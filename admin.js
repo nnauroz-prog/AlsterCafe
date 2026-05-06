@@ -5,8 +5,9 @@ const NOTICE_KEY   = 'alstercafe.notice';
 const AUTH_KEY     = 'alstercafe.auth';
 const ACTIVE_TAB_KEY = 'alstercafe.admin.tab';
 
-const VALID_USERNAMES = ['inhaber', 'inhaber@alstercafe.de', 'admin'];
-const VALID_PASSWORD  = 'alstercafe2026';
+const VALID_USERNAMES = ['inhaber@alstercafe.de', 'inhaber'];
+const VALID_PASSWORD  = 'IfflandStr45!';
+const DISPLAY_USER    = 'inhaber@alstercafe.de';
 
 const DAYS = [
   { key: 'mon', label: 'Montag' },
@@ -32,7 +33,6 @@ function init() {
 
   // Login
   dom.loginForm.addEventListener('submit', onLogin);
-  dom.demoLogin.addEventListener('click', onDemoLogin);
   dom.pwToggle.addEventListener('click', onPwToggle);
   dom.logoutBtn.addEventListener('click', onLogout);
 
@@ -64,12 +64,12 @@ function cacheDom() {
     loginStatus:  document.getElementById('login-status'),
     pwInput:      document.getElementById('pw-input'),
     pwToggle:     document.getElementById('pw-toggle'),
-    demoLogin:    document.getElementById('demo-login'),
     // Header / Dashboard
     dashboard:    document.getElementById('dashboard-view'),
     actions:      document.getElementById('admin-actions'),
     logoutBtn:    document.getElementById('logout-btn'),
     welcome:      document.getElementById('welcome-name'),
+    userBadge:    document.getElementById('user-badge'),
     // Tabs
     tabs:         document.querySelectorAll('.admin-tab'),
     panels:       document.querySelectorAll('.admin-panel'),
@@ -125,14 +125,9 @@ function onLogin(e) {
     showDashboard();
   } else {
     setStatus(dom.loginStatus,
-      'Anmeldung fehlgeschlagen. Demo-Zugang: inhaber / alstercafe2026',
+      'Benutzername oder Passwort ist nicht korrekt.',
       'error');
   }
-}
-
-function onDemoLogin() {
-  sessionStorage.setItem(AUTH_KEY, '1');
-  showDashboard();
 }
 
 function onPwToggle() {
@@ -157,6 +152,7 @@ function showDashboard() {
   dom.loginView.hidden = true;
   dom.dashboard.hidden = false;
   dom.actions.hidden = false;
+  if (dom.userBadge) dom.userBadge.textContent = DISPLAY_USER;
   const lastTab = (() => {
     try { return sessionStorage.getItem(ACTIVE_TAB_KEY) || 'week'; }
     catch { return 'week'; }

@@ -36,6 +36,7 @@
         <span class="admin-pill">Mitgliederbereich</span>
       </a>
       <div class="admin-actions" id="admin-actions" hidden>
+        <span class="user-badge" id="user-badge" title="Angemeldetes Konto"></span>
         <a class="btn btn-link" href="index.html#mittagstisch" target="_blank" rel="noopener">
           <svg class="ico ico-sm"><use href="#i-eye"/></svg>
           Vorschau
@@ -87,21 +88,12 @@
             </div>
           </label>
           <button type="submit" class="btn btn-primary form-submit">Anmelden</button>
-          <button type="button" class="btn btn-gold form-submit" id="demo-login">
-            Mit Demo-Zugang anmelden (1 Klick)
-          </button>
           <p class="form-status" id="login-status" role="status" aria-live="polite"></p>
         </form>
 
-        <div class="login-demo">
-          <strong>Demo-Zugang</strong>
-          <div class="demo-pair">
-            <span>Benutzer</span><code>inhaber</code>
-          </div>
-          <div class="demo-pair">
-            <span>Passwort</span><code>alstercafe2026</code>
-          </div>
-        </div>
+        <p class="login-help">
+          Passwort vergessen? Bitte wenden Sie sich an Ihren Administrator.
+        </p>
       </div>
     </section>
 
@@ -229,15 +221,15 @@
             <dl class="account-list">
               <div>
                 <dt>Angemeldet als</dt>
-                <dd>Inhaber Alstercafé</dd>
+                <dd>inhaber@alstercafe.de</dd>
               </div>
               <div>
                 <dt>Rolle</dt>
-                <dd>Administrator (Vollzugriff)</dd>
+                <dd>Inhaber · Vollzugriff</dd>
               </div>
               <div>
-                <dt>Speicherung</dt>
-                <dd>Demo: lokal im Browser. <em>In der Endversion wird Ihr Plan in der Cloud gespeichert und ist auf allen Geräten verfügbar.</em></dd>
+                <dt>Sicherheit</dt>
+                <dd>Verschlüsselte Verbindung. Sitzung endet automatisch beim Schließen des Fensters.</dd>
               </div>
             </dl>
             <h4>Bedienung in 3 Schritten</h4>
@@ -249,7 +241,7 @@
             <div class="account-actions">
               <button type="button" class="btn btn-link danger" id="reset-all">
                 <svg class="ico ico-sm"><use href="#i-trash"/></svg>
-                Alle Daten lokal löschen
+                Alle Eingaben zurücksetzen
               </button>
             </div>
           </div>

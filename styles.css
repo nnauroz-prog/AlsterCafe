@@ -185,6 +185,27 @@ p  { margin: 0 0 1em; }
 }
 
 .admin-actions { display: flex; gap: 18px; align-items: center; }
+.user-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: .82rem;
+  color: var(--bean);
+  letter-spacing: .02em;
+  font-family: 'Inter', sans-serif;
+}
+.user-badge::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #4FAE5A;
+  box-shadow: 0 0 0 3px rgba(79, 174, 90, 0.18);
+}
+@media (max-width: 720px) {
+  .user-badge { display: none; }
+}
 
 /* ===== BUTTONS ===== */
 .btn {
@@ -840,7 +861,12 @@ p  { margin: 0 0 1em; }
 }
 .login-card input:focus { outline: none; border-color: var(--bean); }
 .login-card .form-submit { width: 100%; margin-top: 8px; }
-.login-card .btn-gold { margin-top: 10px; }
+.login-help {
+  margin: 22px 0 0;
+  font-size: .85rem;
+  color: var(--muted);
+  text-align: center;
+}
 
 .pw-wrap { position: relative; }
 .pw-toggle {
