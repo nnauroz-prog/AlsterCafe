@@ -6,9 +6,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initNav();
   initReveal();
+  initNotice();
   initLunchWeek();
   initReservationForm();
 });
+
+/* ---------- Hinweis-Banner ---------- */
+function initNotice() {
+  const banner = document.getElementById('notice-banner');
+  const text   = document.getElementById('notice-text');
+  if (!banner || !text) return;
+  let value = '';
+  try { value = (localStorage.getItem('alstercafe.notice') || '').trim(); } catch {}
+  if (value) {
+    text.textContent = value;
+    banner.hidden = false;
+  }
+}
 
 /* ---------- Mobile-Navigation ---------- */
 function initNav() {

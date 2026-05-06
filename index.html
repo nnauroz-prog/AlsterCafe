@@ -48,6 +48,14 @@
     </div>
   </div>
 
+  <!-- Hinweis-Banner (befüllt über den Mitgliederbereich) -->
+  <div class="notice-banner" id="notice-banner" hidden>
+    <div class="container notice-inner">
+      <span class="notice-tag">Hinweis</span>
+      <p id="notice-text"></p>
+    </div>
+  </div>
+
   <header class="site-header" id="top">
     <div class="container nav-container">
       <a class="brand" href="#top" aria-label="Alstercafé Startseite">
@@ -63,6 +71,10 @@
         <a href="#ueber-uns">Über uns</a>
         <a href="#reservierung">Reservierung</a>
         <a href="#kontakt">Kontakt</a>
+        <a href="admin.html" class="nav-login">
+          <svg class="ico ico-sm"><use href="#i-lock"/></svg>
+          Login
+        </a>
       </nav>
     </div>
   </header>
@@ -348,6 +360,28 @@
       </div>
     </section>
   </main>
+
+  <!-- LOGIN-STREIFEN -->
+  <section class="login-strip" id="login">
+    <div class="container login-strip-grid">
+      <div class="login-strip-text">
+        <p class="eyebrow gold"><span class="num light">·</span> Mitgliederbereich</p>
+        <h2>Sie sind Inhaber des Cafés?</h2>
+        <p>
+          Verwalten Sie den Wochenplan für den Mittagstisch und aktuelle Hinweise
+          direkt im Mitgliederbereich – ohne technisches Vorwissen, in nur wenigen
+          Klicks.
+        </p>
+      </div>
+      <div class="login-strip-action">
+        <a class="btn btn-gold btn-lg" href="admin.html">
+          <svg class="ico ico-sm"><use href="#i-lock"/></svg>
+          Anmelden &amp; bearbeiten
+        </a>
+        <p class="login-strip-hint">Demo-Zugang: <code>inhaber</code> / <code>alstercafe2026</code></p>
+      </div>
+    </div>
+  </section>
 
   <footer class="site-footer">
     <div class="container footer-grid">
