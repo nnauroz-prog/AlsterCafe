@@ -3,33 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alstercafé – Café & Bäckerei in Hamburg-Hohenfelde · Frühstück & Mittagstisch</title>
-  <meta name="description" content="Alstercafé in der Ifflandstraße 45, Hamburg-Hohenfelde. Frisches Frühstück, täglich wechselnder Mittagstisch, frische Backwaren, hausgemachter Kuchen, aromatischer Mocambo-Kaffee und freies WLAN." />
+  <title>Alstercafé – Café & Bäckerei in Hamburg-Hohenfelde</title>
+  <meta name="description" content="Alstercafé in der Ifflandstraße 45, Hamburg-Hohenfelde. Frühstück, täglich wechselnder Mittagstisch, frische Backwaren und Mocambo-Kaffee." />
   <meta name="theme-color" content="#3D2415" />
   <link rel="icon" type="image/png" href="image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Reusable SVG sprite -->
+  <!-- SVG Icon Sprite -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
       <symbol id="i-wheat" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v36"/><path d="M24 12c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 12c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 19c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 19c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 26c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 26c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 33c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 33c3 0 6-1.5 7-4-1 3-4 5-7 5"/></g></symbol>
       <symbol id="i-cup" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16h24v14a8 8 0 0 1-8 8h-8a8 8 0 0 1-8-8V16z"/><path d="M34 20h4a4 4 0 0 1 0 8h-4"/><path d="M16 8c0 2-2 2-2 4M22 8c0 2-2 2-2 4M28 8c0 2-2 2-2 4"/><path d="M6 44h36"/></g></symbol>
-      <symbol id="i-croissant" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 30c-2-8 4-18 14-20 8-1.5 14 3 16 8-4-2-10-1-12 4-1.5 4 1 8 5 9-3 4-9 6-14 5-5-1-9-3-9-6z"/><path d="M14 28l4-4M20 30l4-4M26 32l4-4"/></g></symbol>
       <symbol id="i-bread" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 24c0-7 8-12 18-12s18 5 18 12c0 4-3 6-6 6H12c-3 0-6-2-6-6z"/><path d="M10 30v6a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4v-6"/><path d="M16 18l-2 4M22 16l-2 4M28 16l-2 4M34 18l-2 4"/></g></symbol>
-      <symbol id="i-cake" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 24h32v14a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V24z"/><path d="M8 30c2 1 4 1 6 0s4-1 6 0 4 1 6 0 4-1 6 0 4 1 6 0"/><path d="M14 24v-6M24 24v-6M34 24v-6"/><path d="M14 18c0-2 2-2 2-4-2 2-4 2-2 4zM24 18c0-2 2-2 2-4-2 2-4 2-2 4zM34 18c0-2 2-2 2-4-2 2-4 2-2 4z"/></g></symbol>
-      <symbol id="i-plate" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="12"/><path d="M14 14l4 4M30 14l-4 4"/></g></symbol>
-      <symbol id="i-bowl" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22h36c0 10-8 18-18 18S6 32 6 22z"/><path d="M14 14c0-2 2-2 2-4M22 14c0-2 2-2 2-4M30 14c0-2 2-2 2-4"/><path d="M4 22h40"/></g></symbol>
+      <symbol id="i-leaf" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c0-18 14-32 32-32 0 18-14 32-32 32z"/><path d="M8 40C18 30 30 22 40 8"/></g></symbol>
       <symbol id="i-wifi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c5-5 13-5 18 0"/><path d="M6 12.5c3.5-3.5 8.5-3.5 12 0"/><path d="M9 16c1.5-1.5 4.5-1.5 6 0"/><circle cx="12" cy="19" r=".8" fill="currentColor"/></g></symbol>
       <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.5 7-13a7 7 0 0 0-14 0c0 5.5 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></g></symbol>
       <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></g></symbol>
-      <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
       <symbol id="i-arrow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
-      <symbol id="i-leaf" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c0-18 14-32 32-32 0 18-14 32-32 32z"/><path d="M8 40C18 30 30 22 40 8"/></g></symbol>
-      <symbol id="ornament" viewBox="0 0 120 12"><g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M0 6h44"/><path d="M76 6h44"/><circle cx="60" cy="6" r="3"/><circle cx="50" cy="6" r="1"/><circle cx="70" cy="6" r="1"/></g></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
     </defs>
   </svg>
 
@@ -63,12 +58,10 @@
         <span></span><span></span><span></span>
       </button>
       <nav class="primary-nav" id="primary-nav">
-        <a href="#fruehstueck">Frühstück</a>
         <a href="#mittagstisch">Mittagstisch</a>
-        <a href="#backwaren">Backwaren</a>
-        <a href="#getraenke">Getränke</a>
+        <a href="#speisekarte">Speisekarte</a>
+        <a href="#ueber-uns">Über uns</a>
         <a href="#reservierung">Reservierung</a>
-        <a href="#galerie">Galerie</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
     </div>
@@ -79,17 +72,15 @@
     <section class="hero">
       <div class="hero-grid container">
         <div class="hero-text reveal">
-          <p class="eyebrow gold">Café · Bäckerei · seit Hamburg-Hohenfelde</p>
+          <p class="eyebrow gold">Café · Bäckerei · Hamburg-Hohenfelde</p>
           <h1>
-            <span class="kicker">Mit Liebe</span>
-            <span class="head-1">gebacken.</span>
-            <span class="head-2"><em>Mit Ruhe</em></span>
-            <span class="head-3">serviert.</span>
+            <span class="head-1">Mit Liebe</span>
+            <span class="head-2">gebacken,</span>
+            <span class="head-3"><em>mit Ruhe serviert.</em></span>
           </h1>
           <p class="lead">
-            In der Ifflandstraße 45 verwöhnen wir Sie mit handwerklich gebackenem Brot,
-            feinen Patisserien, einem reichhaltigen Frühstück und einem täglich
-            wechselnden Mittagstisch – begleitet von aromatischem Mocambo-Kaffee.
+            Handwerklich gebackenes Brot, feine Patisserien und ein täglich wechselnder
+            Mittagstisch – mitten in der Ifflandstraße.
           </p>
           <div class="hero-cta">
             <a class="btn btn-primary" href="#mittagstisch">
@@ -101,41 +92,51 @@
         </div>
 
         <div class="hero-visual reveal" aria-hidden="true">
-          <figure class="illust illust-hero">
-            <!-- CSS-illustration: cup of coffee -->
+          <figure class="illust-hero">
             <div class="cup">
               <div class="cup-saucer"></div>
               <div class="cup-body">
                 <div class="cup-handle"></div>
-                <div class="cup-coffee">
-                  <div class="cup-foam"></div>
-                </div>
+                <div class="cup-coffee"><div class="cup-foam"></div></div>
               </div>
               <div class="steam s1"></div>
               <div class="steam s2"></div>
               <div class="steam s3"></div>
             </div>
           </figure>
-          <div class="hero-stamp" aria-hidden="true">
-            <span>Hamburg</span>
-            <span class="stamp-big">Hohenfelde</span>
-            <span>Ifflandstr. 45</span>
-          </div>
         </div>
       </div>
-      <div class="marquee" aria-hidden="true">
-        <div class="marquee-track">
-          <span>Frühstück</span><span class="dot">●</span>
-          <span>Mittagstisch</span><span class="dot">●</span>
-          <span>Mocambo Kaffee</span><span class="dot">●</span>
-          <span>Frische Backwaren</span><span class="dot">●</span>
-          <span>Hausgemachter Kuchen</span><span class="dot">●</span>
-          <span>Frühstück</span><span class="dot">●</span>
-          <span>Mittagstisch</span><span class="dot">●</span>
-          <span>Mocambo Kaffee</span><span class="dot">●</span>
-          <span>Frische Backwaren</span><span class="dot">●</span>
-          <span>Hausgemachter Kuchen</span><span class="dot">●</span>
+    </section>
+
+    <!-- MITTAGSTISCH (dynamisch aus dem Mitgliederbereich) -->
+    <section class="section lunch" id="mittagstisch">
+      <div class="container">
+        <div class="lunch-head reveal">
+          <p class="eyebrow gold"><span class="num light">01</span> Mittagstisch</p>
+          <h2>Diese Woche bei uns</h2>
+          <p class="lunch-meta" id="lunch-week"></p>
         </div>
+
+        <div class="lunch-today reveal" id="lunch-today" hidden>
+          <span class="lunch-today-tag">Heute · <span id="today-name"></span></span>
+          <p class="lunch-today-dish" id="today-dish"></p>
+          <p class="lunch-today-side" id="today-side"></p>
+          <a class="btn btn-gold" href="tel:+494022692891">
+            <svg class="ico ico-sm"><use href="#i-phone"/></svg>
+            Tisch reservieren · ab 12:00
+          </a>
+        </div>
+
+        <div class="lunch-empty reveal" id="lunch-empty" hidden>
+          <p class="lunch-empty-text">Heute servieren wir Frühstück &amp; Backwaren – kein Mittagstisch.</p>
+        </div>
+
+        <ul class="lunch-week reveal" id="lunch-week-list" aria-label="Wochenkarte"></ul>
+
+        <p class="lunch-note reveal">
+          Zu jedem Mittagstisch reichen wir frische Beilagen und Salate.
+          Die Karte wird wöchentlich aktualisiert.
+        </p>
       </div>
     </section>
 
@@ -143,190 +144,84 @@
     <section class="section about" id="ueber-uns">
       <div class="container about-grid">
         <div class="about-text reveal">
-          <p class="eyebrow"><span class="num">01</span> Über uns</p>
+          <p class="eyebrow"><span class="num">02</span> Über uns</p>
           <h2>Ein Stück Hamburg<br/>zum Wohlfühlen.</h2>
           <p class="lead-soft">
             Im Herzen von Hohenfelde, nur wenige Schritte von der Außenalster entfernt,
-            backen wir mit traditionellen Rezepten, sorgfältig ausgewählten Zutaten und
-            viel Handwerk. Ob morgens auf dem Weg, beim Frühstück mit der Familie oder
-            zum Kaffeeklatsch am Nachmittag – bei uns finden Sie Ihren Lieblingsplatz.
+            backen wir mit traditionellen Rezepten und sorgfältig ausgewählten Zutaten.
+            Ob morgens auf dem Weg, beim Frühstück mit der Familie oder zur Kaffeezeit
+            am Nachmittag – bei uns finden Sie Ihren Lieblingsplatz.
           </p>
           <ul class="features">
             <li>
               <svg class="ico"><use href="#i-wheat"/></svg>
-              <div><strong>Eigene Backstube</strong><span>Täglich frisch im Haus gebacken.</span></div>
+              <strong>Eigene Backstube</strong>
             </li>
             <li>
               <svg class="ico"><use href="#i-cup"/></svg>
-              <div><strong>Mocambo Espresso</strong><span>Aromatischer Italienischer Kaffee.</span></div>
+              <strong>Mocambo Espresso</strong>
             </li>
             <li>
               <svg class="ico"><use href="#i-leaf"/></svg>
-              <div><strong>Hausgemacht</strong><span>Kuchen, Aufstriche, Salate.</span></div>
+              <strong>Hausgemacht</strong>
             </li>
             <li>
               <svg class="ico"><use href="#i-wifi"/></svg>
-              <div><strong>Freies WLAN</strong><span>Für alle unsere Gäste.</span></div>
+              <strong>Freies WLAN</strong>
             </li>
           </ul>
         </div>
 
         <div class="about-aside reveal">
           <blockquote>
-            <p>„Backen ist für uns kein Job — es ist <em>Handwerk</em>, das man schmeckt."</p>
-            <cite>— Inhaber Alstercafé</cite>
+            <p>„Backen ist für uns kein Job – es ist <em>Handwerk</em>, das man schmeckt."</p>
           </blockquote>
-          <div class="about-meta">
-            <div><span>Adresse</span>Ifflandstr. 45<br/>22087 Hamburg</div>
-            <div><span>Telefon</span>040 – 22 69 28 91</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPEISEKARTE (Frühstück + Backwaren + Getränke) -->
+    <section class="section menu" id="speisekarte">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow"><span class="num">03</span> Speisekarte</p>
+          <h2>Was Sie bei uns erwartet</h2>
+        </div>
+
+        <div class="menu-cols">
+          <div class="menu-col reveal">
+            <div class="menu-col-head">
+              <svg class="ico"><use href="#i-bread"/></svg>
+              <h3>Frühstück</h3>
+            </div>
+            <ul class="menu-list">
+              <li><strong>Kleines Frühstück</strong><span>Brötchen, Butter, Marmelade, Heißgetränk.</span></li>
+              <li><strong>Großes Frühstück</strong><span>Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.</span></li>
+              <li><strong>Vegetarisch</strong><span>Frischkäse, Avocado, Gemüse, Heißgetränk.</span></li>
+            </ul>
           </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- FRÜHSTÜCK -->
-    <section class="section section-light" id="fruehstueck">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow"><span class="num">02</span> Frühstück</p>
-          <h2>Genussvoll in den Tag starten</h2>
-          <svg class="orn"><use href="#ornament"/></svg>
-          <p class="section-sub">
-            Vom kleinen Wachmacher bis zum reichhaltigen Frühstück für zwei – mit
-            frischen Brötchen, feinen Aufstrichen und liebevoll angerichteten Tellern.
-          </p>
-        </div>
-        <div class="cards three">
-          <article class="card reveal">
-            <svg class="ico ico-card"><use href="#i-cup"/></svg>
-            <h3>Kleines Frühstück</h3>
-            <p>Zwei frische Brötchen, Butter, Marmelade und ein Heißgetränk Ihrer Wahl.</p>
-          </article>
-          <article class="card reveal">
-            <svg class="ico ico-card"><use href="#i-plate"/></svg>
-            <h3>Großes Frühstück</h3>
-            <p>Brötchenkorb, Butter, Käse- und Wurstauswahl, Marmelade, Honig, Ei und Heißgetränk.</p>
-          </article>
-          <article class="card reveal">
-            <svg class="ico ico-card"><use href="#i-leaf"/></svg>
-            <h3>Vegetarisch</h3>
-            <p>Frischkäse-Variationen, Avocado, Tomate, Gurke, Käseauswahl und Heißgetränk.</p>
-          </article>
-        </div>
-      </div>
-    </section>
+          <div class="menu-col reveal">
+            <div class="menu-col-head">
+              <svg class="ico"><use href="#i-wheat"/></svg>
+              <h3>Backwaren</h3>
+            </div>
+            <ul class="menu-list">
+              <li><strong>Brot &amp; Brötchen</strong><span>Roggen, Dinkel, Vollkorn, Sauerteig.</span></li>
+              <li><strong>Feines Gebäck</strong><span>Croissants, Franzbrötchen, Plunder.</span></li>
+              <li><strong>Torten &amp; Kuchen</strong><span>Hausgemacht, Festtagstorten auf Vorbestellung.</span></li>
+            </ul>
+          </div>
 
-    <!-- MITTAGSTISCH -->
-    <section class="section lunch" id="mittagstisch">
-      <div class="container lunch-card reveal">
-        <p class="eyebrow gold"><span class="num light">03</span> Mittagstisch · ab 12:00</p>
-        <h2>Heute auf der Karte</h2>
-        <svg class="orn light"><use href="#ornament"/></svg>
-        <p class="lunch-dish">
-          Hähnchenschenkel <span class="or">oder</span> gebackener Schafskäse mit Gemüse,
-          dazu gekochter Bulgur <span class="or">oder</span> Reis.
-        </p>
-        <p class="lunch-side">
-          Zu jedem Mittagstisch servieren wir leckere Beilagen und frische Salate.
-        </p>
-        <div class="lunch-cta">
-          <a class="btn btn-gold" href="tel:+494022692891">
-            <svg class="ico ico-sm"><use href="#i-phone"/></svg>
-            Tisch reservieren
-          </a>
-          <a class="btn btn-link light" href="#reservierung">Online anfragen</a>
-        </div>
-        <p class="lunch-note">
-          Der Mittagstisch wechselt täglich. Rufen Sie uns gern an – wir verraten Ihnen
-          das Tagesgericht.
-        </p>
-      </div>
-    </section>
-
-    <!-- BACKWAREN -->
-    <section class="section section-cream" id="backwaren">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow"><span class="num">04</span> Backwaren</p>
-          <h2>Aus dem Ofen,<br/>direkt zu Ihnen</h2>
-          <svg class="orn"><use href="#ornament"/></svg>
-          <p class="section-sub">
-            Knusprige Krusten, lockere Krume und feines Gebäck – täglich frisch in
-            unserer Backstube zubereitet.
-          </p>
-        </div>
-        <div class="cards three">
-          <article class="card reveal">
-            <svg class="ico ico-card"><use href="#i-bread"/></svg>
-            <h3>Brot &amp; Brötchen</h3>
-            <p>Roggen, Dinkel, Vollkorn, Sauerteig und Klassiker – frisch aus dem Ofen.</p>
-          </article>
-          <article class="card reveal">
-            <svg class="ico ico-card"><use href="#i-croissant"/></svg>
-            <h3>Feines Gebäck</h3>
-            <p>Buttercroissants, Franzbrötchen und Plundergebäck – perfekt zum Kaffee.</p>
-          </article>
-          <article class="card reveal">
-            <svg class="ico ico-card"><use href="#i-cake"/></svg>
-            <h3>Torten &amp; Kuchen</h3>
-            <p>Hausgemachte Klassiker und Festtagstorten auf Vorbestellung.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- GETRÄNKE -->
-    <section class="section drinks" id="getraenke">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow"><span class="num">05</span> Heiße Getränke</p>
-          <h2>Kaffee, Kakao &amp; Tee</h2>
-          <svg class="orn"><use href="#ornament"/></svg>
-          <p class="section-sub">
-            Frisch gemahlene Kaffeespezialitäten, cremige Kakao-Variationen und
-            eine große Auswahl feiner Tees.
-          </p>
-        </div>
-
-        <div class="menu-blocks">
-          <div class="menu-block reveal">
-            <div class="menu-head">
+          <div class="menu-col reveal">
+            <div class="menu-col-head">
               <svg class="ico"><use href="#i-cup"/></svg>
-              <h3>Kaffee</h3>
+              <h3>Heiße Getränke</h3>
             </div>
             <ul class="menu-list">
-              <li><strong>Hauskaffee</strong><span>Traditionell gefilterter Kaffee.</span></li>
-              <li><strong>Kaffee Crema</strong><span>Frisch gemahlen und zubereitet.</span></li>
-              <li><strong>Latte Macchiato</strong><span>Italienische Variante zum Milchkaffee.</span></li>
-              <li><strong>Cappuccino</strong><span>Aus Espresso und feinem Milchschaum.</span></li>
-              <li><strong>Milchkaffee</strong><span>Leicht bekömmlich.</span></li>
-              <li><strong>Espresso · Doppelter</strong><span>Klein, heiß, schwarz und kräftig.</span></li>
-              <li><strong>Doppelter Espresso Macchiato</strong><span>Mit Milch verfeinert.</span></li>
-              <li><strong>Schokoccino</strong><span>Schokolade &amp; Espresso.</span></li>
-            </ul>
-          </div>
-
-          <div class="menu-block reveal">
-            <div class="menu-head">
-              <svg class="ico"><use href="#i-bowl"/></svg>
-              <h3>Kakao &amp; Milch</h3>
-            </div>
-            <ul class="menu-list">
-              <li><strong>Heiße Schokolade</strong><span>Lecker schokoladig.</span></li>
-              <li><strong>Heiße weiße Schokolade</strong><span>Cremig mit vanilliger Note.</span></li>
-            </ul>
-          </div>
-
-          <div class="menu-block reveal">
-            <div class="menu-head">
-              <svg class="ico"><use href="#i-leaf"/></svg>
-              <h3>Tee</h3>
-            </div>
-            <p class="menu-intro">Eine große Auswahl – hier ein Auszug:</p>
-            <ul class="menu-list">
-              <li><strong>Fennel</strong><span>Kräutertee mit leicht süßlichem Fenchelgeschmack.</span></li>
-              <li><strong>Lemon Sky</strong><span>Spritzig, erfrischend und „zitronig".</span></li>
-              <li><strong>Mountain Herbs</strong><span>Rooibos &amp; Zitronengras, fein abgestimmt.</span></li>
+              <li><strong>Espresso · Cappuccino · Latte</strong><span>Mocambo, frisch gemahlen.</span></li>
+              <li><strong>Hauskaffee · Milchkaffee</strong><span>Traditionell gefiltert.</span></li>
+              <li><strong>Kakao &amp; Tee</strong><span>Heiße Schokolade, Kräuter- und Früchtetees.</span></li>
             </ul>
           </div>
         </div>
@@ -337,27 +232,20 @@
     <section class="section reservation" id="reservierung">
       <div class="container reservation-grid">
         <div class="reservation-intro reveal">
-          <p class="eyebrow gold"><span class="num light">06</span> Reservierung</p>
+          <p class="eyebrow gold"><span class="num light">04</span> Reservierung</p>
           <h2>Reservieren Sie<br/>Ihren Lieblingsplatz</h2>
           <p>
-            Ob Frühstück mit der Familie, Mittagstisch mit Kolleg:innen oder Kaffeezeit
-            mit Freund:innen – reservieren Sie online über das Formular oder rufen Sie
-            uns an. Wir freuen uns auf Sie.
+            Reservieren Sie online über das Formular oder rufen Sie uns einfach an.
+            Bestätigung in der Regel innerhalb weniger Stunden.
           </p>
           <a class="btn btn-link light" href="tel:+494022692891">
             <svg class="ico ico-sm"><use href="#i-phone"/></svg>
             040 – 22 69 28 91
           </a>
-          <ul class="reservation-info">
-            <li>Reservierungen werktags zu unseren Öffnungszeiten.</li>
-            <li>Für Gruppen ab 6 Personen bitten wir um rechtzeitige Anmeldung.</li>
-            <li>Bestätigung in der Regel innerhalb weniger Stunden.</li>
-          </ul>
         </div>
 
         <form class="reservation-form reveal" id="reservation-form"
               action="mailto:hallo@alstercafe.de" method="post" enctype="text/plain" novalidate>
-          <h3>Online reservieren</h3>
           <div class="form-row">
             <label>
               <span>Name <em>*</em></span>
@@ -365,7 +253,7 @@
             </label>
             <label>
               <span>Telefon <em>*</em></span>
-              <input type="tel" name="Telefon" required autocomplete="tel" placeholder="z. B. 040 12345678" />
+              <input type="tel" name="Telefon" required autocomplete="tel" placeholder="040 12345678" />
             </label>
           </div>
           <label>
@@ -395,11 +283,11 @@
           </div>
           <label>
             <span>Anlass / Nachricht</span>
-            <textarea name="Nachricht" rows="3" placeholder="Geburtstag, Allergien, Kinderstuhl, Wunschtisch, …"></textarea>
+            <textarea name="Nachricht" rows="2" placeholder="Geburtstag, Allergien, Wunschtisch …"></textarea>
           </label>
           <label class="checkbox">
             <input type="checkbox" name="Datenschutz" required />
-            <span>Ich bin damit einverstanden, dass meine Angaben zur Bearbeitung der Reservierung verwendet werden. <em>*</em></span>
+            <span>Ich bin mit der Bearbeitung meiner Anfrage einverstanden. <em>*</em></span>
           </label>
           <button type="submit" class="btn btn-primary form-submit">Reservierung anfragen</button>
           <p class="form-status" role="status" aria-live="polite"></p>
@@ -407,103 +295,49 @@
       </div>
     </section>
 
-    <!-- GALERIE -->
-    <section class="section gallery" id="galerie">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow"><span class="num">07</span> Galerie</p>
-          <h2>Eindrücke aus<br/>unserem Café</h2>
-          <svg class="orn"><use href="#ornament"/></svg>
-        </div>
-        <div class="gallery-grid">
-          <figure class="g-item g-coffee reveal">
-            <div class="g-art">
-              <div class="art-cup"><div class="art-cup-handle"></div><div class="art-cup-foam"></div></div>
-            </div>
-            <figcaption>Cappuccino</figcaption>
-          </figure>
-          <figure class="g-item g-bread reveal">
-            <div class="g-art">
-              <div class="art-loaf"><span></span><span></span><span></span><span></span></div>
-            </div>
-            <figcaption>Frische Brötchen</figcaption>
-          </figure>
-          <figure class="g-item g-cake reveal">
-            <div class="g-art">
-              <div class="art-cake"><div class="art-cake-top"></div></div>
-            </div>
-            <figcaption>Hausgemachter Kuchen</figcaption>
-          </figure>
-          <figure class="g-item g-croissant reveal">
-            <div class="g-art">
-              <div class="art-croissant"></div>
-            </div>
-            <figcaption>Buttercroissant</figcaption>
-          </figure>
-          <figure class="g-item g-wheat reveal">
-            <div class="g-art">
-              <svg viewBox="0 0 100 100" class="art-svg"><use href="#i-wheat" x="26" y="26" width="48" height="48"/></svg>
-            </div>
-            <figcaption>Aus eigener Backstube</figcaption>
-          </figure>
-          <figure class="g-item g-plate reveal">
-            <div class="g-art">
-              <div class="art-plate"><div class="art-plate-inner"></div></div>
-            </div>
-            <figcaption>Mittagstisch</figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- ÖFFNUNGSZEITEN -->
-    <section class="section hours" id="oeffnungszeiten">
-      <div class="container hours-grid">
-        <div class="reveal">
-          <p class="eyebrow"><span class="num">08</span> Öffnungszeiten</p>
-          <h2>Wann wir<br/>für Sie da sind</h2>
-          <p>
-            Besuchen Sie uns zum Frühstück, in der Mittagspause oder zum Kaffeeklatsch
-            am Nachmittag.
-          </p>
-        </div>
-        <ul class="hours-list reveal" aria-label="Öffnungszeiten">
-          <li><span>Montag – Freitag</span><span class="time">06:30 – 15:00</span></li>
-          <li><span>Samstag</span><span class="time">07:30 – 15:00</span></li>
-          <li><span>Sonntag</span><span class="time">07:30 – 15:00</span></li>
-          <li class="note"><span>An Feiertagen</span><span>Sonderzeiten</span></li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- KONTAKT -->
+    <!-- KONTAKT + ÖFFNUNGSZEITEN -->
     <section class="section contact" id="kontakt">
       <div class="container contact-grid">
-        <div class="reveal">
-          <p class="eyebrow gold"><span class="num light">09</span> Kontakt</p>
-          <h2>Besuchen Sie uns</h2>
-          <p class="contact-lead">
-            Mitten in Hamburg-Hohenfelde – nur wenige Schritte von der Außenalster entfernt.
-          </p>
-          <address class="contact-info">
-            <p>
-              <strong>Alstercafé</strong><br/>
-              Ifflandstraße 45<br/>
-              22087 Hamburg-Hohenfelde
-            </p>
-            <p><a href="tel:+494022692891">040 – 22 69 28 91</a></p>
-          </address>
-          <div class="social">
-            <a href="https://www.facebook.com/" target="_blank" rel="noopener">Facebook</a>
-            <a href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a>
-            <a href="https://www.yelp.com/" target="_blank" rel="noopener">Yelp</a>
+        <div class="contact-info-block reveal">
+          <p class="eyebrow"><span class="num">05</span> Besuchen Sie uns</p>
+          <h2>Mitten in<br/>Hamburg-Hohenfelde</h2>
+
+          <div class="contact-cols">
+            <address class="contact-col">
+              <p class="col-label">Adresse</p>
+              <p class="col-value">
+                Alstercafé<br/>
+                Ifflandstraße 45<br/>
+                22087 Hamburg
+              </p>
+              <a class="col-link" target="_blank" rel="noopener"
+                 href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg">
+                Route ansehen →
+              </a>
+            </address>
+            <div class="contact-col">
+              <p class="col-label">Telefon</p>
+              <p class="col-value">
+                <a href="tel:+494022692891">040 – 22 69 28 91</a>
+              </p>
+              <p class="col-label" style="margin-top: 22px;">Folgen Sie uns</p>
+              <div class="social">
+                <a href="https://www.facebook.com/" target="_blank" rel="noopener">Facebook</a>
+                <a href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a>
+              </div>
+            </div>
           </div>
-          <a class="btn btn-gold" target="_blank" rel="noopener"
-             href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg">
-            Route auf Google Maps
-            <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
-          </a>
+
+          <div class="hours-inline">
+            <p class="col-label">Öffnungszeiten</p>
+            <ul class="hours-list">
+              <li><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></li>
+              <li><span>Samstag</span><span class="time">07:30 – 15:00</span></li>
+              <li><span>Sonntag</span><span class="time">07:30 – 15:00</span></li>
+            </ul>
+          </div>
         </div>
+
         <div class="map-card reveal" aria-hidden="true">
           <iframe
             title="Karte Ifflandstraße 45 Hamburg"
@@ -520,20 +354,23 @@
       <div class="footer-brand">
         <img src="image.png" alt="" class="brand-logo small" />
         <p>
-          <strong>Alstercafé</strong> · Café &amp; Bäckerei<br/>
-          Ifflandstr. 45 · 22087 Hamburg-Hohenfelde
+          <strong>Alstercafé</strong><br/>
+          Ifflandstr. 45 · 22087 Hamburg
         </p>
       </div>
       <nav class="footer-nav" aria-label="Footer">
-        <a href="#fruehstueck">Frühstück</a>
         <a href="#mittagstisch">Mittagstisch</a>
-        <a href="#backwaren">Backwaren</a>
-        <a href="#getraenke">Getränke</a>
+        <a href="#speisekarte">Speisekarte</a>
         <a href="#reservierung">Reservierung</a>
-        <a href="#galerie">Galerie</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
-      <p class="footer-meta">© <span id="year"></span> Alstercafé · Hamburg</p>
+      <p class="footer-meta">
+        © <span id="year"></span> Alstercafé ·
+        <a href="admin.html" class="admin-link">
+          <svg class="ico ico-sm"><use href="#i-lock"/></svg>
+          Mitgliederbereich
+        </a>
+      </p>
     </div>
   </footer>
 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mitgliederbereich – Alstercafé</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#3D2415" />
+  <link rel="icon" type="image/png" href="image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></g></symbol>
+      <symbol id="i-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M10 12h11M18 9l3 3-3 3"/></g></symbol>
+    </defs>
+  </svg>
+
+  <header class="admin-header">
+    <div class="container nav-container">
+      <a class="brand" href="index.html" aria-label="Zur Webseite">
+        <img src="image.png" alt="" class="brand-logo" />
+        <span class="brand-name">Alstercafé</span>
+        <span class="admin-pill">Mitgliederbereich</span>
+      </a>
+      <div class="admin-actions" id="admin-actions" hidden>
+        <a class="btn btn-link" href="index.html#mittagstisch" target="_blank" rel="noopener">
+          <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+          Vorschau
+        </a>
+        <button class="btn btn-link" id="logout-btn" type="button">
+          <svg class="ico ico-sm"><use href="#i-out"/></svg>
+          Abmelden
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- LOGIN -->
+    <section class="admin-login" id="login-view">
+      <div class="login-card reveal in">
+        <svg class="ico ico-card lock-ico"><use href="#i-lock"/></svg>
+        <h1>Mitgliederbereich</h1>
+        <p class="login-sub">Bitte melden Sie sich an, um den Wochenplan zu bearbeiten.</p>
+
+        <form id="login-form" autocomplete="off">
+          <label>
+            <span>Benutzername</span>
+            <input type="text" name="username" required autocomplete="username" placeholder="z. B. inhaber" />
+          </label>
+          <label>
+            <span>Passwort</span>
+            <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
+          </label>
+          <button type="submit" class="btn btn-primary form-submit">Anmelden</button>
+          <p class="form-status" id="login-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <p class="login-demo">
+          <strong>Demo-Zugang:</strong> <code>inhaber</code> / <code>alstercafe2026</code>
+        </p>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section class="admin-dashboard" id="dashboard-view" hidden>
+      <div class="container">
+        <div class="admin-page-head">
+          <div>
+            <p class="eyebrow"><span class="num">01</span> Wochenplan</p>
+            <h1>Mittagstisch der Woche</h1>
+            <p class="admin-sub">
+              Tragen Sie für jeden Tag das Hauptgericht ein. Änderungen erscheinen sofort
+              auf der Webseite unter <em>Mittagstisch</em>.
+            </p>
+          </div>
+          <div class="week-switch">
+            <button type="button" class="btn btn-link" id="week-prev" aria-label="Vorherige Woche">←</button>
+            <div class="week-label">
+              <span class="week-kw" id="week-kw">KW –</span>
+              <span class="week-range" id="week-range">–</span>
+            </div>
+            <button type="button" class="btn btn-link" id="week-next" aria-label="Nächste Woche">→</button>
+          </div>
+        </div>
+
+        <form id="menu-form" class="menu-form">
+          <div class="day-grid" id="day-grid"></div>
+
+          <div class="save-bar">
+            <p class="save-status" id="save-status">Noch nicht gespeichert.</p>
+            <div class="save-actions">
+              <button type="button" class="btn btn-link" id="reset-week">Woche zurücksetzen</button>
+              <button type="submit" class="btn btn-primary">
+                <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                Speichern
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div class="admin-info">
+          <h3>Hinweise zur Bedienung</h3>
+          <ul>
+            <li>Lassen Sie Felder leer, an denen kein Mittagstisch angeboten wird (z. B. Sonntag).</li>
+            <li>Die Wochenkarte wird auf der Webseite automatisch aktualisiert.</li>
+            <li>Demo-Modus: Daten werden lokal in diesem Browser gespeichert. In der Endversion erfolgt die Speicherung sicher in der Cloud.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <div class="container">
+      <p>© <span id="year"></span> Alstercafé · Mitgliederbereich</p>
+    </div>
+  </footer>
+
+  <script src="admin.js" defer></script>
+</body>
+</html>
