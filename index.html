@@ -48,6 +48,22 @@
     </div>
   </div>
 
+  <!-- Cookie-Consent-Banner -->
+  <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookie-Hinweis" hidden>
+    <div class="container cookie-inner">
+      <div class="cookie-text">
+        <strong>Wir respektieren Ihre Privatsphäre.</strong>
+        Diese Webseite verwendet ausschließlich technisch notwendige Speicherfunktionen.
+        Die Karte (OpenStreetMap) wird erst geladen, wenn Sie zustimmen.
+        Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
+      </div>
+      <div class="cookie-actions">
+        <button type="button" class="btn btn-link cookie-decline" id="cookie-decline">Nur notwendige</button>
+        <button type="button" class="btn btn-primary cookie-accept" id="cookie-accept">Alle akzeptieren</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Hinweis-Banner (befüllt über den Mitgliederbereich) -->
   <div class="notice-banner" id="notice-banner" hidden>
     <div class="container notice-inner">
@@ -200,42 +216,8 @@
           <h2>Was Sie bei uns erwartet</h2>
         </div>
 
-        <div class="menu-cols">
-          <div class="menu-col reveal">
-            <div class="menu-col-head">
-              <svg class="ico"><use href="#i-bread"/></svg>
-              <h3>Frühstück</h3>
-            </div>
-            <ul class="menu-list">
-              <li><strong>Kleines Frühstück</strong><span>Brötchen, Butter, Marmelade, Heißgetränk.</span></li>
-              <li><strong>Großes Frühstück</strong><span>Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.</span></li>
-              <li><strong>Vegetarisch</strong><span>Frischkäse, Avocado, Gemüse, Heißgetränk.</span></li>
-            </ul>
-          </div>
-
-          <div class="menu-col reveal">
-            <div class="menu-col-head">
-              <svg class="ico"><use href="#i-wheat"/></svg>
-              <h3>Backwaren</h3>
-            </div>
-            <ul class="menu-list">
-              <li><strong>Brot &amp; Brötchen</strong><span>Roggen, Dinkel, Vollkorn, Sauerteig.</span></li>
-              <li><strong>Feines Gebäck</strong><span>Croissants, Franzbrötchen, Plunder.</span></li>
-              <li><strong>Torten &amp; Kuchen</strong><span>Hausgemacht, Festtagstorten auf Vorbestellung.</span></li>
-            </ul>
-          </div>
-
-          <div class="menu-col reveal">
-            <div class="menu-col-head">
-              <svg class="ico"><use href="#i-cup"/></svg>
-              <h3>Heiße Getränke</h3>
-            </div>
-            <ul class="menu-list">
-              <li><strong>Espresso · Cappuccino · Latte</strong><span>Mocambo, frisch gemahlen.</span></li>
-              <li><strong>Hauskaffee · Milchkaffee</strong><span>Traditionell gefiltert.</span></li>
-              <li><strong>Kakao &amp; Tee</strong><span>Heiße Schokolade, Kräuter- und Früchtetees.</span></li>
-            </ul>
-          </div>
+        <div class="menu-cols" id="menu-cols">
+          <!-- Wird dynamisch befüllt aus dem Mitgliederbereich -->
         </div>
       </div>
     </section>
@@ -342,20 +324,32 @@
 
           <div class="hours-inline">
             <p class="col-label">Öffnungszeiten</p>
-            <ul class="hours-list">
-              <li><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></li>
-              <li><span>Samstag</span><span class="time">07:30 – 15:00</span></li>
-              <li><span>Sonntag</span><span class="time">07:30 – 15:00</span></li>
-            </ul>
+            <ul class="hours-list" id="hours-list"></ul>
           </div>
         </div>
 
-        <div class="map-card reveal" aria-hidden="true">
+        <div class="map-card reveal" id="map-card">
+          <div class="map-placeholder" id="map-placeholder">
+            <div>
+              <p class="map-ph-title">Karte ist deaktiviert</p>
+              <p class="map-ph-text">
+                Aus Datenschutzgründen wird die OpenStreetMap-Karte erst nach Ihrer
+                Zustimmung geladen. Dabei wird Ihre IP-Adresse an OpenStreetMap übertragen.
+              </p>
+              <button type="button" class="btn btn-gold" id="map-load">Karte laden</button>
+              <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg"
+                 target="_blank" rel="noopener" class="map-ph-link">
+                Stattdessen Google Maps öffnen →
+              </a>
+            </div>
+          </div>
           <iframe
+            id="map-iframe"
             title="Karte Ifflandstraße 45 Hamburg"
-            src="https://www.openstreetmap.org/export/embed.html?bbox=10.020%2C53.557%2C10.040%2C53.567&amp;layer=mapnik&amp;marker=53.562%2C10.030"
+            data-src="https://www.openstreetmap.org/export/embed.html?bbox=10.0195%2C53.5580%2C10.0295%2C53.5640&amp;layer=mapnik&amp;marker=53.5609%2C10.0244"
             loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"></iframe>
+            referrerpolicy="no-referrer-when-downgrade"
+            hidden></iframe>
         </div>
       </div>
     </section>
@@ -397,6 +391,8 @@
         <a href="#speisekarte">Speisekarte</a>
         <a href="#reservierung">Reservierung</a>
         <a href="#kontakt">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
       </nav>
       <p class="footer-meta">
         © <span id="year"></span> Alstercafé ·

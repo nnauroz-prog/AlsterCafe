@@ -1,39 +1,72 @@
 /* Alstercafé · Hauptseite */
 
+const STORAGE_LUNCH    = 'alstercafe.weekly-menu';
+const STORAGE_NOTICE   = 'alstercafe.notice';
+const STORAGE_CONSENT  = 'alstercafe.consent';
+const STORAGE_MENU     = 'alstercafe.menu';
+const STORAGE_HOURS    = 'alstercafe.hours';
+
+const DAY_KEYS   = ['mon','tue','wed','thu','fri','sat','sun'];
+const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+
+const DEFAULT_MENU = {
+  fruehstueck: {
+    title: 'Frühstück',
+    icon: 'i-bread',
+    items: [
+      { name: 'Kleines Frühstück', description: 'Brötchen, Butter, Marmelade, Heißgetränk.' },
+      { name: 'Großes Frühstück',  description: 'Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.' },
+      { name: 'Vegetarisch',       description: 'Frischkäse, Avocado, Gemüse, Heißgetränk.' }
+    ]
+  },
+  backwaren: {
+    title: 'Backwaren',
+    icon: 'i-wheat',
+    items: [
+      { name: 'Brot & Brötchen',   description: 'Roggen, Dinkel, Vollkorn, Sauerteig.' },
+      { name: 'Feines Gebäck',     description: 'Croissants, Franzbrötchen, Plunder.' },
+      { name: 'Torten & Kuchen',   description: 'Hausgemacht, Festtagstorten auf Vorbestellung.' }
+    ]
+  },
+  getraenke: {
+    title: 'Heiße Getränke',
+    icon: 'i-cup',
+    items: [
+      { name: 'Espresso · Cappuccino · Latte', description: 'Mocambo, frisch gemahlen.' },
+      { name: 'Hauskaffee · Milchkaffee',      description: 'Traditionell gefiltert.' },
+      { name: 'Kakao & Tee',                   description: 'Heiße Schokolade, Kräuter- und Früchtetees.' }
+    ]
+  }
+};
+
+const DEFAULT_HOURS = [
+  { label: 'Mo – Fr',  time: '06:30 – 15:00' },
+  { label: 'Samstag',  time: '07:30 – 15:00' },
+  { label: 'Sonntag',  time: '07:30 – 15:00' }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   initNav();
   initReveal();
+  initCookieBanner();
   initNotice();
+  initMenu();
+  initHours();
   initLunchWeek();
   initReservationForm();
 });
 
-/* ---------- Hinweis-Banner ---------- */
-function initNotice() {
-  const banner = document.getElementById('notice-banner');
-  const text   = document.getElementById('notice-text');
-  if (!banner || !text) return;
-  let value = '';
-  try { value = (localStorage.getItem('alstercafe.notice') || '').trim(); } catch {}
-  if (value) {
-    text.textContent = value;
-    banner.hidden = false;
-  }
-}
-
-/* ---------- Mobile-Navigation ---------- */
+/* ---------- Navigation ---------- */
 function initNav() {
   const toggle = document.querySelector('.nav-toggle');
   const nav = document.getElementById('primary-nav');
   if (!toggle || !nav) return;
-
   toggle.addEventListener('click', () => {
     const open = nav.classList.toggle('open');
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Menü schließen' : 'Menü öffnen');
   });
   nav.querySelectorAll('a').forEach(a => {
     a.addEventListener('click', () => {
@@ -43,7 +76,7 @@ function initNav() {
   });
 }
 
-/* ---------- Scroll-Reveal ---------- */
+/* ---------- Reveal-on-Scroll ---------- */
 function initReveal() {
   const reveals = document.querySelectorAll('.reveal');
   if (!reveals.length) return;
@@ -62,16 +95,137 @@ function initReveal() {
   reveals.forEach(el => io.observe(el));
 }
 
-/* ---------- Mittagstisch (Wochenplan) ---------- */
-const STORAGE_KEY = 'alstercafe.weekly-menu';
-const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
-const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+/* ---------- Cookie-Banner ---------- */
+function initCookieBanner() {
+  const banner   = document.getElementById('cookie-banner');
+  const accept   = document.getElementById('cookie-accept');
+  const decline  = document.getElementById('cookie-decline');
+  if (!banner) return;
 
+  const consent = readConsent();
+  if (!consent) banner.hidden = false;
+  if (consent === 'accepted') loadMap();
+
+  accept?.addEventListener('click', () => {
+    writeConsent('accepted');
+    banner.hidden = true;
+    loadMap();
+  });
+  decline?.addEventListener('click', () => {
+    writeConsent('declined');
+    banner.hidden = true;
+  });
+
+  const mapLoadBtn = document.getElementById('map-load');
+  mapLoadBtn?.addEventListener('click', () => {
+    writeConsent('accepted');
+    loadMap();
+  });
+}
+
+function readConsent() {
+  try { return localStorage.getItem(STORAGE_CONSENT); }
+  catch { return null; }
+}
+function writeConsent(value) {
+  try { localStorage.setItem(STORAGE_CONSENT, value); } catch {}
+}
+
+function loadMap() {
+  const placeholder = document.getElementById('map-placeholder');
+  const iframe = document.getElementById('map-iframe');
+  if (!iframe) return;
+  if (iframe.dataset.src && !iframe.src) {
+    iframe.src = iframe.dataset.src;
+  }
+  iframe.hidden = false;
+  if (placeholder) placeholder.hidden = true;
+}
+
+/* ---------- Hinweis-Banner ---------- */
+function initNotice() {
+  const banner = document.getElementById('notice-banner');
+  const text   = document.getElementById('notice-text');
+  if (!banner || !text) return;
+  let value = '';
+  try { value = (localStorage.getItem(STORAGE_NOTICE) || '').trim(); } catch {}
+  if (value) {
+    text.textContent = value;
+    banner.hidden = false;
+  }
+}
+
+/* ---------- Speisekarte ---------- */
+function initMenu() {
+  const root = document.getElementById('menu-cols');
+  if (!root) return;
+
+  const stored = (() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_MENU);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+  const data = stored && typeof stored === 'object' ? mergeMenu(stored) : DEFAULT_MENU;
+
+  root.innerHTML = '';
+  ['fruehstueck','backwaren','getraenke'].forEach(key => {
+    const cat = data[key];
+    if (!cat || !Array.isArray(cat.items) || !cat.items.length) return;
+    const col = document.createElement('div');
+    col.className = 'menu-col reveal';
+    col.innerHTML = `
+      <div class="menu-col-head">
+        <svg class="ico"><use href="#${escapeAttr(cat.icon || DEFAULT_MENU[key].icon)}"/></svg>
+        <h3>${escapeHtml(cat.title || DEFAULT_MENU[key].title)}</h3>
+      </div>
+      <ul class="menu-list">
+        ${cat.items.map(it => `
+          <li>
+            <strong>${escapeHtml(it.name || '')}</strong>
+            <span>${escapeHtml(it.description || '')}</span>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+    root.appendChild(col);
+  });
+}
+
+function mergeMenu(stored) {
+  const out = JSON.parse(JSON.stringify(DEFAULT_MENU));
+  Object.keys(out).forEach(k => {
+    if (stored[k]) {
+      out[k].title = stored[k].title || out[k].title;
+      out[k].icon  = stored[k].icon  || out[k].icon;
+      if (Array.isArray(stored[k].items)) out[k].items = stored[k].items;
+    }
+  });
+  return out;
+}
+
+/* ---------- Öffnungszeiten ---------- */
+function initHours() {
+  const root = document.getElementById('hours-list');
+  if (!root) return;
+  let hours = DEFAULT_HOURS;
+  try {
+    const raw = localStorage.getItem(STORAGE_HOURS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) hours = parsed;
+    }
+  } catch {}
+  root.innerHTML = hours.map(h => `
+    <li><span>${escapeHtml(h.label || '')}</span><span class="time">${escapeHtml(h.time || '')}</span></li>
+  `).join('');
+}
+
+/* ---------- Mittagstisch (Wochenplan) ---------- */
 function initLunchWeek() {
   const today = new Date();
   const monday = mondayOf(today);
   const weekData = loadCurrentWeek(monday);
-
   renderWeekMeta(monday);
   renderTodayLunch(weekData, today);
   renderWeekList(weekData, monday, today);
@@ -79,7 +233,7 @@ function initLunchWeek() {
 
 function loadCurrentWeek(monday) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_LUNCH);
     if (!raw) return null;
     const all = JSON.parse(raw);
     return all[isoDate(monday)] || null;
@@ -94,19 +248,19 @@ function renderWeekMeta(monday) {
 }
 
 function renderTodayLunch(weekData, today) {
-  const todayBox  = document.getElementById('lunch-today');
-  const emptyBox  = document.getElementById('lunch-empty');
-  const dayIdx    = (today.getDay() + 6) % 7;
-  const dayKey    = DAY_KEYS[dayIdx];
-  const dayLabel  = DAY_LABELS[dayIdx];
-  const entry     = weekData?.days?.[dayKey];
+  const todayBox = document.getElementById('lunch-today');
+  const emptyBox = document.getElementById('lunch-empty');
+  const dayIdx = (today.getDay() + 6) % 7;
+  const dayKey = DAY_KEYS[dayIdx];
+  const dayLabel = DAY_LABELS[dayIdx];
+  const entry = weekData?.days?.[dayKey];
 
   document.getElementById('today-name').textContent = dayLabel;
 
   if (entry?.dish && !entry.closed) {
     document.getElementById('today-dish').textContent = entry.dish;
     const sideEl = document.getElementById('today-side');
-    sideEl.textContent = entry.side ? entry.side : '';
+    sideEl.textContent = entry.side || '';
     sideEl.hidden = !entry.side;
     todayBox.hidden = false;
     emptyBox.hidden = true;
@@ -120,14 +274,12 @@ function renderWeekList(weekData, monday, today) {
   const list = document.getElementById('lunch-week-list');
   if (!list) return;
   list.innerHTML = '';
-
   DAY_KEYS.forEach((key, idx) => {
     const date = new Date(monday); date.setDate(date.getDate() + idx);
     const entry = weekData?.days?.[key];
     const isToday = isSameDay(date, today);
     const li = document.createElement('li');
     li.className = 'lunch-day' + (isToday ? ' is-today' : '');
-
     let body;
     if (entry?.closed) {
       body = '<span class="lunch-closed">Kein Mittagstisch</span>';
@@ -137,7 +289,6 @@ function renderWeekList(weekData, monday, today) {
     } else {
       body = '<span class="lunch-pending">— folgt in Kürze —</span>';
     }
-
     li.innerHTML = `
       <div class="lunch-day-head">
         <span class="lunch-day-name">${DAY_LABELS[idx]}</span>
@@ -153,7 +304,6 @@ function renderWeekList(weekData, monday, today) {
 function initReservationForm() {
   const form = document.getElementById('reservation-form');
   if (!form) return;
-
   const status = form.querySelector('.form-status');
   const dateInput = form.querySelector('input[name="Datum"]');
   if (dateInput) {
@@ -161,7 +311,6 @@ function initReservationForm() {
     dateInput.min = isoDate(new Date());
     if (!dateInput.value) dateInput.value = isoDate(tomorrow);
   }
-
   form.addEventListener('submit', e => {
     if (!form.checkValidity()) {
       e.preventDefault();
@@ -185,7 +334,7 @@ function initReservationForm() {
     ];
     const body = encodeURIComponent(lines.join('\n'));
     e.preventDefault();
-    window.location.href = `mailto:hallo@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
+    window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
     setFormStatus(status, 'Ihr E-Mail-Programm wurde geöffnet. Bitte senden Sie die Anfrage ab.', 'ok');
   });
 }
@@ -205,7 +354,12 @@ function mondayOf(date) {
   d.setDate(d.getDate() - day);
   return d;
 }
-function isoDate(d) { return d.toISOString().slice(0,10); }
+function isoDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 function isSameDay(a, b) { return isoDate(a) === isoDate(b); }
 function formatShort(d) { return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }); }
 function formatDay(d)   { return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }); }
@@ -218,5 +372,6 @@ function isoWeek(date) {
   return 1 + Math.round((diff - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
 }
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
+function escapeAttr(s) { return escapeHtml(s); }

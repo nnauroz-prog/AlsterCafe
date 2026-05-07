@@ -25,6 +25,8 @@
       <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 12l6 6 6-6"/><path d="M5 20h14"/></g></symbol>
       <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21a2 2 0 0 0 4 0"/></g></symbol>
       <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></g></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></g></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></g></symbol>
     </defs>
   </svg>
 
@@ -132,6 +134,12 @@
           <button class="admin-tab is-active" role="tab" aria-selected="true" data-tab="week">
             Wochenplan
           </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="menu">
+            Speisekarte
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="hours">
+            Öffnungszeiten
+          </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="notice">
             <svg class="ico ico-sm"><use href="#i-bell"/></svg>
             Hinweis-Banner
@@ -183,6 +191,59 @@
               </div>
             </div>
           </form>
+        </div>
+
+        <!-- TAB: SPEISEKARTE -->
+        <div class="admin-panel" id="panel-menu" role="tabpanel" hidden>
+          <div class="panel-card wide">
+            <h3>Speisekarte</h3>
+            <p class="panel-card-sub">
+              Hier verwalten Sie die Inhalte der Speisekarte (Frühstück, Backwaren,
+              Heiße Getränke). Sie können Einträge bearbeiten, neue hinzufügen oder
+              entfernen. Die Änderungen erscheinen direkt auf der Webseite.
+            </p>
+
+            <form id="menu-cards-form">
+              <div class="menu-cats" id="menu-cats"></div>
+
+              <div class="save-bar inline">
+                <p class="save-status" id="menu-status"></p>
+                <div class="save-actions">
+                  <button type="button" class="btn btn-link danger" id="menu-reset">Auf Standard zurücksetzen</button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Speisekarte speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- TAB: ÖFFNUNGSZEITEN -->
+        <div class="admin-panel" id="panel-hours" role="tabpanel" hidden>
+          <div class="panel-card">
+            <h3>Öffnungszeiten</h3>
+            <p class="panel-card-sub">
+              Pflegen Sie hier die Öffnungszeiten, die unten auf der Webseite angezeigt werden.
+            </p>
+
+            <form id="hours-form">
+              <div class="hours-rows" id="hours-rows"></div>
+              <button type="button" class="btn btn-link" id="hours-add">+ Zeile hinzufügen</button>
+
+              <div class="save-bar inline">
+                <p class="save-status" id="hours-status"></p>
+                <div class="save-actions">
+                  <button type="button" class="btn btn-link danger" id="hours-reset">Auf Standard zurücksetzen</button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Öffnungszeiten speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
 
         <!-- TAB: NOTICE BANNER -->

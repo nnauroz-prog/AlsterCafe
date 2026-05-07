@@ -1,9 +1,53 @@
 /* Alstercafé · Mitgliederbereich */
 
-const STORAGE_KEY  = 'alstercafe.weekly-menu';
-const NOTICE_KEY   = 'alstercafe.notice';
-const AUTH_KEY     = 'alstercafe.auth';
+const STORAGE_KEY    = 'alstercafe.weekly-menu';
+const NOTICE_KEY     = 'alstercafe.notice';
+const MENU_KEY       = 'alstercafe.menu';
+const HOURS_KEY      = 'alstercafe.hours';
+const AUTH_KEY       = 'alstercafe.auth';
 const ACTIVE_TAB_KEY = 'alstercafe.admin.tab';
+
+const MENU_CATS = [
+  { key: 'fruehstueck', label: 'Frühstück',     defaultIcon: 'i-bread' },
+  { key: 'backwaren',   label: 'Backwaren',     defaultIcon: 'i-wheat' },
+  { key: 'getraenke',   label: 'Heiße Getränke', defaultIcon: 'i-cup'   }
+];
+
+const DEFAULT_MENU = {
+  fruehstueck: {
+    title: 'Frühstück',
+    icon: 'i-bread',
+    items: [
+      { name: 'Kleines Frühstück', description: 'Brötchen, Butter, Marmelade, Heißgetränk.' },
+      { name: 'Großes Frühstück',  description: 'Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.' },
+      { name: 'Vegetarisch',       description: 'Frischkäse, Avocado, Gemüse, Heißgetränk.' }
+    ]
+  },
+  backwaren: {
+    title: 'Backwaren',
+    icon: 'i-wheat',
+    items: [
+      { name: 'Brot & Brötchen',   description: 'Roggen, Dinkel, Vollkorn, Sauerteig.' },
+      { name: 'Feines Gebäck',     description: 'Croissants, Franzbrötchen, Plunder.' },
+      { name: 'Torten & Kuchen',   description: 'Hausgemacht, Festtagstorten auf Vorbestellung.' }
+    ]
+  },
+  getraenke: {
+    title: 'Heiße Getränke',
+    icon: 'i-cup',
+    items: [
+      { name: 'Espresso · Cappuccino · Latte', description: 'Mocambo, frisch gemahlen.' },
+      { name: 'Hauskaffee · Milchkaffee',      description: 'Traditionell gefiltert.' },
+      { name: 'Kakao & Tee',                   description: 'Heiße Schokolade, Kräuter- und Früchtetees.' }
+    ]
+  }
+};
+
+const DEFAULT_HOURS = [
+  { label: 'Mo – Fr',  time: '06:30 – 15:00' },
+  { label: 'Samstag',  time: '07:30 – 15:00' },
+  { label: 'Sonntag',  time: '07:30 – 15:00' }
+];
 
 const VALID_USERNAMES = ['inhaber@alstercafe.de', 'inhaber'];
 const VALID_PASSWORD  = 'IfflandStr45!';
@@ -52,6 +96,15 @@ function init() {
   dom.noticeForm.addEventListener('submit', onSaveNotice);
   dom.noticeClear.addEventListener('click', onClearNotice);
 
+  // Speisekarte
+  dom.menuCardsForm.addEventListener('submit', onSaveMenu);
+  dom.menuReset.addEventListener('click', onResetMenu);
+
+  // Öffnungszeiten
+  dom.hoursForm.addEventListener('submit', onSaveHours);
+  dom.hoursAdd.addEventListener('click', () => addHourRow());
+  dom.hoursReset.addEventListener('click', onResetHours);
+
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
 }
@@ -94,6 +147,17 @@ function cacheDom() {
     noticeInput:  document.getElementById('notice-input'),
     noticeStatus: document.getElementById('notice-status'),
     noticeClear:  document.getElementById('notice-clear'),
+    // Speisekarte
+    menuCardsForm: document.getElementById('menu-cards-form'),
+    menuCats:      document.getElementById('menu-cats'),
+    menuStatus:    document.getElementById('menu-status'),
+    menuReset:     document.getElementById('menu-reset'),
+    // Öffnungszeiten
+    hoursForm:    document.getElementById('hours-form'),
+    hoursRows:    document.getElementById('hours-rows'),
+    hoursAdd:     document.getElementById('hours-add'),
+    hoursStatus:  document.getElementById('hours-status'),
+    hoursReset:   document.getElementById('hours-reset'),
     // Account
     resetAll:     document.getElementById('reset-all'),
     year:         document.getElementById('year')
@@ -160,6 +224,8 @@ function showDashboard() {
   switchTab(lastTab);
   renderWeek();
   renderNotice();
+  renderMenuEditor();
+  renderHoursEditor();
 }
 
 /* ---------- Tabs ---------- */
@@ -334,16 +400,176 @@ function onClearNotice() {
   setStatus(dom.noticeStatus, 'Banner ausgeblendet.', 'ok');
 }
 
+/* ---------- Speisekarte ---------- */
+
+function renderMenuEditor() {
+  if (!dom.menuCats) return;
+  const data = loadMenu();
+  dom.menuCats.innerHTML = '';
+  MENU_CATS.forEach(cat => {
+    const stored = data[cat.key] || DEFAULT_MENU[cat.key];
+    const block = document.createElement('div');
+    block.className = 'menu-cat';
+    block.dataset.key = cat.key;
+    block.innerHTML = `
+      <div class="menu-cat-head">
+        <input type="text" class="menu-cat-title" value="${escapeAttr(stored.title || cat.label)}" />
+      </div>
+      <div class="menu-items"></div>
+      <button type="button" class="btn btn-link menu-add">
+        <svg class="ico ico-sm"><use href="#i-plus"/></svg>
+        Eintrag hinzufügen
+      </button>
+    `;
+    const itemsBox = block.querySelector('.menu-items');
+    (stored.items || []).forEach(it => itemsBox.appendChild(buildMenuItemRow(it)));
+    block.querySelector('.menu-add').addEventListener('click', () => {
+      itemsBox.appendChild(buildMenuItemRow({ name: '', description: '' }));
+    });
+    dom.menuCats.appendChild(block);
+  });
+  setStatus(dom.menuStatus, 'Bereit zum Bearbeiten.');
+}
+
+function buildMenuItemRow(item) {
+  const row = document.createElement('div');
+  row.className = 'menu-item-row';
+  row.innerHTML = `
+    <div class="menu-item-fields">
+      <label>
+        <span>Bezeichnung</span>
+        <input type="text" class="menu-item-name" value="${escapeAttr(item.name || '')}" placeholder="z. B. Cappuccino" />
+      </label>
+      <label>
+        <span>Beschreibung</span>
+        <input type="text" class="menu-item-desc" value="${escapeAttr(item.description || '')}" placeholder="z. B. Espresso mit feinem Milchschaum" />
+      </label>
+    </div>
+    <button type="button" class="btn-icon menu-item-remove" aria-label="Eintrag entfernen" title="Eintrag entfernen">
+      <svg class="ico ico-sm"><use href="#i-x"/></svg>
+    </button>
+  `;
+  row.querySelector('.menu-item-remove').addEventListener('click', () => row.remove());
+  return row;
+}
+
+function onSaveMenu(e) {
+  e.preventDefault();
+  const data = {};
+  dom.menuCats.querySelectorAll('.menu-cat').forEach(block => {
+    const key = block.dataset.key;
+    const title = block.querySelector('.menu-cat-title').value.trim() || DEFAULT_MENU[key].title;
+    const items = [];
+    block.querySelectorAll('.menu-item-row').forEach(row => {
+      const name = row.querySelector('.menu-item-name').value.trim();
+      const description = row.querySelector('.menu-item-desc').value.trim();
+      if (name || description) items.push({ name, description });
+    });
+    data[key] = { title, icon: DEFAULT_MENU[key].icon, items };
+  });
+  try {
+    localStorage.setItem(MENU_KEY, JSON.stringify(data));
+    setStatus(dom.menuStatus, `Gespeichert · ${formatTime(new Date())}`, 'ok');
+  } catch (err) {
+    setStatus(dom.menuStatus, 'Speichern fehlgeschlagen: ' + err.message, 'error');
+  }
+}
+
+function onResetMenu() {
+  if (!confirm('Speisekarte auf Standardwerte zurücksetzen?')) return;
+  try { localStorage.removeItem(MENU_KEY); } catch {}
+  renderMenuEditor();
+  setStatus(dom.menuStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+}
+
+function loadMenu() {
+  try {
+    const raw = localStorage.getItem(MENU_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        const out = JSON.parse(JSON.stringify(DEFAULT_MENU));
+        Object.keys(out).forEach(k => {
+          if (parsed[k]) {
+            out[k].title = parsed[k].title || out[k].title;
+            if (Array.isArray(parsed[k].items)) out[k].items = parsed[k].items;
+          }
+        });
+        return out;
+      }
+    }
+  } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_MENU));
+}
+
+/* ---------- Öffnungszeiten ---------- */
+
+function renderHoursEditor() {
+  if (!dom.hoursRows) return;
+  let hours = DEFAULT_HOURS;
+  try {
+    const raw = localStorage.getItem(HOURS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) hours = parsed;
+    }
+  } catch {}
+  dom.hoursRows.innerHTML = '';
+  hours.forEach(h => addHourRow(h.label, h.time));
+  setStatus(dom.hoursStatus, 'Bereit zum Bearbeiten.');
+}
+
+function addHourRow(label = '', time = '') {
+  const row = document.createElement('div');
+  row.className = 'hours-row';
+  row.innerHTML = `
+    <input type="text" class="hours-label" value="${escapeAttr(label)}" placeholder="z. B. Mo – Fr" />
+    <input type="text" class="hours-time"  value="${escapeAttr(time)}"  placeholder="z. B. 06:30 – 15:00" />
+    <button type="button" class="btn-icon hours-remove" aria-label="Zeile entfernen">
+      <svg class="ico ico-sm"><use href="#i-x"/></svg>
+    </button>
+  `;
+  row.querySelector('.hours-remove').addEventListener('click', () => row.remove());
+  dom.hoursRows.appendChild(row);
+}
+
+function onSaveHours(e) {
+  e.preventDefault();
+  const rows = [];
+  dom.hoursRows.querySelectorAll('.hours-row').forEach(r => {
+    const label = r.querySelector('.hours-label').value.trim();
+    const time  = r.querySelector('.hours-time').value.trim();
+    if (label || time) rows.push({ label, time });
+  });
+  try {
+    localStorage.setItem(HOURS_KEY, JSON.stringify(rows));
+    setStatus(dom.hoursStatus, `Gespeichert · ${formatTime(new Date())}`, 'ok');
+  } catch (err) {
+    setStatus(dom.hoursStatus, 'Speichern fehlgeschlagen: ' + err.message, 'error');
+  }
+}
+
+function onResetHours() {
+  if (!confirm('Öffnungszeiten auf Standardwerte zurücksetzen?')) return;
+  try { localStorage.removeItem(HOURS_KEY); } catch {}
+  renderHoursEditor();
+  setStatus(dom.hoursStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+}
+
 /* ---------- Account ---------- */
 
 function onResetAll() {
-  if (!confirm('Möchten Sie wirklich ALLE lokal gespeicherten Daten löschen (alle Wochen + Banner)?')) return;
+  if (!confirm('Möchten Sie wirklich ALLE lokal gespeicherten Daten löschen (Wochenplan, Speisekarte, Öffnungszeiten, Banner)?')) return;
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(NOTICE_KEY);
+    localStorage.removeItem(MENU_KEY);
+    localStorage.removeItem(HOURS_KEY);
   } catch {}
   renderWeek();
   renderNotice();
+  renderMenuEditor();
+  renderHoursEditor();
   alert('Alle Daten wurden lokal gelöscht.');
 }
 
