@@ -121,6 +121,14 @@ function initCookieBanner() {
     writeConsent('accepted');
     loadMap();
   });
+
+  const cookieReset = document.getElementById('cookie-reset');
+  cookieReset?.addEventListener('click', (e) => {
+    e.preventDefault();
+    try { localStorage.removeItem(STORAGE_CONSENT); } catch {}
+    banner.hidden = false;
+    banner.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  });
 }
 
 function readConsent() {
@@ -135,11 +143,15 @@ function loadMap() {
   const placeholder = document.getElementById('map-placeholder');
   const iframe = document.getElementById('map-iframe');
   if (!iframe) return;
-  if (iframe.dataset.src && !iframe.src) {
-    iframe.src = iframe.dataset.src;
+  // Stelle sicher, dass src nur einmal gesetzt wird
+  if (iframe.dataset.src && iframe.getAttribute('src') !== iframe.dataset.src) {
+    iframe.setAttribute('src', iframe.dataset.src);
   }
-  iframe.hidden = false;
-  if (placeholder) placeholder.hidden = true;
+  iframe.removeAttribute('hidden');
+  iframe.style.display = 'block';
+  if (placeholder) {
+    placeholder.style.display = 'none';
+  }
 }
 
 /* ---------- Hinweis-Banner ---------- */
