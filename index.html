@@ -132,10 +132,6 @@
         <a href="#ueber-uns">Über uns</a>
         <a href="#reservierung">Reservierung</a>
         <a href="#kontakt">Kontakt</a>
-        <a href="admin.html" class="nav-login">
-          <svg class="ico ico-sm"><use href="#i-lock"/></svg>
-          Login
-        </a>
       </nav>
     </div>
   </header>
@@ -145,13 +141,13 @@
     <section class="hero">
       <div class="hero-grid container">
         <div class="hero-text reveal">
-          <p class="eyebrow gold">Café · Bäckerei · Hamburg-Hohenfelde</p>
+          <p class="eyebrow gold" data-editable="hero.eyebrow">Café · Bäckerei · Hamburg-Hohenfelde</p>
           <h1>
-            <span class="head-1">Mit Liebe</span>
-            <span class="head-2">gebacken,</span>
-            <span class="head-3"><em>mit Ruhe serviert.</em></span>
+            <span class="head-1" data-editable="hero.head1">Mit Liebe</span>
+            <span class="head-2" data-editable="hero.head2">gebacken,</span>
+            <span class="head-3" data-editable="hero.head3"><em>mit Ruhe serviert.</em></span>
           </h1>
-          <p class="lead">
+          <p class="lead" data-editable="hero.lead">
             Zwischen Alsterschwimmhalle und Außenalster: frisch gebrühter Kaffee,
             täglich selbstgebackene Brötchen, Croissants &amp; Franzbrötchen — und unter
             der Woche ein wechselnder Mittagstisch.
@@ -187,7 +183,7 @@
       <div class="container">
         <div class="lunch-head reveal">
           <p class="eyebrow gold"><span class="num light">01</span> Mittagstisch</p>
-          <h2>Diese Woche bei uns</h2>
+          <h2 data-editable="lunch.headline">Diese Woche bei uns</h2>
           <p class="lunch-meta" id="lunch-week"></p>
         </div>
 
@@ -207,7 +203,7 @@
 
         <ul class="lunch-week reveal" id="lunch-week-list" aria-label="Wochenkarte"></ul>
 
-        <p class="lunch-note reveal">
+        <p class="lunch-note reveal" data-editable="lunch.note">
           Zu jedem Mittagstisch reichen wir frische Beilagen und Salate.
           Die Karte wird wöchentlich aktualisiert.
         </p>
@@ -219,13 +215,13 @@
       <div class="container about-grid">
         <div class="about-text reveal">
           <p class="eyebrow"><span class="num">02</span> Über uns</p>
-          <h2>Wo die Sonne scheint<br/>und der Kaffee duftet.</h2>
-          <p class="lead-soft">
+          <h2 data-editable="about.headline">Wo die Sonne scheint<br/>und der Kaffee duftet.</h2>
+          <p class="lead-soft" data-editable="about.p1">
             Zentral zwischen Alsterschwimmhalle und der Außenalster gelegen, lädt das
             Café mit familiärer Atmosphäre täglich zum Verzehr frischgebrühter
             Kaffeespezialitäten und leckeren Frühstücksvariationen ein.
           </p>
-          <p class="lead-soft">
+          <p class="lead-soft" data-editable="about.p2">
             Jeden Morgen duftet es nach köstlichen selbstgebackenen Brötchen, Croissants
             und Franzbrötchen. Alle Backwaren werden den ganzen Tag über frisch belegt –
             auch gerne nach Wunsch. Unter der Woche bieten wir zusätzlich einen
@@ -253,7 +249,7 @@
 
         <div class="about-aside reveal">
           <blockquote>
-            <p>Alles genießt man am besten auf einem der Plätze direkt vor dem Eckcafé, wo den ganzen Tag über die Sonne scheint. Und wer einmal hier sitzt, will am liebsten <em>gar nicht mehr gehen</em>.</p>
+            <p data-editable="about.quote">Alles genießt man am besten auf einem der Plätze direkt vor dem Eckcafé, wo den ganzen Tag über die Sonne scheint. Und wer einmal hier sitzt, will am liebsten <em>gar nicht mehr gehen</em>.</p>
           </blockquote>
         </div>
       </div>
@@ -264,7 +260,7 @@
       <div class="container">
         <div class="section-head reveal">
           <p class="eyebrow"><span class="num">03</span> Speisekarte</p>
-          <h2>Was Sie bei uns erwartet</h2>
+          <h2 data-editable="menu.headline">Was Sie bei uns erwartet</h2>
         </div>
 
         <div class="menu-cols" id="menu-cols">
@@ -312,8 +308,8 @@
       <div class="container reservation-grid">
         <div class="reservation-intro reveal">
           <p class="eyebrow gold"><span class="num light">04</span> Reservierung</p>
-          <h2>Reservieren Sie<br/>Ihren Lieblingsplatz</h2>
-          <p>
+          <h2 data-editable="reservation.headline">Reservieren Sie<br/>Ihren Lieblingsplatz</h2>
+          <p data-editable="reservation.intro">
             Reservieren Sie online über das Formular oder rufen Sie uns einfach an.
             Bestätigung in der Regel innerhalb weniger Stunden.
           </p>
@@ -379,7 +375,7 @@
       <div class="container contact-grid">
         <div class="contact-info-block reveal">
           <p class="eyebrow"><span class="num">05</span> Besuchen Sie uns</p>
-          <h2>Mitten in<br/>Hamburg-Hohenfelde</h2>
+          <h2 data-editable="contact.headline">Mitten in<br/>Hamburg-Hohenfelde</h2>
 
           <div class="contact-cols">
             <address class="contact-col">
@@ -443,28 +439,6 @@
     </section>
   </main>
 
-  <!-- LOGIN-STREIFEN -->
-  <section class="login-strip" id="login">
-    <div class="container login-strip-grid">
-      <div class="login-strip-text">
-        <p class="eyebrow gold"><span class="num light">·</span> Mitgliederbereich</p>
-        <h2>Sie sind Inhaber des Cafés?</h2>
-        <p>
-          Verwalten Sie den Wochenplan für den Mittagstisch und aktuelle Hinweise
-          direkt im Mitgliederbereich – ohne technisches Vorwissen, in nur wenigen
-          Klicks.
-        </p>
-      </div>
-      <div class="login-strip-action">
-        <a class="btn btn-gold btn-lg" href="admin.html">
-          <svg class="ico ico-sm"><use href="#i-lock"/></svg>
-          Anmelden &amp; bearbeiten
-        </a>
-        <p class="login-strip-hint">Geschützter Bereich · nur für Inhaber</p>
-      </div>
-    </div>
-  </section>
-
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="footer-brand">
@@ -484,11 +458,8 @@
         <a href="#" id="cookie-reset">Cookies anpassen</a>
       </nav>
       <p class="footer-meta">
-        © <span id="year"></span> Alstercafé ·
-        <a href="admin.html" class="admin-link">
-          <svg class="ico ico-sm"><use href="#i-lock"/></svg>
-          Mitgliederbereich
-        </a>
+        © <span id="year"></span> Alstercafé
+        <a href="admin.html" class="admin-link" aria-label="Mitgliederbereich" title="Mitgliederbereich">·</a>
       </p>
     </div>
   </footer>

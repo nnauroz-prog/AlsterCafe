@@ -6,6 +6,7 @@ const STORAGE_CONSENT  = 'alstercafe.consent';
 const STORAGE_MENU     = 'alstercafe.menu';
 const STORAGE_HOURS    = 'alstercafe.hours';
 const STORAGE_DESIGN   = 'alstercafe.design';
+const STORAGE_CONTENT  = 'alstercafe.content';
 
 const DAY_KEYS   = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   initDesign();
+  initContent();
   initNav();
   initStickyHeader();
   initReveal();
@@ -60,11 +62,107 @@ document.addEventListener('DOMContentLoaded', () => {
   initHours();
   initLunchWeek();
   initReservationForm();
-  // Cross-Tab Sync: wenn Admin in anderem Tab speichert, hier aktualisieren
+  initEditMode();
+  // Cross-Tab Sync
   window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_DESIGN) initDesign();
+    if (e.key === STORAGE_DESIGN)  initDesign();
+    if (e.key === STORAGE_CONTENT) initContent();
   });
 });
+
+/* ---------- Inhalts-Overrides (gespeicherte Custom-Texte) ---------- */
+function initContent() {
+  let content = {};
+  try { content = JSON.parse(localStorage.getItem(STORAGE_CONTENT) || '{}'); } catch {}
+  document.querySelectorAll('[data-editable]').forEach(el => {
+    const key = el.dataset.editable;
+    if (content[key] != null) el.innerHTML = content[key];
+  });
+}
+
+/* ---------- Inline-Bearbeitungsmodus ---------- */
+function initEditMode() {
+  const params = new URLSearchParams(window.location.search);
+  const isEdit = params.get('edit') === '1';
+  if (!isEdit) return;
+
+  document.body.classList.add('is-editing');
+
+  const editables = document.querySelectorAll('[data-editable]');
+  editables.forEach(el => {
+    el.setAttribute('contenteditable', 'true');
+    el.setAttribute('spellcheck', 'true');
+    el.addEventListener('focus', onEditFocus);
+    el.addEventListener('blur', onEditBlur);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') el.blur();
+      if (e.key === 'Enter' && !e.shiftKey && el.tagName !== 'P') {
+        e.preventDefault();
+        el.blur();
+      }
+    });
+  });
+
+  // Toolbar
+  const toolbar = document.createElement('div');
+  toolbar.className = 'edit-toolbar';
+  toolbar.innerHTML = `
+    <div class="edit-toolbar-inner">
+      <span class="edit-dot"></span>
+      <div class="edit-info">
+        <strong>Bearbeitungsmodus</strong>
+        <small id="edit-status">Klicken Sie auf einen Text, um ihn zu ändern.</small>
+      </div>
+      <button type="button" class="btn btn-link danger" id="edit-reset" title="Originaltexte wiederherstellen">Zurücksetzen</button>
+      <button type="button" class="btn btn-primary" id="edit-exit">Fertig</button>
+    </div>
+  `;
+  document.body.appendChild(toolbar);
+
+  document.getElementById('edit-exit').addEventListener('click', () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('edit');
+    window.location.href = url.toString();
+  });
+
+  document.getElementById('edit-reset').addEventListener('click', () => {
+    if (!confirm('Alle bearbeiteten Texte auf den Original-Zustand zurücksetzen?')) return;
+    try { localStorage.removeItem(STORAGE_CONTENT); } catch {}
+    location.reload();
+  });
+}
+
+function onEditFocus(e) {
+  e.currentTarget.dataset.editOriginal = e.currentTarget.innerHTML;
+  setEditStatus('Tippen Sie Ihren Text – Speichern beim Verlassen des Feldes.');
+}
+
+function onEditBlur(e) {
+  const el = e.currentTarget;
+  const key = el.dataset.editable;
+  const newValue = el.innerHTML.trim();
+  const original = el.dataset.editOriginal || '';
+  if (newValue === original) {
+    setEditStatus('Keine Änderung.');
+    return;
+  }
+  let content = {};
+  try { content = JSON.parse(localStorage.getItem(STORAGE_CONTENT) || '{}'); } catch {}
+  content[key] = newValue;
+  try {
+    localStorage.setItem(STORAGE_CONTENT, JSON.stringify(content));
+    setEditStatus('Gespeichert · ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }), 'ok');
+  } catch (err) {
+    setEditStatus('Speicher voll: ' + err.message, 'error');
+  }
+}
+
+function setEditStatus(msg, kind = '') {
+  const s = document.getElementById('edit-status');
+  if (!s) return;
+  s.textContent = msg;
+  s.dataset.kind = kind;
+}
 
 /* ---------- Design (Logo, Bilder, Galerie, Akzentfarbe) ---------- */
 function initDesign() {

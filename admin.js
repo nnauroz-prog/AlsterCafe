@@ -655,13 +655,25 @@ function renderDesignEditor() {
 function renderImageSlot(slot, dataUrl) {
   const preview = slot.querySelector('.image-preview');
   const removeBtn = slot.querySelector('.image-remove');
+  const key = slot.dataset.designKey;
   const aspect = parseFloat(slot.dataset.aspect || '1');
   preview.style.aspectRatio = String(aspect);
+
+  // Fallback fuer Standard-Logo
+  const fallbacks = { logo: 'image.png' };
+  const fallbackSrc = fallbacks[key];
+
   if (dataUrl) {
     preview.innerHTML = `<img src="${dataUrl}" alt="" />`;
     removeBtn.hidden = false;
+  } else if (fallbackSrc) {
+    preview.innerHTML = `
+      <img src="${fallbackSrc}" alt="" />
+      <span class="image-default-tag">Standard-Logo</span>
+    `;
+    removeBtn.hidden = true;
   } else {
-    const empty = preview.dataset.emptyText || preview.querySelector('.image-empty')?.textContent || 'Kein Bild';
+    const empty = slot.querySelector('.image-empty')?.textContent || 'Kein Bild';
     preview.innerHTML = `<span class="image-empty">${empty}</span>`;
     removeBtn.hidden = true;
   }
