@@ -27,6 +27,8 @@
       <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></g></symbol>
       <symbol id="i-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></g></symbol>
       <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></g></symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><path d="M12 8.5l1.5 2 2 1.5-2 1.5-1.5 2-1.5-2-2-1.5 2-1.5z" fill="currentColor"/></g></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5h-3"/></g></symbol>
     </defs>
   </svg>
 
@@ -256,11 +258,17 @@
               Lassen Sie das Feld leer, um den Banner auszublenden.
             </p>
             <form id="notice-form">
-              <label>
-                <span>Hinweistext</span>
-                <textarea name="notice" id="notice-input" rows="3"
-                          placeholder="z. B. „Wir haben am 1. Mai geschlossen. Ihr Alstercafé-Team"></textarea>
-              </label>
+              <div class="day-field with-ai">
+                <label>
+                  <span>Hinweistext</span>
+                  <textarea name="notice" id="notice-input" rows="3"
+                            placeholder="Kurz eintippen — KI verfeinert den Text"></textarea>
+                </label>
+                <button type="button" class="ai-btn" data-ai-target="#notice-input" data-ai-context="notice" title="Mit KI verfeinern">
+                  <svg class="ico ico-sm"><use href="#i-sparkle"/></svg>
+                  <span>KI</span>
+                </button>
+              </div>
               <div class="save-bar inline">
                 <p class="save-status" id="notice-status"></p>
                 <div class="save-actions">

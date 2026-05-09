@@ -1673,6 +1673,139 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   border-bottom-style: dashed;
 }
 
+/* ===== ADMIN: KI-POLISH BUTTON ===== */
+.with-ai {
+  position: relative;
+  display: block;
+  margin-bottom: 14px;
+}
+.with-ai > label {
+  display: block;
+  margin-bottom: 0;
+}
+
+.ai-btn {
+  position: absolute;
+  top: 30px;
+  right: 8px;
+  z-index: 2;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  min-height: 30px;
+  background:
+    linear-gradient(135deg, rgba(184, 137, 62, 0.10), rgba(212, 179, 128, 0.04));
+  color: var(--coffee);
+  border: 1px solid rgba(184, 137, 62, 0.28);
+  border-radius: 999px;
+  font: 600 .68rem 'Inter', sans-serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.ai-btn .ico { width: 14px; height: 14px; color: var(--gold); }
+.ai-btn:hover {
+  background: linear-gradient(135deg, rgba(184, 137, 62, 0.22), rgba(212, 179, 128, 0.12));
+  border-color: var(--gold);
+  color: var(--bean);
+  transform: translateY(-1px);
+}
+.ai-btn:active { transform: translateY(0) scale(.97); }
+.ai-btn:disabled { opacity: .8; cursor: progress; }
+
+.ai-btn.is-processing .ico {
+  animation: ai-spin 1.2s linear infinite;
+}
+.ai-btn.is-processing {
+  background: linear-gradient(135deg, rgba(184, 137, 62, 0.22), rgba(212, 179, 128, 0.18));
+  border-color: var(--gold);
+}
+@keyframes ai-spin {
+  from { transform: rotate(0); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Input bekommt Shimmer beim Verarbeiten */
+.ai-shimmer {
+  background:
+    linear-gradient(90deg,
+      var(--cream) 0%,
+      rgba(212, 179, 128, 0.22) 40%,
+      rgba(212, 179, 128, 0.32) 50%,
+      rgba(212, 179, 128, 0.22) 60%,
+      var(--cream) 100%
+    ) !important;
+  background-size: 300% 100% !important;
+  animation: ai-shimmer 1.4s linear infinite !important;
+  color: transparent !important;
+  caret-color: transparent !important;
+}
+@keyframes ai-shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* Tooltip nach Verfeinerung */
+.ai-tip {
+  position: absolute;
+  top: 30px; right: 70px;
+  padding: 5px 10px;
+  background: var(--bean);
+  color: var(--paper);
+  font: 500 .72rem 'Inter', sans-serif;
+  letter-spacing: .04em;
+  border-radius: 999px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+  z-index: 3;
+  box-shadow: var(--shadow-sm);
+}
+.ai-tip.is-visible { opacity: 1; transform: translateY(0); }
+.ai-tip[data-kind="ok"]  { background: #2e7d32; }
+.ai-tip[data-kind="info"]{ background: var(--coffee); }
+.ai-tip::after {
+  content: '';
+  position: absolute;
+  top: 50%; right: -4px; transform: translateY(-50%) rotate(45deg);
+  width: 8px; height: 8px;
+  background: inherit;
+}
+
+/* Undo-Button neben dem KI-Button */
+.ai-undo {
+  position: absolute;
+  top: 30px; right: 70px;
+  width: 30px; height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  z-index: 2;
+  transition: color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
+  animation: ai-fade-in var(--dur-base) var(--ease-out);
+}
+.ai-undo:hover { color: var(--bean); border-color: var(--bean); }
+.ai-undo .ico { width: 14px; height: 14px; }
+@keyframes ai-fade-in { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+
+@media (max-width: 760px) {
+  .ai-btn { padding: 6px 10px; }
+  .ai-btn span { display: none; }
+  .ai-tip { display: none; }
+  .ai-undo { right: 50px; }
+}
+
 /* ===== ADMIN: HOURS EDITOR ===== */
 .hours-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
 .hours-row {
