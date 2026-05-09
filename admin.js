@@ -181,7 +181,7 @@ function cacheDom() {
     inviteEmail:  document.getElementById('invite-email'),
     invitePassword: document.getElementById('invite-password'),
     inviteStatus: document.getElementById('invite-status'),
-    inviteHint:   document.getElementById('invite-hint'),
+    userList:     document.getElementById('user-list'),
     year:         document.getElementById('year')
   });
 }
@@ -244,8 +244,7 @@ async function showDashboard() {
   const email = await (window.alsterDb?.auth.getEmail()) || DISPLAY_USER;
   if (dom.userBadge)    dom.userBadge.textContent = email;
   if (dom.accountEmail) dom.accountEmail.textContent = email;
-  // Mitarbeiter-Hinweis im Demo-Modus zeigen
-  if (dom.inviteHint) dom.inviteHint.hidden = !!window.alsterDb?.isProd;
+  await renderUserList();
   const lastTab = (() => {
     try { return sessionStorage.getItem(ACTIVE_TAB_KEY) || 'week'; }
     catch { return 'week'; }
@@ -840,11 +839,44 @@ async function onInviteUser(e) {
   if (result.ok) {
     dom.inviteForm.reset();
     setStatus(dom.inviteStatus,
-      `Zugang für ${email} wurde angelegt. Initial-Passwort jetzt sicher weitergeben.`,
+      `Zugang für ${email} wurde angelegt.`,
       'ok');
+    await renderUserList();
   } else {
     setStatus(dom.inviteStatus, result.error || 'Anlegen fehlgeschlagen.', 'error');
   }
+}
+
+async function renderUserList() {
+  if (!dom.userList) return;
+  const users = await (window.alsterDb?.auth.listUsers?.() || []);
+  const currentEmail = await window.alsterDb?.auth.getEmail();
+  if (!users.length) {
+    dom.userList.innerHTML = '';
+    return;
+  }
+  dom.userList.innerHTML = users.map(u => {
+    const isMe = u.email.toLowerCase() === (currentEmail || '').toLowerCase();
+    return `
+      <li class="user-list-item">
+        <div class="user-list-info">
+          <span class="user-list-email">${escapeHtml(u.email)}</span>
+          ${isMe ? '<span class="user-list-tag">Sie</span>' : ''}
+        </div>
+        ${isMe ? '' : `<button type="button" class="btn-icon user-remove" data-email="${escapeAttr(u.email)}" aria-label="Mitarbeiter entfernen" title="Mitarbeiter entfernen">
+          <svg class="ico ico-sm"><use href="#i-x"/></svg>
+        </button>`}
+      </li>
+    `;
+  }).join('');
+  dom.userList.querySelectorAll('.user-remove').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email;
+      if (!confirm(`Zugang für ${email} entfernen?`)) return;
+      await window.alsterDb.auth.removeUser(email);
+      await renderUserList();
+    });
+  });
 }
 
 /* ---------- Helpers ---------- */

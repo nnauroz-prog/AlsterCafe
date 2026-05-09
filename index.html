@@ -12,6 +12,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 
+  <!-- Synchroner Auth-Gate: blockiert ?edit=1 BEVOR die Seite rendert -->
+  <script>
+    (function () {
+      try {
+        var params = new URLSearchParams(location.search);
+        if (params.get('edit') !== '1') return;
+        var demo = false, supa = false;
+        try { demo = localStorage.getItem('alstercafe.auth') === '1'; } catch (e) {}
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') > -1) {
+              var v = JSON.parse(localStorage.getItem(k) || 'null');
+              if (v && v.access_token) { supa = true; break; }
+            }
+          }
+        } catch (e) {}
+        if (!demo && !supa) {
+          // Sofortige Weiterleitung — Inhalt der Seite wird nie gerendert
+          location.replace('admin.html?next=edit');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Open Graph -->
   <meta property="og:type" content="restaurant.restaurant" />
   <meta property="og:title" content="Alstercafé – Café & Bäckerei in Hamburg-Hohenfelde" />

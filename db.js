@@ -56,27 +56,105 @@
       const { error } = await sb.auth.signUp({ email, password });
       return { ok: !error, error: error?.message };
     },
+    async listUsers() {
+      // Liste aller Users: erfordert eine Edge-Function mit Service-Role-Key,
+      // da der Anon-Key keine User listen darf. Stub fuer Production.
+      return [];
+    },
+    async removeUser() {
+      // Erfordert ebenfalls Edge-Function. Stub.
+      return { ok: false, error: 'Bitte Mitarbeiter im Supabase-Dashboard entfernen.' };
+    },
     onChange(cb) {
       sb.auth.onAuthStateChange((_event, session) => cb(!!session));
     }
   } : {
-    /* Demo-Fallback (NICHT für Produktion) */
+    /* Demo-Fallback (keine Cloud, aber funktional fuer Multi-User-Tests) */
+    /* Speichert User-Liste lokal — in Production via Supabase Auth */
     async signIn(user, password) {
       const u = String(user || '').trim().toLowerCase();
       const p = String(password || '').trim();
-      const VALID_USERS = ['inhaber', 'inhaber@alstercafe.de'];
-      const ok = VALID_USERS.includes(u) && p === 'IfflandStr45!';
-      if (ok) try { localStorage.setItem('alstercafe.auth', '1'); } catch {}
-      return { ok, error: ok ? null : 'Benutzername oder Passwort ist nicht korrekt.' };
+      const store = readDemoAuth();
+      const match = store.users.find(x => x.email.toLowerCase() === u && x.password === p);
+      // Legacy-Fallback fuer Original-Demo-Login (nur wenn noch keine User angelegt)
+      const isLegacy = store.users.length <= 1
+        && (u === 'inhaber' || u === 'inhaber@alstercafe.de')
+        && p === 'IfflandStr45!';
+      if (match || isLegacy) {
+        const email = match ? match.email : (cfg.ownerEmail || 'inhaber@alstercafe.de');
+        store.currentEmail = email;
+        writeDemoAuth(store);
+        try { localStorage.setItem('alstercafe.auth', '1'); } catch {}
+        return { ok: true, error: null };
+      }
+      return { ok: false, error: 'Benutzername oder Passwort ist nicht korrekt.' };
     },
-    async signOut()  { try { localStorage.removeItem('alstercafe.auth'); } catch {} },
+    async signOut()  {
+      try { localStorage.removeItem('alstercafe.auth'); } catch {}
+      const store = readDemoAuth();
+      store.currentEmail = null;
+      writeDemoAuth(store);
+    },
     async isAuthed() { try { return localStorage.getItem('alstercafe.auth') === '1'; } catch { return false; } },
-    async getEmail() { return cfg.ownerEmail || 'inhaber@alstercafe.de'; },
-    async resetPassword() { return { ok: false, error: 'Im Demo-Modus nicht verfügbar.' }; },
-    async updatePassword() { return { ok: false, error: 'Passwort-Änderung wird mit dem Cloud-Backend in der Endversion aktiv.' }; },
-    async inviteUser()    { return { ok: false, error: 'Mitarbeiter-Verwaltung wird mit dem Cloud-Backend in der Endversion aktiv.' }; },
+    async getEmail() {
+      const store = readDemoAuth();
+      return store.currentEmail || cfg.ownerEmail || 'inhaber@alstercafe.de';
+    },
+    async resetPassword() { return { ok: false, error: 'Im Demo-Modus nicht verfügbar — bitte direkt im Konto neu setzen.' }; },
+    async updatePassword(newPassword) {
+      if (!newPassword || newPassword.length < 8) return { ok: false, error: 'Mindestens 8 Zeichen erforderlich.' };
+      const store = readDemoAuth();
+      const email = store.currentEmail || cfg.ownerEmail || 'inhaber@alstercafe.de';
+      let user = store.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        user = { email, password: newPassword };
+        store.users.push(user);
+      } else {
+        user.password = newPassword;
+      }
+      writeDemoAuth(store);
+      return { ok: true, error: null };
+    },
+    async inviteUser(email, password) {
+      if (!email || !email.includes('@')) return { ok: false, error: 'Gültige E-Mail erforderlich.' };
+      if (!password || password.length < 8) return { ok: false, error: 'Passwort mindestens 8 Zeichen.' };
+      const store = readDemoAuth();
+      if (store.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        return { ok: false, error: 'Diese E-Mail ist bereits angelegt.' };
+      }
+      store.users.push({ email, password });
+      writeDemoAuth(store);
+      return { ok: true, error: null };
+    },
+    async listUsers() {
+      const store = readDemoAuth();
+      return store.users.map(u => ({ email: u.email }));
+    },
+    async removeUser(email) {
+      const store = readDemoAuth();
+      store.users = store.users.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+      writeDemoAuth(store);
+      return { ok: true };
+    },
     onChange() { /* no-op */ }
   };
+
+  function readDemoAuth() {
+    try {
+      const raw = localStorage.getItem('alstercafe.demo-auth');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    // Initial: Standard-Inhaber-Account anlegen
+    const init = {
+      users: [{ email: cfg.ownerEmail || 'inhaber@alstercafe.de', password: 'IfflandStr45!' }],
+      currentEmail: null
+    };
+    try { localStorage.setItem('alstercafe.demo-auth', JSON.stringify(init)); } catch {}
+    return init;
+  }
+  function writeDemoAuth(obj) {
+    try { localStorage.setItem('alstercafe.demo-auth', JSON.stringify(obj)); } catch {}
+  }
 
   /* ---------- Storage (Daten) ---------- */
   const cache = {};
