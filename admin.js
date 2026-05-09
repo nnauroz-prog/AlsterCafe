@@ -174,7 +174,7 @@ function cacheDom() {
 /* ---------- Auth ---------- */
 
 function isAuthenticated() {
-  try { return sessionStorage.getItem(AUTH_KEY) === '1'; }
+  try { return localStorage.getItem(AUTH_KEY) === '1'; }
   catch { return false; }
 }
 
@@ -191,8 +191,16 @@ function onLogin(e) {
   const p = data.get('password');
 
   if (tryLogin(u, p)) {
-    sessionStorage.setItem(AUTH_KEY, '1');
+    try { localStorage.setItem(AUTH_KEY, '1'); } catch {}
     setStatus(dom.loginStatus, '');
+
+    // Wenn der Login durch Edit-Mode-Aufruf ausgeloest wurde:
+    // direkt zurueck in den Bearbeitungsmodus
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('next') === 'edit') {
+      window.location.href = 'index.html?edit=1';
+      return;
+    }
     showDashboard();
   } else {
     setStatus(dom.loginStatus,
@@ -209,7 +217,7 @@ function onPwToggle() {
 }
 
 function onLogout() {
-  sessionStorage.removeItem(AUTH_KEY);
+  try { localStorage.removeItem(AUTH_KEY); } catch {}
   showLogin();
 }
 

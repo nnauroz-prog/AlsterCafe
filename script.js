@@ -81,10 +81,22 @@ function initContent() {
 }
 
 /* ---------- Inline-Bearbeitungsmodus ---------- */
+const STORAGE_AUTH = 'alstercafe.auth';
+
 function initEditMode() {
   const params = new URLSearchParams(window.location.search);
   const isEdit = params.get('edit') === '1';
   if (!isEdit) return;
+
+  // Auth-Pflicht: Bearbeiten nur fuer eingeloggte Inhaber
+  let authed = false;
+  try { authed = localStorage.getItem(STORAGE_AUTH) === '1'; } catch {}
+  if (!authed) {
+    // Sauber zurueck zum Login, mit ?next=edit damit wir nach erfolgreicher
+    // Anmeldung direkt wieder in den Bearbeitungsmodus springen
+    window.location.replace('admin.html?next=edit');
+    return;
+  }
 
   document.body.classList.add('is-editing');
 
