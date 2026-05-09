@@ -1027,18 +1027,6 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   display: flex; align-items: center; justify-content: flex-end; gap: 14px;
   flex-wrap: wrap;
 }
-.admin-link {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; height: 18px;
-  margin-left: 8px;
-  color: rgba(241, 231, 211, 0.18);
-  font-size: 1rem; line-height: 1;
-  font-weight: 700;
-  border-radius: 50%;
-  text-decoration: none;
-  transition: color var(--dur-base) var(--ease-out);
-}
-.admin-link:hover { color: var(--gold-soft); }
 
 /* ===== REVEAL ===== */
 .reveal {
