@@ -1176,6 +1176,30 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 .notice-banner p { margin: 0; line-height: 1.5; }
 
+/* Webshop-Link in der Hauptnavigation */
+.nav-shop {
+  padding: 8px 16px !important;
+  background: var(--gold);
+  color: var(--bean) !important;
+  border-radius: 999px;
+  font-weight: 600 !important;
+  font-size: .82rem !important;
+  letter-spacing: .04em;
+  transition: background var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+.nav-shop::after { display: none; }
+.nav-shop:hover {
+  background: #c79b48;
+  transform: translateY(-1px);
+}
+@media (max-width: 980px) {
+  .nav-shop {
+    border-radius: 0;
+    padding: 18px var(--gutter) !important;
+    text-align: left;
+  }
+}
+
 /* Edit-Mode-Button im Admin-Header */
 .edit-mode-btn {
   font-size: .78rem !important;

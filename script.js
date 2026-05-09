@@ -47,9 +47,12 @@ const DEFAULT_HOURS = [
   { label: 'Sonntag',  time: '07:30 – 15:00' }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // Daten aus dem Backend laden (Supabase oder localStorage-Fallback)
+  if (window.alsterDb) await window.alsterDb.ready();
 
   initDesign();
   initContent();
@@ -63,10 +66,18 @@ document.addEventListener('DOMContentLoaded', () => {
   initLunchWeek();
   initReservationForm();
   initEditMode();
-  // Cross-Tab Sync
-  window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_DESIGN)  initDesign();
-    if (e.key === STORAGE_CONTENT) initContent();
+
+  // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
+  // des Inhabers) erscheint sofort auf dieser Seite
+  window.alsterDb?.subscribe((key) => {
+    switch (key) {
+      case 'design':      initDesign(); break;
+      case 'content':     initContent(); break;
+      case 'notice':      initNotice(); break;
+      case 'menu':        initMenu(); break;
+      case 'hours':       initHours(); break;
+      case 'weekly-menu': initLunchWeek(); break;
+    }
   });
 });
 
@@ -81,19 +92,15 @@ function initContent() {
 }
 
 /* ---------- Inline-Bearbeitungsmodus ---------- */
-const STORAGE_AUTH = 'alstercafe.auth';
-
-function initEditMode() {
+async function initEditMode() {
   const params = new URLSearchParams(window.location.search);
   const isEdit = params.get('edit') === '1';
   if (!isEdit) return;
 
   // Auth-Pflicht: Bearbeiten nur fuer eingeloggte Inhaber
   let authed = false;
-  try { authed = localStorage.getItem(STORAGE_AUTH) === '1'; } catch {}
+  try { authed = await window.alsterDb?.auth.isAuthed(); } catch {}
   if (!authed) {
-    // Sauber zurueck zum Login, mit ?next=edit damit wir nach erfolgreicher
-    // Anmeldung direkt wieder in den Bearbeitungsmodus springen
     window.location.replace('admin.html?next=edit');
     return;
   }
@@ -137,9 +144,9 @@ function initEditMode() {
     window.location.href = url.toString();
   });
 
-  document.getElementById('edit-reset').addEventListener('click', () => {
+  document.getElementById('edit-reset').addEventListener('click', async () => {
     if (!confirm('Alle bearbeiteten Texte auf den Original-Zustand zurücksetzen?')) return;
-    try { localStorage.removeItem(STORAGE_CONTENT); } catch {}
+    await window.alsterDb?.remove('content');
     location.reload();
   });
 }
@@ -149,7 +156,7 @@ function onEditFocus(e) {
   setEditStatus('Tippen Sie Ihren Text – Speichern beim Verlassen des Feldes.');
 }
 
-function onEditBlur(e) {
+async function onEditBlur(e) {
   const el = e.currentTarget;
   const key = el.dataset.editable;
   const newValue = el.innerHTML.trim();
@@ -158,14 +165,14 @@ function onEditBlur(e) {
     setEditStatus('Keine Änderung.');
     return;
   }
-  let content = {};
-  try { content = JSON.parse(localStorage.getItem(STORAGE_CONTENT) || '{}'); } catch {}
+  const content = window.alsterDb?.get('content') || {};
   content[key] = newValue;
-  try {
-    localStorage.setItem(STORAGE_CONTENT, JSON.stringify(content));
+  setEditStatus('Speichern …');
+  const ok = await window.alsterDb?.set('content', content);
+  if (ok) {
     setEditStatus('Gespeichert · ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }), 'ok');
-  } catch (err) {
-    setEditStatus('Speicher voll: ' + err.message, 'error');
+  } else {
+    setEditStatus('Speichern fehlgeschlagen.', 'error');
   }
 }
 

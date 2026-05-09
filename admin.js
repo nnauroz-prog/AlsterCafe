@@ -72,11 +72,14 @@ let currentMonday = mondayOf(new Date());
 
 document.addEventListener('DOMContentLoaded', init);
 
-function init() {
+async function init() {
   cacheDom();
   if (dom.year) dom.year.textContent = new Date().getFullYear();
 
-  if (isAuthenticated()) showDashboard();
+  // Auf das DB-Modul warten und initialisieren
+  if (window.alsterDb) await window.alsterDb.ready();
+
+  if (await isAuthenticated()) await showDashboard();
   else showLogin();
 
   // Login
@@ -173,38 +176,32 @@ function cacheDom() {
 
 /* ---------- Auth ---------- */
 
-function isAuthenticated() {
-  try { return localStorage.getItem(AUTH_KEY) === '1'; }
+async function isAuthenticated() {
+  try { return await window.alsterDb.auth.isAuthed(); }
   catch { return false; }
 }
 
-function tryLogin(username, password) {
-  const u = String(username || '').trim().toLowerCase();
-  const p = String(password || '').trim();
-  return VALID_USERNAMES.includes(u) && p === VALID_PASSWORD;
-}
-
-function onLogin(e) {
+async function onLogin(e) {
   e.preventDefault();
   const data = new FormData(dom.loginForm);
   const u = data.get('username');
   const p = data.get('password');
 
-  if (tryLogin(u, p)) {
-    try { localStorage.setItem(AUTH_KEY, '1'); } catch {}
-    setStatus(dom.loginStatus, '');
+  setStatus(dom.loginStatus, 'Anmeldung läuft …');
+  const result = await window.alsterDb.auth.signIn(u, p);
 
-    // Wenn der Login durch Edit-Mode-Aufruf ausgeloest wurde:
-    // direkt zurueck in den Bearbeitungsmodus
+  if (result.ok) {
+    setStatus(dom.loginStatus, '');
+    // Bei "?next=edit": direkt zurück in den Bearbeitungsmodus
     const params = new URLSearchParams(window.location.search);
     if (params.get('next') === 'edit') {
       window.location.href = 'index.html?edit=1';
       return;
     }
-    showDashboard();
+    await showDashboard();
   } else {
     setStatus(dom.loginStatus,
-      'Benutzername oder Passwort ist nicht korrekt.',
+      result.error || 'Benutzername oder Passwort ist nicht korrekt.',
       'error');
   }
 }
@@ -216,8 +213,8 @@ function onPwToggle() {
   dom.pwToggle.querySelector('use').setAttribute('href', isHidden ? '#i-eye-off' : '#i-eye');
 }
 
-function onLogout() {
-  try { localStorage.removeItem(AUTH_KEY); } catch {}
+async function onLogout() {
+  await window.alsterDb.auth.signOut();
   showLogin();
 }
 
@@ -483,39 +480,33 @@ function onSaveMenu(e) {
     });
     data[key] = { title, icon: DEFAULT_MENU[key].icon, items };
   });
-  try {
-    localStorage.setItem(MENU_KEY, JSON.stringify(data));
-    setStatus(dom.menuStatus, `Gespeichert · ${formatTime(new Date())}`, 'ok');
-  } catch (err) {
-    setStatus(dom.menuStatus, 'Speichern fehlgeschlagen: ' + err.message, 'error');
-  }
+  window.alsterDb.set('menu', data).then(ok => {
+    setStatus(dom.menuStatus,
+      ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
+      ok ? 'ok' : 'error');
+  });
 }
 
 function onResetMenu() {
   if (!confirm('Speisekarte auf Standardwerte zurücksetzen?')) return;
-  try { localStorage.removeItem(MENU_KEY); } catch {}
-  renderMenuEditor();
-  setStatus(dom.menuStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+  window.alsterDb.remove('menu').then(() => {
+    renderMenuEditor();
+    setStatus(dom.menuStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+  });
 }
 
 function loadMenu() {
-  try {
-    const raw = localStorage.getItem(MENU_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') {
-        const out = JSON.parse(JSON.stringify(DEFAULT_MENU));
-        Object.keys(out).forEach(k => {
-          if (parsed[k]) {
-            out[k].title = parsed[k].title || out[k].title;
-            if (Array.isArray(parsed[k].items)) out[k].items = parsed[k].items;
-          }
-        });
-        return out;
+  const stored = window.alsterDb?.get('menu');
+  const out = JSON.parse(JSON.stringify(DEFAULT_MENU));
+  if (stored && typeof stored === 'object') {
+    Object.keys(out).forEach(k => {
+      if (stored[k]) {
+        out[k].title = stored[k].title || out[k].title;
+        if (Array.isArray(stored[k].items)) out[k].items = stored[k].items;
       }
-    }
-  } catch {}
-  return JSON.parse(JSON.stringify(DEFAULT_MENU));
+    });
+  }
+  return out;
 }
 
 /* ---------- Öffnungszeiten ---------- */
@@ -557,19 +548,19 @@ function onSaveHours(e) {
     const time  = r.querySelector('.hours-time').value.trim();
     if (label || time) rows.push({ label, time });
   });
-  try {
-    localStorage.setItem(HOURS_KEY, JSON.stringify(rows));
-    setStatus(dom.hoursStatus, `Gespeichert · ${formatTime(new Date())}`, 'ok');
-  } catch (err) {
-    setStatus(dom.hoursStatus, 'Speichern fehlgeschlagen: ' + err.message, 'error');
-  }
+  window.alsterDb.set('hours', rows).then(ok => {
+    setStatus(dom.hoursStatus,
+      ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
+      ok ? 'ok' : 'error');
+  });
 }
 
 function onResetHours() {
   if (!confirm('Öffnungszeiten auf Standardwerte zurücksetzen?')) return;
-  try { localStorage.removeItem(HOURS_KEY); } catch {}
-  renderHoursEditor();
-  setStatus(dom.hoursStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+  window.alsterDb.remove('hours').then(() => {
+    renderHoursEditor();
+    setStatus(dom.hoursStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+  });
 }
 
 /* ============================================================
@@ -585,15 +576,16 @@ function initDesignEditor() {
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      flashDesignStatus('Bild wird hochgeladen …');
       try {
-        const dataUrl = await compressImage(file, MAX_IMAGE_PX[key] || 1200, 0.85);
+        const url = await window.alsterDb.uploadImage(file, key);
         const design = loadDesign();
-        design[key] = dataUrl;
+        design[key] = url;
         saveDesign(design);
-        renderImageSlot(slot, dataUrl);
+        renderImageSlot(slot, url);
         flashDesignStatus('Bild gespeichert.');
       } catch (err) {
-        flashDesignStatus('Fehler: ' + err.message, 'error');
+        flashDesignStatus('Fehler beim Upload: ' + err.message, 'error');
       } finally {
         fileInput.value = '';
       }
@@ -612,19 +604,22 @@ function initDesignEditor() {
   galleryInput?.addEventListener('change', async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
+    flashDesignStatus(`${files.length} Bild(er) werden hochgeladen …`);
     const design = loadDesign();
     const gallery = Array.isArray(design.gallery) ? design.gallery.slice() : [];
+    let added = 0;
     for (const file of files) {
       if (gallery.length >= GALLERY_MAX) break;
       try {
-        const dataUrl = await compressImage(file, MAX_IMAGE_PX.gallery, 0.82);
-        gallery.push(dataUrl);
-      } catch (err) { /* skip */ }
+        const url = await window.alsterDb.uploadImage(file, 'gallery');
+        gallery.push(url);
+        added++;
+      } catch (err) { console.warn('Upload skipped', err); }
     }
     design.gallery = gallery;
     saveDesign(design);
     renderGalleryEdit();
-    flashDesignStatus(`${files.length} Bild(er) hinzugefügt.`);
+    flashDesignStatus(`${added} Bild(er) hinzugefügt.`);
     galleryInput.value = '';
   });
 
@@ -636,9 +631,9 @@ function initDesignEditor() {
   colorInput?.addEventListener('input', (e) => setAccentColor(e.target.value));
 
   // Reset all design
-  document.getElementById('design-reset')?.addEventListener('click', () => {
+  document.getElementById('design-reset')?.addEventListener('click', async () => {
     if (!confirm('Alle Design-Anpassungen (Logo, Bilder, Galerie, Farbe) entfernen?')) return;
-    try { localStorage.removeItem(DESIGN_KEY); } catch {}
+    await window.alsterDb.remove('design');
     renderDesignEditor();
     flashDesignStatus('Auf Standard zurückgesetzt.');
   });
@@ -732,12 +727,12 @@ function setAccentColor(hex) {
 }
 
 function loadDesign() {
-  try { return JSON.parse(localStorage.getItem(DESIGN_KEY) || '{}'); }
-  catch { return {}; }
+  return window.alsterDb?.get('design') || {};
 }
 function saveDesign(obj) {
-  try { localStorage.setItem(DESIGN_KEY, JSON.stringify(obj)); }
-  catch (err) { flashDesignStatus('Speicher voll: bitte weniger Bilder laden.', 'error'); }
+  window.alsterDb?.set('design', obj).then(ok => {
+    if (!ok) flashDesignStatus('Speichern fehlgeschlagen.', 'error');
+  }).catch(err => flashDesignStatus('Fehler: ' + err.message, 'error'));
 }
 
 function flashDesignStatus(msg, kind = 'ok') {
@@ -753,72 +748,42 @@ function flashDesignStatus(msg, kind = 'ok') {
   }, 2400);
 }
 
-/* Bildkompression via Canvas */
-function compressImage(file, maxPx = 1400, quality = 0.85) {
-  return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) return reject(new Error('Keine Bilddatei'));
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Datei konnte nicht gelesen werden'));
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
-      img.onload = () => {
-        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(dataUrl);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 /* ---------- Account ---------- */
 
-function onResetAll() {
-  if (!confirm('Möchten Sie wirklich ALLE lokal gespeicherten Daten löschen (Wochenplan, Speisekarte, Öffnungszeiten, Banner)?')) return;
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(NOTICE_KEY);
-    localStorage.removeItem(MENU_KEY);
-    localStorage.removeItem(HOURS_KEY);
-  } catch {}
+async function onResetAll() {
+  if (!confirm('Möchten Sie wirklich ALLE Daten löschen (Wochenplan, Speisekarte, Öffnungszeiten, Banner, Design)?')) return;
+  await Promise.all([
+    window.alsterDb.remove('weekly-menu'),
+    window.alsterDb.remove('notice'),
+    window.alsterDb.remove('menu'),
+    window.alsterDb.remove('hours'),
+    window.alsterDb.remove('design'),
+    window.alsterDb.remove('content')
+  ]);
   renderWeek();
   renderNotice();
   renderMenuEditor();
   renderHoursEditor();
-  alert('Alle Daten wurden lokal gelöscht.');
+  renderDesignEditor();
+  alert('Alle Daten wurden gelöscht.');
 }
 
 /* ---------- Storage ---------- */
 
 function loadAll() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
+  return window.alsterDb?.get('weekly-menu') || {};
 }
 function saveAll(obj) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); }
-  catch (e) { setStatus(dom.saveStatus, 'Speichern fehlgeschlagen: ' + e.message, 'error'); }
+  window.alsterDb?.set('weekly-menu', obj).catch(e =>
+    setStatus(dom.saveStatus, 'Speichern fehlgeschlagen: ' + e.message, 'error')
+  );
 }
 function loadNotice() {
-  try { return localStorage.getItem(NOTICE_KEY) || ''; }
-  catch { return ''; }
+  return window.alsterDb?.get('notice') || '';
 }
 function saveNotice(text) {
-  try {
-    if (text) localStorage.setItem(NOTICE_KEY, text);
-    else localStorage.removeItem(NOTICE_KEY);
-  } catch {}
+  if (text) window.alsterDb?.set('notice', text);
+  else window.alsterDb?.remove('notice');
 }
 
 /* ---------- Helpers ---------- */
