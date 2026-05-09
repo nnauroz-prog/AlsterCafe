@@ -107,9 +107,6 @@ function init() {
 
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
-
-  // KI-Polish (delegiert für dynamisch erzeugte Buttons)
-  document.addEventListener('click', onAiPolishClick);
 }
 
 function cacheDom() {
@@ -343,25 +340,14 @@ function renderWeek() {
         </div>
         ${isToday ? '<span class="day-pill">Heute</span>' : ''}
       </div>
-      <div class="day-field with-ai">
-        <label>
-          <span>Hauptgericht</span>
-          <textarea name="${day.key}-dish" rows="2" placeholder="Kurz eintragen — KI verfeinert es">${escapeHtml(saved.dish || '')}</textarea>
-        </label>
-        <button type="button" class="ai-btn" data-ai-target="textarea[name='${day.key}-dish']" data-ai-context="dish" title="Mit KI verfeinern">
-          <svg class="ico ico-sm"><use href="#i-sparkle"/></svg>
-          <span>KI</span>
-        </button>
-      </div>
-      <div class="day-field with-ai">
-        <label>
-          <span>Beilagen / Zusatz</span>
-          <input type="text" name="${day.key}-side" placeholder="z. B. Bulgur oder Reis, Salat" value="${escapeAttr(saved.side || '')}" />
-        </label>
-        <button type="button" class="ai-btn" data-ai-target="input[name='${day.key}-side']" data-ai-context="side" title="Mit KI verfeinern">
-          <svg class="ico ico-sm"><use href="#i-sparkle"/></svg>
-        </button>
-      </div>
+      <label class="day-field">
+        <span>Hauptgericht</span>
+        <textarea name="${day.key}-dish" rows="2" placeholder="z. B. Hähnchenschenkel oder gebackener Schafskäse mit Gemüse">${escapeHtml(saved.dish || '')}</textarea>
+      </label>
+      <label class="day-field">
+        <span>Beilagen / Zusatz</span>
+        <input type="text" name="${day.key}-side" placeholder="z. B. Bulgur oder Reis, Salat" value="${escapeAttr(saved.side || '')}" />
+      </label>
       <label class="day-toggle">
         <input type="checkbox" name="${day.key}-closed" ${saved.closed ? 'checked' : ''} />
         <span>Kein Mittagstisch / Geschlossen</span>
@@ -450,24 +436,14 @@ function buildMenuItemRow(item) {
   row.className = 'menu-item-row';
   row.innerHTML = `
     <div class="menu-item-fields">
-      <div class="menu-item-cell with-ai">
-        <label>
-          <span>Bezeichnung</span>
-          <input type="text" class="menu-item-name" value="${escapeAttr(item.name || '')}" placeholder="z. B. Cappuccino" />
-        </label>
-        <button type="button" class="ai-btn" data-ai-target=".menu-item-name" data-ai-context="name" title="Mit KI verfeinern">
-          <svg class="ico ico-sm"><use href="#i-sparkle"/></svg>
-        </button>
-      </div>
-      <div class="menu-item-cell with-ai">
-        <label>
-          <span>Beschreibung</span>
-          <input type="text" class="menu-item-desc" value="${escapeAttr(item.description || '')}" placeholder="z. B. Espresso mit feinem Milchschaum" />
-        </label>
-        <button type="button" class="ai-btn" data-ai-target=".menu-item-desc" data-ai-context="description" title="Mit KI verfeinern">
-          <svg class="ico ico-sm"><use href="#i-sparkle"/></svg>
-        </button>
-      </div>
+      <label>
+        <span>Bezeichnung</span>
+        <input type="text" class="menu-item-name" value="${escapeAttr(item.name || '')}" placeholder="z. B. Cappuccino" />
+      </label>
+      <label>
+        <span>Beschreibung</span>
+        <input type="text" class="menu-item-desc" value="${escapeAttr(item.description || '')}" placeholder="z. B. Espresso mit feinem Milchschaum" />
+      </label>
     </div>
     <button type="button" class="btn-icon menu-item-remove" aria-label="Eintrag entfernen" title="Eintrag entfernen">
       <svg class="ico ico-sm"><use href="#i-x"/></svg>
@@ -618,267 +594,6 @@ function saveNotice(text) {
     if (text) localStorage.setItem(NOTICE_KEY, text);
     else localStorage.removeItem(NOTICE_KEY);
   } catch {}
-}
-
-/* ============================================================
-   KI-Polish — verfeinert kurze Inhaber-Eingaben in markenkonforme Form
-   ============================================================ */
-
-/* Wörterbuch: häufige Schreibweisen → professionelle Form (Groß/Klein-blind) */
-const POLISH_DICT = {
-  'soße': 'Sauce',          'sosse': 'Sauce',          'sauce': 'Sauce',
-  'pommes': 'Pommes frites', 'pommes frites': 'Pommes frites',
-  'kartoffel': 'Kartoffel',  'kartoffeln': 'Kartoffeln',
-  'gemüse': 'Gemüse',        'gemuese': 'Gemüse',
-  'reis': 'Basmatireis',     'basmati': 'Basmatireis',
-  'bulgur': 'Bulgur',        'cous cous': 'Couscous',   'couscous': 'Couscous',
-  'nudel': 'Nudeln',         'nudeln': 'Nudeln',         'pasta': 'Pasta',
-  'spaghetti': 'Spaghetti',  'lasagne': 'Lasagne',       'penne': 'Penne',
-  'bolo': 'Bolognese',       'bolognese': 'Bolognese',   'carbonara': 'Carbonara',
-  'hähnchen': 'Hähnchen',    'haehnchen': 'Hähnchen',    'huhn': 'Hähnchen',
-  'schnitzel': 'Schnitzel',  'rindfleisch': 'Rindfleisch','schwein': 'Schwein',
-  'fisch': 'Fisch',          'lachs': 'Lachs',           'thunfisch': 'Thunfisch',
-  'schaferkäse': 'Schafskäse','schafskäse': 'Schafskäse','feta': 'Feta',
-  'salat': 'Salat',          'salate': 'Salate',
-  'suppe': 'Suppe',          'eintopf': 'Eintopf',
-  'mit': 'mit', 'und': 'und', 'oder': 'oder',
-  'frühstück': 'Frühstück',  'mittag': 'Mittag',         'kaffee': 'Kaffee',
-  'cappuccino': 'Cappuccino','espresso': 'Espresso',     'latte': 'Latte Macchiato',
-  'kakao': 'Kakao',          'tee': 'Tee',               'schoko': 'Schokolade',
-  'vegetarisch': 'vegetarisch', 'vegan': 'vegan',
-  'hausgemacht': 'hausgemacht', 'frisch': 'frisch'
-};
-
-/* Beilagen-Pattern: erkennt einfache Strukturen und reichert sanft an */
-const ENRICH_PROTEIN = {
-  'hähnchen':   ['Hähnchenfilet', 'knusprig gebraten'],
-  'rindfleisch':['Rindfleisch',   'sanft geschmort'],
-  'schwein':    ['Schweinefilet', 'in Pfeffersauce'],
-  'lachs':      ['Lachsfilet',    'auf Limettenschaum'],
-  'thunfisch':  ['Thunfischsteak','mediterran gewürzt'],
-  'fisch':      ['Fischfilet',    'mit Zitronenbutter'],
-  'schafskäse': ['Schafskäse',    'im Ofen gebacken'],
-  'feta':       ['Feta',          'mit Honig glasiert']
-};
-
-const ENRICH_BASE = {
-  'reis':       'Basmatireis',
-  'kartoffel':  'cremige Kartoffeln',
-  'kartoffeln': 'cremige Kartoffeln',
-  'pommes':     'Pommes frites',
-  'bulgur':     'aromatischer Bulgur',
-  'couscous':   'mediterraner Couscous',
-  'pasta':      'Pasta al dente',
-  'nudeln':     'Pasta al dente',
-  'spaghetti':  'Spaghetti'
-};
-
-/* Professionelle Adjektive für sehr kurze Eingaben */
-const FILLER_ADJECTIVES = ['knusprig gebraten', 'frisch zubereitet', 'hausgemacht'];
-
-/* Casual-Filler, die wir entfernen */
-const CASUAL_FILLERS = /\b(halt|eben|irgendwie|vielleicht|so'?n|son|n'?|na ja|naja|so was|sowas)\b/gi;
-
-function polishText(input, context = 'default') {
-  if (!input) return '';
-  let t = input.replace(/\s+/g, ' ').trim();
-  if (!t) return '';
-
-  // 1. Casual-Filler entfernen
-  t = t.replace(CASUAL_FILLERS, ' ').replace(/\s+/g, ' ').trim();
-
-  // 2. Wörterbuch-Mapping anwenden (längste Phrasen zuerst)
-  const dictKeys = Object.keys(POLISH_DICT).sort((a, b) => b.length - a.length);
-  dictKeys.forEach(key => {
-    const re = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    t = t.replace(re, POLISH_DICT[key]);
-  });
-
-  // 3. Mehrfach-Leerzeichen, Komma-Spacing
-  t = t.replace(/\s+/g, ' ').replace(/\s+([.,!?])/g, '$1').replace(/([.,])(\S)/g, '$1 $2').trim();
-
-  // 4. Kontext-spezifische Verfeinerung
-  if (context === 'dish') {
-    t = enrichDish(t);
-  } else if (context === 'name') {
-    t = titleCase(t);
-  } else if (context === 'description') {
-    t = capitalizeFirst(t);
-  } else if (context === 'side') {
-    t = enrichSide(t);
-  } else if (context === 'notice') {
-    t = capitalizeFirst(t);
-    if (!/[.!?]$/.test(t)) t += '.';
-  } else {
-    t = capitalizeFirst(t);
-  }
-
-  return t;
-}
-
-function enrichDish(text) {
-  let t = capitalizeFirst(text);
-  const lower = t.toLowerCase();
-  const wordCount = t.split(/\s+/).length;
-
-  // Sehr kurze Eingaben (<= 3 Wörter): mit erkanntem Protein anreichern
-  if (wordCount <= 3) {
-    for (const key of Object.keys(ENRICH_PROTEIN)) {
-      if (lower.includes(key)) {
-        const [proper, modifier] = ENRICH_PROTEIN[key];
-        // Ersetze einfaches Wort durch professionelles Substantiv + Modifier
-        if (!lower.includes('mit')) {
-          t = `${proper} ${modifier}, dazu wechselnde Beilagen`;
-          return t;
-        }
-      }
-    }
-  }
-
-  // Mit "X mit Y" Struktur: Beilage hochwerten
-  const matchMit = t.match(/^(.+?)\s+mit\s+(.+)$/i);
-  if (matchMit) {
-    const protein = polishProtein(matchMit[1].trim());
-    const side    = polishSide(matchMit[2].trim());
-    return `${capitalizeFirst(protein)} mit ${side}`;
-  }
-
-  return t;
-}
-
-function enrichSide(text) {
-  let t = text.trim();
-  if (!t) return '';
-  const lower = t.toLowerCase();
-  // Wenn die Beilage in unserer Liste ist, nutze die professionelle Variante
-  for (const key of Object.keys(ENRICH_BASE)) {
-    if (lower === key) return ENRICH_BASE[key];
-  }
-  // Komma-getrennte Beilagen normalisieren
-  if (t.includes(',') || / oder /i.test(t)) {
-    return t.split(/,| oder /i)
-      .map(s => s.trim()).filter(Boolean)
-      .map(s => ENRICH_BASE[s.toLowerCase()] || capitalizeFirst(s))
-      .join(', ');
-  }
-  return capitalizeFirst(t);
-}
-
-function polishProtein(s) {
-  const lower = s.toLowerCase();
-  for (const key of Object.keys(ENRICH_PROTEIN)) {
-    if (lower.includes(key)) {
-      const [proper, modifier] = ENRICH_PROTEIN[key];
-      // Wenn nur das Wort steht, mit Modifier anreichern
-      if (lower.trim() === key) return `${modifier === 'knusprig gebraten' ? 'Knusprig gebratenes ' + proper : proper + ' ' + modifier}`;
-      return s.replace(new RegExp(key, 'i'), proper);
-    }
-  }
-  return s;
-}
-
-function polishSide(s) {
-  const lower = s.toLowerCase();
-  // Mehrere Beilagen?
-  if (/\bund\b|,| oder /i.test(s)) {
-    return s.split(/,| und | oder /i)
-      .map(p => p.trim()).filter(Boolean)
-      .map(p => ENRICH_BASE[p.toLowerCase()] || p.toLowerCase())
-      .map(capitalizeFirst)
-      .join(', ');
-  }
-  return ENRICH_BASE[lower] || capitalizeFirst(s);
-}
-
-function capitalizeFirst(s) {
-  if (!s) return '';
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-function titleCase(s) {
-  if (!s) return '';
-  const SMALL = new Set(['und','oder','mit','für','von','der','die','das','am','im']);
-  return s.split(/\s+/).map((w, i) => {
-    const lower = w.toLowerCase();
-    if (i > 0 && SMALL.has(lower)) return lower;
-    return capitalizeFirst(w);
-  }).join(' ');
-}
-
-/* ---------- Click-Handler für KI-Buttons ---------- */
-function onAiPolishClick(e) {
-  const btn = e.target.closest('.ai-btn');
-  if (!btn || btn.disabled) return;
-  e.preventDefault();
-  const targetSel = btn.dataset.aiTarget;
-  const ctx = btn.dataset.aiContext || 'default';
-  if (!targetSel) return;
-  const target = btn.parentElement.querySelector(targetSel) || document.querySelector(targetSel);
-  if (!target) return;
-
-  const original = target.value || '';
-  if (!original.trim()) {
-    flashTooltip(btn, 'Bitte zuerst etwas eintragen');
-    return;
-  }
-
-  // Pseudo-Processing-Delay für „AI-Feel"
-  btn.classList.add('is-processing');
-  btn.disabled = true;
-  target.classList.add('ai-shimmer');
-
-  const delay = 480 + Math.random() * 280;
-  setTimeout(() => {
-    const polished = polishText(original, ctx);
-    if (polished && polished !== original) {
-      target.dataset.aiOriginal = original;
-      target.value = polished;
-      target.dispatchEvent(new Event('input', { bubbles: true }));
-      flashTooltip(btn, 'Mit KI verfeinert', 'ok');
-      maybeShowUndo(btn, target);
-    } else {
-      flashTooltip(btn, 'Bereits in optimaler Form', 'info');
-    }
-    btn.classList.remove('is-processing');
-    btn.disabled = false;
-    target.classList.remove('ai-shimmer');
-  }, delay);
-}
-
-function flashTooltip(btn, msg, kind = '') {
-  let tip = btn.parentElement.querySelector('.ai-tip');
-  if (!tip) {
-    tip = document.createElement('span');
-    tip.className = 'ai-tip';
-    btn.parentElement.appendChild(tip);
-  }
-  tip.textContent = msg;
-  tip.dataset.kind = kind;
-  tip.classList.add('is-visible');
-  clearTimeout(tip._t);
-  tip._t = setTimeout(() => tip.classList.remove('is-visible'), 2200);
-}
-
-function maybeShowUndo(btn, target) {
-  let undo = btn.parentElement.querySelector('.ai-undo');
-  if (!undo) {
-    undo = document.createElement('button');
-    undo.type = 'button';
-    undo.className = 'ai-undo';
-    undo.innerHTML = `<svg class="ico ico-sm"><use href="#i-undo"/></svg>`;
-    undo.title = 'Original wiederherstellen';
-    undo.addEventListener('click', () => {
-      const orig = target.dataset.aiOriginal;
-      if (orig != null) {
-        target.value = orig;
-        target.dispatchEvent(new Event('input', { bubbles: true }));
-        delete target.dataset.aiOriginal;
-        undo.remove();
-      }
-    });
-    btn.parentElement.appendChild(undo);
-  }
-  clearTimeout(undo._t);
-  undo._t = setTimeout(() => undo.remove(), 8000);
 }
 
 /* ---------- Helpers ---------- */
