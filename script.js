@@ -167,25 +167,31 @@ function initNotice() {
   }
 }
 
-/* ---------- Speisekarte ---------- */
+/* ---------- Speisekarte ----------
+   HTML enthaelt Standard-Inhalte. JS ueberschreibt nur, wenn der
+   Inhaber im Mitgliederbereich eigene Inhalte gespeichert hat. */
 function initMenu() {
   const root = document.getElementById('menu-cols');
   if (!root) return;
 
-  const stored = (() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_MENU);
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  })();
-  const data = stored && typeof stored === 'object' ? mergeMenu(stored) : DEFAULT_MENU;
+  let stored = null;
+  try {
+    const raw = localStorage.getItem(STORAGE_MENU);
+    if (raw) stored = JSON.parse(raw);
+  } catch {}
+  if (!stored || typeof stored !== 'object') return; // Standard-HTML beibehalten
+
+  const data = mergeMenu(stored);
+  const hasItems = ['fruehstueck','backwaren','getraenke']
+    .some(k => data[k] && Array.isArray(data[k].items) && data[k].items.length);
+  if (!hasItems) return;
 
   root.innerHTML = '';
   ['fruehstueck','backwaren','getraenke'].forEach(key => {
     const cat = data[key];
     if (!cat || !Array.isArray(cat.items) || !cat.items.length) return;
     const col = document.createElement('div');
-    col.className = 'menu-col reveal';
+    col.className = 'menu-col reveal in';
     col.innerHTML = `
       <div class="menu-col-head">
         <svg class="ico"><use href="#${escapeAttr(cat.icon || DEFAULT_MENU[key].icon)}"/></svg>
@@ -216,11 +222,12 @@ function mergeMenu(stored) {
   return out;
 }
 
-/* ---------- Öffnungszeiten ---------- */
+/* ---------- Öffnungszeiten ----------
+   HTML enthaelt Standard-Werte. JS ueberschreibt nur bei Custom-Daten. */
 function initHours() {
   const root = document.getElementById('hours-list');
   if (!root) return;
-  let hours = DEFAULT_HOURS;
+  let hours = null;
   try {
     const raw = localStorage.getItem(STORAGE_HOURS);
     if (raw) {
@@ -228,6 +235,7 @@ function initHours() {
       if (Array.isArray(parsed) && parsed.length) hours = parsed;
     }
   } catch {}
+  if (!hours) return; // Standard-HTML beibehalten
   root.innerHTML = hours.map(h => `
     <li><span>${escapeHtml(h.label || '')}</span><span class="time">${escapeHtml(h.time || '')}</span></li>
   `).join('');

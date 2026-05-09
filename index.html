@@ -217,7 +217,41 @@
         </div>
 
         <div class="menu-cols" id="menu-cols">
-          <!-- Wird dynamisch befüllt aus dem Mitgliederbereich -->
+          <div class="menu-col reveal">
+            <div class="menu-col-head">
+              <svg class="ico"><use href="#i-bread"/></svg>
+              <h3>Frühstück</h3>
+            </div>
+            <ul class="menu-list">
+              <li><strong>Kleines Frühstück</strong><span>Brötchen, Butter, Marmelade, Heißgetränk.</span></li>
+              <li><strong>Großes Frühstück</strong><span>Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.</span></li>
+              <li><strong>Vegetarisch</strong><span>Frischkäse, Avocado, Gemüse, Heißgetränk.</span></li>
+            </ul>
+          </div>
+
+          <div class="menu-col reveal">
+            <div class="menu-col-head">
+              <svg class="ico"><use href="#i-wheat"/></svg>
+              <h3>Backwaren</h3>
+            </div>
+            <ul class="menu-list">
+              <li><strong>Brot &amp; Brötchen</strong><span>Roggen, Dinkel, Vollkorn, Sauerteig.</span></li>
+              <li><strong>Feines Gebäck</strong><span>Croissants, Franzbrötchen, Plunder.</span></li>
+              <li><strong>Torten &amp; Kuchen</strong><span>Hausgemacht, Festtagstorten auf Vorbestellung.</span></li>
+            </ul>
+          </div>
+
+          <div class="menu-col reveal">
+            <div class="menu-col-head">
+              <svg class="ico"><use href="#i-cup"/></svg>
+              <h3>Heiße Getränke</h3>
+            </div>
+            <ul class="menu-list">
+              <li><strong>Espresso · Cappuccino · Latte</strong><span>Mocambo, frisch gemahlen.</span></li>
+              <li><strong>Hauskaffee · Milchkaffee</strong><span>Traditionell gefiltert.</span></li>
+              <li><strong>Kakao &amp; Tee</strong><span>Heiße Schokolade, Kräuter- und Früchtetees.</span></li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -324,7 +358,11 @@
 
           <div class="hours-inline">
             <p class="col-label">Öffnungszeiten</p>
-            <ul class="hours-list" id="hours-list"></ul>
+            <ul class="hours-list" id="hours-list">
+              <li><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></li>
+              <li><span>Samstag</span><span class="time">07:30 – 15:00</span></li>
+              <li><span>Sonntag</span><span class="time">07:30 – 15:00</span></li>
+            </ul>
           </div>
         </div>
 
@@ -333,7 +371,7 @@
             <div>
               <p class="map-ph-title">Karte ist deaktiviert</p>
               <p class="map-ph-text">
-                Aus Datenschutzgründen wird die OpenStreetMap-Karte erst nach Ihrer
+                Aus Datenschutzgründen wird die Google-Maps-Karte erst nach Ihrer
                 Zustimmung geladen.
               </p>
               <button type="button" class="btn btn-gold" id="map-load">Karte laden</button>
@@ -346,7 +384,7 @@
           <iframe
             id="map-iframe"
             title="Karte Ifflandstraße 45 Hamburg"
-            data-src="https://www.openstreetmap.org/export/embed.html?bbox=10.0195%2C53.5580%2C10.0295%2C53.5640&amp;layer=mapnik&amp;marker=53.5609%2C10.0244"
+            data-src="https://maps.google.com/maps?q=Ifflandstra%C3%9Fe+45%2C+22087+Hamburg&amp;t=&amp;z=17&amp;ie=UTF8&amp;iwloc=&amp;output=embed"
             referrerpolicy="no-referrer-when-downgrade"
             style="display:none"></iframe>
         </div>
