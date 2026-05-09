@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   initNav();
+  initStickyHeader();
   initReveal();
   initCookieBanner();
   initNotice();
@@ -58,6 +59,24 @@ document.addEventListener('DOMContentLoaded', () => {
   initLunchWeek();
   initReservationForm();
 });
+
+/* ---------- Scroll-Aware Header ---------- */
+function initStickyHeader() {
+  const header = document.querySelector('.site-header, .admin-header');
+  if (!header) return;
+  let ticking = false;
+  const update = () => {
+    header.classList.toggle('is-scrolled', window.scrollY > 8);
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(update);
+      ticking = true;
+    }
+  }, { passive: true });
+  update();
+}
 
 /* ---------- Navigation ---------- */
 function initNav() {
@@ -80,6 +99,20 @@ function initNav() {
 function initReveal() {
   const reveals = document.querySelectorAll('.reveal');
   if (!reveals.length) return;
+
+  // Geschwister bekommen gestaffelte Delays fuer eleganten Reveal
+  const groups = new Map();
+  reveals.forEach(el => {
+    const parent = el.parentElement;
+    if (!groups.has(parent)) groups.set(parent, []);
+    groups.get(parent).push(el);
+  });
+  groups.forEach(siblings => {
+    if (siblings.length > 1) {
+      siblings.forEach((el, i) => el.style.setProperty('--reveal-delay', `${Math.min(i * 80, 320)}ms`));
+    }
+  });
+
   if (!('IntersectionObserver' in window)) {
     reveals.forEach(el => el.classList.add('in'));
     return;
@@ -91,7 +124,7 @@ function initReveal() {
         io.unobserve(e.target);
       }
     });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
   reveals.forEach(el => io.observe(el));
 }
 
@@ -331,6 +364,7 @@ function initReservationForm() {
     dateInput.min = isoDate(new Date());
     if (!dateInput.value) dateInput.value = isoDate(tomorrow);
   }
+  const submitBtn = form.querySelector('.form-submit');
   form.addEventListener('submit', e => {
     if (!form.checkValidity()) {
       e.preventDefault();
@@ -354,8 +388,22 @@ function initReservationForm() {
     ];
     const body = encodeURIComponent(lines.join('\n'));
     e.preventDefault();
-    window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
-    setFormStatus(status, 'Ihr E-Mail-Programm wurde geöffnet. Bitte senden Sie die Anfrage ab.', 'ok');
+
+    if (submitBtn) {
+      submitBtn.classList.add('is-loading');
+      submitBtn.disabled = true;
+    }
+    setFormStatus(status, 'Anfrage wird vorbereitet …');
+
+    setTimeout(() => {
+      window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
+      if (submitBtn) {
+        submitBtn.classList.remove('is-loading');
+        submitBtn.classList.add('is-success');
+        submitBtn.disabled = false;
+      }
+      setFormStatus(status, 'Ihr E-Mail-Programm wurde geöffnet. Bitte senden Sie die Anfrage ab — wir bestätigen schnellstmöglich.', 'ok');
+    }, 600);
   });
 }
 

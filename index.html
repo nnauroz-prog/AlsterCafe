@@ -11,6 +11,51 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="restaurant.restaurant" />
+  <meta property="og:title" content="Alstercafé – Café & Bäckerei in Hamburg-Hohenfelde" />
+  <meta property="og:description" content="Frühstück, täglich wechselnder Mittagstisch, frische Backwaren und Mocambo-Kaffee. Ifflandstraße 45, Hamburg." />
+  <meta property="og:locale" content="de_DE" />
+  <meta property="og:url" content="https://alstercafe.de/" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Strukturierte Daten: Lokales Geschäft -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CafeOrCoffeeShop",
+    "name": "Alstercafé",
+    "alternateName": "Croquenoah Cafe",
+    "image": "https://alstercafe.de/image.png",
+    "@id": "https://alstercafe.de/",
+    "url": "https://alstercafe.de/",
+    "telephone": "+49-40-22692891",
+    "email": "info@alstercafe.de",
+    "priceRange": "€",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Ifflandstraße 45",
+      "addressLocality": "Hamburg",
+      "postalCode": "22087",
+      "addressCountry": "DE"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 53.5614,
+      "longitude": 10.0245
+    },
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "06:30", "closes": "15:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "07:30", "closes": "15:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday",   "opens": "07:30", "closes": "15:00" }
+    ],
+    "servesCuisine": ["Café", "Bäckerei", "Frühstück", "Mittagstisch"],
+    "amenityFeature": [
+      { "@type": "LocationFeatureSpecification", "name": "Freies WLAN", "value": true }
+    ]
+  }
+  </script>
 </head>
 <body>
   <!-- SVG Icon Sprite -->
