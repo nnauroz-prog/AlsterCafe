@@ -27,6 +27,8 @@
       <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></g></symbol>
       <symbol id="i-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></g></symbol>
       <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></g></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 20"/></g></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M5 20h14"/></g></symbol>
     </defs>
   </svg>
 
@@ -140,6 +142,10 @@
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="hours">
             Öffnungszeiten
           </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="design">
+            <svg class="ico ico-sm"><use href="#i-image"/></svg>
+            Design
+          </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="notice">
             <svg class="ico ico-sm"><use href="#i-bell"/></svg>
             Hinweis-Banner
@@ -243,6 +249,131 @@
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+
+        <!-- TAB: DESIGN -->
+        <div class="admin-panel" id="panel-design" role="tabpanel" hidden>
+          <div class="panel-card wide">
+            <h3>Erscheinungsbild</h3>
+            <p class="panel-card-sub">
+              Pflegen Sie hier Logo, Bilder, Galerie und Akzentfarbe Ihres Cafés.
+              Alle Änderungen erscheinen sofort auf der Webseite.
+            </p>
+
+            <!-- Logo -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Logo</h4>
+                <p>Erscheint im Kopfbereich und im Footer. Quadratisch oder rund, max. 400 × 400 px.</p>
+              </div>
+              <div class="design-control">
+                <div class="image-slot" data-design-key="logo" data-aspect="1">
+                  <div class="image-preview"><span class="image-empty">Kein Logo hochgeladen</span></div>
+                  <div class="image-actions">
+                    <label class="btn btn-link upload-btn">
+                      <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                      Hochladen
+                      <input type="file" accept="image/*" hidden />
+                    </label>
+                    <button type="button" class="btn btn-link danger image-remove" hidden>Entfernen</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hero-Bild -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Hero-Bild</h4>
+                <p>Ersetzt die animierte Kaffeetasse im Header der Hauptseite. Empfohlen: 1200 × 1200 px, zentriertes Motiv.</p>
+              </div>
+              <div class="design-control">
+                <div class="image-slot" data-design-key="heroImage" data-aspect="1">
+                  <div class="image-preview"><span class="image-empty">Standard: animierte Tasse</span></div>
+                  <div class="image-actions">
+                    <label class="btn btn-link upload-btn">
+                      <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                      Hochladen
+                      <input type="file" accept="image/*" hidden />
+                    </label>
+                    <button type="button" class="btn btn-link danger image-remove" hidden>Auf Standard zurücksetzen</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Über-uns-Bild -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Über-uns-Bild</h4>
+                <p>Wird in der „Über uns"-Sektion über dem Zitat angezeigt. Empfohlen: 1200 × 800 px.</p>
+              </div>
+              <div class="design-control">
+                <div class="image-slot" data-design-key="aboutImage" data-aspect="1.5">
+                  <div class="image-preview"><span class="image-empty">Kein Bild gewählt</span></div>
+                  <div class="image-actions">
+                    <label class="btn btn-link upload-btn">
+                      <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                      Hochladen
+                      <input type="file" accept="image/*" hidden />
+                    </label>
+                    <button type="button" class="btn btn-link danger image-remove" hidden>Entfernen</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Galerie -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Galerie</h4>
+                <p>Bis zu 6 Bilder erscheinen als eigene Sektion auf der Hauptseite. Wird automatisch ein- oder ausgeblendet.</p>
+              </div>
+              <div class="design-control">
+                <div class="gallery-grid-edit" id="gallery-grid-edit"></div>
+                <label class="btn btn-link upload-btn" id="gallery-upload-btn">
+                  <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                  Bild hinzufügen
+                  <input type="file" accept="image/*" id="gallery-upload-input" multiple hidden />
+                </label>
+                <span class="gallery-counter" id="gallery-counter">0 / 6</span>
+              </div>
+            </div>
+
+            <!-- Akzentfarbe -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Akzentfarbe</h4>
+                <p>Beeinflusst Akzent-Linien, Buttons und Highlights. Wir empfehlen das warme Original-Gold.</p>
+              </div>
+              <div class="design-control">
+                <div class="color-picker">
+                  <div class="color-presets" id="color-presets">
+                    <button type="button" class="color-chip" data-color="#B8893E" title="Original Gold" style="--c:#B8893E"></button>
+                    <button type="button" class="color-chip" data-color="#A1542A" title="Kupfer"        style="--c:#A1542A"></button>
+                    <button type="button" class="color-chip" data-color="#7C8B6F" title="Salbei"        style="--c:#7C8B6F"></button>
+                    <button type="button" class="color-chip" data-color="#8C6F4F" title="Mocca"         style="--c:#8C6F4F"></button>
+                    <button type="button" class="color-chip" data-color="#3D2415" title="Espresso"      style="--c:#3D2415"></button>
+                  </div>
+                  <label class="color-custom">
+                    <input type="color" id="color-input" value="#B8893E" />
+                    <span>Eigene Farbe wählen</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="save-bar inline">
+              <p class="save-status" id="design-status">Änderungen werden automatisch übernommen.</p>
+              <div class="save-actions">
+                <a class="btn btn-link" href="index.html" target="_blank" rel="noopener">
+                  <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+                  Live ansehen
+                </a>
+                <button type="button" class="btn btn-link danger" id="design-reset">Alles zurücksetzen</button>
+              </div>
+            </div>
           </div>
         </div>
 

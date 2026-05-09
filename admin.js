@@ -4,8 +4,12 @@ const STORAGE_KEY    = 'alstercafe.weekly-menu';
 const NOTICE_KEY     = 'alstercafe.notice';
 const MENU_KEY       = 'alstercafe.menu';
 const HOURS_KEY      = 'alstercafe.hours';
+const DESIGN_KEY     = 'alstercafe.design';
 const AUTH_KEY       = 'alstercafe.auth';
 const ACTIVE_TAB_KEY = 'alstercafe.admin.tab';
+
+const MAX_IMAGE_PX = { logo: 480, heroImage: 1400, aboutImage: 1400, gallery: 1200 };
+const GALLERY_MAX = 6;
 
 const MENU_CATS = [
   { key: 'fruehstueck', label: 'Frühstück',     defaultIcon: 'i-bread' },
@@ -107,6 +111,9 @@ function init() {
 
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
+
+  // Design
+  initDesignEditor();
 }
 
 function cacheDom() {
@@ -226,6 +233,7 @@ function showDashboard() {
   renderNotice();
   renderMenuEditor();
   renderHoursEditor();
+  renderDesignEditor();
 }
 
 /* ---------- Tabs ---------- */
@@ -554,6 +562,203 @@ function onResetHours() {
   try { localStorage.removeItem(HOURS_KEY); } catch {}
   renderHoursEditor();
   setStatus(dom.hoursStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+}
+
+/* ============================================================
+   Design-Studio — Logo, Bilder, Galerie, Akzentfarbe
+   ============================================================ */
+
+function initDesignEditor() {
+  // Slot-Inputs (Logo, Hero, About)
+  document.querySelectorAll('.image-slot').forEach(slot => {
+    const key = slot.dataset.designKey;
+    const fileInput = slot.querySelector('input[type="file"]');
+    const removeBtn = slot.querySelector('.image-remove');
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const dataUrl = await compressImage(file, MAX_IMAGE_PX[key] || 1200, 0.85);
+        const design = loadDesign();
+        design[key] = dataUrl;
+        saveDesign(design);
+        renderImageSlot(slot, dataUrl);
+        flashDesignStatus('Bild gespeichert.');
+      } catch (err) {
+        flashDesignStatus('Fehler: ' + err.message, 'error');
+      } finally {
+        fileInput.value = '';
+      }
+    });
+    removeBtn.addEventListener('click', () => {
+      const design = loadDesign();
+      delete design[key];
+      saveDesign(design);
+      renderImageSlot(slot, null);
+      flashDesignStatus('Bild entfernt.');
+    });
+  });
+
+  // Galerie-Upload
+  const galleryInput = document.getElementById('gallery-upload-input');
+  galleryInput?.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const design = loadDesign();
+    const gallery = Array.isArray(design.gallery) ? design.gallery.slice() : [];
+    for (const file of files) {
+      if (gallery.length >= GALLERY_MAX) break;
+      try {
+        const dataUrl = await compressImage(file, MAX_IMAGE_PX.gallery, 0.82);
+        gallery.push(dataUrl);
+      } catch (err) { /* skip */ }
+    }
+    design.gallery = gallery;
+    saveDesign(design);
+    renderGalleryEdit();
+    flashDesignStatus(`${files.length} Bild(er) hinzugefügt.`);
+    galleryInput.value = '';
+  });
+
+  // Color-Presets + Custom
+  document.querySelectorAll('.color-chip').forEach(chip => {
+    chip.addEventListener('click', () => setAccentColor(chip.dataset.color));
+  });
+  const colorInput = document.getElementById('color-input');
+  colorInput?.addEventListener('input', (e) => setAccentColor(e.target.value));
+
+  // Reset all design
+  document.getElementById('design-reset')?.addEventListener('click', () => {
+    if (!confirm('Alle Design-Anpassungen (Logo, Bilder, Galerie, Farbe) entfernen?')) return;
+    try { localStorage.removeItem(DESIGN_KEY); } catch {}
+    renderDesignEditor();
+    flashDesignStatus('Auf Standard zurückgesetzt.');
+  });
+}
+
+function renderDesignEditor() {
+  const design = loadDesign();
+  document.querySelectorAll('.image-slot').forEach(slot => {
+    const key = slot.dataset.designKey;
+    renderImageSlot(slot, design[key] || null);
+  });
+  renderGalleryEdit();
+  // Color
+  const accent = design.accentColor || '#B8893E';
+  const colorInput = document.getElementById('color-input');
+  if (colorInput) colorInput.value = accent;
+  document.querySelectorAll('.color-chip').forEach(chip => {
+    chip.classList.toggle('is-active', chip.dataset.color.toLowerCase() === accent.toLowerCase());
+  });
+}
+
+function renderImageSlot(slot, dataUrl) {
+  const preview = slot.querySelector('.image-preview');
+  const removeBtn = slot.querySelector('.image-remove');
+  const aspect = parseFloat(slot.dataset.aspect || '1');
+  preview.style.aspectRatio = String(aspect);
+  if (dataUrl) {
+    preview.innerHTML = `<img src="${dataUrl}" alt="" />`;
+    removeBtn.hidden = false;
+  } else {
+    const empty = preview.dataset.emptyText || preview.querySelector('.image-empty')?.textContent || 'Kein Bild';
+    preview.innerHTML = `<span class="image-empty">${empty}</span>`;
+    removeBtn.hidden = true;
+  }
+}
+
+function renderGalleryEdit() {
+  const grid = document.getElementById('gallery-grid-edit');
+  const counter = document.getElementById('gallery-counter');
+  const uploadBtn = document.getElementById('gallery-upload-btn');
+  if (!grid) return;
+  const design = loadDesign();
+  const gallery = Array.isArray(design.gallery) ? design.gallery : [];
+  grid.innerHTML = '';
+  gallery.forEach((src, idx) => {
+    const tile = document.createElement('div');
+    tile.className = 'gallery-tile-edit';
+    tile.innerHTML = `
+      <img src="${src}" alt="" />
+      <button type="button" class="gallery-remove" aria-label="Bild entfernen">
+        <svg class="ico ico-sm"><use href="#i-x"/></svg>
+      </button>
+    `;
+    tile.querySelector('.gallery-remove').addEventListener('click', () => {
+      const d = loadDesign();
+      d.gallery = (d.gallery || []).filter((_, i) => i !== idx);
+      saveDesign(d);
+      renderGalleryEdit();
+      flashDesignStatus('Bild entfernt.');
+    });
+    grid.appendChild(tile);
+  });
+  if (counter) counter.textContent = `${gallery.length} / ${GALLERY_MAX}`;
+  if (uploadBtn) uploadBtn.style.display = gallery.length >= GALLERY_MAX ? 'none' : '';
+}
+
+function setAccentColor(hex) {
+  if (!hex) return;
+  const design = loadDesign();
+  design.accentColor = hex;
+  saveDesign(design);
+  document.documentElement.style.setProperty('--gold', hex);
+  document.querySelectorAll('.color-chip').forEach(chip => {
+    chip.classList.toggle('is-active', chip.dataset.color.toLowerCase() === hex.toLowerCase());
+  });
+  const colorInput = document.getElementById('color-input');
+  if (colorInput) colorInput.value = hex;
+  flashDesignStatus('Akzentfarbe übernommen.');
+}
+
+function loadDesign() {
+  try { return JSON.parse(localStorage.getItem(DESIGN_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveDesign(obj) {
+  try { localStorage.setItem(DESIGN_KEY, JSON.stringify(obj)); }
+  catch (err) { flashDesignStatus('Speicher voll: bitte weniger Bilder laden.', 'error'); }
+}
+
+function flashDesignStatus(msg, kind = 'ok') {
+  const el = document.getElementById('design-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('ok', 'error');
+  if (kind) el.classList.add(kind);
+  clearTimeout(flashDesignStatus._t);
+  flashDesignStatus._t = setTimeout(() => {
+    el.textContent = 'Änderungen werden automatisch übernommen.';
+    el.classList.remove('ok', 'error');
+  }, 2400);
+}
+
+/* Bildkompression via Canvas */
+function compressImage(file, maxPx = 1400, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) return reject(new Error('Keine Bilddatei'));
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Datei konnte nicht gelesen werden'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 /* ---------- Account ---------- */

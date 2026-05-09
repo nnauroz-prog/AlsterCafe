@@ -5,6 +5,7 @@ const STORAGE_NOTICE   = 'alstercafe.notice';
 const STORAGE_CONSENT  = 'alstercafe.consent';
 const STORAGE_MENU     = 'alstercafe.menu';
 const STORAGE_HOURS    = 'alstercafe.hours';
+const STORAGE_DESIGN   = 'alstercafe.design';
 
 const DAY_KEYS   = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  initDesign();
   initNav();
   initStickyHeader();
   initReveal();
@@ -58,7 +60,100 @@ document.addEventListener('DOMContentLoaded', () => {
   initHours();
   initLunchWeek();
   initReservationForm();
+  // Cross-Tab Sync: wenn Admin in anderem Tab speichert, hier aktualisieren
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_DESIGN) initDesign();
+  });
 });
+
+/* ---------- Design (Logo, Bilder, Galerie, Akzentfarbe) ---------- */
+function initDesign() {
+  let design = {};
+  try { design = JSON.parse(localStorage.getItem(STORAGE_DESIGN) || '{}'); } catch {}
+
+  // Akzentfarbe
+  if (design.accentColor) {
+    document.documentElement.style.setProperty('--gold', design.accentColor);
+  }
+
+  // Logo (Header + Footer + Brand-Logo überall)
+  if (design.logo) {
+    document.querySelectorAll('img.brand-logo').forEach(img => { img.src = design.logo; });
+  }
+
+  // Hero-Bild
+  const illust = document.querySelector('.illust-hero');
+  const heroVisual = document.querySelector('.hero-visual');
+  if (heroVisual) {
+    let heroImg = heroVisual.querySelector('.hero-photo');
+    if (design.heroImage) {
+      if (illust) illust.style.display = 'none';
+      if (!heroImg) {
+        heroImg = document.createElement('div');
+        heroImg.className = 'hero-photo';
+        heroVisual.appendChild(heroImg);
+      }
+      heroImg.style.backgroundImage = `url("${design.heroImage}")`;
+    } else {
+      if (illust) illust.style.display = '';
+      if (heroImg) heroImg.remove();
+    }
+  }
+
+  // About-Bild
+  const aboutAside = document.querySelector('.about-aside');
+  if (aboutAside) {
+    let aboutImg = aboutAside.querySelector('.about-photo');
+    if (design.aboutImage) {
+      if (!aboutImg) {
+        aboutImg = document.createElement('div');
+        aboutImg.className = 'about-photo';
+        aboutAside.insertBefore(aboutImg, aboutAside.firstChild);
+      }
+      aboutImg.style.backgroundImage = `url("${design.aboutImage}")`;
+    } else if (aboutImg) {
+      aboutImg.remove();
+    }
+  }
+
+  // Galerie
+  renderHomeGallery(design.gallery);
+}
+
+function renderHomeGallery(images) {
+  const gallery = Array.isArray(images) ? images.filter(Boolean) : [];
+  let section = document.getElementById('galerie');
+  if (!gallery.length) {
+    if (section) section.hidden = true;
+    return;
+  }
+  if (!section) {
+    section = document.createElement('section');
+    section.id = 'galerie';
+    section.className = 'section gallery';
+    section.innerHTML = `
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow"><span class="num">·</span> Galerie</p>
+          <h2>Eindrücke aus<br/>unserem Café</h2>
+        </div>
+        <div class="gallery-grid"></div>
+      </div>
+    `;
+    const reservation = document.getElementById('reservierung');
+    if (reservation) reservation.parentElement.insertBefore(section, reservation);
+    else document.querySelector('main').appendChild(section);
+  }
+  section.hidden = false;
+  const grid = section.querySelector('.gallery-grid');
+  grid.innerHTML = '';
+  gallery.forEach((src, i) => {
+    const item = document.createElement('figure');
+    item.className = 'gallery-item' + (i === 0 ? ' is-feature' : '');
+    item.innerHTML = `<img src="${src}" alt="" loading="lazy" />`;
+    grid.appendChild(item);
+  });
+}
 
 /* ---------- Scroll-Aware Header ---------- */
 function initStickyHeader() {
