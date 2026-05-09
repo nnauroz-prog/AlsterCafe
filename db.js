@@ -77,9 +77,10 @@
       const store = readDemoAuth();
       const match = store.users.find(x => x.email.toLowerCase() === u && x.password === p);
       // Legacy-Fallback fuer Original-Demo-Login (nur wenn noch keine User angelegt)
-      const isLegacy = store.users.length <= 1
+      const demoPwd = cfg.demoPassword || '';
+      const isLegacy = !!demoPwd && store.users.length <= 1
         && (u === 'inhaber' || u === 'inhaber@alstercafe.de')
-        && p === 'IfflandStr45!';
+        && p === demoPwd;
       if (match || isLegacy) {
         const email = match ? match.email : (cfg.ownerEmail || 'inhaber@alstercafe.de');
         store.currentEmail = email;
@@ -144,9 +145,11 @@
       const raw = localStorage.getItem('alstercafe.demo-auth');
       if (raw) return JSON.parse(raw);
     } catch {}
-    // Initial: Standard-Inhaber-Account anlegen
+    // Initial: Standard-Inhaber-Account aus Config anlegen
     const init = {
-      users: [{ email: cfg.ownerEmail || 'inhaber@alstercafe.de', password: 'IfflandStr45!' }],
+      users: cfg.demoPassword
+        ? [{ email: cfg.ownerEmail || 'inhaber@alstercafe.de', password: cfg.demoPassword }]
+        : [],
       currentEmail: null
     };
     try { localStorage.setItem('alstercafe.demo-auth', JSON.stringify(init)); } catch {}

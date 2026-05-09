@@ -179,14 +179,21 @@ Bäckerei-Webseite irrelevant.
 
 ## Sicherheits-Checkliste vor Go-Live
 
-- [ ] Standard-Demo-Passwort `IfflandStr45!` ist **nicht** mehr in
-      `config.js` oder `db.js` (in Production wird die Demo-Auth nicht
-      genutzt, sobald `supabaseUrl` gesetzt ist — kein Risiko)
+- [ ] **Demo-Passwort entfernen:** `demoPassword: ''` in `config.js` setzen
+      (sobald supabaseUrl konfiguriert ist, ist die Demo-Auth ohnehin
+      nicht mehr aktiv — entfernt aber den String aus dem Source)
+- [ ] **GitHub-Repository auf privat stellen:**
+      `https://github.com/nnauroz-prog/AlsterCafe/settings`
+      → Danger Zone → Change visibility → Make private
 - [ ] Echtes Inhaber-Passwort ist mindestens 12 Zeichen
 - [ ] Inhaber-E-Mail ist verifiziert
 - [ ] HTTPS ist aktiv (grünes Schloss in der Browser-Adressleiste)
+- [ ] Security-Headers werden ausgeliefert (testen unter
+      <https://securityheaders.com/?q=alstercafe.de>)
 - [ ] Impressum-Daten sind korrekt
 - [ ] Datenschutzerklärung-Daten sind korrekt
+- [ ] Sitemap zeigt auf die richtige Domain
+      (`sitemap.xml` ggf. anpassen)
 
 ---
 
