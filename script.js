@@ -122,21 +122,31 @@ async function initEditMode() {
     });
   });
 
-  // Toolbar
+  // Floating-Toolbar unten rechts (verbraucht keinen Layout-Platz)
   const toolbar = document.createElement('div');
-  toolbar.className = 'edit-toolbar';
+  toolbar.className = 'edit-fab';
   toolbar.innerHTML = `
-    <div class="edit-toolbar-inner">
+    <button type="button" class="edit-fab-trigger" id="edit-fab-trigger" aria-label="Bearbeitungsoptionen">
       <span class="edit-dot"></span>
-      <div class="edit-info">
-        <strong>Bearbeitungsmodus</strong>
-        <small id="edit-status">Klicken Sie auf einen Text, um ihn zu ändern.</small>
+      <span class="edit-fab-label">Bearbeiten</span>
+    </button>
+    <div class="edit-fab-menu" id="edit-fab-menu" hidden>
+      <p class="edit-fab-status" id="edit-status">Klicken Sie auf einen Text auf der Seite, um ihn zu ändern.</p>
+      <div class="edit-fab-actions">
+        <button type="button" class="btn btn-link" id="edit-reset">Texte zurücksetzen</button>
+        <button type="button" class="btn btn-primary" id="edit-exit">Fertig</button>
       </div>
-      <button type="button" class="btn btn-link danger" id="edit-reset" title="Originaltexte wiederherstellen">Zurücksetzen</button>
-      <button type="button" class="btn btn-primary" id="edit-exit">Fertig</button>
     </div>
   `;
   document.body.appendChild(toolbar);
+
+  const trigger = document.getElementById('edit-fab-trigger');
+  const menu = document.getElementById('edit-fab-menu');
+  trigger.addEventListener('click', () => {
+    const open = menu.hidden;
+    menu.hidden = !open;
+    trigger.setAttribute('aria-expanded', String(open));
+  });
 
   document.getElementById('edit-exit').addEventListener('click', () => {
     const url = new URL(window.location.href);

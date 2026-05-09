@@ -46,6 +46,16 @@
       });
       return { ok: !error, error: error?.message };
     },
+    async updatePassword(newPassword) {
+      const { error } = await sb.auth.updateUser({ password: newPassword });
+      return { ok: !error, error: error?.message };
+    },
+    async inviteUser(email, password) {
+      // Public signUp (anon-key): erzeugt einen neuen User. Bestaetigung
+      // entweder per E-Mail-Link oder direkt nutzbar (je nach Supabase-Setting).
+      const { error } = await sb.auth.signUp({ email, password });
+      return { ok: !error, error: error?.message };
+    },
     onChange(cb) {
       sb.auth.onAuthStateChange((_event, session) => cb(!!session));
     }
@@ -63,6 +73,8 @@
     async isAuthed() { try { return localStorage.getItem('alstercafe.auth') === '1'; } catch { return false; } },
     async getEmail() { return cfg.ownerEmail || 'inhaber@alstercafe.de'; },
     async resetPassword() { return { ok: false, error: 'Im Demo-Modus nicht verfügbar.' }; },
+    async updatePassword() { return { ok: false, error: 'Passwort-Änderung wird mit dem Cloud-Backend in der Endversion aktiv.' }; },
+    async inviteUser()    { return { ok: false, error: 'Mitarbeiter-Verwaltung wird mit dem Cloud-Backend in der Endversion aktiv.' }; },
     onChange() { /* no-op */ }
   };
 

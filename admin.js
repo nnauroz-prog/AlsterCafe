@@ -114,6 +114,8 @@ async function init() {
 
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
+  dom.passwordForm?.addEventListener('submit', onChangePassword);
+  dom.inviteForm?.addEventListener('submit', onInviteUser);
 
   // Design
   initDesignEditor();
@@ -170,6 +172,16 @@ function cacheDom() {
     hoursReset:   document.getElementById('hours-reset'),
     // Account
     resetAll:     document.getElementById('reset-all'),
+    accountEmail: document.getElementById('account-email'),
+    passwordForm: document.getElementById('password-form'),
+    newPassword:  document.getElementById('new-password'),
+    newPasswordConfirm: document.getElementById('new-password-confirm'),
+    passwordStatus: document.getElementById('password-status'),
+    inviteForm:   document.getElementById('invite-form'),
+    inviteEmail:  document.getElementById('invite-email'),
+    invitePassword: document.getElementById('invite-password'),
+    inviteStatus: document.getElementById('invite-status'),
+    inviteHint:   document.getElementById('invite-hint'),
     year:         document.getElementById('year')
   });
 }
@@ -224,11 +236,16 @@ function showLogin() {
   dom.actions.hidden = true;
 }
 
-function showDashboard() {
+async function showDashboard() {
   dom.loginView.hidden = true;
   dom.dashboard.hidden = false;
   dom.actions.hidden = false;
-  if (dom.userBadge) dom.userBadge.textContent = DISPLAY_USER;
+  // Tatsaechliche E-Mail aus dem Backend (Demo: Default-Wert)
+  const email = await (window.alsterDb?.auth.getEmail()) || DISPLAY_USER;
+  if (dom.userBadge)    dom.userBadge.textContent = email;
+  if (dom.accountEmail) dom.accountEmail.textContent = email;
+  // Mitarbeiter-Hinweis im Demo-Modus zeigen
+  if (dom.inviteHint) dom.inviteHint.hidden = !!window.alsterDb?.isProd;
   const lastTab = (() => {
     try { return sessionStorage.getItem(ACTIVE_TAB_KEY) || 'week'; }
     catch { return 'week'; }
@@ -784,6 +801,50 @@ function loadNotice() {
 function saveNotice(text) {
   if (text) window.alsterDb?.set('notice', text);
   else window.alsterDb?.remove('notice');
+}
+
+/* ---------- Konto: Passwort & Mitarbeiter ---------- */
+
+async function onChangePassword(e) {
+  e.preventDefault();
+  const a = dom.newPassword.value;
+  const b = dom.newPasswordConfirm.value;
+  if (a.length < 8) {
+    setStatus(dom.passwordStatus, 'Mindestens 8 Zeichen erforderlich.', 'error');
+    return;
+  }
+  if (a !== b) {
+    setStatus(dom.passwordStatus, 'Die Passwörter stimmen nicht überein.', 'error');
+    return;
+  }
+  setStatus(dom.passwordStatus, 'Wird gespeichert …');
+  const result = await window.alsterDb.auth.updatePassword(a);
+  if (result.ok) {
+    dom.passwordForm.reset();
+    setStatus(dom.passwordStatus, 'Passwort wurde geändert.', 'ok');
+  } else {
+    setStatus(dom.passwordStatus, result.error || 'Speichern fehlgeschlagen.', 'error');
+  }
+}
+
+async function onInviteUser(e) {
+  e.preventDefault();
+  const email = dom.inviteEmail.value.trim();
+  const password = dom.invitePassword.value;
+  if (!email || password.length < 8) {
+    setStatus(dom.inviteStatus, 'E-Mail und Passwort (mind. 8 Zeichen) erforderlich.', 'error');
+    return;
+  }
+  setStatus(dom.inviteStatus, 'Konto wird angelegt …');
+  const result = await window.alsterDb.auth.inviteUser(email, password);
+  if (result.ok) {
+    dom.inviteForm.reset();
+    setStatus(dom.inviteStatus,
+      `Zugang für ${email} wurde angelegt. Initial-Passwort jetzt sicher weitergeben.`,
+      'ok');
+  } else {
+    setStatus(dom.inviteStatus, result.error || 'Anlegen fehlgeschlagen.', 'error');
+  }
 }
 
 /* ---------- Helpers ---------- */
