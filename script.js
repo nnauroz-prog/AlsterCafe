@@ -679,7 +679,7 @@ function initLandingTeaser() {
 
   if (entry?.dish && !entry.closed) {
     block.dataset.state = 'open';
-    if (kickerEl) kickerEl.textContent = 'Mittagstisch ab 12:00';
+    if (kickerEl) kickerEl.textContent = 'Heute kochen wir für Sie';
     dishEl.textContent = entry.dish;
     if (sideEl) {
       sideEl.textContent = entry.side ? `mit ${entry.side}` : '';
@@ -687,13 +687,13 @@ function initLandingTeaser() {
     }
   } else if (entry?.closed) {
     block.dataset.state = 'closed';
-    if (kickerEl) kickerEl.textContent = 'Heute geschlossen';
-    dishEl.textContent = 'Wir sehen uns morgen wieder.';
+    if (kickerEl) kickerEl.textContent = 'Wir machen heute Pause';
+    dishEl.textContent = 'Bis morgen — wir freuen uns auf Sie.';
     if (sideEl) sideEl.hidden = true;
   } else {
     block.dataset.state = 'empty';
-    if (kickerEl) kickerEl.textContent = 'Heute kein Mittagstisch';
-    dishEl.textContent = 'Frühstück & frische Backwaren — den ganzen Tag.';
+    if (kickerEl) kickerEl.textContent = 'Schauen Sie einfach vorbei';
+    dishEl.textContent = 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.';
     if (sideEl) sideEl.hidden = true;
   }
 }

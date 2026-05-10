@@ -622,6 +622,47 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .landing-visit-cta { flex-direction: row; align-items: center; flex-wrap: wrap; }
 }
 
+/* Landing-Visit Tagline */
+.landing-visit-tag {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--gold-soft);
+  margin: 8px 0 0;
+  letter-spacing: -0.005em;
+}
+
+/* Warmer Abschluss am Ende der Startseite */
+.landing-closer {
+  padding: clamp(64px, 9vw, 100px) 0;
+  text-align: center;
+  background:
+    radial-gradient(800px 300px at 50% 0%, rgba(184, 137, 62, 0.08), transparent 60%),
+    var(--cream);
+}
+.landing-closer-quote {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--bean);
+  max-width: 720px;
+  margin: 0 auto 24px;
+  line-height: 1.4;
+  letter-spacing: -0.012em;
+  font-variation-settings: "opsz" 96;
+}
+.landing-closer-quote em { color: var(--gold); }
+.landing-closer-sign {
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+  font-weight: 500;
+}
+
 /* Croque-Highlight auf Speisekarte-Seite */
 .menu-croque {
   margin-top: 64px;
