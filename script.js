@@ -65,7 +65,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initHours();
   initLunchWeek();
   initReservationForm();
+  initLiveStatus();
   initEditMode();
+  initServiceWorker();
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
@@ -88,6 +90,101 @@ function initContent() {
   document.querySelectorAll('[data-editable]').forEach(el => {
     const key = el.dataset.editable;
     if (content[key] != null) el.innerHTML = content[key];
+  });
+}
+
+/* ---------- Live-Status-Pille ("Aktuell geöffnet") ---------- */
+function initLiveStatus() {
+  const el = document.getElementById('live-status');
+  if (!el) return;
+  const update = () => {
+    const status = computeLiveStatus();
+    if (!status) { el.hidden = true; return; }
+    el.hidden = false;
+    el.dataset.state = status.state;
+    el.querySelector('.live-status-text').textContent = status.text;
+  };
+  update();
+  // Jede Minute neu rechnen
+  setInterval(update, 60_000);
+}
+
+function computeLiveStatus() {
+  // Öffnungszeiten parsen — entweder aus dem Admin-Cache oder aus DOM
+  const hours = parseHoursFromDom();
+  if (!hours.length) return null;
+  const now = new Date();
+  const wd = (now.getDay() + 6) % 7; // 0 = Mo, 6 = So
+  const today = hours[wd];
+  const minutesNow = now.getHours() * 60 + now.getMinutes();
+  if (today && today.openMin != null && minutesNow >= today.openMin && minutesNow < today.closeMin) {
+    const remaining = today.closeMin - minutesNow;
+    return {
+      state: 'open',
+      text: remaining <= 60
+        ? `Aktuell geöffnet · schließt in ${remaining} Min.`
+        : `Aktuell geöffnet · bis ${formatMin(today.closeMin)}`
+    };
+  }
+  // Geschlossen — nächsten Öffnungszeitpunkt finden
+  for (let offset = 0; offset < 7; offset++) {
+    const idx = (wd + offset) % 7;
+    const day = hours[idx];
+    if (!day || day.openMin == null) continue;
+    if (offset === 0 && minutesNow < day.openMin) {
+      return {
+        state: 'closed',
+        text: `Geschlossen · öffnet heute um ${formatMin(day.openMin)}`
+      };
+    }
+    if (offset > 0) {
+      const dayName = offset === 1 ? 'morgen'
+                    : ['Mo','Di','Mi','Do','Fr','Sa','So'][idx];
+      return {
+        state: 'closed',
+        text: `Geschlossen · öffnet ${dayName} um ${formatMin(day.openMin)}`
+      };
+    }
+  }
+  return { state: 'closed', text: 'Aktuell geschlossen' };
+}
+
+function parseHoursFromDom() {
+  // Erstellt Array[7] mit {openMin, closeMin} aus der hours-list
+  const items = document.querySelectorAll('#hours-list li');
+  const out = new Array(7).fill(null);
+  const dayMap = {
+    'mo': [0], 'di': [1], 'mi': [2], 'do': [3], 'fr': [4], 'sa': [5], 'so': [6],
+    'mo – fr': [0,1,2,3,4], 'mo–fr': [0,1,2,3,4], 'mo - fr': [0,1,2,3,4],
+    'montag': [0], 'dienstag': [1], 'mittwoch': [2], 'donnerstag': [3],
+    'freitag': [4], 'samstag': [5], 'sonntag': [6]
+  };
+  items.forEach(li => {
+    const spans = li.querySelectorAll('span');
+    if (spans.length < 2) return;
+    const label = spans[0].textContent.trim().toLowerCase();
+    const time = spans[1].textContent.trim();
+    const match = time.match(/(\d{1,2}):(\d{2})\s*[–\-]\s*(\d{1,2}):(\d{2})/);
+    if (!match) return;
+    const openMin = parseInt(match[1]) * 60 + parseInt(match[2]);
+    const closeMin = parseInt(match[3]) * 60 + parseInt(match[4]);
+    const days = dayMap[label] || [];
+    days.forEach(d => out[d] = { openMin, closeMin });
+  });
+  return out;
+}
+
+function formatMin(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/* ---------- Service Worker (Offline-Caching) ---------- */
+function initServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol === 'file:') return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
 

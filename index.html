@@ -9,7 +9,15 @@
   <link rel="icon" type="image/png" href="image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="dns-prefetch" href="https://maps.google.com" />
+  <link rel="preload" as="image" href="image.png" fetchpriority="high" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Alstercafé" />
+  <link rel="apple-touch-icon" href="image.png" />
   <link rel="stylesheet" href="styles.css" />
 
   <!-- Synchroner Auth-Gate: blockiert ?edit=1 BEVOR die Seite rendert -->
@@ -98,6 +106,8 @@
     </defs>
   </svg>
 
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
   <div class="topbar">
     <div class="container topbar-inner">
       <a href="tel:+494022692891" class="topbar-link">
@@ -163,12 +173,16 @@
     </div>
   </header>
 
-  <main>
+  <main id="main">
     <!-- HERO -->
     <section class="hero">
       <div class="hero-grid container">
         <div class="hero-text reveal">
           <p class="eyebrow gold" data-editable="hero.eyebrow">Café · Bäckerei · Hamburg-Hohenfelde</p>
+          <p class="live-status" id="live-status" hidden>
+            <span class="live-status-dot" aria-hidden="true"></span>
+            <span class="live-status-text"></span>
+          </p>
           <h1>
             <span class="head-1" data-editable="hero.head1">Mit Liebe</span>
             <span class="head-2" data-editable="hero.head2">gebacken,</span>
