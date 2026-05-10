@@ -51,23 +51,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Daten aus dem Backend laden (Supabase oder localStorage-Fallback)
-  if (window.alsterDb) await window.alsterDb.ready();
+  // Splash IMMER ausblenden, egal was passiert
+  const safeRun = (fn) => { try { fn(); } catch (e) { console.warn('init err:', e); } };
 
-  initDesign();
-  initContent();
-  initNav();
-  initStickyHeader();
-  initReveal();
-  initCookieBanner();
-  initNotice();
-  initMenu();
-  initHours();
-  initLunchWeek();
-  initReservationForm();
-  initLiveStatus();
-  initEditMode();
-  initServiceWorker();
+  try {
+    if (window.alsterDb) await window.alsterDb.ready();
+  } catch (e) { console.warn('db ready err:', e); }
+
+  safeRun(initDesign);
+  safeRun(initContent);
+  safeRun(initNav);
+  safeRun(initStickyHeader);
+  safeRun(initReveal);
+  safeRun(initCookieBanner);
+  safeRun(initNotice);
+  safeRun(initMenu);
+  safeRun(initHours);
+  safeRun(initLunchWeek);
+  safeRun(initLandingTeaser);
+  safeRun(initReservationForm);
+  safeRun(initLiveStatus);
+  safeRun(initEditMode);
+  safeRun(initServiceWorker);
   hideSplash();
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
@@ -639,12 +644,31 @@ function initHours() {
 
 /* ---------- Mittagstisch (Wochenplan) ---------- */
 function initLunchWeek() {
+  // Nur auf Mittagstisch-Seite aktiv
+  if (!document.getElementById('lunch-today') && !document.getElementById('lunch-week-list')) return;
   const today = new Date();
   const monday = mondayOf(today);
   const weekData = loadCurrentWeek(monday);
   renderWeekMeta(monday);
   renderTodayLunch(weekData, today);
   renderWeekList(weekData, monday, today);
+}
+
+/* Landing-Teaser auf der Home-Page: zeigt heutigen Mittagstisch */
+function initLandingTeaser() {
+  const titleEl = document.getElementById('landing-today-title');
+  const dishEl  = document.getElementById('landing-today-dish');
+  if (!titleEl || !dishEl) return;
+  const today = new Date();
+  const monday = mondayOf(today);
+  const weekData = loadCurrentWeek(monday);
+  const dayIdx = (today.getDay() + 6) % 7;
+  const dayKey = DAY_KEYS[dayIdx];
+  const entry  = weekData?.days?.[dayKey];
+  if (entry?.dish && !entry.closed) {
+    titleEl.textContent = `Heute · ${DAY_LABELS[dayIdx]}`;
+    dishEl.textContent  = entry.dish + (entry.side ? ` · ${entry.side}` : '');
+  }
 }
 
 function loadCurrentWeek(monday) {
@@ -666,18 +690,23 @@ function renderWeekMeta(monday) {
 function renderTodayLunch(weekData, today) {
   const todayBox = document.getElementById('lunch-today');
   const emptyBox = document.getElementById('lunch-empty');
+  if (!todayBox || !emptyBox) return;
   const dayIdx = (today.getDay() + 6) % 7;
   const dayKey = DAY_KEYS[dayIdx];
   const dayLabel = DAY_LABELS[dayIdx];
   const entry = weekData?.days?.[dayKey];
 
-  document.getElementById('today-name').textContent = dayLabel;
+  const nameEl = document.getElementById('today-name');
+  if (nameEl) nameEl.textContent = dayLabel;
 
   if (entry?.dish && !entry.closed) {
-    document.getElementById('today-dish').textContent = entry.dish;
+    const dishEl = document.getElementById('today-dish');
     const sideEl = document.getElementById('today-side');
-    sideEl.textContent = entry.side || '';
-    sideEl.hidden = !entry.side;
+    if (dishEl) dishEl.textContent = entry.dish;
+    if (sideEl) {
+      sideEl.textContent = entry.side || '';
+      sideEl.hidden = !entry.side;
+    }
     todayBox.hidden = false;
     emptyBox.hidden = true;
   } else {
