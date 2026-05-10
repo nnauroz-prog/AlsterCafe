@@ -18,6 +18,22 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Alstercafé" />
   <link rel="apple-touch-icon" href="image.png" />
+
+  <!-- Kritisches Inline-CSS — verhindert FOUC (Flash of Unstyled Content)
+       Diese Regeln greifen sofort, BEVOR styles.css fertig geladen ist. -->
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:#FFFCF4;color:#1F140C;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+    img{max-width:100%;display:block}
+    .skip-link{position:absolute;left:-10000px;top:12px;z-index:1000;padding:12px 18px;background:#3D2415;color:#FFFCF4;border-radius:999px;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
+    .skip-link:focus{left:12px}
+    .app-splash{position:fixed;inset:0;z-index:9999;background:#FFFCF4;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .app-splash-logo{width:80px;height:80px;border-radius:50%;display:block}
+    .app-splash.is-leaving{opacity:0;transition:opacity .5s ease}
+    .topbar{background:#2A1810;color:#F1E7D3;font-size:.85rem;padding:9px 0}
+    .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
+    [hidden]{display:none!important}
+  </style>
   <link rel="stylesheet" href="styles.css" />
 
   <!-- Synchroner Auth-Gate: blockiert ?edit=1 BEVOR die Seite rendert -->

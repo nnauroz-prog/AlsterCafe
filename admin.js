@@ -82,6 +82,8 @@ async function init() {
   if (await isAuthenticated()) await showDashboard();
   else showLogin();
 
+  document.body.classList.add('is-ready');
+
   // Login
   dom.loginForm.addEventListener('submit', onLogin);
   dom.pwToggle.addEventListener('click', onPwToggle);

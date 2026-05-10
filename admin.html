@@ -11,6 +11,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+    img{max-width:100%;display:block}
+    [hidden]{display:none!important}
+    #login-view,#dashboard-view{visibility:hidden}
+    body.is-ready #login-view,body.is-ready #dashboard-view{visibility:visible}
+  </style>
 </head>
 <body class="admin-body">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
