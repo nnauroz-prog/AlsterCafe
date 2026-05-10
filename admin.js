@@ -119,6 +119,7 @@ async function init() {
 
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
+  document.getElementById('reset-content')?.addEventListener('click', onResetContent);
   dom.passwordForm?.addEventListener('submit', onChangePassword);
   dom.inviteForm?.addEventListener('submit', onInviteUser);
 
@@ -836,6 +837,12 @@ function flashDesignStatus(msg, kind = 'ok') {
 }
 
 /* ---------- Account ---------- */
+
+async function onResetContent() {
+  if (!confirm('Alle bearbeiteten Webseiten-Texte zurücksetzen? Wochenplan, Speisekarte und Design bleiben erhalten.')) return;
+  await window.alsterDb.remove('content');
+  alert('Texte wurden auf den Original-Zustand zurückgesetzt.');
+}
 
 async function onResetAll() {
   if (!confirm('Möchten Sie wirklich ALLE Daten löschen (Wochenplan, Speisekarte, Öffnungszeiten, Banner, Design)?')) return;
