@@ -36,6 +36,26 @@
   </style>
   <link rel="stylesheet" href="styles.css" />
 
+  <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
+       Ueberschreibungen automatisch geloescht. So ist die Seite
+       nach jedem Deploy garantiert konsistent. -->
+  <script>
+    (function(){
+      var V='2026-05-10-r1';
+      try{
+        if(localStorage.getItem('alstercafe.app-version')!==V){
+          localStorage.removeItem('alstercafe.content');
+          localStorage.setItem('alstercafe.app-version',V);
+        }
+      }catch(e){}
+      // Alten Service Worker zwangsweise entfernen
+      try{
+        if('serviceWorker' in navigator){
+          navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){});
+        }
+      }catch(e){}
+    })();
+  </script>
   <!-- Sync Auth-Gate fuer ?edit=1 -->
   <script>
     (function(){try{var p=new URLSearchParams(location.search);if(p.get('edit')!=='1')return;var demo=false,supa=false;try{demo=localStorage.getItem('alstercafe.auth')==='1'}catch(e){}try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('sb-')===0&&k.indexOf('-auth-token')>-1){var v=JSON.parse(localStorage.getItem(k)||'null');if(v&&v.access_token){supa=true;break}}}}catch(e){}if(!demo&&!supa)location.replace('admin.html?next=edit')}catch(e){}})();
