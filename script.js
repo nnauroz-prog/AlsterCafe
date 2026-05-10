@@ -66,8 +66,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   initLunchWeek();
   initReservationForm();
   initLiveStatus();
-  initSpotlight();
-  initMagneticButtons();
   initEditMode();
   initServiceWorker();
   hideSplash();
@@ -352,12 +350,12 @@ function initDesign() {
   }
 
   // Hero-Bild
-  const illust = document.querySelector('.illust-hero');
+  const heroMark = document.querySelector('.hero-mark');
   const heroVisual = document.querySelector('.hero-visual');
   if (heroVisual) {
     let heroImg = heroVisual.querySelector('.hero-photo');
     if (design.heroImage) {
-      if (illust) illust.style.display = 'none';
+      if (heroMark) heroMark.style.display = 'none';
       if (!heroImg) {
         heroImg = document.createElement('div');
         heroImg.className = 'hero-photo';
@@ -365,7 +363,7 @@ function initDesign() {
       }
       heroImg.style.backgroundImage = `url("${design.heroImage}")`;
     } else {
-      if (illust) illust.style.display = '';
+      if (heroMark) heroMark.style.display = '';
       if (heroImg) heroImg.remove();
     }
   }

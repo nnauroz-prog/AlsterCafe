@@ -120,7 +120,7 @@ body::before {
   position: fixed; inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: .25;
+  opacity: .12;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.165 0 0 0 0 0.082 0 0 0 0 0.063 0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   background-size: 200px 200px;
@@ -128,19 +128,7 @@ body::before {
 @media (prefers-reduced-motion: reduce) { body::before { display: none; } }
 header, footer, main, .topbar, .cookie-banner, .edit-fab, .notice-banner { position: relative; z-index: 2; }
 
-/* Spotlight — subtile Maus-Aura (nur Desktop) */
-.spotlight {
-  position: fixed;
-  top: 0; left: 0;
-  width: 600px; height: 600px;
-  margin-left: -300px; margin-top: -300px;
-  pointer-events: none;
-  z-index: 1;
-  background: radial-gradient(circle, rgba(184, 137, 62, 0.10), transparent 60%);
-  mix-blend-mode: multiply;
-  transition: opacity .4s var(--ease-out);
-  will-change: transform;
-}
+/* (Spotlight entfernt — wirkt zu „designer-try-hard") */
 
 h1, h2, h3 {
   font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
@@ -436,19 +424,17 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   transition: opacity .5s var(--ease-out);
 }
 .app-splash-logo {
-  width: 80px; height: 80px;
+  width: 64px; height: 64px;
   border-radius: 50%;
-  animation: splash-pulse 1.4s var(--ease-in-out) infinite;
+  opacity: 0;
+  animation: splash-in .9s var(--ease-out) forwards;
 }
 .app-splash.is-leaving {
   opacity: 0;
 }
-@keyframes splash-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.06); opacity: .82; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .app-splash-logo { animation: none; }
+@keyframes splash-in {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 /* ===== HERO ===== */
@@ -597,73 +583,47 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-/* CSS Coffee Cup Illustration */
+/* Hero-Visual — Editorial-Mark statt Illustration */
 .hero-visual {
   position: relative;
   display: flex; align-items: center; justify-content: center;
   min-height: 360px;
 }
-.illust-hero { margin: 0; position: relative; width: 280px; height: 280px; }
-.cup { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; }
-.cup-saucer {
-  position: absolute;
-  bottom: 18px; left: 50%; transform: translateX(-50%);
-  width: 250px; height: 24px;
-  background: linear-gradient(180deg, var(--paper), var(--linen));
-  border: 1.5px solid var(--bean);
+.hero-mark {
+  display: flex; flex-direction: column; align-items: center; gap: 36px;
+  text-align: center;
+  animation: fade-in 1.2s var(--ease-out) .4s backwards;
+}
+.hero-mark-logo {
+  width: 180px; height: 180px;
   border-radius: 50%;
-  box-shadow: 0 14px 30px -10px rgba(42, 24, 16, .25);
+  background: var(--bean);
+  object-fit: cover;
 }
-.cup-body {
-  position: relative;
-  width: 180px; height: 160px;
-  background: linear-gradient(180deg, var(--paper) 0%, var(--linen) 100%);
-  border: 1.5px solid var(--bean);
-  border-radius: 0 0 90px 90px / 0 0 80px 80px;
-  margin-bottom: 38px;
+.hero-mark-meta {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-size: .68rem;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
 }
-.cup-body::before {
-  content: ''; position: absolute;
-  left: 8px; right: 8px; top: -1.5px;
-  height: 14px;
-  background: var(--paper);
-  border: 1.5px solid var(--bean);
-  border-radius: 50%;
+.hero-mark-line { display: block; }
+.hero-mark-big {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--bean);
+  margin: 4px 0;
 }
-.cup-handle {
-  position: absolute; right: -38px; top: 28px;
-  width: 44px; height: 64px;
-  border: 1.5px solid var(--bean); border-left: none;
-  border-radius: 0 50% 50% 0;
+@media (max-width: 760px) {
+  .hero-mark-logo { width: 140px; height: 140px; }
+  .hero-mark { gap: 24px; }
 }
-.cup-handle::after {
-  content: ''; position: absolute;
-  right: 6px; top: 12px;
-  width: 22px; height: 38px;
-  border: 1.5px solid var(--bean); border-left: none;
-  border-radius: 0 50% 50% 0;
-}
-.cup-coffee {
-  position: absolute; inset: 12px 14px auto 14px;
-  height: 20px;
-  background: var(--coffee); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-}
-.cup-foam { width: 80%; height: 60%; background: var(--linen); border-radius: 50%; opacity: .7; }
-.steam {
-  position: absolute; width: 4px;
-  background: linear-gradient(180deg, transparent, var(--coffee), transparent);
-  border-radius: 2px; opacity: 0;
-  animation: steam 3s ease-in-out infinite;
-}
-.steam.s1 { left: 38%; top: 4%; height: 60px; animation-delay: 0s; }
-.steam.s2 { left: 50%; top: 0%; height: 80px; animation-delay: 0.6s; }
-.steam.s3 { left: 62%; top: 4%; height: 60px; animation-delay: 1.2s; }
-@keyframes steam {
-  0%   { transform: translateY(20px) scaleY(.6); opacity: 0; }
-  35%  { opacity: .35; }
-  100% { transform: translateY(-20px) scaleY(1.2); opacity: 0; }
-}
+/* (Cup-Illustration entfernt — Hero arbeitet jetzt mit Editorial-Typografie) */
 
 /* ===== SECTION ===== */
 .section { padding: clamp(72px, 9vw, 130px) 0; position: relative; }
