@@ -2770,48 +2770,45 @@ body.is-editing [data-editable]:focus::before {
 .day-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
+  gap: 16px;
   margin-bottom: 40px;
 }
 .day-grid > .day-card:nth-child(7) { grid-column: 1 / -1; }
 
 .day-card {
   background: var(--paper);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: 26px 28px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  padding: 22px 22px 18px;
   transition:
     border-color var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
+    box-shadow var(--dur-base) var(--ease-out);
 }
-.day-card:hover {
+.day-card:hover,
+.day-card:focus-within {
   border-color: var(--gold-soft);
   box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
 }
 .day-card.is-today {
-  border-left-color: var(--gold);
+  border-color: var(--gold-soft);
   background:
-    radial-gradient(400px 100px at 0% 0%, rgba(184, 137, 62, 0.04), transparent 60%),
+    linear-gradient(180deg, rgba(184, 137, 62, 0.05), transparent 28%),
     var(--paper);
 }
-.day-card.is-closed { opacity: .55; }
+.day-card.is-closed { background: var(--cream); }
+.day-card.is-closed .day-field { opacity: .5; }
 .day-card.is-spillover {
-  /* Heute-Sonntag-Karte (Vorwoche) — visuell abgehoben */
   border-color: var(--gold-soft);
-  border-top: 3px solid var(--gold);
   background:
     linear-gradient(180deg, rgba(184, 137, 62, 0.06), transparent 30%),
     var(--paper);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   position: relative;
 }
 .day-card.is-spillover::before {
   content: 'Aus laufender Woche';
   position: absolute;
-  top: 14px; right: 14px;
+  top: 14px; right: 16px;
   font-size: .62rem;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -2819,71 +2816,108 @@ body.is-editing [data-editable]:focus::before {
   font-weight: 600;
 }
 .day-card.is-closed textarea,
-.day-card.is-closed input[type="text"] { pointer-events: none; opacity: .5; }
+.day-card.is-closed input[type="text"] { pointer-events: none; }
 
 .day-card-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
 }
 .day-name {
   font-family: 'Fraunces', serif;
-  font-size: 1.2rem;
+  font-size: 1.18rem;
   font-weight: 500;
   color: var(--bean);
+  letter-spacing: -0.01em;
 }
 .day-date {
   margin-left: 10px;
   font-size: .82rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  font-weight: 400;
 }
 .day-pill {
   background: var(--gold);
-  color: var(--bean);
-  font-size: .68rem;
-  letter-spacing: .14em;
+  color: var(--paper);
+  font-size: .66rem;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-weight: 600;
 }
 
-.day-field { display: block; margin-bottom: 14px; }
-.day-field > span {
+.day-field { display: block; margin-bottom: 10px; }
+.day-field-label {
   display: block;
-  font-size: .72rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
+  font-size: .82rem;
   color: var(--muted);
-  font-weight: 600;
-  margin-bottom: 6px;
+  font-weight: 500;
+  margin-bottom: 5px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .day-field textarea,
 .day-field input[type="text"] {
   width: 100%;
-  font: 400 .96rem 'Inter', sans-serif;
-  color: var(--ink);
+  font: 400 1rem 'Inter', sans-serif;
+  color: var(--bean);
   background: var(--cream);
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  transition: border-color .2s ease;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 11px 14px;
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
-.day-field textarea { resize: vertical; min-height: 56px; line-height: 1.45; }
+.day-field textarea { resize: vertical; min-height: 60px; line-height: 1.45; }
+.day-field textarea::placeholder,
+.day-field input[type="text"]::placeholder { color: rgba(120, 97, 82, 0.55); }
 .day-field textarea:focus,
-.day-field input[type="text"]:focus { outline: none; border-color: var(--bean); background: var(--paper); }
-
-.day-toggle {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 8px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--line-soft);
-  font-size: .85rem; color: var(--muted);
-  cursor: pointer;
+.day-field input[type="text"]:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: var(--paper);
 }
-.day-toggle input { width: auto; }
+
+/* Geschlossen-Schalter (Toggle-Switch) */
+.day-toggle {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+  font-size: .9rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.day-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+  pointer-events: none;
+}
+.day-toggle-track {
+  flex-shrink: 0;
+  width: 36px; height: 20px;
+  background: var(--line);
+  border-radius: 999px;
+  position: relative;
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.day-toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: var(--paper);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(42, 24, 16, 0.18);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.day-toggle input:checked + .day-toggle-track { background: var(--gold); }
+.day-toggle input:checked + .day-toggle-track .day-toggle-thumb { transform: translateX(16px); }
+.day-toggle input:focus-visible + .day-toggle-track { box-shadow: 0 0 0 3px rgba(184, 137, 62, 0.25); }
+.day-toggle-text { line-height: 1.3; }
+.day-card.is-closed .day-toggle-text { color: var(--bean); font-weight: 500; }
 
 /* SAVE BAR */
 .save-bar {

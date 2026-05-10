@@ -496,16 +496,17 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
       ${isToday ? '<span class="day-pill">Heute</span>' : ''}
     </div>
     <label class="day-field">
-      <span>Hauptgericht</span>
-      <textarea name="${fieldPrefix}-dish" rows="2" placeholder="z. B. Hähnchenschenkel oder gebackener Schafskäse mit Gemüse">${escapeHtml(saved.dish || '')}</textarea>
+      <span class="day-field-label">Hauptgericht</span>
+      <textarea name="${fieldPrefix}-dish" rows="2" placeholder="z. B. Hähnchenschenkel mit Gemüse">${escapeHtml(saved.dish || '')}</textarea>
     </label>
     <label class="day-field">
-      <span>Beilagen / Zusatz</span>
-      <input type="text" name="${fieldPrefix}-side" placeholder="z. B. Bulgur oder Reis, Salat" value="${escapeAttr(saved.side || '')}" />
+      <span class="day-field-label">Beilage</span>
+      <input type="text" name="${fieldPrefix}-side" placeholder="z. B. Reis und Salat" value="${escapeAttr(saved.side || '')}" />
     </label>
     <label class="day-toggle">
       <input type="checkbox" name="${fieldPrefix}-closed" ${saved.closed ? 'checked' : ''} />
-      <span>Kein Mittagstisch / Geschlossen</span>
+      <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
+      <span class="day-toggle-text">An diesem Tag geschlossen</span>
     </label>
   `;
   return card;
