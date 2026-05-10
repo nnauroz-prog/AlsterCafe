@@ -8,6 +8,64 @@ const STORAGE_HOURS    = 'alstercafe.hours';
 const STORAGE_DESIGN   = 'alstercafe.design';
 const STORAGE_CONTENT  = 'alstercafe.content';
 
+/* ---------- Globale Fehler-Sicherung ----------
+   Faengt jeden uncaughten Fehler ab und sorgt dafuer, dass die
+   Seite nie kaputt aussieht. Splash wird notfalls weggenommen. */
+(function setupErrorBoundary() {
+  function rescueSplash() {
+    const s = document.getElementById('app-splash');
+    if (s) { s.classList.add('is-leaving'); setTimeout(() => s.remove(), 500); }
+  }
+  window.addEventListener('error', (e) => {
+    console.warn('[caught]', e.message);
+    rescueSplash();
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    console.warn('[promise]', e.reason);
+    rescueSplash();
+  });
+})();
+
+/* Schema-Validatoren: stellen sicher dass localStorage-Daten
+   die erwartete Form haben. Wenn nicht, wird der Eintrag
+   ignoriert (statt einen Fehler auszuloesen). */
+function isObject(x) { return x && typeof x === 'object' && !Array.isArray(x); }
+function isArray(x)  { return Array.isArray(x); }
+function isString(x) { return typeof x === 'string'; }
+
+function validateContent(c) {
+  if (!isObject(c)) return null;
+  const out = {};
+  Object.keys(c).forEach(k => { if (isString(c[k])) out[k] = c[k]; });
+  return out;
+}
+function validateDesign(d) {
+  if (!isObject(d)) return {};
+  const out = {};
+  ['logo','heroImage','aboutImage','accentColor'].forEach(k => {
+    if (isString(d[k])) out[k] = d[k];
+  });
+  if (isArray(d.gallery)) out.gallery = d.gallery.filter(isString).slice(0, 6);
+  return out;
+}
+function validateHours(h) {
+  if (!isArray(h)) return null;
+  return h.filter(r => isObject(r) && isString(r.label) && isString(r.time)).slice(0, 10);
+}
+function validateMenu(m) {
+  if (!isObject(m)) return null;
+  const out = {};
+  ['fruehstueck','backwaren','getraenke'].forEach(k => {
+    if (isObject(m[k])) {
+      const items = isArray(m[k].items)
+        ? m[k].items.filter(i => isObject(i) && isString(i.name)).slice(0, 50)
+        : [];
+      out[k] = { title: isString(m[k].title) ? m[k].title : '', items };
+    }
+  });
+  return out;
+}
+
 const DAY_KEYS   = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 
@@ -91,11 +149,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /* ---------- Inhalts-Overrides (gespeicherte Custom-Texte) ---------- */
 function initContent() {
-  let content = {};
-  try { content = JSON.parse(localStorage.getItem(STORAGE_CONTENT) || '{}'); } catch {}
+  let raw = {};
+  try { raw = JSON.parse(localStorage.getItem(STORAGE_CONTENT) || '{}'); } catch {}
+  const content = validateContent(raw) || {};
   document.querySelectorAll('[data-editable]').forEach(el => {
     const key = el.dataset.editable;
-    if (content[key] != null) el.innerHTML = content[key];
+    if (typeof content[key] === 'string' && content[key].length < 5000) {
+      el.innerHTML = content[key];
+    }
   });
 }
 
@@ -659,27 +720,37 @@ function initLunchWeek() {
   renderWeekList(weekData, monday, today);
 }
 
-/* Today-Feature-Block auf der Home-Page: nur das heutige Tagesgericht */
+/* Today-Feature-Block auf der Home-Page:
+   - Vor 15:00 (Schliesszeit): heutiges Tagesgericht
+   - Ab 15:00 (Cafe geschlossen): Vorschau auf morgen */
 function initLandingTeaser() {
   const block    = document.getElementById('today-feature');
+  const prefixEl = document.getElementById('today-feature-prefix');
   const dayEl    = document.getElementById('today-feature-day');
   const kickerEl = document.getElementById('today-feature-kicker');
   const dishEl   = document.getElementById('today-feature-dish');
   const sideEl   = document.getElementById('today-feature-side');
   if (!block || !dishEl) return;
 
-  const today = new Date();
-  const monday = mondayOf(today);
+  const now = new Date();
+  const showTomorrow = now.getHours() >= 15;
+  const targetDate = new Date(now);
+  if (showTomorrow) targetDate.setDate(targetDate.getDate() + 1);
+
+  const monday = mondayOf(targetDate);
   const weekData = loadCurrentWeek(monday);
-  const dayIdx = (today.getDay() + 6) % 7;
+  const dayIdx = (targetDate.getDay() + 6) % 7;
   const dayKey = DAY_KEYS[dayIdx];
   const entry  = weekData?.days?.[dayKey];
 
-  if (dayEl) dayEl.textContent = DAY_LABELS[dayIdx];
+  if (prefixEl) prefixEl.textContent = showTomorrow ? 'Morgen' : 'Heute';
+  if (dayEl)    dayEl.textContent    = DAY_LABELS[dayIdx];
 
   if (entry?.dish && !entry.closed) {
     block.dataset.state = 'open';
-    if (kickerEl) kickerEl.textContent = 'Heute kochen wir für Sie';
+    if (kickerEl) kickerEl.textContent = showTomorrow
+      ? 'Morgen kochen wir für Sie'
+      : 'Heute kochen wir für Sie';
     dishEl.textContent = entry.dish;
     if (sideEl) {
       sideEl.textContent = entry.side ? `mit ${entry.side}` : '';
@@ -687,12 +758,18 @@ function initLandingTeaser() {
     }
   } else if (entry?.closed) {
     block.dataset.state = 'closed';
-    if (kickerEl) kickerEl.textContent = 'Wir machen heute Pause';
-    dishEl.textContent = 'Bis morgen — wir freuen uns auf Sie.';
+    if (kickerEl) kickerEl.textContent = showTomorrow
+      ? 'Morgen geschlossen'
+      : 'Wir machen heute Pause';
+    dishEl.textContent = showTomorrow
+      ? 'Übermorgen geht es weiter — wir freuen uns auf Sie.'
+      : 'Bis morgen — wir freuen uns auf Sie.';
     if (sideEl) sideEl.hidden = true;
   } else {
     block.dataset.state = 'empty';
-    if (kickerEl) kickerEl.textContent = 'Schauen Sie einfach vorbei';
+    if (kickerEl) kickerEl.textContent = showTomorrow
+      ? 'Morgen kein Mittagstisch'
+      : 'Schauen Sie einfach vorbei';
     dishEl.textContent = 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.';
     if (sideEl) sideEl.hidden = true;
   }

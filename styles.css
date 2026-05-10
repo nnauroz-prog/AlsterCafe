@@ -893,7 +893,18 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 /* (Cup-Illustration entfernt — Hero arbeitet jetzt mit Editorial-Typografie) */
 
 /* ===== SECTION ===== */
-.section { padding: clamp(72px, 9vw, 130px) 0; position: relative; }
+.section {
+  padding: clamp(72px, 9vw, 130px) 0;
+  position: relative;
+  /* Performance: Browser muss Sektionen ausserhalb des Viewports
+     nicht rendern → schnellerer initialer Paint, weniger Speicher */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 800px;
+}
+.hero, .page-hero, .topbar, .site-header, .site-footer {
+  /* Above-the-fold: niemals "skip" rendern */
+  content-visibility: visible;
+}
 
 .section-head { max-width: 720px; margin: 0 auto 64px; text-align: center; }
 .section-head .eyebrow { justify-content: center; }
@@ -1424,15 +1435,20 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 /* ===== REVEAL ===== */
 .reveal {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translate3d(0, 24px, 0);
   transition:
     opacity var(--dur-reveal) var(--ease-out),
     transform var(--dur-reveal) var(--ease-out);
   transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
 }
-.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal.in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto; /* nach Reveal entfernen, spart Speicher */
+}
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
+  .reveal { opacity: 1; transform: none; transition: none; will-change: auto; }
 }
 
 /* ===== COOKIE BANNER ===== */
