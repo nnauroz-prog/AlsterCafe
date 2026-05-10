@@ -2579,6 +2579,26 @@ body.is-editing [data-editable]:focus::before {
     var(--paper);
 }
 .day-card.is-closed { opacity: .55; }
+.day-card.is-spillover {
+  /* Heute-Sonntag-Karte (Vorwoche) — visuell abgehoben */
+  border-color: var(--gold-soft);
+  border-top: 3px solid var(--gold);
+  background:
+    linear-gradient(180deg, rgba(184, 137, 62, 0.06), transparent 30%),
+    var(--paper);
+  margin-bottom: 8px;
+  position: relative;
+}
+.day-card.is-spillover::before {
+  content: 'Aus laufender Woche';
+  position: absolute;
+  top: 14px; right: 14px;
+  font-size: .62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
 .day-card.is-closed textarea,
 .day-card.is-closed input[type="text"] { pointer-events: none; opacity: .5; }
 

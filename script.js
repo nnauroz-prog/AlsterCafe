@@ -768,9 +768,11 @@ function initLandingTeaser() {
   } else {
     block.dataset.state = 'empty';
     if (kickerEl) kickerEl.textContent = showTomorrow
-      ? 'Morgen kein Mittagstisch'
+      ? `Morgen · ${DAY_LABELS[dayIdx]}`
       : 'Schauen Sie einfach vorbei';
-    dishEl.textContent = 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.';
+    dishEl.textContent = showTomorrow
+      ? 'Eintrag folgt in Kürze.'
+      : 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.';
     if (sideEl) sideEl.hidden = true;
   }
 }

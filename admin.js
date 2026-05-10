@@ -70,6 +70,22 @@ const DAYS = [
 const dom = {};
 let currentMonday = mondayOf(new Date());
 
+// Sonntag-Modus: zeigt heutigen Sonntag + naechste Woche (8 Tage)
+// Aktiv wenn der Inhaber sonntags den Admin oeffnet — er kann den
+// laufenden Sonntag ueberarbeiten UND die naechste Woche planen.
+let sundaySpillover = false;
+function maybeEnableSundaySpillover() {
+  const today = new Date();
+  if (today.getDay() === 0) {
+    // Sonntag: zeige naechste Woche, aber mit Sonntag oben
+    const nextMonday = new Date(today);
+    nextMonday.setDate(nextMonday.getDate() + 1);
+    currentMonday = mondayOf(nextMonday);
+    sundaySpillover = true;
+  }
+}
+maybeEnableSundaySpillover();
+
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
@@ -99,7 +115,12 @@ async function init() {
   dom.menuForm.addEventListener('submit', onSaveWeek);
   dom.weekPrev.addEventListener('click', () => changeWeek(-7));
   dom.weekNext.addEventListener('click', () => changeWeek(7));
-  dom.weekToday.addEventListener('click', () => { currentMonday = mondayOf(new Date()); renderWeek(); });
+  dom.weekToday.addEventListener('click', () => {
+    sundaySpillover = false;
+    currentMonday = mondayOf(new Date());
+    maybeEnableSundaySpillover();
+    renderWeek();
+  });
   dom.copyPrev.addEventListener('click', onCopyFromPrevious);
   dom.exportJson.addEventListener('click', onExportJson);
   dom.resetWeek.addEventListener('click', onResetWeek);
@@ -291,6 +312,7 @@ function switchTab(name) {
 /* ---------- Wochenplan ---------- */
 
 function changeWeek(deltaDays) {
+  sundaySpillover = false; // Manueller Wochen-Wechsel deaktiviert Spillover
   const d = new Date(currentMonday);
   d.setDate(d.getDate() + deltaDays);
   currentMonday = mondayOf(d);
@@ -341,22 +363,44 @@ function onExportJson() {
 
 function onSaveWeek(e) {
   e.preventDefault();
-  const week = readFormToWeek();
   const all = loadAll();
+
+  // Aktuelle Woche aus den 7 Standard-Karten lesen
+  const week = readFormToWeek();
   all[isoDate(currentMonday)] = {
     weekStart: isoDate(currentMonday),
     updatedAt: new Date().toISOString(),
     days: week
   };
+
+  // Sonntag-Spillover: Sonntag-Karte gehoert zur Vorwoche
+  if (sundaySpillover) {
+    const data = new FormData(dom.menuForm);
+    const dish   = (data.get('spillover-sun-dish')   || '').toString().trim();
+    const side   = (data.get('spillover-sun-side')   || '').toString().trim();
+    const closed = data.get('spillover-sun-closed') === 'on';
+    const today = new Date();
+    const prevMonday = mondayOf(new Date(today.getTime() - 7 * 86400000));
+    const prevKey = isoDate(prevMonday);
+    const prevWeek = all[prevKey] || { weekStart: prevKey, days: {} };
+    if (dish || side || closed) {
+      prevWeek.days = prevWeek.days || {};
+      prevWeek.days.sun = { dish, side, closed };
+      prevWeek.updatedAt = new Date().toISOString();
+      all[prevKey] = prevWeek;
+    }
+  }
+
   saveAll(all);
   renderWeek();
   setStatus(dom.saveStatus, `Gespeichert · ${formatTime(new Date())}`, 'ok');
+  if (typeof logActivity === 'function') logActivity('Wochenplan gespeichert');
 }
 
 function renderWeek() {
   const weekKw = isoWeek(currentMonday);
   const sunday = new Date(currentMonday); sunday.setDate(sunday.getDate() + 6);
-  dom.weekKw.textContent = `KW ${weekKw}`;
+  dom.weekKw.textContent = sundaySpillover ? `Heute + KW ${weekKw}` : `KW ${weekKw}`;
   dom.weekRange.textContent = `${formatShort(currentMonday)} – ${formatShort(sunday)}`;
   if (dom.statWeek) dom.statWeek.textContent = `KW ${weekKw}`;
 
@@ -369,35 +413,38 @@ function renderWeek() {
     : '–';
 
   dom.dayGrid.innerHTML = '';
+
+  // Sonntag-Spillover: heute (laufender Sonntag) als erste Karte rendern
+  // Daten kommen aus der Vorwoche
+  if (sundaySpillover) {
+    const todaySunday = new Date();
+    const prevMonday = mondayOf(new Date(todaySunday.getTime() - 7 * 86400000));
+    const prevWeekData = all[isoDate(prevMonday)] || { days: {} };
+    const prevSundayEntry = prevWeekData.days.sun || {};
+    dom.dayGrid.appendChild(buildDayCard({
+      label: 'Heute · Sonntag',
+      key: 'sun',
+      date: todaySunday,
+      saved: prevSundayEntry,
+      isToday: true,
+      weekKey: isoDate(prevMonday),
+      isSpillover: true
+    }));
+  }
+
   DAYS.forEach((day, idx) => {
     const date = new Date(currentMonday); date.setDate(date.getDate() + idx);
     const saved = stored.days[day.key] || {};
     const isToday = isSameDay(date, new Date());
-
-    const card = document.createElement('div');
-    card.className = 'day-card' + (isToday ? ' is-today' : '') + (saved.closed ? ' is-closed' : '');
-    card.innerHTML = `
-      <div class="day-card-head">
-        <div>
-          <span class="day-name">${day.label}</span>
-          <span class="day-date">${formatShort(date)}</span>
-        </div>
-        ${isToday ? '<span class="day-pill">Heute</span>' : ''}
-      </div>
-      <label class="day-field">
-        <span>Hauptgericht</span>
-        <textarea name="${day.key}-dish" rows="2" placeholder="z. B. Hähnchenschenkel oder gebackener Schafskäse mit Gemüse">${escapeHtml(saved.dish || '')}</textarea>
-      </label>
-      <label class="day-field">
-        <span>Beilagen / Zusatz</span>
-        <input type="text" name="${day.key}-side" placeholder="z. B. Bulgur oder Reis, Salat" value="${escapeAttr(saved.side || '')}" />
-      </label>
-      <label class="day-toggle">
-        <input type="checkbox" name="${day.key}-closed" ${saved.closed ? 'checked' : ''} />
-        <span>Kein Mittagstisch / Geschlossen</span>
-      </label>
-    `;
-    dom.dayGrid.appendChild(card);
+    dom.dayGrid.appendChild(buildDayCard({
+      label: day.label,
+      key: day.key,
+      date,
+      saved,
+      isToday,
+      weekKey: isoDate(currentMonday),
+      isSpillover: false
+    }));
   });
 
   dom.dayGrid.querySelectorAll('.day-toggle input').forEach(cb => {
@@ -409,6 +456,41 @@ function renderWeek() {
     stored.updatedAt
       ? `Zuletzt gespeichert · ${formatDateTime(new Date(stored.updatedAt))}`
       : 'Noch nicht gespeichert.');
+}
+
+function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }) {
+  const card = document.createElement('div');
+  card.className = 'day-card'
+    + (isToday ? ' is-today' : '')
+    + (saved.closed ? ' is-closed' : '')
+    + (isSpillover ? ' is-spillover' : '');
+  card.dataset.weekKey = weekKey;
+  card.dataset.dayKey  = key;
+  // Spillover-Karten brauchen unique input-names damit sie nicht mit
+  // den naechste-Woche-Karten kollidieren
+  const fieldPrefix = isSpillover ? `spillover-${key}` : key;
+  card.innerHTML = `
+    <div class="day-card-head">
+      <div>
+        <span class="day-name">${escapeHtml(label)}</span>
+        <span class="day-date">${formatShort(date)}</span>
+      </div>
+      ${isToday ? '<span class="day-pill">Heute</span>' : ''}
+    </div>
+    <label class="day-field">
+      <span>Hauptgericht</span>
+      <textarea name="${fieldPrefix}-dish" rows="2" placeholder="z. B. Hähnchenschenkel oder gebackener Schafskäse mit Gemüse">${escapeHtml(saved.dish || '')}</textarea>
+    </label>
+    <label class="day-field">
+      <span>Beilagen / Zusatz</span>
+      <input type="text" name="${fieldPrefix}-side" placeholder="z. B. Bulgur oder Reis, Salat" value="${escapeAttr(saved.side || '')}" />
+    </label>
+    <label class="day-toggle">
+      <input type="checkbox" name="${fieldPrefix}-closed" ${saved.closed ? 'checked' : ''} />
+      <span>Kein Mittagstisch / Geschlossen</span>
+    </label>
+  `;
+  return card;
 }
 
 function readFormToWeek() {
