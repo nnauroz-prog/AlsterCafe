@@ -37,6 +37,10 @@
   <script>
     (function(){try{var p=new URLSearchParams(location.search);if(p.get('edit')!=='1')return;var demo=false,supa=false;try{demo=localStorage.getItem('alstercafe.auth')==='1'}catch(e){}try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('sb-')===0&&k.indexOf('-auth-token')>-1){var v=JSON.parse(localStorage.getItem(k)||'null');if(v&&v.access_token){supa=true;break}}}}catch(e){}if(!demo&&!supa)location.replace('admin.html?next=edit')}catch(e){}})();
   </script>
+  <!-- Splash-Safety-Net: spaetestens nach 2,5s ist die Seite garantiert sichtbar -->
+  <script>
+    setTimeout(function(){var s=document.getElementById('app-splash');if(s){s.classList.add('is-leaving');setTimeout(function(){s.remove()},600)}},2500);
+  </script>
 
   <!-- Open Graph -->
   <meta property="og:type" content="restaurant.restaurant" />
