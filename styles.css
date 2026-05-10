@@ -457,27 +457,70 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 /* ===== LANDING ===== */
 .hero-landing { padding-bottom: 0; }
 
-.landing-today {
-  background: var(--cream);
-  padding: clamp(40px, 5vw, 64px) 0;
+/* Today-Feature: heutiger Mittagstisch ganz prominent */
+.today-feature {
+  background:
+    radial-gradient(900px 400px at 50% 0%, rgba(184, 137, 62, 0.18), transparent 60%),
+    linear-gradient(160deg, var(--bean) 0%, var(--espresso) 100%);
+  color: var(--linen);
+  padding: clamp(60px, 8vw, 100px) 0;
+  position: relative;
 }
-.landing-today-inner {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 32px; align-items: center;
+.today-feature::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
-.landing-today-text h2 { font-size: clamp(1.6rem, 2.6vw, 2rem); margin: 0 0 8px; }
-.landing-today-dish {
+.today-feature-inner {
+  text-align: center;
+  max-width: 720px;
+}
+.today-feature-inner .eyebrow {
+  justify-content: center;
+}
+.today-feature-kicker {
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  margin: 0 0 18px;
+  font-weight: 500;
+}
+.today-feature-dish {
   font-family: 'Fraunces', serif;
   font-style: italic;
-  font-size: 1.1rem;
-  color: var(--coffee);
-  margin: 0;
-  max-width: 600px;
-  line-height: 1.5;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  color: var(--paper);
+  line-height: 1.25;
+  margin: 0 auto 14px;
+  max-width: 640px;
+  letter-spacing: -0.012em;
+  font-variation-settings: "opsz" 96;
 }
-@media (max-width: 760px) {
-  .landing-today-inner { grid-template-columns: 1fr; }
+.today-feature-side {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: rgba(241, 231, 211, .7);
+  font-size: 1.1rem;
+  margin: 0 0 36px;
+  letter-spacing: -0.005em;
+}
+.today-feature-cta {
+  display: flex; gap: 24px; justify-content: center; align-items: center; flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+/* Geschlossen / leer */
+.today-feature[data-state="closed"] .today-feature-cta,
+.today-feature[data-state="empty"]  .today-feature-cta { display: none; }
+.today-feature[data-state="closed"] .today-feature-dish,
+.today-feature[data-state="empty"]  .today-feature-dish {
+  color: rgba(241, 231, 211, .85);
+  font-size: clamp(1.4rem, 3vw, 2rem);
 }
 
 .landing-cards { background: var(--paper); }

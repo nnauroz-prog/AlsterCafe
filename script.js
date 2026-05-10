@@ -659,20 +659,42 @@ function initLunchWeek() {
   renderWeekList(weekData, monday, today);
 }
 
-/* Landing-Teaser auf der Home-Page: zeigt heutigen Mittagstisch */
+/* Today-Feature-Block auf der Home-Page: nur das heutige Tagesgericht */
 function initLandingTeaser() {
-  const titleEl = document.getElementById('landing-today-title');
-  const dishEl  = document.getElementById('landing-today-dish');
-  if (!titleEl || !dishEl) return;
+  const block    = document.getElementById('today-feature');
+  const dayEl    = document.getElementById('today-feature-day');
+  const kickerEl = document.getElementById('today-feature-kicker');
+  const dishEl   = document.getElementById('today-feature-dish');
+  const sideEl   = document.getElementById('today-feature-side');
+  if (!block || !dishEl) return;
+
   const today = new Date();
   const monday = mondayOf(today);
   const weekData = loadCurrentWeek(monday);
   const dayIdx = (today.getDay() + 6) % 7;
   const dayKey = DAY_KEYS[dayIdx];
   const entry  = weekData?.days?.[dayKey];
+
+  if (dayEl) dayEl.textContent = DAY_LABELS[dayIdx];
+
   if (entry?.dish && !entry.closed) {
-    titleEl.textContent = `Heute · ${DAY_LABELS[dayIdx]}`;
-    dishEl.textContent  = entry.dish + (entry.side ? ` · ${entry.side}` : '');
+    block.dataset.state = 'open';
+    if (kickerEl) kickerEl.textContent = 'Mittagstisch ab 12:00';
+    dishEl.textContent = entry.dish;
+    if (sideEl) {
+      sideEl.textContent = entry.side ? `mit ${entry.side}` : '';
+      sideEl.hidden = !entry.side;
+    }
+  } else if (entry?.closed) {
+    block.dataset.state = 'closed';
+    if (kickerEl) kickerEl.textContent = 'Heute geschlossen';
+    dishEl.textContent = 'Wir sehen uns morgen wieder.';
+    if (sideEl) sideEl.hidden = true;
+  } else {
+    block.dataset.state = 'empty';
+    if (kickerEl) kickerEl.textContent = 'Heute kein Mittagstisch';
+    dishEl.textContent = 'Frühstück & frische Backwaren — den ganzen Tag.';
+    if (sideEl) sideEl.hidden = true;
   }
 }
 
