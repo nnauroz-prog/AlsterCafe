@@ -713,11 +713,19 @@ function initLunchWeek() {
   // Nur auf Mittagstisch-Seite aktiv
   if (!document.getElementById('lunch-today') && !document.getElementById('lunch-week-list')) return;
   const today = new Date();
-  const monday = mondayOf(today);
-  const weekData = loadCurrentWeek(monday);
-  renderWeekMeta(monday);
-  renderTodayLunch(weekData, today);
-  renderWeekList(weekData, monday, today);
+  // Sunday-Spillover (spiegelt admin.js maybeEnableSundaySpillover):
+  // Am Sonntag traegt der Inhaber die kommende Woche ein — die Wochenliste
+  // zeigt sie daher sonntags an. Das heutige Sonntags-Gericht wird weiterhin
+  // aus der laufenden Woche geladen (dort speichert admin den Spillover).
+  const isSunday = today.getDay() === 0;
+  const displayMonday = isSunday
+    ? mondayOf(new Date(today.getTime() + 86400000))
+    : mondayOf(today);
+  const todayWeekData   = loadCurrentWeek(mondayOf(today));
+  const displayWeekData = loadCurrentWeek(displayMonday);
+  renderWeekMeta(displayMonday);
+  renderTodayLunch(todayWeekData, today);
+  renderWeekList(displayWeekData, displayMonday, today);
 }
 
 /* Today-Feature-Block auf der Home-Page:
