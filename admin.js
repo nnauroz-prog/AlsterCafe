@@ -76,12 +76,15 @@ async function init() {
   cacheDom();
   if (dom.year) dom.year.textContent = new Date().getFullYear();
 
-  // Auf das DB-Modul warten und initialisieren
-  if (window.alsterDb) await window.alsterDb.ready();
-
-  if (await isAuthenticated()) await showDashboard();
-  else showLogin();
-
+  // Sicherstellen, dass auch bei Fehlern immer der Login sichtbar ist
+  try {
+    if (window.alsterDb) await window.alsterDb.ready();
+    if (await isAuthenticated()) await showDashboard();
+    else showLogin();
+  } catch (err) {
+    console.error('Admin-Init fehlgeschlagen, zeige Login:', err);
+    showLogin();
+  }
   document.body.classList.add('is-ready');
 
   // Login

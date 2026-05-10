@@ -16,8 +16,6 @@
     html,body{margin:0;padding:0;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
     img{max-width:100%;display:block}
     [hidden]{display:none!important}
-    #login-view,#dashboard-view{visibility:hidden}
-    body.is-ready #login-view,body.is-ready #dashboard-view{visibility:visible}
   </style>
 </head>
 <body class="admin-body">
@@ -67,7 +65,7 @@
 
   <main class="admin-main">
     <!-- LOGIN -->
-    <section class="admin-login" id="login-view" hidden>
+    <section class="admin-login" id="login-view">
       <div class="login-card reveal in">
         <svg class="ico ico-card lock-ico"><use href="#i-lock"/></svg>
         <h1>Mitgliederbereich</h1>
