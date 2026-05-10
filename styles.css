@@ -632,6 +632,66 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   letter-spacing: -0.005em;
 }
 
+/* Persoenliche Begruessung — Maria als Mensch */
+.landing-greeting {
+  padding: clamp(70px, 9vw, 110px) 0;
+  background: var(--paper);
+  position: relative;
+}
+.landing-greeting::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-soft), transparent);
+}
+.landing-greeting-inner {
+  max-width: 720px;
+  text-align: center;
+}
+.landing-greeting .eyebrow { justify-content: center; }
+.greeting-line {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2rem, 4.4vw, 3.4rem);
+  color: var(--bean);
+  line-height: 1.05;
+  margin: 8px 0 32px;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 144;
+}
+.greeting-text {
+  font-size: 1.05rem;
+  color: var(--muted);
+  line-height: 1.75;
+  max-width: 580px;
+  margin: 0 auto 36px;
+}
+.greeting-signature {
+  display: flex; flex-direction: column; align-items: center;
+  margin: 28px 0 0;
+  gap: 6px;
+}
+.greeting-signature-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  color: var(--gold);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 144;
+}
+.greeting-signature-role {
+  font-size: .72rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
 /* Warmer Abschluss am Ende der Startseite */
 .landing-closer {
   padding: clamp(64px, 9vw, 100px) 0;
