@@ -37,6 +37,12 @@
       <symbol id="i-image" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 20"/></g></symbol>
       <symbol id="i-upload" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M5 20h14"/></g></symbol>
       <symbol id="i-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5h-3"/></g></symbol>
+      <symbol id="i-fork" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8a2 2 0 0 0 2 2v8"/><path d="M11 3v8"/><path d="M15 3c-1 0-2 1-2 3v5c0 1 .5 2 2 2v8"/></g></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h13"/><path d="M8 7h7M8 11h7"/></g></symbol>
+      <symbol id="i-inbox" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-8h12l3 8"/><path d="M3 13v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 13h5l1 3h6l1-3h5"/></g></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
+      <symbol id="i-arrow-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></g></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
     </defs>
   </svg>
 
@@ -144,6 +150,85 @@
             </div>
           </div>
         </div>
+
+        <!-- OVERVIEW (Dashboard-Startansicht) -->
+        <section class="admin-overview" id="overview-view">
+          <header class="overview-head">
+            <div>
+              <p class="overview-eyebrow">Inhalte verwalten</p>
+              <h2 class="overview-title-main">Was möchten Sie ändern?</h2>
+            </div>
+            <span class="overview-status" aria-label="Status: online">
+              <span class="overview-status-dot" aria-hidden="true"></span>
+              Online
+            </span>
+          </header>
+
+          <div class="overview-grid">
+            <button class="overview-card" type="button" data-tab="week">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-fork"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Mittagsmenü bearbeiten</span>
+                <span class="overview-card-desc">Wochenplan und Tagesgerichte pflegen</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="menu">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-book"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Speisekarte pflegen</span>
+                <span class="overview-card-desc">Frühstück, Backwaren, Getränke</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="notice">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-bell"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Hinweisbanner aktivieren</span>
+                <span class="overview-card-desc">Brückentage und Sonderhinweise</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <a class="overview-card" href="mailto:info@alstercafe.de" rel="noopener">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-inbox"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Anfragen ansehen</span>
+                <span class="overview-card-desc">Reservierungen im Posteingang öffnen</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </a>
+
+            <button class="overview-card" type="button" data-tab="design">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-image"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Bilder hochladen</span>
+                <span class="overview-card-desc">Logo, Hero-Bild, Galerie & Farben</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="hours">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-clock"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Öffnungszeiten ändern</span>
+                <span class="overview-card-desc">Wochentage und Zeiten anpassen</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+          </div>
+
+          <p class="overview-meta" id="overview-meta">Bereit für Ihre Änderungen.</p>
+        </section>
+
+        <!-- WORKSPACE (Tabs + Panels — eingeblendet sobald eine Karte gewählt wird) -->
+        <div class="admin-workspace" id="workspace-view" hidden>
+          <button type="button" class="back-to-overview" id="back-to-overview">
+            <svg class="ico ico-sm"><use href="#i-arrow-left"/></svg>
+            Zurück zur Übersicht
+          </button>
 
         <!-- TAB NAV -->
         <nav class="admin-tabs" role="tablist">
@@ -534,6 +619,7 @@
           </div>
         </div>
 
+        </div><!-- /workspace -->
       </div>
     </section>
   </main>

@@ -111,6 +111,13 @@ async function init() {
   // Tabs
   dom.tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
 
+  // Overview-Karten und Back-Button
+  dom.overviewCards.forEach(c => c.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchTab(c.dataset.tab);
+  }));
+  dom.backToOverview?.addEventListener('click', () => showOverview());
+
   // Wochenplan
   dom.menuForm.addEventListener('submit', onSaveWeek);
   dom.weekPrev.addEventListener('click', () => changeWeek(-7));
@@ -209,7 +216,12 @@ function cacheDom() {
     invitePassword: document.getElementById('invite-password'),
     inviteStatus: document.getElementById('invite-status'),
     userList:     document.getElementById('user-list'),
-    year:         document.getElementById('year')
+    year:         document.getElementById('year'),
+    // Overview / Workspace
+    overviewView: document.getElementById('overview-view'),
+    workspaceView: document.getElementById('workspace-view'),
+    overviewCards: document.querySelectorAll('.overview-card[data-tab]'),
+    backToOverview: document.getElementById('back-to-overview')
   });
 }
 
@@ -272,11 +284,8 @@ async function showDashboard() {
   if (dom.userBadge)    dom.userBadge.textContent = email;
   if (dom.accountEmail) dom.accountEmail.textContent = email;
   await renderUserList();
-  const lastTab = (() => {
-    try { return sessionStorage.getItem(ACTIVE_TAB_KEY) || 'week'; }
-    catch { return 'week'; }
-  })();
-  switchTab(lastTab);
+  // Default-Landing: Overview. Tab-Inhalte werden lazy beim Klick aktiv.
+  showOverview();
   renderWeek();
   renderNotice();
   renderMenuEditor();
@@ -287,8 +296,16 @@ async function showDashboard() {
 
 /* ---------- Tabs ---------- */
 
+function showOverview() {
+  if (dom.overviewView) dom.overviewView.hidden = false;
+  if (dom.workspaceView) dom.workspaceView.hidden = true;
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
+}
+
 function switchTab(name) {
   const apply = () => {
+    if (dom.overviewView) dom.overviewView.hidden = true;
+    if (dom.workspaceView) dom.workspaceView.hidden = false;
     dom.tabs.forEach(t => {
       const active = t.dataset.tab === name;
       t.classList.toggle('is-active', active);
@@ -300,6 +317,7 @@ function switchTab(name) {
       p.hidden = !active;
     });
     try { sessionStorage.setItem(ACTIVE_TAB_KEY, name); } catch {}
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
   };
   // Smooth Tab-Wechsel via View-Transitions API (Chromium); Fallback: direkt
   if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
