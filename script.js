@@ -66,8 +66,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   initLunchWeek();
   initReservationForm();
   initLiveStatus();
+  initMagneticButtons();
   initEditMode();
   initServiceWorker();
+  hideSplash();
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
@@ -91,6 +93,31 @@ function initContent() {
     const key = el.dataset.editable;
     if (content[key] != null) el.innerHTML = content[key];
   });
+}
+
+/* ---------- Magnetic Buttons (subtile Maus-Anziehung) ---------- */
+function initMagneticButtons() {
+  if (matchMedia('(pointer: coarse)').matches) return; // nicht auf Touch-Geraeten
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.btn-primary, .btn-gold, .nav-shop').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const r = btn.getBoundingClientRect();
+      const x = e.clientX - r.left - r.width / 2;
+      const y = e.clientY - r.top - r.height / 2;
+      btn.style.transform = `translate(${x * 0.18}px, ${y * 0.18}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+    });
+  });
+}
+
+/* ---------- Loading-Splash beim ersten Laden ---------- */
+function hideSplash() {
+  const splash = document.getElementById('app-splash');
+  if (!splash) return;
+  splash.classList.add('is-leaving');
+  setTimeout(() => splash.remove(), 600);
 }
 
 /* ---------- Live-Status-Pille ("Aktuell geöffnet") ---------- */

@@ -412,6 +412,31 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 .btn-link.light { color: var(--linen); border-bottom-color: var(--gold-soft); }
 .btn-link.light:hover { color: var(--gold-soft); border-bottom-color: var(--gold-soft); }
 
+/* ===== APP SPLASH ===== */
+.app-splash {
+  position: fixed; inset: 0;
+  z-index: 9999;
+  background: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  transition: opacity .5s var(--ease-out);
+}
+.app-splash-logo {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  animation: splash-pulse 1.4s var(--ease-in-out) infinite;
+}
+.app-splash.is-leaving {
+  opacity: 0;
+}
+@keyframes splash-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.06); opacity: .82; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-splash-logo { animation: none; }
+}
+
 /* ===== HERO ===== */
 .hero {
   position: relative;
@@ -529,6 +554,34 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   line-height: 1.6;
 }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; }
+
+/* Mocambo-Partner-Badge */
+.hero-partner {
+  display: inline-flex; align-items: center; gap: 14px;
+  margin: 36px 0 0;
+  font-size: .76rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  animation: fade-in 1s var(--ease-out) 1.2s backwards;
+}
+.hero-partner-line {
+  width: 36px; height: 1px;
+  background: var(--gold-soft);
+  flex-shrink: 0;
+}
+.hero-partner em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.05em;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--coffee);
+  margin-left: 4px;
+}
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
 /* CSS Coffee Cup Illustration */
 .hero-visual {
