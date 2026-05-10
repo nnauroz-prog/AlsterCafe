@@ -255,22 +255,31 @@ async function showDashboard() {
   renderMenuEditor();
   renderHoursEditor();
   renderDesignEditor();
+  renderActivityLog();
 }
 
 /* ---------- Tabs ---------- */
 
 function switchTab(name) {
-  dom.tabs.forEach(t => {
-    const active = t.dataset.tab === name;
-    t.classList.toggle('is-active', active);
-    t.setAttribute('aria-selected', String(active));
-  });
-  dom.panels.forEach(p => {
-    const active = p.id === `panel-${name}`;
-    p.classList.toggle('is-active', active);
-    p.hidden = !active;
-  });
-  try { sessionStorage.setItem(ACTIVE_TAB_KEY, name); } catch {}
+  const apply = () => {
+    dom.tabs.forEach(t => {
+      const active = t.dataset.tab === name;
+      t.classList.toggle('is-active', active);
+      t.setAttribute('aria-selected', String(active));
+    });
+    dom.panels.forEach(p => {
+      const active = p.id === `panel-${name}`;
+      p.classList.toggle('is-active', active);
+      p.hidden = !active;
+    });
+    try { sessionStorage.setItem(ACTIVE_TAB_KEY, name); } catch {}
+  };
+  // Smooth Tab-Wechsel via View-Transitions API (Chromium); Fallback: direkt
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.startViewTransition(apply);
+  } else {
+    apply();
+  }
 }
 
 /* ---------- Wochenplan ---------- */
@@ -463,7 +472,9 @@ function renderMenuEditor() {
 function buildMenuItemRow(item) {
   const row = document.createElement('div');
   row.className = 'menu-item-row';
+  row.draggable = true;
   row.innerHTML = `
+    <span class="drag-handle" aria-label="Verschieben" title="Zum Sortieren ziehen">⠿</span>
     <div class="menu-item-fields">
       <label>
         <span>Bezeichnung</span>
@@ -479,7 +490,43 @@ function buildMenuItemRow(item) {
     </button>
   `;
   row.querySelector('.menu-item-remove').addEventListener('click', () => row.remove());
+  attachDragHandlers(row, '.menu-item-row');
   return row;
+}
+
+/* ---------- Drag & Drop Sortierung ---------- */
+let draggedEl = null;
+function attachDragHandlers(el, siblingSelector) {
+  el.addEventListener('dragstart', (e) => {
+    draggedEl = el;
+    el.classList.add('is-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', ''); } catch {}
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('is-dragging');
+    document.querySelectorAll('.is-drop-target').forEach(x => x.classList.remove('is-drop-target'));
+    draggedEl = null;
+  });
+  el.addEventListener('dragover', (e) => {
+    if (!draggedEl || draggedEl === el) return;
+    if (draggedEl.parentElement !== el.parentElement) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    el.classList.add('is-drop-target');
+  });
+  el.addEventListener('dragleave', () => {
+    el.classList.remove('is-drop-target');
+  });
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    el.classList.remove('is-drop-target');
+    if (!draggedEl || draggedEl === el) return;
+    const r = el.getBoundingClientRect();
+    const insertBefore = (e.clientY - r.top) < r.height / 2;
+    if (insertBefore) el.parentElement.insertBefore(draggedEl, el);
+    else el.parentElement.insertBefore(draggedEl, el.nextSibling);
+  });
 }
 
 function onSaveMenu(e) {
@@ -500,6 +547,7 @@ function onSaveMenu(e) {
     setStatus(dom.menuStatus,
       ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
       ok ? 'ok' : 'error');
+    if (ok) logActivity('Speisekarte gespeichert');
   });
 }
 
@@ -568,6 +616,7 @@ function onSaveHours(e) {
     setStatus(dom.hoursStatus,
       ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
       ok ? 'ok' : 'error');
+    if (ok) logActivity('Öffnungszeiten gespeichert');
   });
 }
 
@@ -709,6 +758,8 @@ function renderGalleryEdit() {
   gallery.forEach((src, idx) => {
     const tile = document.createElement('div');
     tile.className = 'gallery-tile-edit';
+    tile.draggable = true;
+    tile.dataset.idx = idx;
     tile.innerHTML = `
       <img src="${src}" alt="" />
       <button type="button" class="gallery-remove" aria-label="Bild entfernen">
@@ -722,7 +773,21 @@ function renderGalleryEdit() {
       renderGalleryEdit();
       flashDesignStatus('Bild entfernt.');
     });
+    attachDragHandlers(tile, '.gallery-tile-edit');
     grid.appendChild(tile);
+  });
+  // Nach Drop: Reihenfolge speichern
+  grid.addEventListener('drop', () => {
+    setTimeout(() => {
+      const newOrder = Array.from(grid.querySelectorAll('.gallery-tile-edit'))
+        .map(t => gallery[parseInt(t.dataset.idx, 10)])
+        .filter(Boolean);
+      const d = loadDesign();
+      d.gallery = newOrder;
+      saveDesign(d);
+      flashDesignStatus('Reihenfolge gespeichert.');
+      renderGalleryEdit();
+    }, 50);
   });
   if (counter) counter.textContent = `${gallery.length} / ${GALLERY_MAX}`;
   if (uploadBtn) uploadBtn.style.display = gallery.length >= GALLERY_MAX ? 'none' : '';
@@ -748,6 +813,7 @@ function loadDesign() {
 function saveDesign(obj) {
   window.alsterDb?.set('design', obj).then(ok => {
     if (!ok) flashDesignStatus('Speichern fehlgeschlagen.', 'error');
+    else logActivity('Design aktualisiert');
   }).catch(err => flashDesignStatus('Fehler: ' + err.message, 'error'));
 }
 
@@ -793,13 +859,50 @@ function saveAll(obj) {
   window.alsterDb?.set('weekly-menu', obj).catch(e =>
     setStatus(dom.saveStatus, 'Speichern fehlgeschlagen: ' + e.message, 'error')
   );
+  logActivity('Wochenplan gespeichert');
+}
+
+/* ---------- Aktivitätslog ---------- */
+const ACTIVITY_KEY = 'alstercafe.activity';
+function logActivity(action) {
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]'); } catch {}
+  log.unshift({ at: new Date().toISOString(), who: dom.userBadge?.textContent || 'Inhaber', action });
+  log = log.slice(0, 30);
+  try { localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log)); } catch {}
+  renderActivityLog();
+}
+function renderActivityLog() {
+  const ul = document.getElementById('activity-log');
+  if (!ul) return;
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]'); } catch {}
+  if (!log.length) {
+    ul.innerHTML = '<li class="activity-empty">Noch keine Aktivität.</li>';
+    return;
+  }
+  ul.innerHTML = log.map(item => {
+    const d = new Date(item.at);
+    const rel = formatRelative(d);
+    return `
+      <li class="activity-item">
+        <span class="activity-when">${rel}</span>
+        <span class="activity-action">${escapeHtml(item.action)}</span>
+        <span class="activity-who">${escapeHtml(item.who)}</span>
+      </li>`;
+  }).join('');
 }
 function loadNotice() {
   return window.alsterDb?.get('notice') || '';
 }
 function saveNotice(text) {
-  if (text) window.alsterDb?.set('notice', text);
-  else window.alsterDb?.remove('notice');
+  if (text) {
+    window.alsterDb?.set('notice', text);
+    logActivity('Hinweis-Banner aktualisiert');
+  } else {
+    window.alsterDb?.remove('notice');
+    logActivity('Hinweis-Banner ausgeblendet');
+  }
 }
 
 /* ---------- Konto: Passwort & Mitarbeiter ---------- */
