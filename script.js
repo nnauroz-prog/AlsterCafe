@@ -228,13 +228,18 @@ function formatMin(min) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-/* ---------- Service Worker (Offline-Caching) ---------- */
+/* ---------- Service Worker ---------- */
+/* Aktuell deaktiviert. Wenn ein alter SW noch installiert ist,
+   sorgt er fuer Cache-Probleme. Wir registrieren keinen neuen,
+   und ein evtl. existierender wird hier zwangsweise entfernt. */
 function initServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
-  if (location.protocol === 'file:') return;
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister().catch(() => {}));
+  }).catch(() => {});
+  if (window.caches && caches.keys) {
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
+  }
 }
 
 /* ---------- Inline-Bearbeitungsmodus ---------- */
