@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speisekarte · Alstercafé</title>
+  <meta name="description" content="Frühstück, Backwaren, Croques und Heiße Getränke — die komplette Speisekarte des Alstercafé in Hamburg." />
+  <meta name="theme-color" content="#3D2415" />
+  <link rel="icon" type="image/png" href="image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;background:#FFFCF4;color:#1F140C;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}img{max-width:100%;display:block}[hidden]{display:none!important}</style>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></g></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.5 7-13a7 7 0 0 0-14 0c0 5.5 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></g></symbol>
+      <symbol id="i-wifi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c5-5 13-5 18 0"/><path d="M6 12.5c3.5-3.5 8.5-3.5 12 0"/><path d="M9 16c1.5-1.5 4.5-1.5 6 0"/><circle cx="12" cy="19" r=".8" fill="currentColor"/></g></symbol>
+      <symbol id="i-bread" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 24c0-7 8-12 18-12s18 5 18 12c0 4-3 6-6 6H12c-3 0-6-2-6-6z"/><path d="M10 30v6a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4v-6"/><path d="M16 18l-2 4M22 16l-2 4M28 16l-2 4M34 18l-2 4"/></g></symbol>
+      <symbol id="i-wheat" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v36"/><path d="M24 12c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 12c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 19c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 19c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 26c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 26c3 0 6-1.5 7-4-1 3-4 5-7 5"/></g></symbol>
+      <symbol id="i-cup" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16h24v14a8 8 0 0 1-8 8h-8a8 8 0 0 1-8-8V16z"/><path d="M34 20h4a4 4 0 0 1 0 8h-4"/><path d="M16 8c0 2-2 2-2 4M22 8c0 2-2 2-2 4M28 8c0 2-2 2-2 4"/><path d="M6 44h36"/></g></symbol>
+      <symbol id="i-leaf" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c0-18 14-32 32-32 0 18-14 32-32 32z"/><path d="M8 40C18 30 30 22 40 8"/></g></symbol>
+    </defs>
+  </svg>
+
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <a href="tel:+494022692891" class="topbar-link"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
+      <span class="topbar-sep">·</span>
+      <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener" class="topbar-link"><svg class="ico ico-sm"><use href="#i-pin"/></svg> Ifflandstr. 45, 22087 Hamburg</a>
+      <span class="topbar-sep">·</span>
+      <span class="topbar-link"><svg class="ico ico-sm"><use href="#i-wifi"/></svg> Freies WLAN</span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container nav-container">
+      <a class="brand" href="/" aria-label="Alstercafé Startseite"><img src="image.png" alt="" class="brand-logo" /><span class="brand-name">Alstercafé</span></a>
+      <button class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button>
+      <nav class="primary-nav" id="primary-nav">
+        <a href="mittagstisch.html">Mittagstisch</a>
+        <a href="speisekarte.html" class="is-active">Speisekarte</a>
+        <a href="ueber-uns.html">Über uns</a>
+        <a href="reservierung.html">Reservierung</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer" class="nav-shop">Webshop ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <p class="page-breadcrumb"><a href="/">Start</a> <span>/</span> Speisekarte</p>
+        <p class="eyebrow"><span class="num">02</span> Speisekarte</p>
+        <h1>Was Sie bei uns finden</h1>
+        <p class="page-lead">
+          Frisch gebackene Brötchen und Croissants, herzhafte Croques, ein
+          wechselnder Mittagstisch und Mocambo-Espresso — alles handwerklich
+          zubereitet.
+        </p>
+      </div>
+    </section>
+
+    <section class="section menu">
+      <div class="container">
+        <div class="menu-cols" id="menu-cols">
+          <div class="menu-col reveal">
+            <div class="menu-col-head"><svg class="ico"><use href="#i-bread"/></svg><h3>Frühstück</h3></div>
+            <ul class="menu-list">
+              <li><strong>Kleines Frühstück</strong><span>Brötchen, Butter, Marmelade, Heißgetränk.</span></li>
+              <li><strong>Großes Frühstück</strong><span>Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.</span></li>
+              <li><strong>Vegetarisch</strong><span>Frischkäse, Avocado, Gemüse, Heißgetränk.</span></li>
+              <li><strong>Croque-Monsieur</strong><span>Schinken &amp; Käse, gratiniert.</span></li>
+              <li><strong>Croque-Madame</strong><span>Croque-Monsieur mit Spiegelei.</span></li>
+            </ul>
+          </div>
+          <div class="menu-col reveal">
+            <div class="menu-col-head"><svg class="ico"><use href="#i-wheat"/></svg><h3>Backwaren</h3></div>
+            <ul class="menu-list">
+              <li><strong>Brot &amp; Brötchen</strong><span>Roggen, Dinkel, Vollkorn, Sauerteig.</span></li>
+              <li><strong>Croissants &amp; Franzbrötchen</strong><span>Frisch jeden Morgen, mit Butter.</span></li>
+              <li><strong>Plundergebäck</strong><span>Süß und herzhaft, wechselnd.</span></li>
+              <li><strong>Torten &amp; Kuchen</strong><span>Hausgemacht, Festtagstorten auf Vorbestellung.</span></li>
+              <li><strong>Belegte Brötchen</strong><span>Frisch belegt, auch nach Wunsch.</span></li>
+            </ul>
+          </div>
+          <div class="menu-col reveal">
+            <div class="menu-col-head"><svg class="ico"><use href="#i-cup"/></svg><h3>Heiße Getränke</h3></div>
+            <ul class="menu-list">
+              <li><strong>Hauskaffee</strong><span>Traditionell gefilterter Kaffee.</span></li>
+              <li><strong>Espresso · Doppelter</strong><span>Klein, heiß, schwarz und kräftig.</span></li>
+              <li><strong>Cappuccino · Latte Macchiato</strong><span>Mit feinem Milchschaum.</span></li>
+              <li><strong>Milchkaffee · Hauskaffee</strong><span>Leicht bekömmlich.</span></li>
+              <li><strong>Heiße Schokolade</strong><span>Lecker schokoladig, auch weiß mit Vanille.</span></li>
+              <li><strong>Tee</strong><span>Fennel, Lemon Sky, Mountain Herbs &amp; mehr.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="menu-croque reveal">
+          <div>
+            <p class="eyebrow gold"><span class="num light">·</span> Unser Klassiker</p>
+            <h2>Croques aus dem Ofen</h2>
+            <p>Klassisch, herzhaft, à la française — frisch belegt und gratiniert. Auch über unseren <strong>Croquenoah-Webshop</strong> bestellbar zur Abholung oder Lieferung im Stadtteil.</p>
+            <a class="btn btn-gold" href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">
+              Croques online bestellen
+              <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand"><img src="image.png" alt="" class="brand-logo small" /><p><strong>Alstercafé</strong><br/>Ifflandstr. 45 · 22087 Hamburg</p></div>
+      <nav class="footer-nav"><a href="mittagstisch.html">Mittagstisch</a><a href="speisekarte.html">Speisekarte</a><a href="ueber-uns.html">Über uns</a><a href="reservierung.html">Reservierung</a><a href="kontakt.html">Kontakt</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="admin.html">Mitgliederbereich</a></nav>
+      <p class="footer-meta">© <span id="year"></span> Alstercafé</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+  <script src="config.js" defer></script>
+  <script src="db.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>

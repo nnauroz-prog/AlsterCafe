@@ -4,13 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Alstercafé – Café & Bäckerei in Hamburg-Hohenfelde</title>
-  <meta name="description" content="Alstercafé in der Ifflandstraße 45, Hamburg-Hohenfelde. Frühstück, täglich wechselnder Mittagstisch, frische Backwaren und Mocambo-Kaffee." />
+  <meta name="description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und ein wechselnder Mittagstisch — mitten in der Ifflandstraße 45 in Hamburg." />
   <meta name="theme-color" content="#3D2415" />
   <link rel="icon" type="image/png" href="image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-  <link rel="dns-prefetch" href="https://maps.google.com" />
   <link rel="preload" as="image" href="image.png" fetchpriority="high" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -19,16 +18,14 @@
   <meta name="apple-mobile-web-app-title" content="Alstercafé" />
   <link rel="apple-touch-icon" href="image.png" />
 
-  <!-- Kritisches Inline-CSS — verhindert FOUC (Flash of Unstyled Content)
-       Diese Regeln greifen sofort, BEVOR styles.css fertig geladen ist. -->
   <style>
     *,*::before,*::after{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:#FFFCF4;color:#1F140C;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+    html,body{margin:0;padding:0;background:#FFFCF4;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
     img{max-width:100%;display:block}
     .skip-link{position:absolute;left:-10000px;top:12px;z-index:1000;padding:12px 18px;background:#3D2415;color:#FFFCF4;border-radius:999px;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
     .skip-link:focus{left:12px}
     .app-splash{position:fixed;inset:0;z-index:9999;background:#FFFCF4;display:flex;align-items:center;justify-content:center;pointer-events:none}
-    .app-splash-logo{width:80px;height:80px;border-radius:50%;display:block}
+    .app-splash-logo{width:64px;height:64px;border-radius:50%;display:block}
     .app-splash.is-leaving{opacity:0;transition:opacity .5s ease}
     .topbar{background:#2A1810;color:#F1E7D3;font-size:.85rem;padding:9px 0}
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
@@ -36,153 +33,65 @@
   </style>
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Synchroner Auth-Gate: blockiert ?edit=1 BEVOR die Seite rendert -->
+  <!-- Sync Auth-Gate fuer ?edit=1 -->
   <script>
-    (function () {
-      try {
-        var params = new URLSearchParams(location.search);
-        if (params.get('edit') !== '1') return;
-        var demo = false, supa = false;
-        try { demo = localStorage.getItem('alstercafe.auth') === '1'; } catch (e) {}
-        try {
-          for (var i = 0; i < localStorage.length; i++) {
-            var k = localStorage.key(i);
-            if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') > -1) {
-              var v = JSON.parse(localStorage.getItem(k) || 'null');
-              if (v && v.access_token) { supa = true; break; }
-            }
-          }
-        } catch (e) {}
-        if (!demo && !supa) {
-          // Sofortige Weiterleitung — Inhalt der Seite wird nie gerendert
-          location.replace('admin.html?next=edit');
-        }
-      } catch (e) {}
-    })();
+    (function(){try{var p=new URLSearchParams(location.search);if(p.get('edit')!=='1')return;var demo=false,supa=false;try{demo=localStorage.getItem('alstercafe.auth')==='1'}catch(e){}try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('sb-')===0&&k.indexOf('-auth-token')>-1){var v=JSON.parse(localStorage.getItem(k)||'null');if(v&&v.access_token){supa=true;break}}}}catch(e){}if(!demo&&!supa)location.replace('admin.html?next=edit')}catch(e){}})();
   </script>
 
   <!-- Open Graph -->
   <meta property="og:type" content="restaurant.restaurant" />
-  <meta property="og:title" content="Alstercafé – Café & Bäckerei in Hamburg-Hohenfelde" />
-  <meta property="og:description" content="Frühstück, täglich wechselnder Mittagstisch, frische Backwaren und Mocambo-Kaffee. Ifflandstraße 45, Hamburg." />
+  <meta property="og:title" content="Alstercafé – Café & Bäckerei in Hamburg" />
+  <meta property="og:description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und wechselnder Mittagstisch in der Ifflandstraße 45." />
   <meta property="og:locale" content="de_DE" />
-  <meta property="og:url" content="https://alstercafe.de/" />
-  <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- Strukturierte Daten: Lokales Geschäft -->
+  <!-- Strukturierte Daten -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "CafeOrCoffeeShop",
     "name": "Alstercafé",
-    "alternateName": "Croquenoah Cafe",
     "image": "https://alstercafe.de/image.png",
-    "@id": "https://alstercafe.de/",
     "url": "https://alstercafe.de/",
     "telephone": "+49-40-22692891",
     "email": "info@alstercafe.de",
     "priceRange": "€",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Ifflandstraße 45",
-      "addressLocality": "Hamburg",
-      "postalCode": "22087",
-      "addressCountry": "DE"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 53.5614,
-      "longitude": 10.0245
-    },
+    "address": { "@type": "PostalAddress", "streetAddress": "Ifflandstraße 45", "addressLocality": "Hamburg", "postalCode": "22087", "addressCountry": "DE" },
+    "geo": { "@type": "GeoCoordinates", "latitude": 53.5614, "longitude": 10.0245 },
     "openingHoursSpecification": [
       { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "06:30", "closes": "15:00" },
       { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "07:30", "closes": "15:00" },
       { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday",   "opens": "07:30", "closes": "15:00" }
     ],
-    "servesCuisine": ["Café", "Bäckerei", "Frühstück", "Mittagstisch"],
-    "amenityFeature": [
-      { "@type": "LocationFeatureSpecification", "name": "Freies WLAN", "value": true }
-    ],
     "sameAs": [
       "https://www.instagram.com/alstercafe/",
-      "https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html",
-      "https://croquenoah.simplywebshop.de/storedata/listStore"
-    ],
-    "hasMenu": {
-      "@type": "Menu",
-      "name": "Speisekarte",
-      "hasMenuSection": [
-        {
-          "@type": "MenuSection",
-          "name": "Frühstück",
-          "hasMenuItem": [
-            { "@type": "MenuItem", "name": "Kleines Frühstück", "description": "Brötchen, Butter, Marmelade, Heißgetränk." },
-            { "@type": "MenuItem", "name": "Großes Frühstück", "description": "Brötchenkorb, Käse, Wurst, Ei, Heißgetränk." },
-            { "@type": "MenuItem", "name": "Vegetarisch", "description": "Frischkäse, Avocado, Gemüse, Heißgetränk." }
-          ]
-        },
-        {
-          "@type": "MenuSection",
-          "name": "Backwaren",
-          "hasMenuItem": [
-            { "@type": "MenuItem", "name": "Brot & Brötchen", "description": "Roggen, Dinkel, Vollkorn, Sauerteig." },
-            { "@type": "MenuItem", "name": "Feines Gebäck", "description": "Croissants, Franzbrötchen, Plunder." },
-            { "@type": "MenuItem", "name": "Torten & Kuchen", "description": "Hausgemacht, Festtagstorten auf Vorbestellung." }
-          ]
-        },
-        {
-          "@type": "MenuSection",
-          "name": "Heiße Getränke",
-          "hasMenuItem": [
-            { "@type": "MenuItem", "name": "Espresso · Cappuccino · Latte", "description": "Mocambo, frisch gemahlen." },
-            { "@type": "MenuItem", "name": "Hauskaffee · Milchkaffee", "description": "Traditionell gefiltert." },
-            { "@type": "MenuItem", "name": "Kakao & Tee", "description": "Heiße Schokolade, Kräuter- und Früchtetees." }
-          ]
-        }
-      ]
-    }
-  }
-  </script>
-
-  <!-- FAQ-Schema -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      { "@type": "Question", "name": "Akzeptieren Sie Reservierungen?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Reservieren Sie online über das Formular oder telefonisch unter 040 / 22 69 28 91." } },
-      { "@type": "Question", "name": "Bieten Sie vegetarische und vegane Optionen?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Unser Frühstück gibt es auch vegetarisch. Beim Mittagstisch wird in der Regel eine fleischlose Alternative angeboten." } },
-      { "@type": "Question", "name": "Wann gibt es den Mittagstisch?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Unser wechselnder Mittagstisch ist montags bis freitags ab 12:00 erhältlich." } },
-      { "@type": "Question", "name": "Bieten Sie freies WLAN?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Ja, allen Gästen steht kostenfreies WLAN zur Verfügung." } }
+      "https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html"
     ]
   }
   </script>
 </head>
 <body>
-  <!-- SVG Icon Sprite -->
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <div class="app-splash" id="app-splash" aria-hidden="true">
+    <img src="image.png" alt="" class="app-splash-logo" />
+  </div>
+
+  <!-- SVG-Sprite -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
-      <symbol id="i-wheat" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v36"/><path d="M24 12c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 12c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 19c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 19c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 26c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 26c3 0 6-1.5 7-4-1 3-4 5-7 5"/><path d="M24 33c-3 0-6-1.5-7-4 1 3 4 5 7 5"/><path d="M24 33c3 0 6-1.5 7-4-1 3-4 5-7 5"/></g></symbol>
-      <symbol id="i-cup" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16h24v14a8 8 0 0 1-8 8h-8a8 8 0 0 1-8-8V16z"/><path d="M34 20h4a4 4 0 0 1 0 8h-4"/><path d="M16 8c0 2-2 2-2 4M22 8c0 2-2 2-2 4M28 8c0 2-2 2-2 4"/><path d="M6 44h36"/></g></symbol>
-      <symbol id="i-bread" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 24c0-7 8-12 18-12s18 5 18 12c0 4-3 6-6 6H12c-3 0-6-2-6-6z"/><path d="M10 30v6a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4v-6"/><path d="M16 18l-2 4M22 16l-2 4M28 16l-2 4M34 18l-2 4"/></g></symbol>
-      <symbol id="i-leaf" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 40c0-18 14-32 32-32 0 18-14 32-32 32z"/><path d="M8 40C18 30 30 22 40 8"/></g></symbol>
-      <symbol id="i-wifi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c5-5 13-5 18 0"/><path d="M6 12.5c3.5-3.5 8.5-3.5 12 0"/><path d="M9 16c1.5-1.5 4.5-1.5 6 0"/><circle cx="12" cy="19" r=".8" fill="currentColor"/></g></symbol>
-      <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.5 7-13a7 7 0 0 0-14 0c0 5.5 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></g></symbol>
-      <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></g></symbol>
       <symbol id="i-arrow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
-      <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z"/></g></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.5 7-13a7 7 0 0 0-14 0c0 5.5 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></g></symbol>
+      <symbol id="i-wifi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c5-5 13-5 18 0"/><path d="M6 12.5c3.5-3.5 8.5-3.5 12 0"/><path d="M9 16c1.5-1.5 4.5-1.5 6 0"/><circle cx="12" cy="19" r=".8" fill="currentColor"/></g></symbol>
     </defs>
   </svg>
 
-  <a class="skip-link" href="#main">Zum Inhalt springen</a>
-
-  <!-- Loading-Splash (verschwindet nach Init) -->
-  <div class="app-splash" id="app-splash" aria-hidden="true">
-    <img src="image.png" alt="" class="app-splash-logo" />
+  <!-- Hinweis-Banner -->
+  <div class="notice-banner" id="notice-banner" hidden>
+    <div class="container notice-inner">
+      <span class="notice-tag">Hinweis</span>
+      <p id="notice-text"></p>
+    </div>
   </div>
 
   <div class="topbar">
@@ -205,33 +114,9 @@
     </div>
   </div>
 
-  <!-- Cookie-Consent-Banner -->
-  <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookie-Hinweis" hidden>
-    <div class="container cookie-inner">
-      <div class="cookie-text">
-        <strong>Wir respektieren Ihre Privatsphäre.</strong>
-        Diese Webseite verwendet ausschließlich technisch notwendige Speicherfunktionen.
-        Die Karte (OpenStreetMap) wird erst geladen, wenn Sie zustimmen.
-        Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
-      </div>
-      <div class="cookie-actions">
-        <button type="button" class="btn btn-link cookie-decline" id="cookie-decline">Nur notwendige</button>
-        <button type="button" class="btn btn-primary cookie-accept" id="cookie-accept">Alle akzeptieren</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Hinweis-Banner (befüllt über den Mitgliederbereich) -->
-  <div class="notice-banner" id="notice-banner" hidden>
-    <div class="container notice-inner">
-      <span class="notice-tag">Hinweis</span>
-      <p id="notice-text"></p>
-    </div>
-  </div>
-
   <header class="site-header" id="top">
     <div class="container nav-container">
-      <a class="brand" href="#top" aria-label="Alstercafé Startseite">
+      <a class="brand" href="/" aria-label="Alstercafé Startseite">
         <img src="image.png" alt="" class="brand-logo" />
         <span class="brand-name">Alstercafé</span>
       </a>
@@ -239,12 +124,11 @@
         <span></span><span></span><span></span>
       </button>
       <nav class="primary-nav" id="primary-nav">
-        <a href="#mittagstisch">Mittagstisch</a>
-        <a href="#speisekarte">Speisekarte</a>
-        <a href="#ueber-uns">Über uns</a>
-        <a href="#faq">FAQ</a>
-        <a href="#reservierung">Reservierung</a>
-        <a href="#kontakt">Kontakt</a>
+        <a href="mittagstisch.html">Mittagstisch</a>
+        <a href="speisekarte.html">Speisekarte</a>
+        <a href="ueber-uns.html">Über uns</a>
+        <a href="reservierung.html">Reservierung</a>
+        <a href="kontakt.html">Kontakt</a>
         <a href="https://croquenoah.simplywebshop.de/storedata/listStore"
            target="_blank" rel="noopener noreferrer" class="nav-shop">Webshop ↗</a>
       </nav>
@@ -253,23 +137,22 @@
 
   <main id="main">
     <!-- HERO -->
-    <section class="hero">
+    <section class="hero hero-landing">
       <div class="hero-grid container">
         <div class="hero-text reveal">
-          <p class="eyebrow gold" data-editable="hero.eyebrow">Café · Bäckerei · Hamburg-Hohenfelde</p>
+          <p class="eyebrow gold" data-editable="hero.eyebrow">Café · Bäckerei · Croques · Hohenfelde</p>
           <p class="live-status" id="live-status" hidden>
             <span class="live-status-dot" aria-hidden="true"></span>
             <span class="live-status-text"></span>
           </p>
           <h1>
-            <span class="head-1" data-editable="hero.head1">Mit Liebe</span>
-            <span class="head-2" data-editable="hero.head2">gebacken,</span>
-            <span class="head-3" data-editable="hero.head3"><em>mit Ruhe serviert.</em></span>
+            <span class="head-1" data-editable="hero.head1">Frisch gebacken,</span>
+            <span class="head-2" data-editable="hero.head2"><em>liebevoll</em> belegt —</span>
+            <span class="head-3" data-editable="hero.head3">am Alsterufer.</span>
           </h1>
           <p class="lead" data-editable="hero.lead">
-            Zwischen Alsterschwimmhalle und Außenalster: frisch gebrühter Kaffee,
-            täglich selbstgebackene Brötchen, Croissants &amp; Franzbrötchen — und unter
-            der Woche ein wechselnder Mittagstisch.
+            Brötchen, Croques und Kaffee, frisch gebackene Croissants und Franzbrötchen —
+            und unter der Woche ein wechselnder Mittagstisch ab 12:00.
           </p>
           <div class="hero-cta">
             <a class="btn btn-primary" href="https://croquenoah.simplywebshop.de/storedata/listStore"
@@ -277,7 +160,7 @@
               Online bestellen
               <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
             </a>
-            <a class="btn btn-link" href="#mittagstisch">Heutiger Mittagstisch</a>
+            <a class="btn btn-link" href="reservierung.html">Tisch reservieren</a>
           </div>
           <p class="hero-partner" aria-label="Kaffeepartner">
             <span class="hero-partner-line"></span>
@@ -291,334 +174,104 @@
             <div class="hero-mark-meta">
               <span class="hero-mark-line">Hamburg</span>
               <span class="hero-mark-big">Hohenfelde</span>
-              <span class="hero-mark-line">seit 1998</span>
+              <span class="hero-mark-line">Ifflandstr. 45</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- MITTAGSTISCH (dynamisch aus dem Mitgliederbereich) -->
-    <section class="section lunch" id="mittagstisch">
-      <div class="container">
-        <div class="lunch-head reveal">
-          <p class="eyebrow gold"><span class="num light">01</span> Mittagstisch</p>
-          <h2 data-editable="lunch.headline">Diese Woche bei uns</h2>
-          <p class="lunch-meta" id="lunch-week"></p>
+    <!-- TEASER: HEUTE -->
+    <section class="section landing-today">
+      <div class="container landing-today-inner reveal">
+        <div class="landing-today-text">
+          <p class="eyebrow"><span class="num">·</span> Heute</p>
+          <h2 id="landing-today-title">Mittagstisch der Woche</h2>
+          <p class="landing-today-dish" id="landing-today-dish">Heute servieren wir Frühstück &amp; Backwaren — die ganze Woche im Überblick auf der Mittagstisch-Seite.</p>
         </div>
+        <a class="btn btn-link" href="mittagstisch.html">
+          Wochenkarte ansehen
+          <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+        </a>
+      </div>
+    </section>
 
-        <div class="lunch-today reveal" id="lunch-today" hidden>
-          <span class="lunch-today-tag">Heute · <span id="today-name"></span></span>
-          <p class="lunch-today-dish" id="today-dish"></p>
-          <p class="lunch-today-side" id="today-side"></p>
-          <a class="btn btn-gold" href="tel:+494022692891">
-            <svg class="ico ico-sm"><use href="#i-phone"/></svg>
-            Tisch reservieren · ab 12:00
+    <!-- TEASER-CARDS -->
+    <section class="section landing-cards">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow"><span class="num">·</span> Was Sie hier finden</p>
+          <h2>Bäckerei, Café —<br/>und unsere Croques.</h2>
+        </div>
+        <div class="teaser-grid">
+          <a class="teaser-card teaser-feature reveal" href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">
+            <p class="teaser-num">01</p>
+            <h3>Unsere Croques</h3>
+            <p>Croque Monsieur, Madame, vegetarisch und mehr — frisch belegt und auf Wunsch auch online bestellbar im Croquenoah-Webshop.</p>
+            <span class="teaser-link">Online bestellen ↗</span>
+          </a>
+          <a class="teaser-card reveal" href="mittagstisch.html">
+            <p class="teaser-num">02</p>
+            <h3>Mittagstisch</h3>
+            <p>Täglich wechselndes Tagesgericht ab 12:00 — mit frischen Beilagen und Salaten.</p>
+            <span class="teaser-link">Wochenplan <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          </a>
+          <a class="teaser-card reveal" href="speisekarte.html">
+            <p class="teaser-num">03</p>
+            <h3>Speisekarte</h3>
+            <p>Frühstück, Backwaren, Croques und Heiße Getränke — die komplette Auswahl auf einen Blick.</p>
+            <span class="teaser-link">Karte ansehen <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          </a>
+          <a class="teaser-card reveal" href="reservierung.html">
+            <p class="teaser-num">04</p>
+            <h3>Reservierung</h3>
+            <p>Reservieren Sie Ihren Lieblingsplatz online oder telefonisch — Bestätigung in wenigen Stunden.</p>
+            <span class="teaser-link">Tisch reservieren <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
           </a>
         </div>
-
-        <div class="lunch-empty reveal" id="lunch-empty" hidden>
-          <p class="lunch-empty-text">Heute servieren wir Frühstück &amp; Backwaren – kein Mittagstisch.</p>
-        </div>
-
-        <ul class="lunch-week reveal" id="lunch-week-list" aria-label="Wochenkarte"></ul>
-
-        <p class="lunch-note reveal" data-editable="lunch.note">
-          Zu jedem Mittagstisch reichen wir frische Beilagen und Salate.
-          Die Karte wird wöchentlich aktualisiert.
-        </p>
       </div>
     </section>
 
-    <!-- ÜBER UNS -->
-    <section class="section about" id="ueber-uns">
-      <div class="container about-grid">
-        <div class="about-text reveal">
-          <p class="eyebrow"><span class="num">02</span> Über uns</p>
-          <h2 data-editable="about.headline">Wo die Sonne scheint<br/>und der Kaffee duftet.</h2>
-          <p class="lead-soft" data-editable="about.p1">
-            Zentral zwischen Alsterschwimmhalle und der Außenalster gelegen, lädt das
-            Café mit familiärer Atmosphäre täglich zum Verzehr frischgebrühter
-            Kaffeespezialitäten und leckeren Frühstücksvariationen ein.
-          </p>
-          <p class="lead-soft" data-editable="about.p2">
-            Jeden Morgen duftet es nach köstlichen selbstgebackenen Brötchen, Croissants
-            und Franzbrötchen. Alle Backwaren werden den ganzen Tag über frisch belegt –
-            auch gerne nach Wunsch. Unter der Woche bieten wir zusätzlich einen
-            wechselnden Mittagstisch an.
-          </p>
-          <ul class="features">
-            <li>
-              <svg class="ico"><use href="#i-wheat"/></svg>
-              <strong>Eigene Backstube</strong>
-            </li>
-            <li>
-              <svg class="ico"><use href="#i-cup"/></svg>
-              <strong>Mocambo Espresso</strong>
-            </li>
-            <li>
-              <svg class="ico"><use href="#i-leaf"/></svg>
-              <strong>Hausgemacht</strong>
-            </li>
-            <li>
-              <svg class="ico"><use href="#i-wifi"/></svg>
-              <strong>Freies WLAN</strong>
-            </li>
-          </ul>
+    <!-- VISIT-US-STRIP -->
+    <section class="section landing-visit">
+      <div class="container landing-visit-inner reveal">
+        <div>
+          <p class="eyebrow gold"><span class="num light">·</span> Besuchen Sie uns</p>
+          <h2>Ifflandstraße 45<br/>22087 Hamburg</h2>
         </div>
-
-        <div class="about-aside reveal">
-          <blockquote>
-            <p data-editable="about.quote">Alles genießt man am besten auf einem der Plätze direkt vor dem Eckcafé, wo den ganzen Tag über die Sonne scheint. Und wer einmal hier sitzt, will am liebsten <em>gar nicht mehr gehen</em>.</p>
-          </blockquote>
-        </div>
-      </div>
-    </section>
-
-    <!-- SPEISEKARTE (Frühstück + Backwaren + Getränke) -->
-    <section class="section menu" id="speisekarte">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow"><span class="num">03</span> Speisekarte</p>
-          <h2 data-editable="menu.headline">Was Sie bei uns erwartet</h2>
-        </div>
-
-        <div class="menu-cols" id="menu-cols">
-          <div class="menu-col reveal">
-            <div class="menu-col-head">
-              <svg class="ico"><use href="#i-bread"/></svg>
-              <h3>Frühstück</h3>
-            </div>
-            <ul class="menu-list">
-              <li><strong>Kleines Frühstück</strong><span>Brötchen, Butter, Marmelade, Heißgetränk.</span></li>
-              <li><strong>Großes Frühstück</strong><span>Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.</span></li>
-              <li><strong>Vegetarisch</strong><span>Frischkäse, Avocado, Gemüse, Heißgetränk.</span></li>
-            </ul>
-          </div>
-
-          <div class="menu-col reveal">
-            <div class="menu-col-head">
-              <svg class="ico"><use href="#i-wheat"/></svg>
-              <h3>Backwaren</h3>
-            </div>
-            <ul class="menu-list">
-              <li><strong>Brot &amp; Brötchen</strong><span>Roggen, Dinkel, Vollkorn, Sauerteig.</span></li>
-              <li><strong>Feines Gebäck</strong><span>Croissants, Franzbrötchen, Plunder.</span></li>
-              <li><strong>Torten &amp; Kuchen</strong><span>Hausgemacht, Festtagstorten auf Vorbestellung.</span></li>
-            </ul>
-          </div>
-
-          <div class="menu-col reveal">
-            <div class="menu-col-head">
-              <svg class="ico"><use href="#i-cup"/></svg>
-              <h3>Heiße Getränke</h3>
-            </div>
-            <ul class="menu-list">
-              <li><strong>Espresso · Cappuccino · Latte</strong><span>Mocambo, frisch gemahlen.</span></li>
-              <li><strong>Hauskaffee · Milchkaffee</strong><span>Traditionell gefiltert.</span></li>
-              <li><strong>Kakao &amp; Tee</strong><span>Heiße Schokolade, Kräuter- und Früchtetees.</span></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section class="section faq" id="faq">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow"><span class="num">·</span> Häufige Fragen</p>
-          <h2>Antworten auf<br/>einen Blick</h2>
-        </div>
-        <div class="faq-list reveal">
-          <details class="faq-item">
-            <summary class="faq-summary">Akzeptieren Sie Reservierungen?</summary>
-            <div class="faq-content">
-              <p>Ja. Reservieren Sie online über das Formular oder telefonisch unter <a href="tel:+494022692891">040 / 22 69 28 91</a>. Eine Bestätigung erhalten Sie in der Regel innerhalb weniger Stunden.</p>
-            </div>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-summary">Bieten Sie vegetarische und vegane Optionen?</summary>
-            <div class="faq-content">
-              <p>Ja. Unser Frühstück gibt es auch in einer vegetarischen Variante. Beim wechselnden Mittagstisch wird in der Regel eine fleischlose Alternative angeboten — fragen Sie uns vor Ort oder rufen Sie an.</p>
-            </div>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-summary">Wie lange wird Frühstück serviert?</summary>
-            <div class="faq-content">
-              <p>Frühstück servieren wir den ganzen Tag, von 06:30 bis 15:00 unter der Woche und ab 07:30 am Wochenende. Auch Brötchen werden über den Tag verteilt frisch belegt.</p>
-            </div>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-summary">Wann gibt es den Mittagstisch?</summary>
-            <div class="faq-content">
-              <p>Unser wechselnder Mittagstisch ist montags bis freitags ab 12:00 erhältlich. Die Tageskarte sehen Sie oben in der Mittagstisch-Sektion oder rufen Sie uns an.</p>
-            </div>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-summary">Kann ich Backwaren auf Bestellung abholen?</summary>
-            <div class="faq-content">
-              <p>Sehr gern. Festtagstorten und größere Mengen Brötchen, Croissants oder Franzbrötchen nehmen wir gerne im Voraus auf — am besten ein bis zwei Tage im Voraus telefonisch bestellen.</p>
-            </div>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-summary">Bieten Sie freies WLAN?</summary>
-            <div class="faq-content">
-              <p>Ja, allen Gästen steht kostenfreies WLAN zur Verfügung. Sprechen Sie das Personal an für die Zugangsdaten.</p>
-            </div>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-summary">Sind Hunde willkommen?</summary>
-            <div class="faq-content">
-              <p>Gut erzogene Vierbeiner sind im Außenbereich gerne gesehen. Im Innenraum bitten wir um Rücksicht auf andere Gäste.</p>
-            </div>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-summary">Kann ich auch online bestellen?</summary>
-            <div class="faq-content">
-              <p>Ja, ausgewählte Produkte können Sie über unseren <a href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">Webshop</a> direkt bestellen.</p>
-            </div>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- RESERVIERUNG -->
-    <section class="section reservation" id="reservierung">
-      <div class="container reservation-grid">
-        <div class="reservation-intro reveal">
-          <p class="eyebrow gold"><span class="num light">04</span> Reservierung</p>
-          <h2 data-editable="reservation.headline">Reservieren Sie<br/>Ihren Lieblingsplatz</h2>
-          <p data-editable="reservation.intro">
-            Reservieren Sie online über das Formular oder rufen Sie uns einfach an.
-            Bestätigung in der Regel innerhalb weniger Stunden.
-          </p>
+        <ul class="hours-list" id="hours-list">
+          <li><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></li>
+          <li><span>Samstag</span><span class="time">07:30 – 15:00</span></li>
+          <li><span>Sonntag</span><span class="time">07:30 – 15:00</span></li>
+        </ul>
+        <div class="landing-visit-cta">
+          <a class="btn btn-gold" href="kontakt.html">
+            Anfahrt &amp; Kontakt
+            <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+          </a>
           <a class="btn btn-link light" href="tel:+494022692891">
             <svg class="ico ico-sm"><use href="#i-phone"/></svg>
             040 – 22 69 28 91
           </a>
         </div>
-
-        <form class="reservation-form reveal" id="reservation-form"
-              action="mailto:hallo@alstercafe.de" method="post" enctype="text/plain" novalidate>
-          <div class="form-row">
-            <label>
-              <span>Name <em>*</em></span>
-              <input type="text" name="Name" required autocomplete="name" placeholder="Ihr Name" />
-            </label>
-            <label>
-              <span>Telefon <em>*</em></span>
-              <input type="tel" name="Telefon" required autocomplete="tel" placeholder="040 12345678" />
-            </label>
-          </div>
-          <label>
-            <span>E-Mail <em>*</em></span>
-            <input type="email" name="E-Mail" required autocomplete="email" placeholder="ihre@mail.de" />
-          </label>
-          <div class="form-row three">
-            <label>
-              <span>Datum <em>*</em></span>
-              <input type="date" name="Datum" required />
-            </label>
-            <label>
-              <span>Uhrzeit <em>*</em></span>
-              <input type="time" name="Uhrzeit" required min="06:30" max="14:30" step="900" />
-            </label>
-            <label>
-              <span>Personen <em>*</em></span>
-              <select name="Personen" required>
-                <option value="">Bitte wählen</option>
-                <option>1 Person</option><option>2 Personen</option>
-                <option>3 Personen</option><option>4 Personen</option>
-                <option>5 Personen</option><option>6 Personen</option>
-                <option>7 Personen</option><option>8 Personen</option>
-                <option>mehr als 8 Personen</option>
-              </select>
-            </label>
-          </div>
-          <label>
-            <span>Anlass / Nachricht</span>
-            <textarea name="Nachricht" rows="2" placeholder="Geburtstag, Allergien, Wunschtisch …"></textarea>
-          </label>
-          <label class="checkbox">
-            <input type="checkbox" name="Datenschutz" required />
-            <span>Ich bin mit der Bearbeitung meiner Anfrage einverstanden. <em>*</em></span>
-          </label>
-          <button type="submit" class="btn btn-primary form-submit">Reservierung anfragen</button>
-          <p class="form-status" role="status" aria-live="polite"></p>
-        </form>
-      </div>
-    </section>
-
-    <!-- KONTAKT + ÖFFNUNGSZEITEN -->
-    <section class="section contact" id="kontakt">
-      <div class="container contact-grid">
-        <div class="contact-info-block reveal">
-          <p class="eyebrow"><span class="num">05</span> Besuchen Sie uns</p>
-          <h2 data-editable="contact.headline">Mitten in<br/>Hamburg-Hohenfelde</h2>
-
-          <div class="contact-cols">
-            <address class="contact-col">
-              <p class="col-label">Adresse</p>
-              <p class="col-value">
-                Alstercafé<br/>
-                Ifflandstraße 45<br/>
-                22087 Hamburg
-              </p>
-              <a class="col-link" target="_blank" rel="noopener"
-                 href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg">
-                Route ansehen →
-              </a>
-            </address>
-            <div class="contact-col">
-              <p class="col-label">Telefon</p>
-              <p class="col-value">
-                <a href="tel:+494022692891">040 – 22 69 28 91</a>
-              </p>
-              <p class="col-label" style="margin-top: 22px;">Folgen Sie uns</p>
-              <div class="social">
-                <a href="https://www.instagram.com/alstercafe/" target="_blank" rel="noopener noreferrer">Instagram</a>
-                <a href="https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html" target="_blank" rel="noopener noreferrer">Tripadvisor</a>
-                <a href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">Webshop</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="hours-inline">
-            <p class="col-label">Öffnungszeiten</p>
-            <ul class="hours-list" id="hours-list">
-              <li><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></li>
-              <li><span>Samstag</span><span class="time">07:30 – 15:00</span></li>
-              <li><span>Sonntag</span><span class="time">07:30 – 15:00</span></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="map-card reveal" id="map-card">
-          <div class="map-placeholder" id="map-placeholder">
-            <div>
-              <p class="map-ph-title">Karte ist deaktiviert</p>
-              <p class="map-ph-text">
-                Aus Datenschutzgründen wird die Google-Maps-Karte erst nach Ihrer
-                Zustimmung geladen.
-              </p>
-              <button type="button" class="btn btn-gold" id="map-load">Karte laden</button>
-              <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg"
-                 target="_blank" rel="noopener" class="map-ph-link">
-                Stattdessen Google Maps öffnen →
-              </a>
-            </div>
-          </div>
-          <iframe
-            id="map-iframe"
-            title="Karte Ifflandstraße 45 Hamburg"
-            data-src="https://maps.google.com/maps?q=Ifflandstra%C3%9Fe+45%2C+22087+Hamburg&amp;t=&amp;z=17&amp;ie=UTF8&amp;iwloc=&amp;output=embed"
-            referrerpolicy="no-referrer-when-downgrade"
-            style="display:none"></iframe>
-        </div>
       </div>
     </section>
   </main>
+
+  <!-- Cookie-Consent -->
+  <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookie-Hinweis" hidden>
+    <div class="container cookie-inner">
+      <div class="cookie-text">
+        <strong>Wir respektieren Ihre Privatsphäre.</strong>
+        Diese Webseite verwendet ausschließlich technisch notwendige Speicherfunktionen.
+        Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
+      </div>
+      <div class="cookie-actions">
+        <button type="button" class="btn btn-link cookie-decline" id="cookie-decline">Nur notwendige</button>
+        <button type="button" class="btn btn-primary cookie-accept" id="cookie-accept">Alle akzeptieren</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="site-footer">
     <div class="container footer-grid">
@@ -630,11 +283,11 @@
         </p>
       </div>
       <nav class="footer-nav" aria-label="Footer">
-        <a href="#mittagstisch">Mittagstisch</a>
-        <a href="#speisekarte">Speisekarte</a>
-        <a href="#faq">FAQ</a>
-        <a href="#reservierung">Reservierung</a>
-        <a href="#kontakt">Kontakt</a>
+        <a href="mittagstisch.html">Mittagstisch</a>
+        <a href="speisekarte.html">Speisekarte</a>
+        <a href="ueber-uns.html">Über uns</a>
+        <a href="reservierung.html">Reservierung</a>
+        <a href="kontakt.html">Kontakt</a>
         <a href="impressum.html">Impressum</a>
         <a href="datenschutz.html">Datenschutz</a>
         <a href="#" id="cookie-reset">Cookies anpassen</a>
