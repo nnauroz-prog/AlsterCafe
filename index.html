@@ -86,6 +86,62 @@
     "servesCuisine": ["Café", "Bäckerei", "Frühstück", "Mittagstisch"],
     "amenityFeature": [
       { "@type": "LocationFeatureSpecification", "name": "Freies WLAN", "value": true }
+    ],
+    "sameAs": [
+      "https://www.instagram.com/alstercafe/",
+      "https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html",
+      "https://croquenoah.simplywebshop.de/storedata/listStore"
+    ],
+    "hasMenu": {
+      "@type": "Menu",
+      "name": "Speisekarte",
+      "hasMenuSection": [
+        {
+          "@type": "MenuSection",
+          "name": "Frühstück",
+          "hasMenuItem": [
+            { "@type": "MenuItem", "name": "Kleines Frühstück", "description": "Brötchen, Butter, Marmelade, Heißgetränk." },
+            { "@type": "MenuItem", "name": "Großes Frühstück", "description": "Brötchenkorb, Käse, Wurst, Ei, Heißgetränk." },
+            { "@type": "MenuItem", "name": "Vegetarisch", "description": "Frischkäse, Avocado, Gemüse, Heißgetränk." }
+          ]
+        },
+        {
+          "@type": "MenuSection",
+          "name": "Backwaren",
+          "hasMenuItem": [
+            { "@type": "MenuItem", "name": "Brot & Brötchen", "description": "Roggen, Dinkel, Vollkorn, Sauerteig." },
+            { "@type": "MenuItem", "name": "Feines Gebäck", "description": "Croissants, Franzbrötchen, Plunder." },
+            { "@type": "MenuItem", "name": "Torten & Kuchen", "description": "Hausgemacht, Festtagstorten auf Vorbestellung." }
+          ]
+        },
+        {
+          "@type": "MenuSection",
+          "name": "Heiße Getränke",
+          "hasMenuItem": [
+            { "@type": "MenuItem", "name": "Espresso · Cappuccino · Latte", "description": "Mocambo, frisch gemahlen." },
+            { "@type": "MenuItem", "name": "Hauskaffee · Milchkaffee", "description": "Traditionell gefiltert." },
+            { "@type": "MenuItem", "name": "Kakao & Tee", "description": "Heiße Schokolade, Kräuter- und Früchtetees." }
+          ]
+        }
+      ]
+    }
+  }
+  </script>
+
+  <!-- FAQ-Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Akzeptieren Sie Reservierungen?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Reservieren Sie online über das Formular oder telefonisch unter 040 / 22 69 28 91." } },
+      { "@type": "Question", "name": "Bieten Sie vegetarische und vegane Optionen?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Unser Frühstück gibt es auch vegetarisch. Beim Mittagstisch wird in der Regel eine fleischlose Alternative angeboten." } },
+      { "@type": "Question", "name": "Wann gibt es den Mittagstisch?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Unser wechselnder Mittagstisch ist montags bis freitags ab 12:00 erhältlich." } },
+      { "@type": "Question", "name": "Bieten Sie freies WLAN?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja, allen Gästen steht kostenfreies WLAN zur Verfügung." } }
     ]
   }
   </script>
@@ -165,6 +221,7 @@
         <a href="#mittagstisch">Mittagstisch</a>
         <a href="#speisekarte">Speisekarte</a>
         <a href="#ueber-uns">Über uns</a>
+        <a href="#faq">FAQ</a>
         <a href="#reservierung">Reservierung</a>
         <a href="#kontakt">Kontakt</a>
         <a href="https://croquenoah.simplywebshop.de/storedata/listStore"
@@ -345,6 +402,66 @@
       </div>
     </section>
 
+    <!-- FAQ -->
+    <section class="section faq" id="faq">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow"><span class="num">·</span> Häufige Fragen</p>
+          <h2>Antworten auf<br/>einen Blick</h2>
+        </div>
+        <div class="faq-list reveal">
+          <details class="faq-item">
+            <summary class="faq-summary">Akzeptieren Sie Reservierungen?</summary>
+            <div class="faq-content">
+              <p>Ja. Reservieren Sie online über das Formular oder telefonisch unter <a href="tel:+494022692891">040 / 22 69 28 91</a>. Eine Bestätigung erhalten Sie in der Regel innerhalb weniger Stunden.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-summary">Bieten Sie vegetarische und vegane Optionen?</summary>
+            <div class="faq-content">
+              <p>Ja. Unser Frühstück gibt es auch in einer vegetarischen Variante. Beim wechselnden Mittagstisch wird in der Regel eine fleischlose Alternative angeboten — fragen Sie uns vor Ort oder rufen Sie an.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-summary">Wie lange wird Frühstück serviert?</summary>
+            <div class="faq-content">
+              <p>Frühstück servieren wir den ganzen Tag, von 06:30 bis 15:00 unter der Woche und ab 07:30 am Wochenende. Auch Brötchen werden über den Tag verteilt frisch belegt.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-summary">Wann gibt es den Mittagstisch?</summary>
+            <div class="faq-content">
+              <p>Unser wechselnder Mittagstisch ist montags bis freitags ab 12:00 erhältlich. Die Tageskarte sehen Sie oben in der Mittagstisch-Sektion oder rufen Sie uns an.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-summary">Kann ich Backwaren auf Bestellung abholen?</summary>
+            <div class="faq-content">
+              <p>Sehr gern. Festtagstorten und größere Mengen Brötchen, Croissants oder Franzbrötchen nehmen wir gerne im Voraus auf — am besten ein bis zwei Tage im Voraus telefonisch bestellen.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-summary">Bieten Sie freies WLAN?</summary>
+            <div class="faq-content">
+              <p>Ja, allen Gästen steht kostenfreies WLAN zur Verfügung. Sprechen Sie das Personal an für die Zugangsdaten.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-summary">Sind Hunde willkommen?</summary>
+            <div class="faq-content">
+              <p>Gut erzogene Vierbeiner sind im Außenbereich gerne gesehen. Im Innenraum bitten wir um Rücksicht auf andere Gäste.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-summary">Kann ich auch online bestellen?</summary>
+            <div class="faq-content">
+              <p>Ja, ausgewählte Produkte können Sie über unseren <a href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">Webshop</a> direkt bestellen.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
     <!-- RESERVIERUNG -->
     <section class="section reservation" id="reservierung">
       <div class="container reservation-grid">
@@ -494,6 +611,7 @@
       <nav class="footer-nav" aria-label="Footer">
         <a href="#mittagstisch">Mittagstisch</a>
         <a href="#speisekarte">Speisekarte</a>
+        <a href="#faq">FAQ</a>
         <a href="#reservierung">Reservierung</a>
         <a href="#kontakt">Kontakt</a>
         <a href="impressum.html">Impressum</a>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seite nicht gefunden – Alstercafé</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#3D2415" />
+  <link rel="icon" type="image/png" href="image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="error-page">
+    <div class="container error-inner">
+      <p class="eyebrow gold">Fehler 404</p>
+      <h1 class="error-headline">
+        <span>Diese Seite</span>
+        <span><em>ist leider</em></span>
+        <span>nicht im Sortiment.</span>
+      </h1>
+      <p class="error-lead">
+        Die gewünschte Seite gibt es nicht — vielleicht wurde sie verlegt
+        oder umbenannt. Kommen Sie gerne zurück zur Startseite oder
+        schauen Sie persönlich in der Ifflandstraße 45 vorbei.
+      </p>
+      <div class="error-cta">
+        <a class="btn btn-primary" href="/">Zurück zur Startseite</a>
+        <a class="btn btn-link" href="tel:+494022692891">040 / 22 69 28 91</a>
+      </div>
+      <p class="error-meta">© <span id="year"></span> Alstercafé · Ifflandstraße 45 · 22087 Hamburg</p>
+    </div>
+  </main>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

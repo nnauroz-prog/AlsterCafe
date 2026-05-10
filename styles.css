@@ -2350,6 +2350,111 @@ body.is-editing [data-editable]:focus::before {
   html { scroll-behavior: auto; }
 }
 
+/* ===== 404 ERROR PAGE ===== */
+.error-page {
+  min-height: 100vh;
+  display: flex; align-items: center;
+  background:
+    radial-gradient(900px 500px at 50% 30%, rgba(184, 137, 62, 0.12), transparent 60%),
+    var(--paper);
+  padding: 80px var(--gutter);
+}
+.error-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+.error-headline {
+  display: flex; flex-direction: column;
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  line-height: .98;
+  letter-spacing: -0.028em;
+  color: var(--bean);
+  margin: 12px 0 28px;
+}
+.error-headline em { font-style: italic; color: var(--coffee); }
+.error-lead { color: var(--muted); font-size: 1.1rem; max-width: 520px; margin: 0 auto 36px; }
+.error-cta { display: flex; gap: 22px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 60px; }
+.error-meta { font-size: .82rem; color: var(--muted); letter-spacing: .04em; }
+
+/* ===== PRINT STYLESHEET ===== */
+@media print {
+  body::before, .topbar, .site-header, .site-footer, .cookie-banner,
+  .notice-banner, .edit-fab, .reservation, .lunch, .reveal, .nav-toggle,
+  .live-status, .hero-cta, .hero-visual, .map-card, .social, .map-placeholder,
+  .footer-meta, .col-link, .skip-link {
+    display: none !important;
+  }
+  body { background: white; color: black; font-size: 11pt; }
+  body::after { content: '© Alstercafé · Ifflandstr. 45 · 22087 Hamburg · 040 / 22 69 28 91'; display: block; padding: 18pt 0; text-align: center; font-size: 8pt; color: #666; border-top: 1px solid #ccc; margin-top: 40pt; }
+  .section { padding: 24pt 0; page-break-inside: avoid; }
+  .section.menu, .section.about, .section.contact { display: block; }
+  h1, h2, h3 { color: black; page-break-after: avoid; }
+  .menu-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24pt; }
+  .menu-list li { padding: 6pt 0; border-bottom: 1px dotted #ccc; }
+  .menu-list strong { color: black; }
+  .menu-list span { color: #666; }
+  a, a:visited { color: black; text-decoration: none; }
+  a[href^="http"]:after { content: ' (' attr(href) ')'; font-size: 0.85em; color: #888; }
+  a[href^="mailto"]:after, a[href^="tel"]:after { content: ''; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .container { max-width: 100%; padding: 0; }
+  .hours-list li { display: flex; justify-content: space-between; padding: 4pt 0; border-bottom: 1px dotted #ccc; }
+}
+
+/* ===== FAQ SECTION ===== */
+.faq { background: var(--paper); }
+.faq-list {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.faq-item {
+  border-top: 1px solid var(--line);
+  padding: 0;
+}
+.faq-item:last-child { border-bottom: 1px solid var(--line); }
+.faq-summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 18px;
+  padding: 24px 0;
+  cursor: pointer;
+  list-style: none;
+  font-family: 'Fraunces', serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--bean);
+  transition: color var(--dur-base) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.faq-summary::-webkit-details-marker { display: none; }
+.faq-summary:hover { color: var(--coffee); }
+.faq-summary::after {
+  content: '+';
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--coffee);
+  transition: transform var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+}
+.faq-item[open] .faq-summary::after {
+  content: '−';
+  transform: rotate(180deg);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.faq-content {
+  padding: 0 0 24px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 1rem;
+  max-width: 580px;
+}
+.faq-content p { margin: 0 0 .8em; }
+.faq-content p:last-child { margin: 0; }
+
 /* Polish: native scroll feel auf iOS, dezente Scrollbar */
 html { -webkit-overflow-scrolling: touch; }
 body { overflow-x: hidden; }
