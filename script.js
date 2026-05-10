@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initLunchWeek();
   initReservationForm();
   initLiveStatus();
+  initSpotlight();
   initMagneticButtons();
   initEditMode();
   initServiceWorker();
@@ -93,6 +94,24 @@ function initContent() {
     const key = el.dataset.editable;
     if (content[key] != null) el.innerHTML = content[key];
   });
+}
+
+/* ---------- Spotlight (subtiler Maus-Halo, nur Desktop) ---------- */
+function initSpotlight() {
+  if (matchMedia('(pointer: coarse)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const el = document.createElement('div');
+  el.className = 'spotlight';
+  el.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(el);
+  let raf = 0, x = 0, y = 0;
+  window.addEventListener('mousemove', (e) => {
+    x = e.clientX; y = e.clientY;
+    if (!raf) raf = requestAnimationFrame(() => {
+      el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      raf = 0;
+    });
+  }, { passive: true });
 }
 
 /* ---------- Magnetic Buttons (subtile Maus-Anziehung) ---------- */

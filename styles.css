@@ -128,6 +128,20 @@ body::before {
 @media (prefers-reduced-motion: reduce) { body::before { display: none; } }
 header, footer, main, .topbar, .cookie-banner, .edit-fab, .notice-banner { position: relative; z-index: 2; }
 
+/* Spotlight — subtile Maus-Aura (nur Desktop) */
+.spotlight {
+  position: fixed;
+  top: 0; left: 0;
+  width: 600px; height: 600px;
+  margin-left: -300px; margin-top: -300px;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(circle, rgba(184, 137, 62, 0.10), transparent 60%);
+  mix-blend-mode: multiply;
+  transition: opacity .4s var(--ease-out);
+  will-change: transform;
+}
+
 h1, h2, h3 {
   font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
   font-weight: 500;
@@ -933,7 +947,18 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   font-weight: 500; font-size: 1.08rem;
   color: var(--bean);
   letter-spacing: -0.005em;
+  position: relative;
+  display: inline-block;
 }
+.menu-list strong::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 100%; bottom: -2px;
+  height: 1px;
+  background: var(--gold);
+  transition: right var(--dur-base) var(--ease-out);
+}
+.menu-list li:hover strong::after { right: 30%; }
 .menu-list span {
   color: var(--muted);
   font-size: .92rem;

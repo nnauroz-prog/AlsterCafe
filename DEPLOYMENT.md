@@ -16,6 +16,16 @@ abgesicherten Webseite mit echter Cloud-Anmeldung.
 - **HTTPS-Hosting** mit eigener Domain
 - **Realtime-Sync**: Bäcker editiert auf Handy → Webseite aktualisiert sich
   überall ohne Reload
+- **PWA**: „Add to Home Screen" auf iPhone & Android — Bäcker hat den
+  Mitgliederbereich als App
+- **Offline-Fähigkeit** (Service Worker cached Shell-Assets)
+- **Live-Status-Pille** „Aktuell geöffnet · schließt in X Min." auf
+  Basis der Öffnungszeiten
+- **Drag & Drop Sortierung** für Speisekarten-Items und Galerie-Bilder
+- **Aktivitäts-Verlauf** im Mitgliederbereich
+- **Print-optimierte Speisekarte** (Cmd+P liefert druckbare Karte)
+- **404-Seite** im Brand-Stil
+- **JSON-LD Menu/FAQ-Schemas** für Google Rich Results
 
 ---
 
