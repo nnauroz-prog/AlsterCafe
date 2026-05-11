@@ -2062,6 +2062,18 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   border-bottom-color: var(--gold);
   font-weight: 600;
 }
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-left: 6px;
+  background: var(--gold);
+  color: var(--paper);
+  font-size: .68rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+}
 
 .admin-panel { display: none; }
 .admin-panel.is-active { display: block; view-transition-name: panel; }

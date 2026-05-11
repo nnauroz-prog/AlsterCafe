@@ -902,10 +902,7 @@ function initReservationForm() {
 
     let saved = false;
     try {
-      const list = window.alsterDb?.get('reservations') || [];
-      const next = Array.isArray(list) ? list : [];
-      next.unshift(entry);
-      saved = !!(await window.alsterDb?.set('reservations', next.slice(0, 200)));
+      saved = !!(await window.alsterDb?.addReservation(entry));
     } catch (err) { console.warn('Reservierung speichern fehlgeschlagen', err); }
 
     if (submitBtn) {

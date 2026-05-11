@@ -10,9 +10,8 @@
    • supabaseUrl + supabaseAnonKey sind ÖFFENTLICHE Werte und
      dürfen im Frontend stehen. Echte Sicherheit kommt durch
      die Row-Level-Security-Regeln in setup.sql.
-   • demoPassword ist nur für die Demo. Vor dem Go-Live entweder
-     leeren ODER eine echte Supabase-Anbindung aktivieren — dann
-     wird der Demo-Pfad nicht mehr verwendet.
+   • Konten werden im Supabase-Userpanel angelegt. Es gibt KEIN
+     Demo-Passwort mehr im Frontend.
    ============================================================ */
 
 window.ALSTERCAFE_CONFIG = {
@@ -20,9 +19,6 @@ window.ALSTERCAFE_CONFIG = {
   supabaseUrl:     'https://jsepktfpdlgezzncmbxz.supabase.co',
   supabaseAnonKey: 'sb_publishable_a1vXLZgs185839v7G4XRaw_0TLnt7WH',
   storageBucket:   'images',
-  ownerEmail:      'inhaber@alstercafe.de',
-
-  // Demo (wird ignoriert sobald supabaseUrl gesetzt ist)
-  demoPassword:    'IfflandStr45!'
+  ownerEmail:      'inhaber@alstercafe.de'
 };
 

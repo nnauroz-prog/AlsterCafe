@@ -244,6 +244,76 @@
     });
   }
 
+  /* ---------- Reservierungen (eigene Tabelle, public-insert) ---------- */
+  async function addReservation(entry) {
+    // Eintrag normalisieren
+    const id = entry.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    const row = {
+      id,
+      name:    entry.name    || '',
+      phone:   entry.phone   || '',
+      email:   entry.email   || '',
+      date:    entry.date    || '',
+      time:    entry.time    || '',
+      persons: entry.persons || '',
+      message: entry.message || '',
+      status:  entry.status  || 'new'
+    };
+    if (!useSupabase) {
+      const list = readCache('reservations') || [];
+      const next = Array.isArray(list) ? list : [];
+      next.unshift({ ...row, receivedAt: new Date().toISOString() });
+      writeCache('reservations', next.slice(0, 200));
+      return true;
+    }
+    const { error } = await sb.from('reservations').insert(row);
+    if (error) { console.error('Reservierung-Insert fehlgeschlagen', error); return false; }
+    return true;
+  }
+
+  async function listReservations() {
+    if (!useSupabase) {
+      const list = readCache('reservations') || [];
+      return Array.isArray(list) ? list : [];
+    }
+    const { data, error } = await sb.from('reservations')
+      .select('id,name,phone,email,date,time,persons,message,status,received_at')
+      .order('received_at', { ascending: false })
+      .limit(200);
+    if (error) { console.warn('Reservierungen-Read fehlgeschlagen', error); return readCache('reservations') || []; }
+    const items = (data || []).map(r => ({
+      id: r.id,
+      name: r.name, phone: r.phone, email: r.email,
+      date: r.date, time: r.time, persons: r.persons,
+      message: r.message, status: r.status || 'new',
+      receivedAt: r.received_at
+    }));
+    writeCache('reservations', items);
+    return items;
+  }
+
+  async function updateReservationStatus(id, status) {
+    if (!useSupabase) {
+      const list = readCache('reservations') || [];
+      const next = (Array.isArray(list) ? list : []).map(r => r.id === id ? { ...r, status } : r);
+      writeCache('reservations', next);
+      return true;
+    }
+    const { error } = await sb.from('reservations').update({ status }).eq('id', id);
+    return !error;
+  }
+
+  async function deleteReservation(id) {
+    if (!useSupabase) {
+      const list = readCache('reservations') || [];
+      const next = (Array.isArray(list) ? list : []).filter(r => r.id !== id);
+      writeCache('reservations', next);
+      return true;
+    }
+    const { error } = await sb.from('reservations').delete().eq('id', id);
+    return !error;
+  }
+
   /* ---------- Realtime Sync (nur Supabase) ---------- */
   function subscribeChanges(cb) {
     if (!useSupabase) {
@@ -260,6 +330,9 @@
           else writeCache(row.id, row.data);
           cb(row.id);
         }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
+        cb('reservations');
       })
       .subscribe();
   }
@@ -279,6 +352,11 @@
     remove: dbRemove,
     uploadImage,
     subscribe: subscribeChanges,
-    auth
+    auth,
+    // Reservierungen
+    addReservation,
+    listReservations,
+    updateReservationStatus,
+    deleteReservation
   };
 })();

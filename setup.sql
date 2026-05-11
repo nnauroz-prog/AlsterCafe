@@ -44,6 +44,46 @@ create policy "Authenticated can delete content"
 -- 4. Realtime aktivieren (damit Aenderungen live auf der Webseite erscheinen)
 alter publication supabase_realtime add table public.content;
 
+-- 4a. Reservierungs-Tabelle: anonyme Besucher schreiben rein, nur Inhaber liest
+create table if not exists public.reservations (
+  id          text primary key,
+  name        text,
+  phone       text,
+  email       text,
+  date        text,
+  time        text,
+  persons     text,
+  message     text,
+  status      text default 'new',
+  received_at timestamptz default now() not null
+);
+
+alter table public.reservations enable row level security;
+
+-- Public darf NUR einfuegen (Reservierung absenden), aber nicht lesen
+drop policy if exists "Public can insert reservations" on public.reservations;
+create policy "Public can insert reservations"
+  on public.reservations for insert
+  with check (true);
+
+drop policy if exists "Authenticated can read reservations" on public.reservations;
+create policy "Authenticated can read reservations"
+  on public.reservations for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "Authenticated can update reservations" on public.reservations;
+create policy "Authenticated can update reservations"
+  on public.reservations for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "Authenticated can delete reservations" on public.reservations;
+create policy "Authenticated can delete reservations"
+  on public.reservations for delete
+  using (auth.role() = 'authenticated');
+
+alter publication supabase_realtime add table public.reservations;
+
 -- 5. Storage-Bucket "images" anlegen + public lesbar
 insert into storage.buckets (id, name, public)
   values ('images', 'images', true)

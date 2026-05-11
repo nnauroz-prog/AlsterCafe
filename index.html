@@ -34,14 +34,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r5" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r3';
+      var V='2026-05-10-r5';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -65,11 +65,23 @@
     setTimeout(function(){var s=document.getElementById('app-splash');if(s){s.classList.add('is-leaving');setTimeout(function(){s.remove()},600)}},2500);
   </script>
 
+  <!-- Canonical -->
+  <link rel="canonical" href="https://alstercafe.de/" />
+
   <!-- Open Graph -->
   <meta property="og:type" content="restaurant.restaurant" />
   <meta property="og:title" content="Alstercafé – Café & Bäckerei in Hamburg" />
   <meta property="og:description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und wechselnder Mittagstisch in der Ifflandstraße 45." />
+  <meta property="og:url" content="https://alstercafe.de/" />
+  <meta property="og:site_name" content="Alstercafé" />
+  <meta property="og:image" content="https://alstercafe.de/image.png" />
   <meta property="og:locale" content="de_DE" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Alstercafé – Café & Bäckerei in Hamburg" />
+  <meta name="twitter:description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und wechselnder Mittagstisch." />
+  <meta name="twitter:image" content="https://alstercafe.de/image.png" />
 
   <!-- Strukturierte Daten -->
   <script type="application/ld+json">
@@ -362,8 +374,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js" defer></script>
-  <script src="db.js" defer></script>
-  <script src="script.js" defer></script>
+  <script src="config.js?v=2026-05-10-r5" defer></script>
+  <script src="db.js?v=2026-05-10-r5" defer></script>
+  <script src="script.js?v=2026-05-10-r5" defer></script>
 </body>
 </html>

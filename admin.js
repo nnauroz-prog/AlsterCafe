@@ -225,7 +225,8 @@ function cacheDom() {
     // Anfragen
     anfragenList:  document.getElementById('anfragen-list'),
     anfragenCount: document.getElementById('anfragen-count'),
-    anfragenBadge: document.getElementById('overview-anfragen-badge')
+    anfragenBadge: document.getElementById('overview-anfragen-badge'),
+    tabAnfragenBadge: document.getElementById('tab-anfragen-badge')
   });
 }
 
@@ -296,9 +297,9 @@ async function showDashboard() {
   renderHoursEditor();
   renderDesignEditor();
   renderActivityLog();
-  renderAnfragen();
+  refreshAnfragen();
   // Live-Update wenn ueber das oeffentliche Formular eine neue Anfrage reinkommt
-  window.alsterDb?.subscribe?.((key) => { if (key === 'reservations') renderAnfragen(); });
+  window.alsterDb?.subscribe?.((key) => { if (key === 'reservations') refreshAnfragen(); });
 }
 
 /* ---------- Tabs ---------- */
@@ -1113,6 +1114,13 @@ function setStatus(el, msg, kind = '') {
 
 /* ---------- Anfragen (Reservierungen) ---------- */
 
+async function refreshAnfragen() {
+  try {
+    await window.alsterDb?.listReservations();   // schreibt in Cache
+  } catch {}
+  renderAnfragen();
+}
+
 function renderAnfragen() {
   const list = window.alsterDb?.get('reservations') || [];
   const items = Array.isArray(list) ? list : [];
@@ -1121,6 +1129,10 @@ function renderAnfragen() {
   if (dom.anfragenBadge) {
     dom.anfragenBadge.hidden = newCount === 0;
     dom.anfragenBadge.textContent = newCount > 0 ? String(newCount) : '';
+  }
+  if (dom.tabAnfragenBadge) {
+    dom.tabAnfragenBadge.hidden = newCount === 0;
+    dom.tabAnfragenBadge.textContent = newCount > 0 ? String(newCount) : '';
   }
   if (dom.anfragenCount) {
     dom.anfragenCount.hidden = items.length === 0;
@@ -1190,17 +1202,22 @@ function formatAnfrageDate(date, time) {
 
 function onMarkAnfrage(id) {
   const list = window.alsterDb?.get('reservations') || [];
-  if (!Array.isArray(list)) return;
-  const next = list.map(r => r.id === id ? { ...r, status: r.status === 'done' ? 'new' : 'done' } : r);
-  window.alsterDb?.set('reservations', next).then(() => renderAnfragen());
+  const current = (Array.isArray(list) ? list : []).find(r => r.id === id);
+  const nextStatus = current?.status === 'done' ? 'new' : 'done';
+  // Optimistisches Update
+  const optimistic = (Array.isArray(list) ? list : []).map(r => r.id === id ? { ...r, status: nextStatus } : r);
+  try { localStorage.setItem('alstercafe.reservations', JSON.stringify(optimistic)); } catch {}
+  renderAnfragen();
+  window.alsterDb?.updateReservationStatus(id, nextStatus).finally(() => refreshAnfragen());
 }
 
 function onDeleteAnfrage(id) {
   if (!confirm('Diese Anfrage wirklich löschen?')) return;
   const list = window.alsterDb?.get('reservations') || [];
-  if (!Array.isArray(list)) return;
-  const next = list.filter(r => r.id !== id);
-  window.alsterDb?.set('reservations', next).then(() => renderAnfragen());
+  const optimistic = (Array.isArray(list) ? list : []).filter(r => r.id !== id);
+  try { localStorage.setItem('alstercafe.reservations', JSON.stringify(optimistic)); } catch {}
+  renderAnfragen();
+  window.alsterDb?.deleteReservation(id).finally(() => refreshAnfragen());
 }
 
 function mondayOf(date) {
