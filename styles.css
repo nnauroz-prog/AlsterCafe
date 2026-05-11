@@ -1910,6 +1910,18 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   line-height: 1.4;
 }
 
+.overview-card-badge {
+  flex-shrink: 0;
+  background: var(--gold);
+  color: var(--paper);
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: .02em;
+  min-width: 22px;
+  text-align: center;
+}
 .overview-card-arrow {
   flex-shrink: 0;
   color: var(--muted);
@@ -2269,6 +2281,114 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 .activity-who { font-size: .82rem; color: var(--muted); }
 @media (max-width: 540px) {
   .activity-item { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* Anfragen (Reservierungen) */
+.anfragen-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.anfragen-count {
+  background: var(--linen);
+  color: var(--bean);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+.anfragen-list {
+  list-style: none; padding: 0; margin: 16px 0 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.anfragen-empty {
+  padding: 30px 0;
+  color: var(--muted);
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+  text-align: center;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+.anfrage-item {
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 18px 20px;
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+.anfrage-item:hover { border-color: var(--gold-soft); }
+.anfrage-item.is-done { opacity: .65; background: var(--paper); }
+.anfrage-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.anfrage-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 1.15rem;
+  color: var(--bean);
+}
+.anfrage-pers {
+  color: var(--muted);
+  font-size: .92rem;
+  margin-left: 4px;
+}
+.anfrage-tag {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--linen);
+  color: var(--muted);
+}
+.anfrage-tag.is-new {
+  background: var(--gold);
+  color: var(--paper);
+}
+.anfrage-when {
+  margin: 4px 0 10px;
+  color: var(--bean);
+  font-size: .96rem;
+}
+.anfrage-contact {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  font-size: .9rem;
+  margin-bottom: 10px;
+}
+.anfrage-contact a {
+  color: var(--bean);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold-soft);
+  padding-bottom: 1px;
+}
+.anfrage-contact a:hover { color: var(--gold); }
+.anfrage-msg {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  background: var(--paper);
+  border-left: 3px solid var(--gold-soft);
+  border-radius: 0 8px 8px 0;
+  color: var(--bean);
+  font-size: .92rem;
+  white-space: pre-wrap;
+}
+.anfrage-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: .8rem;
+  color: var(--muted);
+}
+.anfrage-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+@media (max-width: 540px) {
+  .anfrage-head { flex-direction: column; align-items: flex-start; }
+  .anfrage-meta { flex-direction: column; align-items: flex-start; }
 }
 
 /* Mitarbeiter-Liste */

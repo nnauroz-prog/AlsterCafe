@@ -192,14 +192,15 @@
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
             </button>
 
-            <a class="overview-card" href="mailto:info@alstercafe.de" rel="noopener">
+            <button class="overview-card" type="button" data-tab="anfragen">
               <span class="overview-card-icon"><svg class="ico"><use href="#i-inbox"/></svg></span>
               <span class="overview-card-body">
                 <span class="overview-card-title">Anfragen ansehen</span>
-                <span class="overview-card-desc">Reservierungen im Posteingang öffnen</span>
+                <span class="overview-card-desc">Eingegangene Reservierungsanfragen</span>
               </span>
+              <span class="overview-card-badge" id="overview-anfragen-badge" hidden></span>
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
-            </a>
+            </button>
 
             <button class="overview-card" type="button" data-tab="design">
               <span class="overview-card-icon"><svg class="ico"><use href="#i-image"/></svg></span>
@@ -248,6 +249,10 @@
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="notice">
             <svg class="ico ico-sm"><use href="#i-bell"/></svg>
             Hinweis-Banner
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="anfragen">
+            <svg class="ico ico-sm"><use href="#i-inbox"/></svg>
+            Anfragen
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="account">
             <svg class="ico ico-sm"><use href="#i-user"/></svg>
@@ -502,6 +507,25 @@
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+
+        <!-- TAB: ANFRAGEN -->
+        <div class="admin-panel" id="panel-anfragen" role="tabpanel" hidden>
+          <div class="panel-card wide">
+            <div class="anfragen-head">
+              <div>
+                <h3>Reservierungsanfragen</h3>
+                <p class="panel-card-sub">
+                  Hier sehen Sie alle Anfragen, die über das Reservierungs-Formular auf
+                  der Webseite eingehen — chronologisch sortiert.
+                </p>
+              </div>
+              <span class="anfragen-count" id="anfragen-count" hidden></span>
+            </div>
+            <ul class="anfragen-list" id="anfragen-list">
+              <li class="anfragen-empty">Noch keine Anfragen.</li>
+            </ul>
           </div>
         </div>
 

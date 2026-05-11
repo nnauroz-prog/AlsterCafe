@@ -871,7 +871,7 @@ function initReservationForm() {
     if (!dateInput.value) dateInput.value = isoDate(tomorrow);
   }
   const submitBtn = form.querySelector('.form-submit');
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     if (!form.checkValidity()) {
       e.preventDefault();
       const firstInvalid = form.querySelector(':invalid');
@@ -879,37 +879,58 @@ function initReservationForm() {
       setFormStatus(status, 'Bitte füllen Sie alle Pflichtfelder (*) aus.', 'error');
       return;
     }
-    const data = new FormData(form);
-    const subject = `Reservierungsanfrage – ${data.get('Name') || ''}`;
-    const lines = [
-      `Name: ${data.get('Name') || ''}`,
-      `Telefon: ${data.get('Telefon') || ''}`,
-      `E-Mail: ${data.get('E-Mail') || ''}`,
-      `Datum: ${data.get('Datum') || ''}`,
-      `Uhrzeit: ${data.get('Uhrzeit') || ''}`,
-      `Personen: ${data.get('Personen') || ''}`,
-      '',
-      'Nachricht:',
-      data.get('Nachricht') || '–'
-    ];
-    const body = encodeURIComponent(lines.join('\n'));
     e.preventDefault();
+    const data = new FormData(form);
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      receivedAt: new Date().toISOString(),
+      name:    (data.get('Name')     || '').toString().trim(),
+      phone:   (data.get('Telefon')  || '').toString().trim(),
+      email:   (data.get('E-Mail')   || '').toString().trim(),
+      date:    (data.get('Datum')    || '').toString().trim(),
+      time:    (data.get('Uhrzeit')  || '').toString().trim(),
+      persons: (data.get('Personen') || '').toString().trim(),
+      message: (data.get('Nachricht')|| '').toString().trim(),
+      status:  'new'
+    };
 
     if (submitBtn) {
       submitBtn.classList.add('is-loading');
       submitBtn.disabled = true;
     }
-    setFormStatus(status, 'Anfrage wird vorbereitet …');
+    setFormStatus(status, 'Anfrage wird gesendet …');
 
-    setTimeout(() => {
+    let saved = false;
+    try {
+      const list = window.alsterDb?.get('reservations') || [];
+      const next = Array.isArray(list) ? list : [];
+      next.unshift(entry);
+      saved = !!(await window.alsterDb?.set('reservations', next.slice(0, 200)));
+    } catch (err) { console.warn('Reservierung speichern fehlgeschlagen', err); }
+
+    if (submitBtn) {
+      submitBtn.classList.remove('is-loading');
+      submitBtn.disabled = false;
+    }
+    if (saved) {
+      if (submitBtn) submitBtn.classList.add('is-success');
+      setFormStatus(status, 'Vielen Dank! Ihre Anfrage ist bei uns eingegangen. Wir melden uns telefonisch oder per E-Mail.', 'ok');
+      try { form.reset(); } catch {}
+    } else {
+      // Fallback: Mail-Programm oeffnen
+      const subject = `Reservierungsanfrage – ${entry.name}`;
+      const body = encodeURIComponent([
+        `Name: ${entry.name}`,
+        `Telefon: ${entry.phone}`,
+        `E-Mail: ${entry.email}`,
+        `Datum: ${entry.date}`,
+        `Uhrzeit: ${entry.time}`,
+        `Personen: ${entry.persons}`,
+        '', 'Nachricht:', entry.message || '–'
+      ].join('\n'));
       window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
-      if (submitBtn) {
-        submitBtn.classList.remove('is-loading');
-        submitBtn.classList.add('is-success');
-        submitBtn.disabled = false;
-      }
-      setFormStatus(status, 'Ihr E-Mail-Programm wurde geöffnet. Bitte senden Sie die Anfrage ab — wir bestätigen schnellstmöglich.', 'ok');
-    }, 600);
+      setFormStatus(status, 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
+    }
   });
 }
 

@@ -221,7 +221,11 @@ function cacheDom() {
     overviewView: document.getElementById('overview-view'),
     workspaceView: document.getElementById('workspace-view'),
     overviewCards: document.querySelectorAll('.overview-card[data-tab]'),
-    backToOverview: document.getElementById('back-to-overview')
+    backToOverview: document.getElementById('back-to-overview'),
+    // Anfragen
+    anfragenList:  document.getElementById('anfragen-list'),
+    anfragenCount: document.getElementById('anfragen-count'),
+    anfragenBadge: document.getElementById('overview-anfragen-badge')
   });
 }
 
@@ -292,6 +296,9 @@ async function showDashboard() {
   renderHoursEditor();
   renderDesignEditor();
   renderActivityLog();
+  renderAnfragen();
+  // Live-Update wenn ueber das oeffentliche Formular eine neue Anfrage reinkommt
+  window.alsterDb?.subscribe?.((key) => { if (key === 'reservations') renderAnfragen(); });
 }
 
 /* ---------- Tabs ---------- */
@@ -1102,6 +1109,98 @@ function setStatus(el, msg, kind = '') {
   el.textContent = msg;
   el.classList.remove('ok', 'error');
   if (kind) el.classList.add(kind);
+}
+
+/* ---------- Anfragen (Reservierungen) ---------- */
+
+function renderAnfragen() {
+  const list = window.alsterDb?.get('reservations') || [];
+  const items = Array.isArray(list) ? list : [];
+  const newCount = items.filter(r => r.status !== 'done').length;
+
+  if (dom.anfragenBadge) {
+    dom.anfragenBadge.hidden = newCount === 0;
+    dom.anfragenBadge.textContent = newCount > 0 ? String(newCount) : '';
+  }
+  if (dom.anfragenCount) {
+    dom.anfragenCount.hidden = items.length === 0;
+    dom.anfragenCount.textContent = items.length === 1 ? '1 Anfrage' : `${items.length} Anfragen`;
+  }
+  if (!dom.anfragenList) return;
+
+  if (items.length === 0) {
+    dom.anfragenList.innerHTML = '<li class="anfragen-empty">Noch keine Anfragen.</li>';
+    return;
+  }
+  dom.anfragenList.innerHTML = items.map(r => buildAnfrageItem(r)).join('');
+  dom.anfragenList.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', () => onMarkAnfrage(b.dataset.mark)));
+  dom.anfragenList.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => onDeleteAnfrage(b.dataset.del)));
+}
+
+function buildAnfrageItem(r) {
+  const rec = r.receivedAt ? formatRelative(new Date(r.receivedAt)) : '';
+  const dateLabel = formatAnfrageDate(r.date, r.time);
+  const isDone = r.status === 'done';
+  const tel = r.phone ? `tel:${r.phone.replace(/\s+/g,'')}` : '';
+  const mailSubject = encodeURIComponent(`Ihre Reservierungsanfrage – Alstercafé`);
+  const mailBody = encodeURIComponent(`Guten Tag ${r.name || ''},\n\nvielen Dank für Ihre Anfrage. \n\nHerzliche Grüße\nAlstercafé`);
+  const mailLink = r.email
+    ? `mailto:${escapeAttr(r.email)}?subject=${mailSubject}&body=${mailBody}`
+    : '';
+
+  return `
+    <li class="anfrage-item ${isDone ? 'is-done' : ''}">
+      <div class="anfrage-head">
+        <div>
+          <span class="anfrage-name">${escapeHtml(r.name || 'Ohne Namen')}</span>
+          ${r.persons ? `<span class="anfrage-pers">· ${escapeHtml(r.persons)} ${Number(r.persons) === 1 ? 'Person' : 'Personen'}</span>` : ''}
+        </div>
+        ${isDone
+          ? '<span class="anfrage-tag">Erledigt</span>'
+          : '<span class="anfrage-tag is-new">Neu</span>'}
+      </div>
+      <p class="anfrage-when">${escapeHtml(dateLabel)}</p>
+      <div class="anfrage-contact">
+        ${r.phone ? `<a href="${escapeAttr(tel)}">${escapeHtml(r.phone)}</a>` : ''}
+        ${r.email ? `<a href="${mailLink}">${escapeHtml(r.email)}</a>` : ''}
+      </div>
+      ${r.message ? `<p class="anfrage-msg">${escapeHtml(r.message)}</p>` : ''}
+      <div class="anfrage-meta">
+        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
+        <div class="anfrage-actions">
+          ${isDone
+            ? `<button type="button" class="btn btn-link" data-mark="${escapeAttr(r.id)}">Erneut öffnen</button>`
+            : `<button type="button" class="btn btn-link" data-mark="${escapeAttr(r.id)}">Als erledigt markieren</button>`}
+          <button type="button" class="btn btn-link danger" data-del="${escapeAttr(r.id)}">Löschen</button>
+        </div>
+      </div>
+    </li>
+  `;
+}
+
+function formatAnfrageDate(date, time) {
+  if (!date) return time ? `Uhrzeit ${time}` : 'Datum offen';
+  try {
+    const d = new Date(date + 'T00:00:00');
+    const opts = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+    const datePart = d.toLocaleDateString('de-DE', opts);
+    return time ? `${datePart} · ${time} Uhr` : datePart;
+  } catch { return time ? `${date} · ${time}` : date; }
+}
+
+function onMarkAnfrage(id) {
+  const list = window.alsterDb?.get('reservations') || [];
+  if (!Array.isArray(list)) return;
+  const next = list.map(r => r.id === id ? { ...r, status: r.status === 'done' ? 'new' : 'done' } : r);
+  window.alsterDb?.set('reservations', next).then(() => renderAnfragen());
+}
+
+function onDeleteAnfrage(id) {
+  if (!confirm('Diese Anfrage wirklich löschen?')) return;
+  const list = window.alsterDb?.get('reservations') || [];
+  if (!Array.isArray(list)) return;
+  const next = list.filter(r => r.id !== id);
+  window.alsterDb?.set('reservations', next).then(() => renderAnfragen());
 }
 
 function mondayOf(date) {
