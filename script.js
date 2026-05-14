@@ -757,8 +757,8 @@ function initLandingTeaser() {
   if (entry?.dish && !entry.closed) {
     block.dataset.state = 'open';
     if (kickerEl) kickerEl.textContent = showTomorrow
-      ? 'Morgen kochen wir für Sie'
-      : 'Heute kochen wir für Sie';
+      ? 'Morgen mittag bei uns'
+      : 'Heute mittag bei uns';
     dishEl.textContent = entry.dish;
     if (sideEl) {
       sideEl.textContent = entry.side ? `mit ${entry.side}` : '';

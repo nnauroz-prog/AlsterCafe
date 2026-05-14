@@ -34,14 +34,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r5" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r6" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r5';
+      var V='2026-05-10-r6';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -179,7 +179,7 @@
     <section class="hero hero-landing">
       <div class="hero-grid container">
         <div class="hero-text reveal">
-          <p class="eyebrow gold" data-editable="hero.eyebrow">Willkommen im Alstercafé</p>
+          <p class="eyebrow gold" data-editable="hero.eyebrow">Bäckerei · Café · Mittagstisch · Hohenfelde</p>
           <p class="live-status" id="live-status" hidden>
             <span class="live-status-dot" aria-hidden="true"></span>
             <span class="live-status-text"></span>
@@ -190,9 +190,9 @@
             <span class="head-3" data-editable="hero.head3">Kommen Sie vorbei.</span>
           </h1>
           <p class="lead" data-editable="hero.lead">
-            Frische Brötchen, knusprige Croques, ein richtig guter Kaffee — und
-            unter der Woche ein Mittagstisch, der sich lohnt. Wir freuen uns
-            auf Ihren Besuch.
+            Croque-Monsieur aus dem Ofen, Franzbrötchen vor sieben, mittags
+            etwas Warmes. Ifflandstraße 45, gleich um die Ecke von der
+            Außenalster.
           </p>
           <div class="hero-cta">
             <a class="btn btn-primary" href="https://croquenoah.simplywebshop.de/storedata/listStore"
@@ -228,7 +228,7 @@
           <span class="num light">·</span>
           <span id="today-feature-prefix">Heute</span> · <span id="today-feature-day"></span>
         </p>
-        <p class="today-feature-kicker" id="today-feature-kicker">Heute kochen wir für Sie</p>
+        <p class="today-feature-kicker" id="today-feature-kicker">Heute mittag bei uns</p>
         <h2 class="today-feature-dish" id="today-feature-dish">—</h2>
         <p class="today-feature-side" id="today-feature-side"></p>
         <div class="today-feature-cta">
@@ -247,11 +247,11 @@
         <p class="eyebrow"><span class="num">·</span> Familienbetrieb</p>
         <p class="greeting-line">Familiengeführt<br/><em>seit über 15 Jahren.</em></p>
         <p class="greeting-text">
-          Bei uns ist Bäckerei noch Handarbeit. Hier in der Ifflandstraße backen
-          wir jeden Morgen frisch — Brötchen, Croissants, Franzbrötchen — und
-          belegen sie den ganzen Tag über. Unsere Croques kommen heiß aus dem
-          Ofen, der Mittagstisch wird täglich neu gekocht. Alles aus eigener
-          Backstube, alles aus einer Hand.
+          Unsere Backstube ist im Haus. Brötchen, Croissants und Franzbrötchen
+          kommen ab halb sieben aus dem Ofen — was um 10 Uhr noch auf dem Tresen
+          liegt, war drei Stunden vorher noch Teig. Mittagstisch wechselt
+          täglich, je nach dem, was der Markt morgens hergegeben hat. Und ja:
+          es gibt auch Simit.
         </p>
         <p class="greeting-signature">
           <span class="greeting-signature-name">Alstercafé</span>
@@ -264,33 +264,32 @@
     <section class="section landing-cards">
       <div class="container">
         <div class="section-head reveal">
-          <p class="eyebrow"><span class="num">·</span> Was wir lieben</p>
-          <h2>Frisch gebacken,<br/>persönlich serviert.</h2>
-          <p class="section-sub">Drei Sachen, die uns ausmachen — und ein Tisch, den wir gerne für Sie freihalten.</p>
+          <p class="eyebrow"><span class="num">·</span> Vier Gründe</p>
+          <h2>Wofür Leute<br/>vorbeikommen.</h2>
         </div>
         <div class="teaser-grid">
           <a class="teaser-card teaser-feature reveal" href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">
             <p class="teaser-num">01</p>
             <h3>Unsere Croques</h3>
-            <p>Knusprig gratiniert, klassisch oder vegetarisch — unsere Spezialität aus dem Ofen. Auch zum Mitnehmen oder ganz bequem online vorbestellen.</p>
+            <p>Croque-Monsieur, Croque-Madame mit Spiegelei, vegetarisch mit Bergkäse und Gemüse. Aus dem Ofen, drei Minuten, fertig. Online vorbestellen geht über Croquenoah.</p>
             <span class="teaser-link">Jetzt bestellen ↗</span>
           </a>
           <a class="teaser-card reveal" href="mittagstisch.html">
             <p class="teaser-num">02</p>
             <h3>Mittagstisch</h3>
-            <p>Jeden Tag etwas Neues. Frisch gekocht, mit knackigen Salaten und herzhaften Beilagen — ab 12:00 für Sie da.</p>
+            <p>Werktags ab zwölf, jeden Tag ein anderes Gericht. Beilage und Salat dazu. Was es heute gibt, steht auf der Karte.</p>
             <span class="teaser-link">Heute auf der Karte <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
           </a>
           <a class="teaser-card reveal" href="speisekarte.html">
             <p class="teaser-num">03</p>
             <h3>Speisekarte</h3>
-            <p>Vom warmen Croissant zum Frühstück bis zum Cappuccino am Nachmittag — alles, was Sie hier finden.</p>
+            <p>Frühstück bis 11:30, Backwaren den ganzen Tag, Kaffee von Mocambo. Hier die ganze Karte.</p>
             <span class="teaser-link">Karte entdecken <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
           </a>
           <a class="teaser-card reveal" href="reservierung.html">
             <p class="teaser-num">04</p>
             <h3>Tisch reservieren</h3>
-            <p>Sichern Sie sich Ihren Lieblingsplatz — am Fenster, draußen in der Sonne oder gemütlich drinnen. Wir bestätigen schnell.</p>
+            <p>Ein Tisch zum Mittag oder einer für den Sonntagvormittag. Online oder kurz anrufen — wir melden uns am gleichen Tag zurück.</p>
             <span class="teaser-link">Platz sichern <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
           </a>
         </div>
@@ -301,9 +300,9 @@
     <section class="section landing-visit">
       <div class="container landing-visit-inner reveal">
         <div>
-          <p class="eyebrow gold"><span class="num light">·</span> Wir freuen uns auf Sie</p>
+          <p class="eyebrow gold"><span class="num light">·</span> So finden Sie uns</p>
           <h2>Ifflandstraße 45<br/>22087 Hamburg</h2>
-          <p class="landing-visit-tag">Vorbeischauen, hinsetzen, ankommen.</p>
+          <p class="landing-visit-tag">Eckhaus, drei Tische vor der Tür, gleich um die Ecke von der Alsterschwimmhalle.</p>
         </div>
         <ul class="hours-list" id="hours-list">
           <li><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></li>
@@ -327,7 +326,8 @@
     <section class="landing-closer">
       <div class="container">
         <p class="landing-closer-quote reveal">
-          „Wer einmal hier sitzt, will am liebsten <em>gar nicht mehr gehen</em>."
+          Sie können auch <em>zwei Stunden</em> bei einem Kaffee sitzen.<br/>
+          Tun viele.
         </p>
         <p class="landing-closer-sign reveal">— Ihre Familie vom Alstercafé</p>
       </div>
@@ -374,8 +374,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r5" defer></script>
-  <script src="db.js?v=2026-05-10-r5" defer></script>
-  <script src="script.js?v=2026-05-10-r5" defer></script>
+  <script src="config.js?v=2026-05-10-r6" defer></script>
+  <script src="db.js?v=2026-05-10-r6" defer></script>
+  <script src="script.js?v=2026-05-10-r6" defer></script>
 </body>
 </html>
