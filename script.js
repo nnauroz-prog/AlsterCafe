@@ -128,6 +128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initLunchWeek);
   safeRun(initLandingTeaser);
   safeRun(initStickyToday);
+  safeRun(initCounters);
+  safeRun(initMagnetic);
   safeRun(initReservationForm);
   safeRun(initLiveStatus);
   safeRun(initEditMode);
@@ -786,6 +788,59 @@ function initLandingTeaser() {
       : 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.';
     if (sideEl) sideEl.hidden = true;
   }
+}
+
+/* Magnetic Hover: Primary-CTAs ziehen den Mauspointer leicht an (Desktop) */
+function initMagnetic() {
+  if (matchMedia('(pointer: coarse)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.btn-stamp, .btn-gold, .btn-primary').forEach(el => {
+    let raf = 0;
+    const onMove = (e) => {
+      const r = el.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+      const dy = (e.clientY - (r.top  + r.height / 2)) / r.height;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        el.style.transform = `translate3d(${dx * 8}px, ${dy * 8}px, 0)`;
+      });
+    };
+    const onLeave = () => {
+      if (raf) cancelAnimationFrame(raf);
+      el.style.transform = '';
+    };
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseleave', onLeave);
+  });
+}
+
+/* Counter-Animation: zaehlt hoch, wenn das Element ins Viewport kommt */
+function initCounters() {
+  const elements = document.querySelectorAll('.counter[data-counter-to]');
+  if (!elements.length) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    elements.forEach(el => { el.textContent = el.dataset.counterTo; });
+    return;
+  }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const to = parseInt(el.dataset.counterTo, 10) || 0;
+      const duration = 1400;
+      const start = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(to * eased);
+        if (t < 1) requestAnimationFrame(step);
+        else el.textContent = to;
+      };
+      requestAnimationFrame(step);
+      io.unobserve(el);
+    });
+  }, { threshold: 0.6 });
+  elements.forEach(el => io.observe(el));
 }
 
 /* Sticky-Today-Bar: erscheint beim Scrollen wenn ein Tagesgericht eingetragen ist */

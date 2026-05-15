@@ -34,14 +34,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r12" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r13" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r12';
+      var V='2026-05-10-r13';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -266,7 +266,7 @@
       <span class="section-shout" aria-hidden="true">Familie</span>
       <div class="container landing-greeting-inner reveal">
         <p class="eyebrow"><span class="num">·</span> Familienbetrieb</p>
-        <p class="greeting-line">Familiengeführt<br/><em>seit über 15 Jahren.</em></p>
+        <p class="greeting-line">Familiengeführt<br/>seit <em>über <span class="counter" data-counter-to="15">0</span> Jahren.</em></p>
         <p class="greeting-text">
           Unsere Backstube ist im Haus. Brötchen, Croissants und Franzbrötchen
           kommen ab halb sieben aus dem Ofen — was um 10 Uhr noch auf dem Tresen
@@ -434,8 +434,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r12" defer></script>
-  <script src="db.js?v=2026-05-10-r12" defer></script>
-  <script src="script.js?v=2026-05-10-r12" defer></script>
+  <script src="config.js?v=2026-05-10-r13" defer></script>
+  <script src="db.js?v=2026-05-10-r13" defer></script>
+  <script src="script.js?v=2026-05-10-r13" defer></script>
 </body>
 </html>

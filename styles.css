@@ -786,6 +786,14 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .sticky-today-cta { padding: 7px 12px; font-size: .78rem; }
 }
 
+/* Counter-Animation Style */
+.counter {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.2ch;
+  color: var(--gold);
+}
+
 /* STAMP-STYLE-Button — Hover dreht leicht, Schatten wird tiefer */
 .btn-stamp {
   position: relative;
