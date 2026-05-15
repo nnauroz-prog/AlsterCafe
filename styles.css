@@ -1493,50 +1493,55 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   list-style: none; padding: 0; margin: 0 0 32px;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 .lunch-day {
-  padding: 20px 16px;
+  padding: 24px 20px 22px;
   border: 1px solid rgba(241, 231, 211, .10);
-  border-radius: var(--radius);
-  background: rgba(255, 252, 244, 0.02);
+  border-radius: 14px;
+  background: rgba(255, 252, 244, 0.025);
   display: flex; flex-direction: column;
-  min-height: 140px;
+  min-height: 200px;
+  position: relative;
   transition:
     border-color var(--dur-base) var(--ease-out),
     background-color var(--dur-base) var(--ease-out),
     transform var(--dur-base) var(--ease-out);
 }
 .lunch-day:hover {
-  border-color: rgba(212, 179, 128, 0.3);
-  background: rgba(255, 252, 244, 0.04);
-  transform: translateY(-2px);
+  border-color: rgba(212, 179, 128, 0.4);
+  background: rgba(255, 252, 244, 0.045);
+  transform: translateY(-3px);
 }
-/* Heutiger Tag in der Wochenliste sieht genauso aus wie die
-   anderen Tage — er ist bereits prominent als "Heute"-Karte oben
-   sichtbar, daher keine doppelte Hervorhebung im Grid */
 .lunch-day-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(241, 231, 211, .1);
+  display: flex; flex-direction: column; gap: 4px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(241, 231, 211, .12);
 }
 .lunch-day-name {
-  font-family: 'Inter', sans-serif;
-  font-size: .72rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.45rem;
+  letter-spacing: -0.01em;
   color: var(--gold-soft);
-  font-weight: 600;
+  line-height: 1;
+  font-variation-settings: "opsz" 96;
 }
 .lunch-day-date {
   font-size: .72rem;
-  color: rgba(241, 231, 211, .5);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(241, 231, 211, .45);
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
+.lunch-day.is-today { border-color: var(--gold); background: rgba(184, 137, 62, 0.06); }
+.lunch-day.is-today .lunch-day-name { color: var(--gold); }
 .lunch-day-body {
   font-family: 'Fraunces', serif;
-  font-size: .95rem;
+  font-size: 1.02rem;
   line-height: 1.4;
   color: var(--paper);
   display: flex; flex-direction: column; gap: 6px;
@@ -1620,11 +1625,28 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 .menu-cols {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px;
 }
+.menu-col { position: relative; }
+.menu-col-num {
+  position: absolute;
+  top: -56px; right: -8px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(4rem, 8vw, 7rem);
+  line-height: 1;
+  color: var(--bean);
+  opacity: 0.08;
+  pointer-events: none;
+  user-select: none;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.02em;
+}
 .menu-col-head {
   display: flex; align-items: center; gap: 14px;
   padding-bottom: 18px;
   margin-bottom: 22px;
   border-bottom: 1px solid var(--line);
+  position: relative; z-index: 1;
 }
 .menu-col-head .ico { color: var(--gold); }
 .menu-col-head h3 { margin: 0; font-size: 1.4rem; }
