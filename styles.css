@@ -653,10 +653,108 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 .teaser-feature .teaser-num { color: var(--bean); font-size: 2rem; }
 .teaser-feature h3 { font-size: clamp(1.9rem, 3.4vw, 2.4rem); line-height: 1.1; }
 .teaser-feature p { font-size: 1.05rem; max-width: 32ch; }
+.teaser-card .teaser-num {
+  transition: transform var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+}
+.teaser-card:hover .teaser-num {
+  transform: rotate(-6deg) translateY(-3px);
+  color: var(--gold);
+}
+.teaser-link .ico { transition: transform var(--dur-base) var(--ease-out); }
+.teaser-card:hover .teaser-link .ico { transform: translateX(6px); }
+.teaser-card:hover { border-color: var(--gold); box-shadow: 0 18px 40px -22px rgba(42, 24, 16, 0.32); }
 @media (max-width: 760px) {
   .teaser-grid { grid-template-columns: 1fr; }
   .teaser-grid > .teaser-feature { grid-row: auto; }
   .teaser-feature { padding: 36px 28px; }
+}
+
+/* STAMP-STYLE-Button — Hover dreht leicht, Schatten wird tiefer */
+.btn-stamp {
+  position: relative;
+  font-size: 1.02rem;
+  padding: 18px 32px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 24px -12px rgba(42, 24, 16, 0.35);
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+.btn-stamp:hover {
+  transform: translateY(-2px) rotate(-1.2deg);
+  box-shadow: 0 14px 32px -10px rgba(42, 24, 16, 0.5);
+}
+.btn-stamp:active { transform: translateY(0) rotate(-0.4deg); }
+
+/* STAMMGAST-ZITATE-Sektion */
+.landing-quotes {
+  padding: clamp(64px, 9vw, 110px) 0;
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+.quotes-eyebrow {
+  text-align: center;
+  font-size: .72rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0 0 40px;
+}
+.quotes-eyebrow .num { color: var(--gold); margin-right: 8px; }
+.quotes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px;
+  align-items: start;
+}
+.quote-card {
+  margin: 0;
+  padding: 32px 28px;
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  position: relative;
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+.quote-card::before {
+  content: '"';
+  position: absolute;
+  top: -22px; left: 18px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 5.5rem;
+  color: var(--gold);
+  line-height: 1;
+  opacity: 0.5;
+  font-variation-settings: "opsz" 144;
+}
+.quote-card blockquote {
+  margin: 0 0 18px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  line-height: 1.4;
+  color: var(--bean);
+  letter-spacing: -0.005em;
+}
+.quote-card figcaption {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.quote-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm); }
+.quote-card--tilt-left { transform: rotate(-1deg); }
+.quote-card--tilt-left:hover { transform: rotate(-1deg) translateY(-3px); }
+.quote-card:nth-child(1) { transform: rotate(0.8deg); }
+.quote-card:nth-child(1):hover { transform: rotate(0.8deg) translateY(-3px); }
+@media (max-width: 880px) {
+  .quotes-grid { grid-template-columns: 1fr; gap: 24px; }
+  .quote-card:nth-child(1), .quote-card--tilt-left { transform: none; }
+  .quote-card:nth-child(1):hover, .quote-card--tilt-left:hover { transform: translateY(-3px); }
 }
 
 .landing-visit {
@@ -906,6 +1004,64 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   overflow: hidden;
   padding: 0;
 }
+
+/* Riesiges "Est. 2010" als Wasserzeichen rechts oben */
+.hero-est {
+  position: absolute;
+  top: 8%;
+  right: -3vw;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(6rem, 14vw, 14rem);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  color: var(--bean);
+  opacity: 0.06;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  white-space: nowrap;
+  font-variation-settings: "opsz" 144;
+  transform: rotate(-4deg);
+}
+
+/* Marquee-Ticker am unteren Hero-Rand */
+.hero-ticker {
+  position: relative;
+  background: var(--bean);
+  color: var(--linen);
+  overflow: hidden;
+  border-top: 1px solid rgba(241, 231, 211, 0.12);
+  border-bottom: 1px solid rgba(241, 231, 211, 0.12);
+  z-index: 3;
+}
+.hero-ticker-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 36px;
+  white-space: nowrap;
+  padding: 22px 0;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  animation: marquee 45s linear infinite;
+  font-variation-settings: "opsz" 48;
+}
+.hero-ticker-track > span:nth-child(even) {
+  color: var(--gold);
+  font-style: normal;
+  font-size: 0.85em;
+}
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-ticker-track { animation: none; }
+}
+.hero-ticker:hover .hero-ticker-track {
+  animation-play-state: paused;
+}
 .hero::before {
   content: ''; position: absolute; inset: 0;
   background:
@@ -976,8 +1132,10 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   display: flex; flex-direction: column;
   font-family: 'Fraunces', serif;
   margin: 12px 0 32px;
-  line-height: .96;
-  letter-spacing: -0.028em;
+  font-size: clamp(3.4rem, 8.6vw, 6.5rem);
+  line-height: .92;
+  letter-spacing: -0.032em;
+  font-variation-settings: "opsz" 144;
 }
 .hero-text h1 .head-1,
 .hero-text h1 .head-2,

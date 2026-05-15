@@ -34,14 +34,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r9" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r10" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r9';
+      var V='2026-05-10-r10';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -177,6 +177,7 @@
   <main id="main">
     <!-- HERO -->
     <section class="hero hero-landing">
+      <span class="hero-est" aria-hidden="true">Est. 2010</span>
       <div class="hero-grid container">
         <div class="hero-text reveal">
           <p class="eyebrow gold" data-editable="hero.eyebrow">Bäckerei · Café · Mittagstisch · Hohenfelde</p>
@@ -195,7 +196,7 @@
             Außenalster.
           </p>
           <div class="hero-cta">
-            <a class="btn btn-primary" href="https://croquenoah.simplywebshop.de/storedata/listStore"
+            <a class="btn btn-primary btn-stamp" href="https://croquenoah.simplywebshop.de/storedata/listStore"
                target="_blank" rel="noopener noreferrer">
               Online bestellen
               <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
@@ -217,6 +218,24 @@
               <span class="hero-mark-line">Ifflandstr. 45</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Marquee-Ticker am unteren Hero-Rand -->
+      <div class="hero-ticker" aria-hidden="true">
+        <div class="hero-ticker-track">
+          <span>Croque-Monsieur</span><span aria-hidden="true">★</span>
+          <span>Franzbrötchen vor sieben</span><span aria-hidden="true">★</span>
+          <span>Mittagstisch ab 12:00</span><span aria-hidden="true">★</span>
+          <span>Espresso von Mocambo</span><span aria-hidden="true">★</span>
+          <span>Eigene Backstube</span><span aria-hidden="true">★</span>
+          <span>Hohenfelde seit über 15 Jahren</span><span aria-hidden="true">★</span>
+          <span>Croque-Monsieur</span><span aria-hidden="true">★</span>
+          <span>Franzbrötchen vor sieben</span><span aria-hidden="true">★</span>
+          <span>Mittagstisch ab 12:00</span><span aria-hidden="true">★</span>
+          <span>Espresso von Mocambo</span><span aria-hidden="true">★</span>
+          <span>Eigene Backstube</span><span aria-hidden="true">★</span>
+          <span>Hohenfelde seit über 15 Jahren</span><span aria-hidden="true">★</span>
         </div>
       </div>
     </section>
@@ -294,6 +313,27 @@
             <p>Ein Tisch zum Mittag oder einer für den Sonntagvormittag. Online oder kurz anrufen — wir melden uns am gleichen Tag zurück.</p>
             <span class="teaser-link">Platz sichern <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZITATE / STAMMGÄSTE -->
+    <section class="landing-quotes">
+      <div class="container">
+        <p class="quotes-eyebrow"><span class="num">·</span> Was Gäste sagen</p>
+        <div class="quotes-grid">
+          <figure class="quote-card reveal">
+            <blockquote>„Das beste Franzbrötchen östlich der Alster."</blockquote>
+            <figcaption>— Stammgast, seit 2014</figcaption>
+          </figure>
+          <figure class="quote-card reveal quote-card--tilt-left">
+            <blockquote>„Hier kennt man dich beim zweiten Besuch."</blockquote>
+            <figcaption>— Tripadvisor</figcaption>
+          </figure>
+          <figure class="quote-card reveal">
+            <blockquote>„Der Croque-Madame ist nicht zum Aushalten."</blockquote>
+            <figcaption>— Bürokollegin von gegenüber</figcaption>
+          </figure>
         </div>
       </div>
     </section>
@@ -383,8 +423,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r9" defer></script>
-  <script src="db.js?v=2026-05-10-r9" defer></script>
-  <script src="script.js?v=2026-05-10-r9" defer></script>
+  <script src="config.js?v=2026-05-10-r10" defer></script>
+  <script src="db.js?v=2026-05-10-r10" defer></script>
+  <script src="script.js?v=2026-05-10-r10" defer></script>
 </body>
 </html>
