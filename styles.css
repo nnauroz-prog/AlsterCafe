@@ -471,6 +471,54 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
     radial-gradient(900px 400px at 50% 0%, rgba(184, 137, 62, 0.08), transparent 60%),
     var(--paper);
 }
+
+/* Editorial Page-Hero (Ueber Uns) — riesiges Wasserzeichen + Jahres-Linie */
+.page-hero-editorial {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(110px, 14vw, 180px) 0 clamp(60px, 8vw, 100px);
+}
+.page-hero-editorial > .container { position: relative; z-index: 1; }
+.page-hero-watermark {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-3deg);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(8rem, 22vw, 22rem);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: var(--bean);
+  opacity: 0.05;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  font-variation-settings: "opsz" 144;
+}
+.page-hero-editorial h1 {
+  font-size: clamp(3rem, 7vw, 5.6rem);
+  line-height: 0.95;
+  font-variation-settings: "opsz" 144;
+}
+.page-hero-editorial h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+.page-hero-meta {
+  display: flex; align-items: center; gap: 16px;
+  margin: 28px 0 14px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  color: var(--bean);
+}
+.page-hero-year { letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.page-hero-year-line {
+  flex: 0 0 80px;
+  height: 1.5px;
+  background: var(--gold);
+  opacity: 0.7;
+}
 .page-hero h1 {
   font-size: clamp(2.4rem, 5vw, 4rem);
   font-weight: 400;
@@ -667,6 +715,75 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .teaser-grid { grid-template-columns: 1fr; }
   .teaser-grid > .teaser-feature { grid-row: auto; }
   .teaser-feature { padding: 36px 28px; }
+}
+
+/* STICKY HEUTE-BAR (Startseite) */
+.sticky-today {
+  position: fixed;
+  bottom: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0));
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bean);
+  color: var(--paper);
+  padding: 12px 20px 12px 22px;
+  border-radius: 999px;
+  box-shadow: 0 18px 40px -16px rgba(42, 24, 16, 0.55);
+  z-index: 100;
+  max-width: calc(100vw - 32px);
+  font-family: 'Inter', sans-serif;
+  font-size: .9rem;
+  animation: stickySlide var(--dur-base) var(--ease-out);
+}
+@keyframes stickySlide {
+  from { transform: translateX(-50%) translateY(120%); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+.sticky-today-tag {
+  font-size: .68rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sticky-today-dish {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--paper);
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sticky-today-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--gold);
+  color: var(--bean);
+  padding: 8px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: .85rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.sticky-today-cta:hover { transform: scale(1.04); color: var(--bean); }
+.sticky-today-close {
+  background: transparent; border: 0;
+  color: var(--paper); opacity: 0.5;
+  font-size: 1.3rem; line-height: 1;
+  cursor: pointer; padding: 4px 8px;
+  flex-shrink: 0;
+}
+.sticky-today-close:hover { opacity: 1; }
+@media (max-width: 560px) {
+  .sticky-today { padding: 10px 14px 10px 16px; gap: 10px; }
+  .sticky-today-tag { display: none; }
+  .sticky-today-dish { max-width: 160px; font-size: .92rem; }
+  .sticky-today-cta { padding: 7px 12px; font-size: .78rem; }
 }
 
 /* STAMP-STYLE-Button — Hover dreht leicht, Schatten wird tiefer */
@@ -1728,9 +1845,29 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 .site-footer {
   background: var(--espresso);
   color: var(--linen);
-  padding: 56px 0 32px;
-  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0));
+  padding: 64px 0 0;
   border-top: 1px solid rgba(212, 179, 128, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+/* Riesiger Footer-Wordmark — laeuft am unteren Rand entlang, abgeschnitten */
+.site-footer::after {
+  content: 'Alstercafé';
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(7rem, 24vw, 24rem);
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  color: var(--linen);
+  opacity: 0.10;
+  text-align: center;
+  margin: 16px 0 -2.5vw;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  font-variation-settings: "opsz" 144;
 }
 .footer-grid {
   display: grid; grid-template-columns: 1fr 1.4fr 1fr;

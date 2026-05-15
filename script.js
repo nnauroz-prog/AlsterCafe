@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initHours);
   safeRun(initLunchWeek);
   safeRun(initLandingTeaser);
+  safeRun(initStickyToday);
   safeRun(initReservationForm);
   safeRun(initLiveStatus);
   safeRun(initEditMode);
@@ -785,6 +786,46 @@ function initLandingTeaser() {
       : 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.';
     if (sideEl) sideEl.hidden = true;
   }
+}
+
+/* Sticky-Today-Bar: erscheint beim Scrollen wenn ein Tagesgericht eingetragen ist */
+function initStickyToday() {
+  const bar = document.getElementById('sticky-today');
+  const dishEl = document.getElementById('sticky-today-dish');
+  const feature = document.getElementById('today-feature-dish');
+  if (!bar || !dishEl || !feature) return;
+  // Wenn vom User in dieser Session geschlossen, gar nicht zeigen
+  try { if (sessionStorage.getItem('alstercafe.sticky-today.dismissed') === '1') return; } catch {}
+
+  const updateContent = () => {
+    const dish = (feature.textContent || '').trim();
+    if (dish && dish !== '—' && dish.length < 200) {
+      dishEl.textContent = dish;
+      bar.dataset.ready = '1';
+    } else {
+      bar.dataset.ready = '';
+    }
+  };
+  // Erstmal abwarten, bis initLandingTeaser den Text gesetzt hat
+  setTimeout(updateContent, 500);
+  // Bei spaeteren Aenderungen (Supabase-Subscribe) ebenfalls
+  new MutationObserver(updateContent).observe(feature, { childList: true, characterData: true, subtree: true });
+
+  const onScroll = () => {
+    if (bar.dataset.ready !== '1') { bar.hidden = true; return; }
+    const scrolled = window.scrollY || document.documentElement.scrollTop;
+    const featureRect = document.getElementById('today-feature')?.getBoundingClientRect();
+    // Bar einblenden sobald der Today-Feature-Block fast oben ist
+    const featurePassed = featureRect && featureRect.bottom < window.innerHeight * 0.4;
+    bar.hidden = !(scrolled > 400 && featurePassed);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  document.getElementById('sticky-today-close')?.addEventListener('click', () => {
+    bar.hidden = true;
+    try { sessionStorage.setItem('alstercafe.sticky-today.dismissed', '1'); } catch {}
+  });
 }
 
 function loadCurrentWeek(monday) {
