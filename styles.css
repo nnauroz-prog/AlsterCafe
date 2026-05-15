@@ -694,10 +694,42 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 
 /* Persoenliche Begruessung — Maria als Mensch */
+/* Brutalist Section-Shout: Riesiges Hintergrundwort als editorial Akzent */
+.section-shout {
+  position: absolute;
+  top: 50%;
+  left: -2vw;
+  transform: translateY(-50%);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(8rem, 22vw, 22rem);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: var(--bean);
+  opacity: 0.05;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 0;
+  font-variation-settings: "opsz" 144;
+  user-select: none;
+}
+.section-shout.shout-light  { color: var(--gold); opacity: 0.08; }
+.section-shout.shout-on-dark { color: var(--paper); opacity: 0.06; }
+.today-feature, .landing-visit, .landing-closer { position: relative; overflow: hidden; }
+.today-feature > .container,
+.landing-greeting > .container,
+.landing-visit > .container,
+.landing-closer > .container { position: relative; z-index: 1; }
+@media (max-width: 760px) {
+  .section-shout { font-size: clamp(6rem, 30vw, 14rem); left: -4vw; }
+}
+
 .landing-greeting {
   padding: clamp(70px, 9vw, 110px) 0;
   background: var(--paper);
   position: relative;
+  overflow: hidden;
 }
 .landing-greeting::before {
   content: '';
@@ -786,15 +818,42 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   letter-spacing: -0.012em;
   font-variation-settings: "opsz" 96;
 }
-.landing-closer-quote em { color: var(--gold); }
-.landing-closer-sign {
-  font-family: 'Inter', sans-serif;
-  font-size: .82rem;
-  letter-spacing: .22em;
-  text-transform: uppercase;
+.landing-closer-quote em { color: var(--gold); font-style: italic; }
+.landing-closer-quote { font-size: clamp(1.8rem, 4.2vw, 3rem); line-height: 1.18; max-width: 820px; }
+.landing-closer-note {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.05rem;
   color: var(--muted);
-  margin: 0;
-  font-weight: 500;
+  margin: 0 auto 36px;
+  max-width: 720px;
+  transform: rotate(-1.2deg) translateX(140px);
+  display: inline-block;
+}
+.landing-closer-sign {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--bean);
+  margin: 12px 0 0;
+  font-weight: 400;
+  line-height: 1.45;
+  display: inline-block;
+  text-align: left;
+}
+.landing-closer-sign em { color: var(--gold); font-style: italic; }
+.closer-sign-line {
+  display: block;
+  width: 64px; height: 1.5px;
+  background: var(--bean);
+  margin: 0 auto 16px;
+  transform: rotate(-2deg);
+  opacity: 0.6;
+}
+@media (max-width: 760px) {
+  .landing-closer-note { transform: rotate(-1.2deg); }
 }
 
 /* Croque-Highlight auf Speisekarte-Seite */

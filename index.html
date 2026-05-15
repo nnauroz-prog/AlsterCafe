@@ -34,14 +34,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r8" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r9" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r8';
+      var V='2026-05-10-r9';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -223,6 +223,7 @@
 
     <!-- HEUTE / MORGEN AUF DER KARTE -->
     <section class="today-feature" id="today-feature">
+      <span class="section-shout shout-light" aria-hidden="true">Mittag</span>
       <div class="container today-feature-inner reveal">
         <p class="eyebrow gold">
           <span class="num light">·</span>
@@ -243,6 +244,7 @@
 
     <!-- FAMILIENBETRIEB -->
     <section class="landing-greeting">
+      <span class="section-shout" aria-hidden="true">Familie</span>
       <div class="container landing-greeting-inner reveal">
         <p class="eyebrow"><span class="num">·</span> Familienbetrieb</p>
         <p class="greeting-line">Familiengeführt<br/><em>seit über 15 Jahren.</em></p>
@@ -297,7 +299,8 @@
     </section>
 
     <!-- VISIT-US-STRIP -->
-    <section class="section landing-visit">
+    <section class="section landing-visit landing-visit-dark">
+      <span class="section-shout shout-on-dark" aria-hidden="true">Hohenfelde</span>
       <div class="container landing-visit-inner reveal">
         <div>
           <p class="eyebrow gold"><span class="num light">·</span> So finden Sie uns</p>
@@ -326,10 +329,16 @@
     <section class="landing-closer">
       <div class="container">
         <p class="landing-closer-quote reveal">
-          Sie können auch <em>zwei Stunden</em> bei einem Kaffee sitzen.<br/>
-          Tun viele.
+          Sie können auch <em>zwei Stunden</em><br/>
+          bei einem Kaffee sitzen.
         </p>
-        <p class="landing-closer-sign reveal">— Ihre Familie vom Alstercafé</p>
+        <p class="landing-closer-note reveal" aria-hidden="true">
+          (Tun viele.)
+        </p>
+        <p class="landing-closer-sign reveal">
+          <span class="closer-sign-line"></span>
+          Bis dann — Ihre Familie<br/>vom <em>Alstercafé</em>
+        </p>
       </div>
     </section>
   </main>
@@ -374,8 +383,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r8" defer></script>
-  <script src="db.js?v=2026-05-10-r8" defer></script>
-  <script src="script.js?v=2026-05-10-r8" defer></script>
+  <script src="config.js?v=2026-05-10-r9" defer></script>
+  <script src="db.js?v=2026-05-10-r9" defer></script>
+  <script src="script.js?v=2026-05-10-r9" defer></script>
 </body>
 </html>
