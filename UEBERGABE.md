@@ -88,6 +88,17 @@ was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten is
 
 ---
 
+## 3b. Optional: WhatsApp-Benachrichtigung aufs Handy
+
+Auf Wunsch bekommt der Inhaber bei jeder neuen Bestellung und Reservierung
+sofort eine WhatsApp-Nachricht — ganz ohne Mitgliederbereich-öffnen.
+Die Nachricht enthält keine Kundendaten (nur Anzahl + Termin), die Details
+stehen weiterhin sicher im Mitgliederbereich.
+
+Einrichtung (einmalig, ca. 15 Min.): siehe **WHATSAPP-SETUP.md**.
+
+---
+
 ## 4. Wartung
 
 - **Inhalte ändern:** alles im Mitgliederbereich. Keine Programmierkenntnisse nötig.
