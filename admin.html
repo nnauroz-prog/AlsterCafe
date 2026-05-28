@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r19" />
-  <script>(function(){var V='2026-05-10-r19';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r20" />
+  <script>(function(){var V='2026-05-10-r20';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -344,6 +344,7 @@
               Heiße Getränke). Sie können Einträge bearbeiten, neue hinzufügen oder
               entfernen. Die Änderungen erscheinen direkt auf der Webseite.
             </p>
+            <p class="panel-help">So geht's: In jedes Feld den Namen und die Beschreibung tippen. Mit „+" eine Zeile hinzufügen, mit dem Mülleimer löschen. Zum Schluss unten auf <strong>„Speisekarte speichern"</strong> klicken.</p>
 
             <form id="menu-cards-form">
               <div class="menu-cats" id="menu-cats"></div>
@@ -369,6 +370,7 @@
             <p class="panel-card-sub">
               Pflegen Sie hier die Öffnungszeiten, die unten auf der Webseite angezeigt werden.
             </p>
+            <p class="panel-help">So geht's: Links steht der Tag (z. B. „Mo – Fr"), rechts die Zeit (z. B. „06:30 – 15:00"). Einfach überschreiben. Dann unten auf <strong>„Öffnungszeiten speichern"</strong> klicken.</p>
 
             <form id="hours-form">
               <div class="hours-rows" id="hours-rows"></div>
@@ -396,6 +398,7 @@
               Pflegen Sie hier Logo, Bilder, Galerie und Akzentfarbe Ihres Cafés.
               Alle Änderungen erscheinen sofort auf der Webseite.
             </p>
+            <p class="panel-help">So geht's: Auf „Hochladen" tippen und ein Foto vom Handy oder Computer auswählen. Bilder werden <strong>sofort übernommen</strong> — hier gibt es keinen extra Speichern-Knopf. Ein Bild wieder loswerden? „Entfernen".</p>
 
             <!-- Logo -->
             <div class="design-row">
@@ -522,6 +525,7 @@
               z. B. für Brückentage, Sonderaktionen oder kurzfristige Hinweise.
               Lassen Sie das Feld leer, um den Banner auszublenden.
             </p>
+            <p class="panel-help">So geht's: Text eintippen (z. B. „Am 1. Mai geschlossen") und auf <strong>„Hinweis speichern"</strong> klicken — der gelbe Banner erscheint oben auf der Seite. Soll er wieder weg? Feld leeren oder auf „Banner ausblenden".</p>
             <form id="notice-form">
               <label>
                 <span>Hinweistext</span>
@@ -569,6 +573,7 @@
               Diese Sorten kann der Kunde auf der Brötchen-Service-Seite auswählen.
               Name und eine kurze Beschreibung des Belags.
             </p>
+            <p class="panel-help">So geht's: Pro Zeile eine Sorte — Name (z. B. „Käse") und kurze Beschreibung. „vegetarisch" ankreuzen, wenn es fleischlos ist. Mit „+ Sorte hinzufügen" erweitern. Dann auf <strong>„Sorten speichern"</strong> klicken.</p>
             <form id="broetchen-form">
               <div class="broetchen-editor" id="broetchen-editor"></div>
               <button type="button" class="btn btn-link" id="broetchen-add">+ Sorte hinzufügen</button>
@@ -728,8 +733,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r19" defer></script>
-  <script src="db.js?v=2026-05-10-r19" defer></script>
-  <script src="admin.js?v=2026-05-10-r19" defer></script>
+  <script src="config.js?v=2026-05-10-r20" defer></script>
+  <script src="db.js?v=2026-05-10-r20" defer></script>
+  <script src="admin.js?v=2026-05-10-r20" defer></script>
 </body>
 </html>
