@@ -1192,7 +1192,7 @@ function buildAnfrageItem(r) {
           ? '<span class="anfrage-tag">Erledigt</span>'
           : '<span class="anfrage-tag is-new">Neu</span>'}
       </div>
-      <p class="anfrage-when">${escapeHtml(dateLabel)}</p>
+      <p class="anfrage-when">${escapeHtml(dateLabel)}${pickupBadgeHtml(r.date)}</p>
       <div class="anfrage-contact">
         ${r.phone ? `<a href="${escapeAttr(tel)}">${escapeHtml(r.phone)}</a>` : ''}
         ${r.email ? `<a href="${mailLink}">${escapeHtml(r.email)}</a>` : ''}
@@ -1219,6 +1219,22 @@ function formatAnfrageDate(date, time) {
     const datePart = d.toLocaleDateString('de-DE', opts);
     return time ? `${datePart} · ${time} Uhr` : datePart;
   } catch { return time ? `${date} · ${time}` : date; }
+}
+
+/* Gibt eine Dringlichkeits-Pille zurueck: Heute / Morgen / Vergangen */
+function pickupBadgeHtml(dateStr) {
+  if (!dateStr) return '';
+  let diff;
+  try {
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d)) return '';
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    diff = Math.round((d - today) / 86400000);
+  } catch { return ''; }
+  if (diff === 0)  return '<span class="pickup-badge is-today">Heute</span>';
+  if (diff === 1)  return '<span class="pickup-badge is-soon">Morgen</span>';
+  if (diff < 0)    return '<span class="pickup-badge is-past">Vergangen</span>';
+  return '';
 }
 
 function onMarkAnfrage(id) {
@@ -1299,7 +1315,7 @@ function buildOrderItem(o) {
           ? '<span class="anfrage-tag">Erledigt</span>'
           : '<span class="anfrage-tag is-new">Neu</span>'}
       </div>
-      <p class="anfrage-when">Abholung: ${escapeHtml(dateLabel)}</p>
+      <p class="anfrage-when">Abholung: ${escapeHtml(dateLabel)}${pickupBadgeHtml(o.pickupDate)}</p>
       <ul class="order-line-list">${itemsList}</ul>
       <div class="anfrage-contact">
         ${o.phone ? `<a href="${escapeAttr(tel)}">${escapeHtml(o.phone)}</a>` : ''}

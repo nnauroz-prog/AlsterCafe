@@ -44,16 +44,19 @@ Die Seite ist statisches HTML und kann überall liegen, das einfachste ist **Net
 `alstercafe.de/admin.html` aufrufen, E-Mail und Passwort eingeben.
 
 ### Übersicht
-Nach dem Login sehen Sie 6 große Karten. Jede führt zu einem Bereich:
+Nach dem Login sehen Sie große Karten. Jede führt zu einem Bereich:
 
 - **Mittagsmenü bearbeiten** — Tagesgerichte für die Woche
 - **Speisekarte pflegen** — Frühstück, Backwaren, Getränke
 - **Hinweisbanner aktivieren** — Brückentage, Sonderaktionen
 - **Anfragen ansehen** — eingegangene Reservierungen (Badge zeigt Anzahl)
+- **Brötchen-Bestellungen** — Vorbestellungen für belegte Brötchen (Badge zeigt Anzahl)
 - **Bilder hochladen** — Logo, Bilder, Galerie, Akzentfarbe
 - **Öffnungszeiten ändern** — Tage und Zeiten
 
 Mit „Zurück zur Übersicht" oben links kommen Sie immer wieder zurück.
+Bei Bestellungen und Reservierungen zeigt eine Pille **„Heute"** oder **„Morgen"** an,
+was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten ist.
 
 ### Wochenplan
 - Hauptgericht und Beilage je Tag eintragen
@@ -66,6 +69,14 @@ Mit „Zurück zur Übersicht" oben links kommen Sie immer wieder zurück.
 - Telefonnummer und E-Mail sind anklickbar — direkt anrufen oder antworten
 - „Als erledigt markieren" wenn Sie sich gekümmert haben; die Anfrage bleibt erhalten, aber zählt nicht mehr im Badge
 - „Löschen" entfernt die Anfrage endgültig
+
+### Brötchen-Bestellungen
+- Kunden bestellen belegte Brötchen über die Seite **Brötchen-Service** (ab 10 Stück).
+- Oben im Bereich **„Bestellbare Brötchen-Sorten"** legen Sie selbst fest, welche
+  Sorten zur Auswahl stehen (Name, Beschreibung, „vegetarisch"). Speichern nicht vergessen.
+- Darunter unter **„Eingegangene Bestellungen"** sehen Sie jede Bestellung mit
+  allen Positionen (z. B. 5× Käse, 3× Lachs), Abholtermin, Telefon und E-Mail.
+- Wie bei den Anfragen: „Als erledigt markieren" und „Löschen".
 
 ---
 

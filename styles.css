@@ -3092,6 +3092,22 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .broetchen-edit-fields { grid-template-columns: 1fr; gap: 8px; }
 }
 
+/* Dringlichkeits-Pille (Heute / Morgen / Vergangen) */
+.pickup-badge {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.pickup-badge.is-today { background: var(--gold); color: var(--paper); }
+.pickup-badge.is-soon  { background: rgba(184, 137, 62, 0.16); color: var(--gold); }
+.pickup-badge.is-past  { background: rgba(120, 97, 82, 0.14); color: var(--muted); }
+
 /* Bestellpositionen im Admin */
 .order-line-list {
   list-style: none; padding: 0; margin: 0 0 12px;
