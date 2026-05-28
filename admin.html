@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r16" />
-  <script>(function(){var V='2026-05-10-r16';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r17" />
+  <script>(function(){var V='2026-05-10-r17';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -549,9 +549,31 @@
         <!-- TAB: BESTELLUNGEN -->
         <div class="admin-panel" id="panel-bestellungen" role="tabpanel" hidden>
           <div class="panel-card wide">
+            <h3>Bestellbare Brötchen-Sorten</h3>
+            <p class="panel-card-sub">
+              Diese Sorten kann der Kunde auf der Brötchen-Service-Seite auswählen.
+              Name und eine kurze Beschreibung des Belags.
+            </p>
+            <form id="broetchen-form">
+              <div class="broetchen-editor" id="broetchen-editor"></div>
+              <button type="button" class="btn btn-link" id="broetchen-add">+ Sorte hinzufügen</button>
+              <div class="save-bar inline">
+                <p class="save-status" id="broetchen-status"></p>
+                <div class="save-actions">
+                  <button type="button" class="btn btn-link danger" id="broetchen-reset">Auf Standard zurücksetzen</button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Sorten speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel-card wide">
             <div class="anfragen-head">
               <div>
-                <h3>Brötchen-Bestellungen</h3>
+                <h3>Eingegangene Bestellungen</h3>
                 <p class="panel-card-sub">
                   Vorbestellungen für belegte Brötchen, die über den
                   Brötchen-Service auf der Webseite eingehen — neueste zuerst.
@@ -691,8 +713,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r16" defer></script>
-  <script src="db.js?v=2026-05-10-r16" defer></script>
-  <script src="admin.js?v=2026-05-10-r16" defer></script>
+  <script src="config.js?v=2026-05-10-r17" defer></script>
+  <script src="db.js?v=2026-05-10-r17" defer></script>
+  <script src="admin.js?v=2026-05-10-r17" defer></script>
 </body>
 </html>

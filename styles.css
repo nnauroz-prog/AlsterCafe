@@ -3048,6 +3048,50 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 .anfrage-actions { display: flex; gap: 14px; flex-wrap: wrap; }
 
+/* Brötchen-Sorten-Editor im Admin */
+.broetchen-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.broetchen-edit-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+}
+.broetchen-edit-fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr auto;
+  gap: 10px;
+  align-items: center;
+}
+.broetchen-edit-fields input[type="text"] {
+  width: 100%;
+  font: 400 .95rem 'Inter', sans-serif;
+  color: var(--bean);
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 9px 12px;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.broetchen-edit-fields input[type="text"]:focus { outline: none; border-color: var(--gold); }
+.broetchen-edit-veg {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .82rem; color: var(--muted); white-space: nowrap; cursor: pointer;
+}
+.broetchen-edit-remove {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--line);
+  border-radius: 50%; color: var(--muted); cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.broetchen-edit-remove:hover { color: #b3382c; border-color: rgba(179, 56, 44, 0.4); }
+@media (max-width: 640px) {
+  .broetchen-edit-fields { grid-template-columns: 1fr; gap: 8px; }
+}
+
 /* Bestellpositionen im Admin */
 .order-line-list {
   list-style: none; padding: 0; margin: 0 0 12px;

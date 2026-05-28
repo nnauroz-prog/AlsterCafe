@@ -145,6 +145,11 @@ async function init() {
   dom.hoursAdd.addEventListener('click', () => addHourRow());
   dom.hoursReset.addEventListener('click', onResetHours);
 
+  // Brötchen-Sorten
+  dom.broetchenForm?.addEventListener('submit', onSaveBroetchen);
+  dom.broetchenAdd?.addEventListener('click', () => addBroetchenRow());
+  dom.broetchenReset?.addEventListener('click', onResetBroetchen);
+
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
   document.getElementById('reset-content')?.addEventListener('click', onResetContent);
@@ -231,7 +236,13 @@ function cacheDom() {
     ordersList:    document.getElementById('orders-list'),
     ordersCount:   document.getElementById('orders-count'),
     ordersBadge:   document.getElementById('overview-orders-badge'),
-    tabOrdersBadge: document.getElementById('tab-orders-badge')
+    tabOrdersBadge: document.getElementById('tab-orders-badge'),
+    // Brötchen-Sorten-Editor
+    broetchenForm:   document.getElementById('broetchen-form'),
+    broetchenEditor: document.getElementById('broetchen-editor'),
+    broetchenAdd:    document.getElementById('broetchen-add'),
+    broetchenReset:  document.getElementById('broetchen-reset'),
+    broetchenStatus: document.getElementById('broetchen-status')
   });
 }
 
@@ -302,6 +313,7 @@ async function showDashboard() {
   renderHoursEditor();
   renderDesignEditor();
   renderActivityLog();
+  renderBroetchenEditor();
   refreshAnfragen();
   refreshOrders();
   // Live-Update wenn ueber das oeffentliche Formular etwas reinkommt
@@ -1324,6 +1336,85 @@ function onDeleteOrder(id) {
   try { localStorage.setItem('alstercafe.orders', JSON.stringify(optimistic)); } catch {}
   renderOrders();
   window.alsterDb?.deleteOrder(id).finally(() => refreshOrders());
+}
+
+/* ---------- Brötchen-Sorten-Editor ---------- */
+
+const DEFAULT_BROETCHEN = [
+  { name: 'Käse',                desc: 'Gouda & Bergkäse, Salatblatt, Butter' },
+  { name: 'Schinken',            desc: 'Gekochter Schinken, Ei, Gurke' },
+  { name: 'Salami',              desc: 'Edelsalami, Käse, Salat' },
+  { name: 'Frischkäse & Gurke',  desc: 'Kräuterfrischkäse, Gurke, Radieschen', veg: true },
+  { name: 'Ei',                  desc: 'Spiegel- oder Rührei, Schnittlauch' },
+  { name: 'Lachs',               desc: 'Räucherlachs, Meerrettich-Frischkäse, Dill' },
+  { name: 'Bunt gemischt',       desc: 'Wir stellen eine ausgewogene Auswahl zusammen' }
+];
+
+function renderBroetchenEditor() {
+  if (!dom.broetchenEditor) return;
+  let items = window.alsterDb?.get('broetchen-items');
+  if (!Array.isArray(items) || !items.length) items = DEFAULT_BROETCHEN;
+  dom.broetchenEditor.innerHTML = '';
+  items.forEach(it => addBroetchenRow(it, true));
+  setStatus(dom.broetchenStatus, '');
+}
+
+function addBroetchenRow(item, skipStatus) {
+  if (!dom.broetchenEditor) return;
+  const data = item || { name: '', desc: '', veg: false };
+  const row = document.createElement('div');
+  row.className = 'broetchen-edit-row';
+  row.innerHTML = `
+    <div class="broetchen-edit-fields">
+      <input type="text" class="broetchen-edit-name" placeholder="Sorte (z. B. Käse)" value="${escapeAttr(data.name || '')}" />
+      <input type="text" class="broetchen-edit-desc" placeholder="Beschreibung (z. B. Gouda, Salat, Butter)" value="${escapeAttr(data.desc || '')}" />
+      <label class="broetchen-edit-veg"><input type="checkbox" ${data.veg ? 'checked' : ''} /> vegetarisch</label>
+    </div>
+    <button type="button" class="broetchen-edit-remove" aria-label="Sorte entfernen">
+      <svg class="ico ico-sm"><use href="#i-x"/></svg>
+    </button>
+  `;
+  row.querySelector('.broetchen-edit-remove').addEventListener('click', () => {
+    row.remove();
+    setStatus(dom.broetchenStatus, 'Nicht vergessen: „Sorten speichern" klicken.', '');
+  });
+  dom.broetchenEditor.appendChild(row);
+  if (!skipStatus) setStatus(dom.broetchenStatus, 'Nicht vergessen: „Sorten speichern" klicken.', '');
+}
+
+function readBroetchenForm() {
+  const rows = Array.from(dom.broetchenEditor.querySelectorAll('.broetchen-edit-row'));
+  const out = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.broetchen-edit-name').value.trim();
+    const desc = row.querySelector('.broetchen-edit-desc').value.trim();
+    const veg  = row.querySelector('.broetchen-edit-veg input').checked;
+    if (name) out.push(veg ? { name, desc, veg: true } : { name, desc });
+  });
+  return out;
+}
+
+function onSaveBroetchen(e) {
+  e.preventDefault();
+  const items = readBroetchenForm();
+  if (!items.length) {
+    setStatus(dom.broetchenStatus, 'Bitte mindestens eine Sorte angeben.', 'error');
+    return;
+  }
+  window.alsterDb?.set('broetchen-items', items).then(ok => {
+    setStatus(dom.broetchenStatus,
+      ok === false ? 'Speichern fehlgeschlagen.' : `Gespeichert · ${items.length} Sorten`,
+      ok === false ? 'error' : 'ok');
+  });
+  if (typeof logActivity === 'function') logActivity('Brötchen-Sorten aktualisiert');
+}
+
+function onResetBroetchen() {
+  if (!confirm('Sorten auf die Standard-Auswahl zurücksetzen?')) return;
+  window.alsterDb?.remove('broetchen-items').then(() => {
+    renderBroetchenEditor();
+    setStatus(dom.broetchenStatus, 'Auf Standard zurückgesetzt.', 'ok');
+  });
 }
 
 function mondayOf(date) {

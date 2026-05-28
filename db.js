@@ -25,7 +25,7 @@
     : null;
 
   // Schlüssel die wir in beiden Modi unterstützen
-  const SYNCED_KEYS = ['weekly-menu', 'menu', 'hours', 'notice', 'content', 'design'];
+  const SYNCED_KEYS = ['weekly-menu', 'menu', 'hours', 'notice', 'content', 'design', 'broetchen-items'];
   const PREFIX = 'alstercafe.';
 
   /* ---------- Auth ---------- */

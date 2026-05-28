@@ -105,6 +105,18 @@ const DEFAULT_HOURS = [
   { label: 'Sonntag',  time: '07:30 – 15:00' }
 ];
 
+/* Standard-Sorten für den Brötchen-Service.
+   Der Inhaber kann sie im Mitgliederbereich überschreiben (Key: broetchen-items). */
+const DEFAULT_BROETCHEN = [
+  { name: 'Käse',                desc: 'Gouda & Bergkäse, Salatblatt, Butter' },
+  { name: 'Schinken',            desc: 'Gekochter Schinken, Ei, Gurke' },
+  { name: 'Salami',              desc: 'Edelsalami, Käse, Salat' },
+  { name: 'Frischkäse & Gurke',  desc: 'Kräuterfrischkäse, Gurke, Radieschen', veg: true },
+  { name: 'Ei',                  desc: 'Spiegel- oder Rührei, Schnittlauch' },
+  { name: 'Lachs',               desc: 'Räucherlachs, Meerrettich-Frischkäse, Dill' },
+  { name: 'Bunt gemischt',       desc: 'Wir stellen eine ausgewogene Auswahl zusammen' }
+];
+
 document.addEventListener('DOMContentLoaded', async () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -958,11 +970,41 @@ function renderWeekList(weekData, monday, today) {
   });
 }
 
+/* Baut eine Brötchen-Sorten-Zeile (für vom Inhaber gepflegte Sorten) */
+function buildBroetchenRow(item) {
+  const name = escapeHtml(item.name || '');
+  const desc = escapeHtml(item.desc || '');
+  const veg  = item.veg ? ' <span class="broetchen-badge">vegetarisch</span>' : '';
+  return `
+    <li class="broetchen-row" data-name="${escapeAttr(item.name || '')}">
+      <div class="broetchen-info">
+        <span class="broetchen-name">${name}${veg}</span>
+        ${desc ? `<span class="broetchen-desc">${desc}</span>` : ''}
+      </div>
+      <div class="qty-stepper">
+        <button type="button" class="qty-btn" data-step="-1" aria-label="Weniger ${name}">−</button>
+        <span class="qty-value" aria-live="polite">0</span>
+        <button type="button" class="qty-btn" data-step="1" aria-label="Mehr ${name}">+</button>
+      </div>
+    </li>`;
+}
+
 /* ---------- Bestellformular: belegte Brötchen ---------- */
 function initOrderForm() {
   const form = document.getElementById('order-form');
   if (!form) return;
   const MIN_ORDER = 10;
+
+  // Falls der Inhaber eigene Sorten gepflegt hat: Liste daraus neu aufbauen.
+  // Sonst bleibt die statische Standard-Liste im HTML stehen.
+  const sortListEl = document.getElementById('broetchen-list');
+  let storedItems = null;
+  try { storedItems = window.alsterDb?.get('broetchen-items'); } catch {}
+  if (sortListEl && Array.isArray(storedItems) && storedItems.length) {
+    const valid = storedItems.filter(it => it && typeof it.name === 'string' && it.name.trim());
+    if (valid.length) sortListEl.innerHTML = valid.map(buildBroetchenRow).join('');
+  }
+
   const rows = Array.from(document.querySelectorAll('.broetchen-row'));
   const countEl = document.getElementById('order-count');
   const listEl = document.getElementById('order-summary-list');
