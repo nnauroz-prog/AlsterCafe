@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -23,7 +24,7 @@
 
   <style>
     *,*::before,*::after{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:#FFFCF4;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+    html,body{margin:0;padding:0;color-scheme:only light;background:#FFFCF4;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
     img{max-width:100%;display:block}
     .skip-link{position:absolute;left:-10000px;top:12px;z-index:1000;padding:12px 18px;background:#3D2415;color:#FFFCF4;border-radius:999px;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
     .skip-link:focus{left:12px}
@@ -34,14 +35,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r22" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r23" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r22';
+      var V='2026-05-10-r23';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -436,8 +437,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r22" defer></script>
-  <script src="db.js?v=2026-05-10-r22" defer></script>
-  <script src="script.js?v=2026-05-10-r22" defer></script>
+  <script src="config.js?v=2026-05-10-r23" defer></script>
+  <script src="db.js?v=2026-05-10-r23" defer></script>
+  <script src="script.js?v=2026-05-10-r23" defer></script>
 </body>
 </html>

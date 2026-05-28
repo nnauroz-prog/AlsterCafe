@@ -3,6 +3,10 @@
    =============================================== */
 
 :root {
+  /* Helles Design erzwingen — verhindert Auto-Dark-Mode mancher Browser,
+     der das warme Creme-Design sonst matschig-dunkel invertiert. */
+  color-scheme: only light;
+
   /* Color */
   --espresso:  #2A1810;
   --bean:      #3D2415;
