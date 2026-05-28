@@ -253,7 +253,11 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   font-style: normal;
 }
 
-.primary-nav { display: flex; gap: 32px; align-items: center; }
+.primary-nav { display: flex; gap: 26px; align-items: center; }
+@media (min-width: 981px) and (max-width: 1120px) {
+  .primary-nav { gap: 18px; }
+  .primary-nav a { font-size: .92rem; }
+}
 .primary-nav a {
   color: var(--bean);
   font-size: .9rem;
@@ -812,6 +816,139 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 .btn-stamp:active { transform: translateY(0) rotate(-0.4deg); }
 
+/* BRÖTCHEN-BESTELLSERVICE */
+.order-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+.order-fieldset { border: 0; padding: 0; margin: 0 0 40px; }
+.order-legend {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  color: var(--bean);
+  margin-bottom: 8px;
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 0;
+}
+.order-legend .num {
+  font-style: italic;
+  color: var(--gold);
+  font-size: 1.1rem;
+}
+.order-hint { color: var(--muted); font-size: .92rem; margin: 0 0 22px; }
+
+.broetchen-list { list-style: none; padding: 0; margin: 0; }
+.broetchen-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line-soft);
+  transition: padding-left var(--dur-base) var(--ease-out);
+}
+.broetchen-row:first-child { border-top: 1px solid var(--line-soft); }
+.broetchen-row.is-active { padding-left: 10px; }
+.broetchen-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.broetchen-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 1.12rem;
+  color: var(--bean);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.broetchen-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: .62rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #4a6f47;
+  background: rgba(124, 161, 119, 0.14);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.broetchen-desc { color: var(--muted); font-size: .88rem; line-height: 1.4; }
+
+/* Mengen-Stepper */
+.qty-stepper {
+  display: inline-flex; align-items: center;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.qty-btn {
+  width: 42px; height: 42px;
+  border: 0; background: transparent;
+  font-size: 1.4rem; line-height: 1;
+  color: var(--bean);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background-color var(--dur-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.qty-btn:hover { background: var(--cream); }
+.qty-btn:active { background: var(--linen); }
+.qty-value {
+  min-width: 34px; text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600; font-size: 1rem;
+  color: var(--bean);
+}
+.broetchen-row.is-active .qty-stepper { border-color: var(--gold); }
+.broetchen-row.is-active .qty-value { color: var(--gold); }
+
+/* Warenkorb-Sidebar */
+.order-summary { position: sticky; top: 96px; }
+.order-summary-card {
+  background: var(--bean);
+  color: var(--linen);
+  border-radius: 18px;
+  padding: 32px 28px;
+  box-shadow: 0 30px 70px -38px rgba(42, 24, 16, 0.6);
+}
+.order-summary-eyebrow {
+  font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--gold-soft); font-weight: 700; margin: 0 0 12px;
+}
+.order-summary-count {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  line-height: 1; margin: 0 0 20px;
+  color: var(--paper);
+  font-variation-settings: "opsz" 144;
+}
+.order-summary-count #order-count { font-variant-numeric: tabular-nums; }
+.order-summary-unit { font-style: italic; font-size: .5em; color: var(--gold-soft); }
+.order-summary-list { list-style: none; padding: 0; margin: 0 0 18px; }
+.order-summary-list li {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(241, 231, 211, 0.12);
+  font-size: .92rem;
+}
+.order-summary-qty { color: var(--gold-soft); font-variant-numeric: tabular-nums; font-weight: 600; }
+.order-summary-empty { color: rgba(241, 231, 211, 0.5); font-style: italic; border-bottom: 0 !important; }
+.order-min-note {
+  font-size: .82rem; margin: 0 0 18px;
+  color: rgba(241, 231, 211, 0.6);
+}
+.order-min-note.is-met { color: #9ed3a0; }
+.order-min-note.is-below { color: var(--gold-soft); }
+.order-submit { width: 100%; justify-content: center; }
+.order-submit:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+.order-summary-fineprint {
+  font-size: .76rem; line-height: 1.5;
+  color: rgba(241, 231, 211, 0.5);
+  margin: 16px 0 0;
+}
+@media (max-width: 900px) {
+  .order-grid { grid-template-columns: 1fr; gap: 32px; }
+  .order-summary { position: static; order: -1; }
+}
+
 /* STAMMGAST-ZITATE-Sektion */
 .landing-quotes {
   padding: clamp(64px, 9vw, 110px) 0;
@@ -1092,6 +1229,25 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 .menu-croque h2 { margin: 8px 0 16px; }
 .menu-croque p { color: var(--muted); max-width: 580px; margin: 0 auto 28px; line-height: 1.6; }
+
+/* Belegte-Brötchen-CTA-Banner */
+.menu-broetchen-cta {
+  margin-top: 20px;
+  padding: clamp(28px, 4vw, 44px) clamp(28px, 4vw, 48px);
+  background: var(--bean);
+  color: var(--linen);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 28px; flex-wrap: wrap;
+}
+.menu-broetchen-cta .eyebrow { color: var(--gold-soft); justify-content: flex-start; }
+.menu-broetchen-cta .eyebrow .num { color: var(--gold); }
+.menu-broetchen-cta h2 { color: var(--paper); margin: 6px 0 12px; }
+.menu-broetchen-cta p { color: rgba(241, 231, 211, 0.75); max-width: 460px; margin: 0; line-height: 1.6; }
+.menu-broetchen-cta .btn { flex-shrink: 0; }
+@media (max-width: 700px) {
+  .menu-broetchen-cta { flex-direction: column; align-items: flex-start; text-align: left; }
+}
 
 /* Reservation-Page eigener Background */
 .reservation-page { background: linear-gradient(140deg, var(--bean), var(--espresso)); }
@@ -2886,6 +3042,24 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   color: var(--muted);
 }
 .anfrage-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+/* Bestellpositionen im Admin */
+.order-line-list {
+  list-style: none; padding: 0; margin: 0 0 12px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 4px 18px;
+}
+.order-line-list li {
+  font-size: .9rem;
+  color: var(--bean);
+  padding: 4px 0;
+}
+.order-line-qty {
+  font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  margin-right: 4px;
+}
 @media (max-width: 540px) {
   .anfrage-head { flex-direction: column; align-items: flex-start; }
   .anfrage-meta { flex-direction: column; align-items: flex-start; }

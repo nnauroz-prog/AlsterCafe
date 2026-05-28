@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r14" />
-  <script>(function(){var V='2026-05-10-r14';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r15" />
+  <script>(function(){var V='2026-05-10-r15';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -40,6 +40,7 @@
       <symbol id="i-fork" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8a2 2 0 0 0 2 2v8"/><path d="M11 3v8"/><path d="M15 3c-1 0-2 1-2 3v5c0 1 .5 2 2 2v8"/></g></symbol>
       <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h13"/><path d="M8 7h7M8 11h7"/></g></symbol>
       <symbol id="i-inbox" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-8h12l3 8"/><path d="M3 13v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 13h5l1 3h6l1-3h5"/></g></symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/><path d="M9 8a3 3 0 0 1 6 0"/></g></symbol>
       <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
       <symbol id="i-arrow-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></g></symbol>
       <symbol id="i-arrow-right" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
@@ -202,6 +203,16 @@
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
             </button>
 
+            <button class="overview-card" type="button" data-tab="bestellungen">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-bag"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Brötchen-Bestellungen</span>
+                <span class="overview-card-desc">Vorbestellungen für belegte Brötchen</span>
+              </span>
+              <span class="overview-card-badge" id="overview-orders-badge" hidden></span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
             <button class="overview-card" type="button" data-tab="design">
               <span class="overview-card-icon"><svg class="ico"><use href="#i-image"/></svg></span>
               <span class="overview-card-body">
@@ -254,6 +265,11 @@
             <svg class="ico ico-sm"><use href="#i-inbox"/></svg>
             Anfragen
             <span class="tab-badge" id="tab-anfragen-badge" hidden></span>
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="bestellungen">
+            <svg class="ico ico-sm"><use href="#i-bag"/></svg>
+            Bestellungen
+            <span class="tab-badge" id="tab-orders-badge" hidden></span>
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="account">
             <svg class="ico ico-sm"><use href="#i-user"/></svg>
@@ -530,6 +546,25 @@
           </div>
         </div>
 
+        <!-- TAB: BESTELLUNGEN -->
+        <div class="admin-panel" id="panel-bestellungen" role="tabpanel" hidden>
+          <div class="panel-card wide">
+            <div class="anfragen-head">
+              <div>
+                <h3>Brötchen-Bestellungen</h3>
+                <p class="panel-card-sub">
+                  Vorbestellungen für belegte Brötchen, die über den
+                  Brötchen-Service auf der Webseite eingehen — neueste zuerst.
+                </p>
+              </div>
+              <span class="anfragen-count" id="orders-count" hidden></span>
+            </div>
+            <ul class="anfragen-list" id="orders-list">
+              <li class="anfragen-empty">Noch keine Bestellungen.</li>
+            </ul>
+          </div>
+        </div>
+
         <!-- TAB: ACCOUNT -->
         <div class="admin-panel" id="panel-account" role="tabpanel" hidden>
           <div class="panel-card">
@@ -656,8 +691,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r14" defer></script>
-  <script src="db.js?v=2026-05-10-r14" defer></script>
-  <script src="admin.js?v=2026-05-10-r14" defer></script>
+  <script src="config.js?v=2026-05-10-r15" defer></script>
+  <script src="db.js?v=2026-05-10-r15" defer></script>
+  <script src="admin.js?v=2026-05-10-r15" defer></script>
 </body>
 </html>

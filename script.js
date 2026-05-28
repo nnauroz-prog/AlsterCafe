@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initCounters);
   safeRun(initMagnetic);
   safeRun(initReservationForm);
+  safeRun(initOrderForm);
   safeRun(initLiveStatus);
   safeRun(initEditMode);
   safeRun(initServiceWorker);
@@ -954,6 +955,129 @@ function renderWeekList(weekData, monday, today) {
       <div class="lunch-day-body">${body}</div>
     `;
     list.appendChild(li);
+  });
+}
+
+/* ---------- Bestellformular: belegte Brötchen ---------- */
+function initOrderForm() {
+  const form = document.getElementById('order-form');
+  if (!form) return;
+  const MIN_ORDER = 10;
+  const rows = Array.from(document.querySelectorAll('.broetchen-row'));
+  const countEl = document.getElementById('order-count');
+  const listEl = document.getElementById('order-summary-list');
+  const minNote = document.getElementById('order-min-note');
+  const submitBtn = document.getElementById('order-submit');
+  const status = document.getElementById('order-status');
+
+  // Abholdatum frühestens morgen
+  const dateInput = form.querySelector('input[name="Datum"]');
+  if (dateInput) {
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    dateInput.min = isoDate(tomorrow);
+    if (!dateInput.value) dateInput.value = isoDate(tomorrow);
+  }
+
+  const getItems = () => rows
+    .map(row => ({
+      name: (row.dataset.name || '').replace(/&amp;/g, '&'),
+      qty: parseInt(row.querySelector('.qty-value').textContent, 10) || 0
+    }))
+    .filter(it => it.qty > 0);
+
+  const render = () => {
+    const items = getItems();
+    const total = items.reduce((s, it) => s + it.qty, 0);
+    if (countEl) countEl.textContent = String(total);
+    if (listEl) {
+      listEl.innerHTML = items.length
+        ? items.map(it => `<li><span>${escapeHtml(it.name)}</span><span class="order-summary-qty">${it.qty}×</span></li>`).join('')
+        : '<li class="order-summary-empty">Noch nichts ausgewählt.</li>';
+    }
+    const ok = total >= MIN_ORDER;
+    if (minNote) {
+      if (total === 0) {
+        minNote.textContent = `Mindestbestellung: ${MIN_ORDER} Brötchen.`;
+        minNote.classList.remove('is-met', 'is-below');
+      } else if (ok) {
+        minNote.textContent = 'Mindestbestellung erreicht.';
+        minNote.classList.add('is-met'); minNote.classList.remove('is-below');
+      } else {
+        minNote.textContent = `Noch ${MIN_ORDER - total} bis zur Mindestbestellung.`;
+        minNote.classList.add('is-below'); minNote.classList.remove('is-met');
+      }
+    }
+    if (submitBtn) submitBtn.disabled = !ok;
+  };
+
+  // Stepper-Buttons
+  rows.forEach(row => {
+    const valueEl = row.querySelector('.qty-value');
+    row.querySelectorAll('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const step = parseInt(btn.dataset.step, 10) || 0;
+        const next = Math.max(0, Math.min(200, (parseInt(valueEl.textContent, 10) || 0) + step));
+        valueEl.textContent = String(next);
+        row.classList.toggle('is-active', next > 0);
+        render();
+      });
+    });
+  });
+  render();
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const items = getItems();
+    const total = items.reduce((s, it) => s + it.qty, 0);
+    if (total < MIN_ORDER) {
+      setFormStatus(status, `Bitte wählen Sie mindestens ${MIN_ORDER} Brötchen.`, 'error');
+      return;
+    }
+    if (!form.checkValidity()) {
+      const firstInvalid = form.querySelector(':invalid');
+      if (firstInvalid) firstInvalid.focus();
+      setFormStatus(status, 'Bitte füllen Sie alle Pflichtfelder (*) aus.', 'error');
+      return;
+    }
+    const data = new FormData(form);
+    const entry = {
+      name:       (data.get('Name')     || '').toString().trim(),
+      phone:      (data.get('Telefon')  || '').toString().trim(),
+      email:      (data.get('E-Mail')   || '').toString().trim(),
+      pickupDate: (data.get('Datum')    || '').toString().trim(),
+      pickupTime: (data.get('Uhrzeit')  || '').toString().trim(),
+      notes:      (data.get('Nachricht')|| '').toString().trim(),
+      items,
+      status: 'new'
+    };
+
+    if (submitBtn) { submitBtn.classList.add('is-loading'); submitBtn.disabled = true; }
+    setFormStatus(status, 'Bestellung wird gesendet …');
+
+    let saved = false;
+    try { saved = !!(await window.alsterDb?.addOrder(entry)); }
+    catch (err) { console.warn('Bestellung speichern fehlgeschlagen', err); }
+
+    if (submitBtn) submitBtn.classList.remove('is-loading');
+    if (saved) {
+      if (submitBtn) submitBtn.classList.add('is-success');
+      setFormStatus(status, `Vielen Dank! Ihre Bestellung über ${total} belegte Brötchen ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
+      try { form.reset(); } catch {}
+      rows.forEach(row => { row.querySelector('.qty-value').textContent = '0'; row.classList.remove('is-active'); });
+      render();
+    } else {
+      // Fallback: Mail-Programm
+      const lines = items.map(it => `${it.qty}× ${it.name}`).join('\n');
+      const subject = `Brötchen-Bestellung (${total} Stück) – ${entry.name}`;
+      const body = encodeURIComponent(
+        `Bestellung:\n${lines}\n\nGesamt: ${total} Brötchen\n` +
+        `Abholung: ${entry.pickupDate} um ${entry.pickupTime}\n` +
+        `Name: ${entry.name}\nTelefon: ${entry.phone}\nE-Mail: ${entry.email}\n\n` +
+        `Wünsche:\n${entry.notes || '–'}`
+      );
+      window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
+      setFormStatus(status, 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
+    }
   });
 }
 

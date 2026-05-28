@@ -84,6 +84,46 @@ create policy "Authenticated can delete reservations"
 
 alter publication supabase_realtime add table public.reservations;
 
+-- 4b. Bestellungen-Tabelle (belegte Broetchen): anonym einreichen, nur Inhaber liest
+create table if not exists public.orders (
+  id           text primary key,
+  name         text,
+  phone        text,
+  email        text,
+  pickup_date  text,
+  pickup_time  text,
+  items        jsonb,        -- [{ "name": "...", "qty": 5 }]
+  total_count  integer default 0,
+  notes        text,
+  status       text default 'new',
+  received_at  timestamptz default now() not null
+);
+
+alter table public.orders enable row level security;
+
+drop policy if exists "Public can insert orders" on public.orders;
+create policy "Public can insert orders"
+  on public.orders for insert
+  with check (true);
+
+drop policy if exists "Authenticated can read orders" on public.orders;
+create policy "Authenticated can read orders"
+  on public.orders for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "Authenticated can update orders" on public.orders;
+create policy "Authenticated can update orders"
+  on public.orders for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+drop policy if exists "Authenticated can delete orders" on public.orders;
+create policy "Authenticated can delete orders"
+  on public.orders for delete
+  using (auth.role() = 'authenticated');
+
+alter publication supabase_realtime add table public.orders;
+
 -- 5. Storage-Bucket "images" anlegen + public lesbar
 insert into storage.buckets (id, name, public)
   values ('images', 'images', true)

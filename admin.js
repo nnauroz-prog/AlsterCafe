@@ -226,7 +226,12 @@ function cacheDom() {
     anfragenList:  document.getElementById('anfragen-list'),
     anfragenCount: document.getElementById('anfragen-count'),
     anfragenBadge: document.getElementById('overview-anfragen-badge'),
-    tabAnfragenBadge: document.getElementById('tab-anfragen-badge')
+    tabAnfragenBadge: document.getElementById('tab-anfragen-badge'),
+    // Bestellungen (belegte Brötchen)
+    ordersList:    document.getElementById('orders-list'),
+    ordersCount:   document.getElementById('orders-count'),
+    ordersBadge:   document.getElementById('overview-orders-badge'),
+    tabOrdersBadge: document.getElementById('tab-orders-badge')
   });
 }
 
@@ -298,8 +303,12 @@ async function showDashboard() {
   renderDesignEditor();
   renderActivityLog();
   refreshAnfragen();
-  // Live-Update wenn ueber das oeffentliche Formular eine neue Anfrage reinkommt
-  window.alsterDb?.subscribe?.((key) => { if (key === 'reservations') refreshAnfragen(); });
+  refreshOrders();
+  // Live-Update wenn ueber das oeffentliche Formular etwas reinkommt
+  window.alsterDb?.subscribe?.((key) => {
+    if (key === 'reservations') refreshAnfragen();
+    if (key === 'orders') refreshOrders();
+  });
 }
 
 /* ---------- Tabs ---------- */
@@ -1218,6 +1227,103 @@ function onDeleteAnfrage(id) {
   try { localStorage.setItem('alstercafe.reservations', JSON.stringify(optimistic)); } catch {}
   renderAnfragen();
   window.alsterDb?.deleteReservation(id).finally(() => refreshAnfragen());
+}
+
+/* ---------- Bestellungen (belegte Brötchen) ---------- */
+
+async function refreshOrders() {
+  try { await window.alsterDb?.listOrders(); } catch {}
+  renderOrders();
+}
+
+function renderOrders() {
+  const list = window.alsterDb?.get('orders') || [];
+  const items = Array.isArray(list) ? list : [];
+  const newCount = items.filter(o => o.status !== 'done').length;
+
+  if (dom.ordersBadge) {
+    dom.ordersBadge.hidden = newCount === 0;
+    dom.ordersBadge.textContent = newCount > 0 ? String(newCount) : '';
+  }
+  if (dom.tabOrdersBadge) {
+    dom.tabOrdersBadge.hidden = newCount === 0;
+    dom.tabOrdersBadge.textContent = newCount > 0 ? String(newCount) : '';
+  }
+  if (dom.ordersCount) {
+    dom.ordersCount.hidden = items.length === 0;
+    dom.ordersCount.textContent = items.length === 1 ? '1 Bestellung' : `${items.length} Bestellungen`;
+  }
+  if (!dom.ordersList) return;
+
+  if (items.length === 0) {
+    dom.ordersList.innerHTML = '<li class="anfragen-empty">Noch keine Bestellungen.</li>';
+    return;
+  }
+  dom.ordersList.innerHTML = items.map(o => buildOrderItem(o)).join('');
+  dom.ordersList.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', () => onMarkOrder(b.dataset.mark)));
+  dom.ordersList.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => onDeleteOrder(b.dataset.del)));
+}
+
+function buildOrderItem(o) {
+  const rec = o.receivedAt ? formatRelative(new Date(o.receivedAt)) : '';
+  const dateLabel = formatAnfrageDate(o.pickupDate, o.pickupTime);
+  const isDone = o.status === 'done';
+  const tel = o.phone ? `tel:${o.phone.replace(/\s+/g,'')}` : '';
+  const mailSubject = encodeURIComponent('Ihre Brötchen-Bestellung – Alstercafé');
+  const mailBody = encodeURIComponent(`Guten Tag ${o.name || ''},\n\nvielen Dank für Ihre Bestellung. Wir haben sie notiert.\n\nHerzliche Grüße\nAlstercafé`);
+  const mailLink = o.email ? `mailto:${escapeAttr(o.email)}?subject=${mailSubject}&body=${mailBody}` : '';
+  const itemsList = (Array.isArray(o.items) ? o.items : [])
+    .map(it => `<li><span class="order-line-qty">${escapeHtml(String(it.qty))}×</span> ${escapeHtml(it.name)}</li>`)
+    .join('');
+
+  return `
+    <li class="anfrage-item order-item ${isDone ? 'is-done' : ''}">
+      <div class="anfrage-head">
+        <div>
+          <span class="anfrage-name">${escapeHtml(o.name || 'Ohne Namen')}</span>
+          <span class="anfrage-pers">· ${escapeHtml(String(o.totalCount || 0))} Brötchen</span>
+        </div>
+        ${isDone
+          ? '<span class="anfrage-tag">Erledigt</span>'
+          : '<span class="anfrage-tag is-new">Neu</span>'}
+      </div>
+      <p class="anfrage-when">Abholung: ${escapeHtml(dateLabel)}</p>
+      <ul class="order-line-list">${itemsList}</ul>
+      <div class="anfrage-contact">
+        ${o.phone ? `<a href="${escapeAttr(tel)}">${escapeHtml(o.phone)}</a>` : ''}
+        ${o.email ? `<a href="${mailLink}">${escapeHtml(o.email)}</a>` : ''}
+      </div>
+      ${o.notes ? `<p class="anfrage-msg">${escapeHtml(o.notes)}</p>` : ''}
+      <div class="anfrage-meta">
+        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
+        <div class="anfrage-actions">
+          ${isDone
+            ? `<button type="button" class="btn btn-link" data-mark="${escapeAttr(o.id)}">Erneut öffnen</button>`
+            : `<button type="button" class="btn btn-link" data-mark="${escapeAttr(o.id)}">Als erledigt markieren</button>`}
+          <button type="button" class="btn btn-link danger" data-del="${escapeAttr(o.id)}">Löschen</button>
+        </div>
+      </div>
+    </li>
+  `;
+}
+
+function onMarkOrder(id) {
+  const list = window.alsterDb?.get('orders') || [];
+  const current = (Array.isArray(list) ? list : []).find(o => o.id === id);
+  const nextStatus = current?.status === 'done' ? 'new' : 'done';
+  const optimistic = (Array.isArray(list) ? list : []).map(o => o.id === id ? { ...o, status: nextStatus } : o);
+  try { localStorage.setItem('alstercafe.orders', JSON.stringify(optimistic)); } catch {}
+  renderOrders();
+  window.alsterDb?.updateOrderStatus(id, nextStatus).finally(() => refreshOrders());
+}
+
+function onDeleteOrder(id) {
+  if (!confirm('Diese Bestellung wirklich löschen?')) return;
+  const list = window.alsterDb?.get('orders') || [];
+  const optimistic = (Array.isArray(list) ? list : []).filter(o => o.id !== id);
+  try { localStorage.setItem('alstercafe.orders', JSON.stringify(optimistic)); } catch {}
+  renderOrders();
+  window.alsterDb?.deleteOrder(id).finally(() => refreshOrders());
 }
 
 function mondayOf(date) {

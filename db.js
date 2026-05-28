@@ -314,6 +314,85 @@
     return !error;
   }
 
+  /* ---------- Bestellungen (belegte Broetchen, eigene Tabelle, public-insert) ---------- */
+  async function addOrder(entry) {
+    const id = entry.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    const items = Array.isArray(entry.items) ? entry.items : [];
+    const totalCount = items.reduce((sum, it) => sum + (parseInt(it.qty, 10) || 0), 0);
+    const row = {
+      id,
+      name:        entry.name        || '',
+      phone:       entry.phone       || '',
+      email:       entry.email       || '',
+      pickup_date: entry.pickupDate  || '',
+      pickup_time: entry.pickupTime  || '',
+      items,
+      total_count: totalCount,
+      notes:       entry.notes       || '',
+      status:      entry.status      || 'new'
+    };
+    if (!useSupabase) {
+      const list = readCache('orders') || [];
+      const next = Array.isArray(list) ? list : [];
+      next.unshift({
+        id, name: row.name, phone: row.phone, email: row.email,
+        pickupDate: row.pickup_date, pickupTime: row.pickup_time,
+        items, totalCount, notes: row.notes, status: row.status,
+        receivedAt: new Date().toISOString()
+      });
+      writeCache('orders', next.slice(0, 200));
+      return true;
+    }
+    const { error } = await sb.from('orders').insert(row);
+    if (error) { console.error('Bestellung-Insert fehlgeschlagen', error); return false; }
+    return true;
+  }
+
+  async function listOrders() {
+    if (!useSupabase) {
+      const list = readCache('orders') || [];
+      return Array.isArray(list) ? list : [];
+    }
+    const { data, error } = await sb.from('orders')
+      .select('id,name,phone,email,pickup_date,pickup_time,items,total_count,notes,status,received_at')
+      .order('received_at', { ascending: false })
+      .limit(200);
+    if (error) { console.warn('Bestellungen-Read fehlgeschlagen', error); return readCache('orders') || []; }
+    const items = (data || []).map(o => ({
+      id: o.id,
+      name: o.name, phone: o.phone, email: o.email,
+      pickupDate: o.pickup_date, pickupTime: o.pickup_time,
+      items: Array.isArray(o.items) ? o.items : [],
+      totalCount: o.total_count || 0,
+      notes: o.notes, status: o.status || 'new',
+      receivedAt: o.received_at
+    }));
+    writeCache('orders', items);
+    return items;
+  }
+
+  async function updateOrderStatus(id, status) {
+    if (!useSupabase) {
+      const list = readCache('orders') || [];
+      const next = (Array.isArray(list) ? list : []).map(o => o.id === id ? { ...o, status } : o);
+      writeCache('orders', next);
+      return true;
+    }
+    const { error } = await sb.from('orders').update({ status }).eq('id', id);
+    return !error;
+  }
+
+  async function deleteOrder(id) {
+    if (!useSupabase) {
+      const list = readCache('orders') || [];
+      const next = (Array.isArray(list) ? list : []).filter(o => o.id !== id);
+      writeCache('orders', next);
+      return true;
+    }
+    const { error } = await sb.from('orders').delete().eq('id', id);
+    return !error;
+  }
+
   /* ---------- Realtime Sync (nur Supabase) ---------- */
   function subscribeChanges(cb) {
     if (!useSupabase) {
@@ -333,6 +412,9 @@
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
         cb('reservations');
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        cb('orders');
       })
       .subscribe();
   }
@@ -357,6 +439,11 @@
     addReservation,
     listReservations,
     updateReservationStatus,
-    deleteReservation
+    deleteReservation,
+    // Bestellungen (belegte Broetchen)
+    addOrder,
+    listOrders,
+    updateOrderStatus,
+    deleteOrder
   };
 })();
