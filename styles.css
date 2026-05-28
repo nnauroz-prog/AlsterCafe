@@ -504,6 +504,11 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   line-height: 0.95;
   font-variation-settings: "opsz" 144;
 }
+/* Auf schmalen Screens das Wasserzeichen dezenter halten, damit
+   Ueberschrift und Lead klar lesbar bleiben (kein matschiger Kopf). */
+@media (max-width: 700px) {
+  .page-hero-watermark { opacity: 0.035; font-size: clamp(6rem, 30vw, 11rem); }
+}
 .page-hero-editorial h1 em {
   font-style: italic;
   color: var(--gold);
