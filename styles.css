@@ -2596,6 +2596,83 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   flex-shrink: 0;
 }
 
+/* Idiotensichere Hilfe-Box auf der Übersicht */
+.overview-help {
+  margin: 8px 0 26px;
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--gold);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.overview-help > summary {
+  cursor: pointer;
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  color: var(--bean);
+  font-weight: 500;
+  list-style: none;
+  display: flex; align-items: center; gap: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.overview-help > summary::-webkit-details-marker { display: none; }
+.overview-help > summary::before {
+  content: '?';
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; flex-shrink: 0;
+  background: var(--gold); color: var(--paper);
+  border-radius: 50%; font-size: .85rem; font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+.overview-help > summary::after {
+  content: '▾';
+  margin-left: auto; color: var(--muted);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.overview-help[open] > summary::after { transform: rotate(180deg); }
+.overview-help-steps {
+  margin: 16px 0 0; padding-left: 0; list-style: none;
+  counter-reset: help;
+}
+.overview-help-steps li {
+  position: relative;
+  padding: 8px 0 8px 40px;
+  color: var(--muted);
+  line-height: 1.55;
+  counter-increment: help;
+}
+.overview-help-steps li::before {
+  content: counter(help);
+  position: absolute; left: 0; top: 8px;
+  width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--paper); border: 1px solid var(--gold-soft);
+  border-radius: 50%; color: var(--bean);
+  font-weight: 700; font-size: .85rem;
+  font-variant-numeric: tabular-nums;
+}
+.overview-help-steps strong { color: var(--bean); }
+.overview-help-steps em { font-style: italic; color: var(--gold); }
+.overview-help-note {
+  margin: 14px 0 0; padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+  font-size: .9rem; color: var(--muted); line-height: 1.55;
+}
+
+/* Kurz-Hilfe oben in einem Panel */
+.panel-help {
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 0 0 22px;
+  font-size: .92rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.panel-help strong { color: var(--bean); }
+
 /* Workspace – Back-Link */
 .admin-workspace { margin-top: 20px; }
 .back-to-overview {
