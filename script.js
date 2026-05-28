@@ -970,13 +970,16 @@ function initOrderForm() {
   const submitBtn = document.getElementById('order-submit');
   const status = document.getElementById('order-status');
 
-  // Abholdatum frühestens morgen
+  // Abholdatum: frühestens heute wählbar, Vorschlag = morgen (Vorlauf für Bulk)
   const dateInput = form.querySelector('input[name="Datum"]');
-  if (dateInput) {
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-    dateInput.min = isoDate(tomorrow);
-    if (!dateInput.value) dateInput.value = isoDate(tomorrow);
-  }
+  const setDefaultDate = () => {
+    if (!dateInput) return;
+    const today = new Date();
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    dateInput.min = isoDate(today);
+    dateInput.value = isoDate(tomorrow);
+  };
+  setDefaultDate();
 
   const getItems = () => rows
     .map(row => ({
@@ -1019,6 +1022,8 @@ function initOrderForm() {
         const next = Math.max(0, Math.min(200, (parseInt(valueEl.textContent, 10) || 0) + step));
         valueEl.textContent = String(next);
         row.classList.toggle('is-active', next > 0);
+        // Nach einer erfolgreichen Bestellung den Erfolgs-Zustand zuruecksetzen
+        submitBtn?.classList.remove('is-success');
         render();
       });
     });
@@ -1064,6 +1069,7 @@ function initOrderForm() {
       setFormStatus(status, `Vielen Dank! Ihre Bestellung über ${total} belegte Brötchen ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
       try { form.reset(); } catch {}
       rows.forEach(row => { row.querySelector('.qty-value').textContent = '0'; row.classList.remove('is-active'); });
+      setDefaultDate();
       render();
     } else {
       // Fallback: Mail-Programm
@@ -1077,6 +1083,7 @@ function initOrderForm() {
       );
       window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
       setFormStatus(status, 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
+      render(); // Button-Status wiederherstellen, falls kein Mail-Programm vorhanden
     }
   });
 }

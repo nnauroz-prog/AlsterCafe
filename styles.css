@@ -880,7 +880,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   overflow: hidden;
 }
 .qty-btn {
-  width: 42px; height: 42px;
+  width: 44px; height: 44px;
   border: 0; background: transparent;
   font-size: 1.4rem; line-height: 1;
   color: var(--bean);
@@ -888,6 +888,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   display: inline-flex; align-items: center; justify-content: center;
   transition: background-color var(--dur-fast) var(--ease-out);
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .qty-btn:hover { background: var(--cream); }
 .qty-btn:active { background: var(--linen); }
@@ -945,8 +946,9 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   margin: 16px 0 0;
 }
 @media (max-width: 900px) {
-  .order-grid { grid-template-columns: 1fr; gap: 32px; }
-  .order-summary { position: static; order: -1; }
+  /* Auswahl zuerst, Warenkorb mit Submit darunter — klarer linearer Fluss */
+  .order-grid { grid-template-columns: 1fr; gap: 28px; }
+  .order-summary { position: static; }
 }
 
 /* STAMMGAST-ZITATE-Sektion */
@@ -1952,11 +1954,13 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   position: relative;
   transition: all var(--dur-base) var(--ease-out);
 }
-.form-submit.is-loading {
+.form-submit.is-loading,
+.order-submit.is-loading {
   pointer-events: none;
   color: transparent !important;
 }
-.form-submit.is-loading::before {
+.form-submit.is-loading::before,
+.order-submit.is-loading::before {
   content: '';
   position: absolute;
   top: 50%; left: 50%;
@@ -1969,7 +1973,8 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   animation: btn-spin .7s linear infinite;
 }
 @keyframes btn-spin { to { transform: rotate(360deg); } }
-.form-submit.is-success {
+.form-submit.is-success,
+.order-submit.is-success {
   background: #2e7d32 !important;
   border-color: #2e7d32 !important;
 }
