@@ -485,6 +485,8 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   position: relative;
   overflow: hidden;
   padding: clamp(110px, 14vw, 180px) 0 clamp(60px, 8vw, 100px);
+  /* Explizit, opak und hell — kein Verlauf, der irgendwo dunkel wirken koennte */
+  background: var(--paper);
 }
 .page-hero-editorial > .container { position: relative; z-index: 1; }
 .page-hero-watermark {
