@@ -1,42 +1,31 @@
-name: Deploy zu GitHub Pages
+name: Live-Seite aktualisieren
 
-# Loest sich aus bei jedem Push auf main oder die Arbeitsbranche
+# Bei jedem Push auf die Arbeitsbranche wird der Stand automatisch
+# in den gh-pages-Branch gespiegelt. GitHub Pages (Modus "Deploy from
+# branch", Branch gh-pages) liefert dann sofort die neue Version aus.
 on:
   push:
     branches:
-      - main
       - "claude/bakery-website-redesign-vyyXQ"
+      - main
   workflow_dispatch:
 
-# Benoetigte Rechte fuer GitHub Pages
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# Nicht parallel deployen
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: "gh-pages-sync"
+  cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  publish:
     runs-on: ubuntu-latest
     steps:
       - name: Quellcode auschecken
         uses: actions/checkout@v4
-
-      - name: Pages konfigurieren
-        uses: actions/configure-pages@v5
-
-      - name: Artefakt hochladen (statische Dateien)
-        uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          fetch-depth: 0
 
-      - name: Auf GitHub Pages deployen
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Nach gh-pages spiegeln
+        run: |
+          git push origin HEAD:gh-pages --force
