@@ -328,7 +328,68 @@ async function showDashboard() {
 function showOverview() {
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
+  renderOverviewStatus();
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
+}
+
+/* Zeigt der Inhaberin, was im Setup noch fehlt — als anklickbare Checkliste */
+function renderOverviewStatus() {
+  const card = document.getElementById('overview-status-card');
+  const list = document.getElementById('overview-status-list');
+  const pctEl = document.getElementById('overview-progress-pct');
+  const barEl = document.getElementById('overview-progress-bar');
+  if (!card || !list) return;
+
+  const get = (k) => { try { return window.alsterDb?.get(k); } catch { return null; } };
+  const weekly = get('weekly-menu');
+  const hours = get('hours');
+  const notice = get('notice');
+  const menu = get('menu');
+  const design = get('design') || {};
+  const broetchen = get('broetchen-items');
+
+  // Aktuelle Woche befuellt?
+  let weeklyDone = false;
+  if (weekly && typeof weekly === 'object') {
+    const today = new Date();
+    const day = (today.getDay() + 6) % 7;
+    const monday = new Date(today); monday.setDate(monday.getDate() - day); monday.setHours(0,0,0,0);
+    const iso = monday.toISOString().slice(0,10);
+    const wk = weekly[iso];
+    if (wk?.days) weeklyDone = Object.values(wk.days).some(d => d?.dish || d?.closed);
+  }
+
+  const items = [
+    { key: 'weekly', label: 'Wochenplan für diese Woche eintragen',           done: weeklyDone, tab: 'week' },
+    { key: 'menu',   label: 'Speisekarte überprüfen',                          done: !!menu, tab: 'menu' },
+    { key: 'broet',  label: 'Brötchen-Sorten für den Service festlegen',       done: Array.isArray(broetchen) && broetchen.length, tab: 'bestellungen' },
+    { key: 'hours',  label: 'Öffnungszeiten kontrollieren',                    done: !!hours, tab: 'hours' },
+    { key: 'logo',   label: 'Eigenes Logo hochladen',                          done: !!design.logo, tab: 'design' },
+    { key: 'hero',   label: 'Hero-Foto (Aussenansicht oder Croque) hochladen', done: !!design.heroImage, tab: 'design' },
+    { key: 'gallery',label: 'Mindestens 3 Galerie-Fotos hochladen',            done: Array.isArray(design.gallery) && design.gallery.length >= 3, tab: 'design' },
+  ];
+
+  const done = items.filter(i => i.done).length;
+  const total = items.length;
+  const pct = Math.round((done / total) * 100);
+  if (pctEl) pctEl.textContent = `${pct}%`;
+  if (barEl) barEl.style.width = `${pct}%`;
+
+  list.innerHTML = items.map(it => `
+    <li class="overview-status-item ${it.done ? 'is-done' : ''}">
+      <span class="overview-status-icon" aria-hidden="true">${it.done ? '✓' : ''}</span>
+      <span class="overview-status-label">${it.label}</span>
+      ${it.done ? '' : `<button type="button" class="overview-status-go" data-tab="${it.tab}">Öffnen →</button>`}
+    </li>
+  `).join('');
+
+  // Wenn alles fertig: Karte mit Glückwunsch-Banner zeigen, ansonsten Liste
+  card.hidden = false;
+  card.classList.toggle('is-complete', done === total);
+
+  list.querySelectorAll('button[data-tab]').forEach(b =>
+    b.addEventListener('click', () => switchTab(b.dataset.tab))
+  );
 }
 
 function switchTab(name) {

@@ -2702,6 +2702,86 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   font-size: .9rem; color: var(--muted); line-height: 1.55;
 }
 
+/* Setup-Status-Karte: zeigt, was noch fehlt */
+.overview-status-card {
+  margin: 0 0 26px;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 24px 26px;
+}
+.overview-status-card.is-complete {
+  background:
+    linear-gradient(180deg, rgba(74, 168, 91, .08), transparent 80%),
+    var(--paper);
+  border-color: rgba(74, 168, 91, .25);
+}
+.overview-status-head { margin-bottom: 18px; }
+.overview-status-eyebrow {
+  font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600; margin: 0 0 4px;
+}
+.overview-status-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+  color: var(--bean);
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+.overview-status-title span { color: var(--gold); }
+.overview-progress {
+  height: 6px;
+  background: var(--cream);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.overview-progress-bar {
+  height: 100%;
+  background: var(--gold);
+  border-radius: inherit;
+  transition: width var(--dur-slow) var(--ease-out);
+}
+.is-complete .overview-progress-bar { background: #4aa85b; }
+
+.overview-status-list { list-style: none; padding: 0; margin: 0; }
+.overview-status-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: .94rem;
+}
+.overview-status-item:last-child { border-bottom: 0; }
+.overview-status-icon {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  font-size: .82rem; color: transparent;
+  font-weight: 700;
+  background: transparent;
+}
+.overview-status-item.is-done .overview-status-icon {
+  background: #4aa85b; border-color: #4aa85b; color: var(--paper);
+}
+.overview-status-label { flex: 1; color: var(--bean); }
+.overview-status-item.is-done .overview-status-label {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.overview-status-go {
+  background: transparent; border: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  letter-spacing: .04em;
+  color: var(--gold);
+  cursor: pointer; padding: 4px 0;
+  font-weight: 600;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.overview-status-go:hover { color: var(--bean); }
+
 /* Kurz-Hilfe oben in einem Panel */
 .panel-help {
   background: var(--cream);
