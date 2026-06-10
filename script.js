@@ -951,6 +951,67 @@ function initPremiumPolish() {
 
   // 7. Scroll-Hint am Hero · floating "scrollen"-Marker
   initHeroScrollHint();
+
+  // 8. Char-by-Char-Reveal auf der Hero-H1
+  initHeroCharReveal(reduceMotion);
+
+  // 9. Footer-Credit-Zeile injizieren
+  injectFooterCredit();
+}
+
+function initHeroCharReveal(reduceMotion) {
+  if (reduceMotion) return;
+  const h1 = document.querySelector('.hero-cinema-h1');
+  if (!h1) return;
+  if (h1.classList.contains('is-char-revealed')) return;
+
+  const lines = h1.querySelectorAll('.head-1, .head-2, .head-3');
+  lines.forEach(line => {
+    // Inner-HTML in Wort- und Char-Spans aufteilen, em-Tags bewahren
+    const walk = (node) => {
+      if (node.nodeType === 3) {
+        // Text-Knoten: jeden Char in ein span wrappen
+        const frag = document.createDocumentFragment();
+        const text = node.textContent;
+        let charIdx = 0;
+        for (const ch of text) {
+          if (ch === ' ') {
+            frag.appendChild(document.createTextNode(' '));
+            continue;
+          }
+          const span = document.createElement('span');
+          span.className = 'hero-char';
+          span.style.setProperty('--char-i', charIdx);
+          span.textContent = ch;
+          frag.appendChild(span);
+          charIdx++;
+        }
+        node.replaceWith(frag);
+      } else if (node.nodeType === 1) {
+        // Element: rekursiv reinwandern
+        Array.from(node.childNodes).forEach(walk);
+      }
+    };
+    Array.from(line.childNodes).forEach(walk);
+  });
+  h1.classList.add('is-char-revealed');
+}
+
+function injectFooterCredit() {
+  const footer = document.querySelector('.site-footer .container');
+  if (!footer) return;
+  if (footer.querySelector('.footer-credit')) return;
+
+  const credit = document.createElement('p');
+  credit.className = 'footer-credit';
+  credit.innerHTML = 'Eine Familien-Backstube — <em>seit 2010 in Hohenfelde.</em>';
+  // Nach dem footer-grid einsetzen
+  const grid = footer.querySelector('.footer-grid');
+  if (grid) {
+    grid.insertAdjacentElement('afterend', credit);
+  } else {
+    footer.appendChild(credit);
+  }
 }
 
 function injectEditionStripIfMissing() {

@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r31" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r32" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r31';
+      var V='2026-05-10-r32';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -313,38 +313,50 @@
       <span class="ornament-glyph">· · ·</span>
     </div>
 
-    <!-- TEASER-CARDS -->
-    <section class="section landing-cards chapter" data-chapter="III">
+    <!-- TEASER-CARDS · Editorial Spread -->
+    <section class="section landing-cards landing-cards-spread chapter" data-chapter="III">
       <span class="chapter-mark" aria-hidden="true">III</span>
       <div class="container">
         <div class="section-head reveal">
           <p class="eyebrow"><span class="num">·</span> Vier Gründe</p>
-          <h2>Wofür Leute<br/>vorbeikommen.</h2>
+          <h2>Wofür Leute<br/><em>vorbei&shy;kommen.</em></h2>
         </div>
-        <div class="teaser-grid">
-          <a class="teaser-card teaser-feature reveal" href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">
-            <p class="teaser-num">01</p>
-            <h3>Unsere Croques</h3>
-            <p>Croque-Monsieur, Croque-Madame mit Spiegelei, vegetarisch mit Bergkäse und Gemüse. Aus dem Ofen, drei Minuten, fertig. Online vorbestellen geht über Croquenoah.</p>
-            <span class="teaser-link">Jetzt bestellen ↗</span>
+        <div class="spread-grid">
+          <a class="spread-card spread-card-hero reveal" href="https://croquenoah.simplywebshop.de/storedata/listStore" target="_blank" rel="noopener noreferrer">
+            <span class="spread-num" aria-hidden="true">I</span>
+            <div class="spread-card-body">
+              <p class="spread-kicker">Aus dem Ofen</p>
+              <h3>Unsere<br/><em>Croques.</em></h3>
+              <p>Croque-Monsieur, Croque-Madame mit Spiegelei, vegetarisch mit Bergkäse und Gemüse. Aus dem Ofen, drei Minuten, fertig. Online vorbestellen geht über Croquenoah.</p>
+              <span class="spread-link">Jetzt bestellen <span aria-hidden="true">↗</span></span>
+            </div>
           </a>
-          <a class="teaser-card reveal" href="mittagstisch.html">
-            <p class="teaser-num">02</p>
-            <h3>Mittagstisch</h3>
-            <p>Werktags ab zwölf, jeden Tag ein anderes Gericht. Beilage und Salat dazu. Was es heute gibt, steht auf der Karte.</p>
-            <span class="teaser-link">Heute auf der Karte <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          <a class="spread-card reveal" href="mittagstisch.html">
+            <span class="spread-num" aria-hidden="true">II</span>
+            <div class="spread-card-body">
+              <p class="spread-kicker">Werktags ab zwölf</p>
+              <h3>Mittagstisch.</h3>
+              <p>Jeden Tag ein anderes Gericht. Beilage und Salat dazu. Was es heute gibt, steht auf der Karte.</p>
+              <span class="spread-link">Heute auf der Karte <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+            </div>
           </a>
-          <a class="teaser-card reveal" href="speisekarte.html">
-            <p class="teaser-num">03</p>
-            <h3>Speisekarte</h3>
-            <p>Frühstück bis 11:30, Backwaren den ganzen Tag, Kaffee von Mocambo. Hier die ganze Karte.</p>
-            <span class="teaser-link">Karte entdecken <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          <a class="spread-card reveal" href="speisekarte.html">
+            <span class="spread-num" aria-hidden="true">III</span>
+            <div class="spread-card-body">
+              <p class="spread-kicker">Ganztags</p>
+              <h3>Speisekarte.</h3>
+              <p>Frühstück bis 11:30, Backwaren den ganzen Tag, Kaffee von Mocambo. Die ganze Karte.</p>
+              <span class="spread-link">Karte entdecken <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+            </div>
           </a>
-          <a class="teaser-card reveal" href="reservierung.html">
-            <p class="teaser-num">04</p>
-            <h3>Tisch reservieren</h3>
-            <p>Ein Tisch zum Mittag oder einer für den Sonntagvormittag. Online oder kurz anrufen — wir melden uns am gleichen Tag zurück.</p>
-            <span class="teaser-link">Platz sichern <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          <a class="spread-card reveal" href="reservierung.html">
+            <span class="spread-num" aria-hidden="true">IV</span>
+            <div class="spread-card-body">
+              <p class="spread-kicker">Platz sichern</p>
+              <h3>Reservieren.</h3>
+              <p>Tisch zum Mittag oder einer für den Sonntagvormittag. Online oder kurz anrufen — wir melden uns am gleichen Tag zurück.</p>
+              <span class="spread-link">Platz sichern <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+            </div>
           </a>
         </div>
       </div>
@@ -478,8 +490,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r31" defer></script>
-  <script src="db.js?v=2026-05-10-r31" defer></script>
-  <script src="script.js?v=2026-05-10-r31" defer></script>
+  <script src="config.js?v=2026-05-10-r32" defer></script>
+  <script src="db.js?v=2026-05-10-r32" defer></script>
+  <script src="script.js?v=2026-05-10-r32" defer></script>
 </body>
 </html>
