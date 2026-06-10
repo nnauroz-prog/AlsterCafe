@@ -902,19 +902,24 @@ function initStickyToday() {
   // Wenn vom User in dieser Session geschlossen, gar nicht zeigen
   try { if (sessionStorage.getItem('alstercafe.sticky-today.dismissed') === '1') return; } catch {}
 
+  const featureSection = document.getElementById('today-feature');
   const updateContent = () => {
+    // Nur anzeigen, wenn wirklich ein Tagesgericht eingetragen ist.
+    // initLandingTeaser setzt data-state auf 'open' (Gericht), 'closed' oder 'empty'.
+    const state = featureSection?.dataset.state;
     const dish = (feature.textContent || '').trim();
-    if (dish && dish !== '—' && dish.length < 200) {
+    if (state === 'open' && dish && dish !== '—' && dish.length < 200) {
       dishEl.textContent = dish;
       bar.dataset.ready = '1';
     } else {
       bar.dataset.ready = '';
     }
   };
-  // Erstmal abwarten, bis initLandingTeaser den Text gesetzt hat
+  // Erstmal abwarten, bis initLandingTeaser den Text und data-state gesetzt hat
   setTimeout(updateContent, 500);
   // Bei spaeteren Aenderungen (Supabase-Subscribe) ebenfalls
   new MutationObserver(updateContent).observe(feature, { childList: true, characterData: true, subtree: true });
+  if (featureSection) new MutationObserver(updateContent).observe(featureSection, { attributes: true, attributeFilter: ['data-state'] });
 
   const onScroll = () => {
     if (bar.dataset.ready !== '1') { bar.hidden = true; return; }
@@ -960,6 +965,7 @@ function renderTodayLunch(weekData, today) {
 
   const nameEl = document.getElementById('today-name');
   if (nameEl) nameEl.textContent = dayLabel;
+  const emptyText = document.querySelector('.lunch-empty-text');
 
   if (entry?.dish && !entry.closed) {
     const dishEl = document.getElementById('today-dish');
@@ -971,7 +977,14 @@ function renderTodayLunch(weekData, today) {
     }
     todayBox.hidden = false;
     emptyBox.hidden = true;
+  } else if (entry?.closed) {
+    // Explizit als geschlossen markiert — bewusste Pause
+    if (emptyText) emptyText.innerHTML = 'Heute servieren wir Frühstück &amp; Backwaren — kein Mittagstisch.';
+    todayBox.hidden = true;
+    emptyBox.hidden = false;
   } else {
+    // Nicht eingetragen — ehrlich kommunizieren statt "kein Mittagstisch" zu behaupten
+    if (emptyText) emptyText.innerHTML = 'Die heutige Karte wird gerade aktualisiert. <a href="tel:+494022692891">040 / 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.';
     todayBox.hidden = true;
     emptyBox.hidden = false;
   }
@@ -981,6 +994,23 @@ function renderWeekList(weekData, monday, today) {
   const list = document.getElementById('lunch-week-list');
   if (!list) return;
   list.innerHTML = '';
+
+  // Wenn die gesamte Woche leer ist: konsolidierte Info statt 7x "folgt in Kürze"
+  const days = weekData?.days || {};
+  const hasAnyEntry = DAY_KEYS.some(k => days[k]?.dish || days[k]?.closed);
+  if (!hasAnyEntry) {
+    list.classList.add('lunch-week-empty');
+    const li = document.createElement('li');
+    li.className = 'lunch-week-empty-card';
+    li.innerHTML = `
+      <p class="lunch-week-empty-title">Die Wochenkarte wird gerade aktualisiert.</p>
+      <p class="lunch-week-empty-text">Anrufen lohnt sich — wir verraten Ihnen das Tagesgericht gern direkt: <a href="tel:+494022692891">040 / 22 69 28 91</a>.</p>
+    `;
+    list.appendChild(li);
+    return;
+  }
+  list.classList.remove('lunch-week-empty');
+
   DAY_KEYS.forEach((key, idx) => {
     const date = new Date(monday); date.setDate(date.getDate() + idx);
     const entry = weekData?.days?.[key];
