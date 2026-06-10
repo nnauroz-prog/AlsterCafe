@@ -1694,7 +1694,15 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   font-family: 'Fraunces', serif; font-style: italic;
   font-size: 1.1rem; color: rgba(241, 231, 211, .85);
   margin: 0;
+  line-height: 1.5;
 }
+.lunch-empty-text a {
+  color: var(--gold);
+  border-bottom: 1px solid rgba(184, 137, 62, .5);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lunch-empty-text a:hover { color: var(--gold-soft); border-bottom-color: var(--gold-soft); }
 
 .lunch-week {
   list-style: none; padding: 0; margin: 0 0 32px;

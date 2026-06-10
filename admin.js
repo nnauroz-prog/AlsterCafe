@@ -348,25 +348,28 @@ function renderOverviewStatus() {
   const design = get('design') || {};
   const broetchen = get('broetchen-items');
 
-  // Aktuelle Woche befuellt?
+  // Aktuelle Woche befuellt? (lokales Datum nutzen, sonst Tag-Versatz durch UTC)
   let weeklyDone = false;
   if (weekly && typeof weekly === 'object') {
-    const today = new Date();
-    const day = (today.getDay() + 6) % 7;
-    const monday = new Date(today); monday.setDate(monday.getDate() - day); monday.setHours(0,0,0,0);
-    const iso = monday.toISOString().slice(0,10);
-    const wk = weekly[iso];
+    const wk = weekly[isoDate(mondayOf(new Date()))];
     if (wk?.days) weeklyDone = Object.values(wk.days).some(d => d?.dish || d?.closed);
   }
 
+  // Hilfs-Prüfungen — ehrlich (leere Objekte/Arrays gelten nicht als erledigt)
+  const hasMenuContent = menu && typeof menu === 'object' &&
+    Object.values(menu).some(cat => cat && Array.isArray(cat.items) && cat.items.length > 0);
+  const hasHoursContent = Array.isArray(hours) && hours.length > 0;
+  const hasBroetchen = Array.isArray(broetchen) && broetchen.length > 0;
+  const galleryCount = Array.isArray(design.gallery) ? design.gallery.length : 0;
+
   const items = [
-    { key: 'weekly', label: 'Wochenplan für diese Woche eintragen',           done: weeklyDone, tab: 'week' },
-    { key: 'menu',   label: 'Speisekarte überprüfen',                          done: !!menu, tab: 'menu' },
-    { key: 'broet',  label: 'Brötchen-Sorten für den Service festlegen',       done: Array.isArray(broetchen) && broetchen.length, tab: 'bestellungen' },
-    { key: 'hours',  label: 'Öffnungszeiten kontrollieren',                    done: !!hours, tab: 'hours' },
-    { key: 'logo',   label: 'Eigenes Logo hochladen',                          done: !!design.logo, tab: 'design' },
-    { key: 'hero',   label: 'Hero-Foto (Aussenansicht oder Croque) hochladen', done: !!design.heroImage, tab: 'design' },
-    { key: 'gallery',label: 'Mindestens 3 Galerie-Fotos hochladen',            done: Array.isArray(design.gallery) && design.gallery.length >= 3, tab: 'design' },
+    { key: 'weekly', label: 'Wochenplan für diese Woche eintragen',           done: weeklyDone,             tab: 'week' },
+    { key: 'menu',   label: 'Speisekarte überprüfen',                          done: hasMenuContent,        tab: 'menu' },
+    { key: 'broet',  label: 'Brötchen-Sorten für den Service festlegen',       done: hasBroetchen,          tab: 'bestellungen' },
+    { key: 'hours',  label: 'Öffnungszeiten kontrollieren',                    done: hasHoursContent,       tab: 'hours' },
+    { key: 'logo',   label: 'Eigenes Logo hochladen',                          done: !!design.logo,         tab: 'design' },
+    { key: 'hero',   label: 'Hero-Foto (Außenansicht oder Croque) hochladen',  done: !!design.heroImage,    tab: 'design' },
+    { key: 'gallery',label: 'Mindestens 3 Galerie-Fotos hochladen',            done: galleryCount >= 3,     tab: 'design' },
   ];
 
   const done = items.filter(i => i.done).length;
