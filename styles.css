@@ -4609,3 +4609,434 @@ body { overflow-x: hidden; }
   background: rgba(212, 179, 128, 0.06);
 }
 
+/* ===============================================
+   GRAND OVERHAUL · Magazine Edition
+   ===============================================
+   Hier wird die Seite zu einer richtigen Druck-
+   Ausgabe: Edition-Strip, Cinema-Hero, Kapitel-
+   Marker, Pull-Quote-Spread, Sign-Off "Fin." */
+
+/* ---------- EDITION-STRIP ----------
+   Schmaler Streifen ueber der Topbar: Datum, Vol., Standort.
+   Macht aus der Seite eine gedruckte Ausgabe vom heutigen Tag. */
+.edition-strip {
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .82rem;
+  color: var(--muted);
+  position: relative;
+  z-index: 3;
+}
+.edition-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 10px var(--gutter);
+  flex-wrap: wrap;
+}
+.edition-cell { display: inline-flex; align-items: center; gap: 6px; line-height: 1.2; }
+.edition-cell em {
+  font-style: italic;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  font-variation-settings: "opsz" 48;
+}
+.edition-date::first-letter { text-transform: uppercase; }
+@media (max-width: 720px) {
+  .edition-place { display: none; }
+  .edition-inner { justify-content: center; gap: 16px; font-size: .76rem; }
+}
+
+/* ---------- HERO · Cinematic ----------
+   Standzeile riesig ueber die volle Breite, darunter Spread
+   mit Lead-Text links und Standort-Aside rechts. Wie ein
+   Magazin-Cover. */
+.hero-cinematic { padding: 0 0 0; }
+.hero-cinematic .hero-masthead {
+  padding-top: clamp(60px, 9vw, 110px);
+  padding-bottom: clamp(20px, 3vw, 36px);
+  position: relative;
+  z-index: 1;
+}
+.hero-cinematic .hero-eyebrow {
+  margin: 0 0 18px;
+  letter-spacing: .3em;
+}
+.hero-cinema-h1 {
+  display: flex; flex-direction: column;
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(3.8rem, 12vw, 10rem);
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  margin: 8px 0 0;
+  color: var(--bean);
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  font-feature-settings: "kern" 1, "liga" 1, "dlig" 1, "ss01" 1;
+  text-wrap: balance;
+}
+.hero-cinema-h1 .head-1,
+.hero-cinema-h1 .head-2,
+.hero-cinema-h1 .head-3 {
+  display: block;
+  opacity: 0;
+  transform: translateY(28px);
+  animation: hero-line var(--dur-reveal) var(--ease-out) forwards;
+}
+.hero-cinema-h1 .head-1 { animation-delay: 80ms; }
+.hero-cinema-h1 .head-2 { animation-delay: 220ms; }
+.hero-cinema-h1 .head-3 {
+  color: var(--coffee);
+  font-style: italic;
+  margin-top: 0.04em;
+  animation-delay: 360ms;
+  letter-spacing: -0.05em;
+}
+.hero-cinema-h1 .head-2 em {
+  font-style: italic;
+  color: var(--gold);
+  background-image: linear-gradient(180deg, transparent 62%, rgba(184, 137, 62, 0.18) 62%, rgba(184, 137, 62, 0.18) 92%, transparent 92%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-cinema-h1 .head-1,
+  .hero-cinema-h1 .head-2,
+  .hero-cinema-h1 .head-3 { opacity: 1; transform: none; animation: none; }
+}
+
+.hero-cinematic .hero-spread {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.4fr 0.85fr;
+  gap: clamp(40px, 6vw, 90px);
+  padding-top: clamp(36px, 5vw, 60px);
+  padding-bottom: clamp(70px, 9vw, 110px);
+  align-items: end;
+}
+.hero-spread-text .lead {
+  max-width: 540px;
+  font-size: clamp(1.05rem, 1.6vw, 1.18rem);
+  color: var(--muted);
+  margin: 0 0 30px;
+  line-height: 1.62;
+}
+/* Editorial Drop-Cap auf dem Lead */
+.hero-spread-text .lead::first-letter {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 3.6rem;
+  line-height: 1;
+  float: left;
+  margin: 6px 12px 0 0;
+  padding-top: 2px;
+  color: var(--bean);
+  font-style: italic;
+  font-variation-settings: "opsz" 144;
+}
+
+/* Hero-Coord-Aside · Standort-Daten als Editorial Datenblock */
+.hero-coord {
+  display: flex; flex-direction: column;
+  gap: 14px;
+  padding: 28px 28px 22px;
+  background: rgba(255, 252, 244, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  color: var(--bean);
+  letter-spacing: .02em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 28px 60px -34px rgba(42, 24, 16, 0.22);
+}
+.hero-coord::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+.hero-coord-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.hero-coord-row:last-of-type { border-bottom: 0; padding-bottom: 6px; }
+.hero-coord-label {
+  font-size: .66rem;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.hero-coord-value {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.02rem;
+  color: var(--bean);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+}
+.hero-coord-mark {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+.hero-coord-logo {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--bean);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.hero-coord-stamp {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .92rem;
+  color: var(--bean);
+  letter-spacing: -0.005em;
+}
+@media (max-width: 920px) {
+  .hero-cinematic .hero-spread { grid-template-columns: 1fr; gap: 36px; }
+  .hero-coord { max-width: 420px; }
+}
+@media (max-width: 760px) {
+  .hero-cinematic .hero-masthead { padding-top: clamp(40px, 7vw, 60px); }
+  .hero-cinema-h1 { font-size: clamp(3.2rem, 14vw, 5.4rem); }
+}
+
+/* ---------- CHAPTER-MARKS ----------
+   Riesige Roman-Numeral-Ecke-Marker pro Sektion.
+   Sehr ruhig, sehr gross — wie Kapitel in einem Buch. */
+.chapter { position: relative; }
+.chapter-mark {
+  position: absolute;
+  top: clamp(20px, 3vw, 38px);
+  right: clamp(20px, 4vw, 56px);
+  z-index: 1;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  line-height: 1;
+  color: var(--gold);
+  opacity: 0.5;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 144;
+  pointer-events: none;
+  user-select: none;
+}
+.chapter-mark::before {
+  content: '№ ';
+  font-size: 0.36em;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: .12em;
+  color: var(--muted);
+  vertical-align: top;
+  margin-right: 2px;
+  position: relative;
+  top: 0.3em;
+}
+.chapter-dark .chapter-mark { color: var(--gold-soft); opacity: 0.55; }
+.chapter-dark .chapter-mark::before { color: rgba(241, 231, 211, 0.4); }
+
+/* Fin. Marker fuer Closer-Sektion · subtiler, lateinisch */
+.chapter-mark-fin {
+  font-style: italic;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.6rem, 2.4vw, 2.4rem);
+  color: var(--muted);
+  opacity: 0.6;
+}
+.chapter-mark-fin::before { content: ''; display: none; }
+
+@media (max-width: 760px) {
+  .chapter-mark { top: 14px; right: 16px; font-size: 2.2rem; opacity: 0.35; }
+}
+
+/* ---------- PULL-QUOTE SPREAD ----------
+   Statt drei kleiner Karten: eine riesige Headline-Quote
+   mit grossem typografischen Anfuehrungszeichen, darunter
+   zwei kleinere zur Balance. */
+.landing-pullquote {
+  padding: clamp(80px, 11vw, 140px) 0;
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+.landing-pullquote .quotes-eyebrow { text-align: left; margin-bottom: 30px; }
+.pullquote-hero {
+  position: relative;
+  margin: 0 0 clamp(56px, 8vw, 110px);
+  max-width: 980px;
+}
+.pullquote-mark {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(7rem, 14vw, 14rem);
+  line-height: 0.5;
+  color: var(--gold);
+  opacity: 0.8;
+  margin: 0 0 -.2em -.08em;
+  font-variation-settings: "opsz" 144;
+}
+.pullquote-text {
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 5.6vw, 5rem);
+  line-height: 1.04;
+  letter-spacing: -0.026em;
+  color: var(--bean);
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  font-feature-settings: "kern" 1, "liga" 1, "dlig" 1, "ss01" 1;
+  text-wrap: balance;
+}
+.pullquote-text em {
+  font-style: italic;
+  color: var(--coffee);
+}
+.pullquote-cite {
+  margin: clamp(22px, 3vw, 36px) 0 0;
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.pullquote-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(36px, 5vw, 80px);
+  padding-top: 36px;
+  border-top: 1px solid var(--line);
+}
+.pullquote-small {
+  margin: 0;
+}
+.pullquote-small blockquote {
+  margin: 0 0 14px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  line-height: 1.32;
+  color: var(--bean);
+  letter-spacing: -0.012em;
+  font-variation-settings: "opsz" 96;
+}
+.pullquote-small figcaption {
+  font-family: 'Inter', sans-serif;
+  font-size: .76rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+@media (max-width: 760px) {
+  .pullquote-row { grid-template-columns: 1fr; gap: 28px; }
+}
+
+/* ---------- CLOSER · Editorial Sign-Off ----------
+   Riesige Schlusszeile mit Fin.-Marker. */
+.chapter-finis .landing-closer-quote {
+  font-size: clamp(2.2rem, 6vw, 4.4rem);
+  line-height: 1.06;
+  letter-spacing: -0.024em;
+  max-width: 920px;
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+}
+.chapter-finis .landing-closer-quote em {
+  background-image: linear-gradient(180deg, transparent 62%, rgba(184, 137, 62, 0.18) 62%, rgba(184, 137, 62, 0.18) 92%, transparent 92%);
+}
+
+/* ---------- CUSTOM CURSOR ----------
+   Dot + Ring, magnetisch auf CTAs. Premium-Signal, aber
+   sehr ruhig. Nur Desktop mit fine pointer + no reduced-motion. */
+@media (hover: hover) and (pointer: fine) {
+  .has-custom-cursor { cursor: none; }
+  .has-custom-cursor a, .has-custom-cursor button { cursor: none; }
+  .custom-cursor,
+  .custom-cursor-ring {
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate3d(-50%, -50%, 0);
+    will-change: transform;
+    mix-blend-mode: multiply;
+  }
+  .custom-cursor {
+    width: 6px; height: 6px;
+    background: var(--bean);
+    border-radius: 50%;
+    transition: width 200ms var(--ease-out), height 200ms var(--ease-out), background-color 200ms var(--ease-out);
+  }
+  .custom-cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--bean);
+    border-radius: 50%;
+    opacity: 0.4;
+    transition:
+      width 280ms var(--ease-spring),
+      height 280ms var(--ease-spring),
+      opacity 280ms var(--ease-out),
+      border-color 280ms var(--ease-out),
+      background-color 280ms var(--ease-out);
+  }
+  .custom-cursor.is-hover { width: 0; height: 0; }
+  .custom-cursor-ring.is-hover {
+    width: 56px; height: 56px;
+    border-color: var(--gold);
+    background: rgba(184, 137, 62, 0.12);
+    opacity: 1;
+  }
+  .custom-cursor.is-on-dark { background: var(--gold-soft); mix-blend-mode: normal; }
+  .custom-cursor-ring.is-on-dark { border-color: var(--gold-soft); mix-blend-mode: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor, .custom-cursor-ring { display: none; }
+  .has-custom-cursor, .has-custom-cursor a, .has-custom-cursor button { cursor: auto; }
+}
+
+/* ---------- SMOOTH-SCROLL ----------
+   Etwas weichere Standard-Scroll-Animation per CSS. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* ---------- HERO-EST ANPASSEN AUF VOLLE BREITE ----------
+   Das Wasserzeichen Est. 2010 sitzt jetzt hinter dem
+   cinematic Hero, nicht mehr nur in der rechten Spalte. */
+.hero-cinematic .hero-est {
+  top: clamp(60px, 8vw, 110px);
+  right: -2vw;
+  opacity: 0.045;
+}
+
+/* ---------- HERO-PARTNER auf Cinematic groesser ---------- */
+.hero-cinematic .hero-partner { margin-top: 26px; }
+.hero-cinematic .hero-cta { gap: clamp(18px, 2.5vw, 26px); }
+
+/* ---------- REFINED TODAY-FEATURE-DISH ueber Spread ----------
+   Auf der Cinema-Seite wirkt der Heute-Dish jetzt noch
+   prominenter. */
+.chapter.today-feature { padding: clamp(80px, 10vw, 130px) 0; }
+.chapter.today-feature .today-feature-dish {
+  font-size: clamp(2.8rem, 6vw, 4.2rem);
+}
+.chapter.today-feature .today-feature-inner { max-width: 820px; }
+

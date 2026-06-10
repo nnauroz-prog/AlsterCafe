@@ -913,6 +913,107 @@ function initPremiumPolish() {
     }, { passive: true });
     updatePar();
   }
+
+  // 3. Edition-Strip · Datum, Volume, Heute
+  const editionDate = document.getElementById('edition-date');
+  if (editionDate) {
+    const now = new Date();
+    const fmt = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    editionDate.textContent = fmt;
+  }
+  const editionNo = document.getElementById('edition-no');
+  if (editionNo) {
+    // No. = Tag im Jahr (1..366) — wie eine Tageszeitung
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+    const dayOfYear = Math.floor(diff / 86400000);
+    editionNo.textContent = String(dayOfYear).padStart(3, '0');
+  }
+  const heroToday = document.getElementById('hero-coord-today');
+  if (heroToday) {
+    const now = new Date();
+    const wd = now.toLocaleDateString('de-DE', { weekday: 'long' });
+    const dayIdx = now.getDay(); // 0=So, 1=Mo, ..., 6=Sa
+    // Mo-Fr: 06:30-15:00, Sa/So: 07:30-15:00
+    const hours = (dayIdx >= 1 && dayIdx <= 5) ? '06:30 – 15:00' : '07:30 – 15:00';
+    heroToday.textContent = `${wd} · ${hours}`;
+  }
+
+  // 4. Custom Cursor · Dot + Ring, magnetisch auf CTAs
+  initCustomCursor(reduceMotion);
+}
+
+function initCustomCursor(reduceMotion) {
+  if (reduceMotion) return;
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  const dot  = document.createElement('div');
+  const ring = document.createElement('div');
+  dot.className  = 'custom-cursor';
+  ring.className = 'custom-cursor-ring';
+  dot.setAttribute('aria-hidden', 'true');
+  ring.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(dot);
+  document.body.appendChild(ring);
+  document.body.classList.add('has-custom-cursor');
+
+  let dx = 0, dy = 0, rx = 0, ry = 0, tx = 0, ty = 0;
+  let raf = 0;
+
+  const tick = () => {
+    // Dot folgt schnell
+    dx += (tx - dx) * 0.45;
+    dy += (ty - dy) * 0.45;
+    // Ring folgt traege
+    rx += (tx - rx) * 0.18;
+    ry += (ty - ry) * 0.18;
+    dot.style.transform  = `translate3d(${dx}px, ${dy}px, 0) translate(-50%, -50%)`;
+    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%)`;
+    raf = requestAnimationFrame(tick);
+  };
+
+  document.addEventListener('mousemove', (e) => {
+    tx = e.clientX;
+    ty = e.clientY;
+    if (!raf) raf = requestAnimationFrame(tick);
+
+    // Dunkler Hintergrund erkennen → invertieren
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const onDark = el?.closest('.chapter-dark, .lunch, .reservation, .today-feature, .landing-visit-dark, .site-footer, .menu-broetchen-cta, .topbar, .order-summary-card, .nav-shop');
+    dot.classList.toggle('is-on-dark', !!onDark);
+    ring.classList.toggle('is-on-dark', !!onDark);
+  }, { passive: true });
+
+  document.addEventListener('mouseleave', () => {
+    dot.style.opacity = '0';
+    ring.style.opacity = '0';
+  });
+  document.addEventListener('mouseenter', () => {
+    dot.style.opacity = '';
+    ring.style.opacity = '';
+  });
+
+  // Hover-Boost auf interaktiven Elementen
+  const onEnter = () => { dot.classList.add('is-hover'); ring.classList.add('is-hover'); };
+  const onLeave = () => { dot.classList.remove('is-hover'); ring.classList.remove('is-hover'); };
+  const wire = (el) => {
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+  };
+  document.querySelectorAll('a, button, .teaser-card, .quote-card, .pullquote-small, label.checkbox, input, select, textarea, [role="button"]').forEach(wire);
+
+  // Falls neue Elemente per JS reingerendert werden — Mutation-Observer
+  const mo = new MutationObserver(muts => {
+    muts.forEach(m => {
+      m.addedNodes.forEach(n => {
+        if (n.nodeType !== 1) return;
+        if (n.matches?.('a, button, .teaser-card, .quote-card, .pullquote-small, label.checkbox, input, select, textarea, [role="button"]')) wire(n);
+        n.querySelectorAll?.('a, button, .teaser-card, .quote-card, .pullquote-small, label.checkbox, input, select, textarea, [role="button"]').forEach(wire);
+      });
+    });
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
 }
 
 /* Counter-Animation: zaehlt hoch, wenn das Element ins Viewport kommt */

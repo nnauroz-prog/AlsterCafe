@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r30" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r31" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r30';
+      var V='2026-05-10-r31';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -135,6 +135,15 @@
     </div>
   </div>
 
+  <!-- Editorial Edition-Strip: Datum, Ausgabe, Standort -->
+  <aside class="edition-strip" aria-hidden="true">
+    <div class="container edition-inner">
+      <span class="edition-cell edition-date" id="edition-date"></span>
+      <span class="edition-cell edition-vol">Vol. <em>XVI</em> &middot; No. <em id="edition-no">—</em></span>
+      <span class="edition-cell edition-place">Ifflandstr. 45 &middot; Hamburg-Hohenfelde</span>
+    </div>
+  </aside>
+
   <div class="topbar">
     <div class="container topbar-inner">
       <a href="tel:+494022692891" class="topbar-link">
@@ -178,24 +187,30 @@
   </header>
 
   <main id="main">
-    <!-- HERO -->
-    <section class="hero hero-landing">
+    <!-- HERO · Cinematic Cover -->
+    <section class="hero hero-landing hero-cinematic">
       <span class="hero-est" aria-hidden="true">Est. 2010</span>
-      <div class="hero-grid container">
-        <div class="hero-text reveal">
-          <p class="eyebrow gold" data-editable="hero.eyebrow">Bäckerei · Café · Mittagstisch · Hohenfelde</p>
-          <p class="live-status" id="live-status" hidden>
-            <span class="live-status-dot" aria-hidden="true"></span>
-            <span class="live-status-text"></span>
-          </p>
-          <h1>
-            <span class="head-1" data-editable="hero.head1">Schön, dass</span>
-            <span class="head-2" data-editable="hero.head2"><em>Sie da</em> sind.</span>
-            <span class="head-3" data-editable="hero.head3">Kommen Sie vorbei.</span>
-          </h1>
+
+      <!-- Magazin-Standzeile: groesste Headline ueber die volle Breite -->
+      <div class="container hero-masthead reveal">
+        <p class="eyebrow gold hero-eyebrow" data-editable="hero.eyebrow">Bäckerei · Café · Mittagstisch · Hohenfelde</p>
+        <p class="live-status" id="live-status" hidden>
+          <span class="live-status-dot" aria-hidden="true"></span>
+          <span class="live-status-text"></span>
+        </p>
+        <h1 class="hero-cinema-h1">
+          <span class="head-1" data-editable="hero.head1">Schön, dass</span>
+          <span class="head-2" data-editable="hero.head2"><em>Sie da</em> sind.</span>
+          <span class="head-3" data-editable="hero.head3">Kommen Sie vorbei.</span>
+        </h1>
+      </div>
+
+      <!-- Untere Spread-Zeile: Lead links, Standort-Mark rechts -->
+      <div class="container hero-spread reveal">
+        <div class="hero-spread-text">
           <p class="lead" data-editable="hero.lead">
             Croque-Monsieur aus dem Ofen, Franzbrötchen vor sieben, mittags
-            etwas Warmes. Ifflandstraße 45, gleich um die Ecke von der
+            etwas Warmes. Ifflandstraße&nbsp;45, gleich um die Ecke von der
             Außenalster.
           </p>
           <div class="hero-cta">
@@ -212,16 +227,24 @@
           </p>
         </div>
 
-        <div class="hero-visual reveal" aria-hidden="true">
-          <div class="hero-mark">
-            <img src="image.png" alt="" class="hero-mark-logo" />
-            <div class="hero-mark-meta">
-              <span class="hero-mark-line">Hamburg</span>
-              <span class="hero-mark-big">Hohenfelde</span>
-              <span class="hero-mark-line">Ifflandstr. 45</span>
-            </div>
+        <aside class="hero-coord" aria-hidden="true">
+          <div class="hero-coord-row">
+            <span class="hero-coord-label">Lage</span>
+            <span class="hero-coord-value">53.5614° N · 10.0245° O</span>
           </div>
-        </div>
+          <div class="hero-coord-row">
+            <span class="hero-coord-label">Backstube</span>
+            <span class="hero-coord-value">ab 05:30 Uhr</span>
+          </div>
+          <div class="hero-coord-row">
+            <span class="hero-coord-label">Heute</span>
+            <span class="hero-coord-value" id="hero-coord-today">—</span>
+          </div>
+          <div class="hero-coord-mark">
+            <img src="image.png" alt="" class="hero-coord-logo" />
+            <span class="hero-coord-stamp">Est. 2010 · Hohenfelde</span>
+          </div>
+        </aside>
       </div>
 
       <!-- Marquee-Ticker am unteren Hero-Rand -->
@@ -244,7 +267,8 @@
     </section>
 
     <!-- HEUTE / MORGEN AUF DER KARTE -->
-    <section class="today-feature" id="today-feature">
+    <section class="today-feature chapter chapter-dark" id="today-feature" data-chapter="I">
+      <span class="chapter-mark" aria-hidden="true">I</span>
       <span class="section-shout shout-light" aria-hidden="true">Mittag</span>
       <div class="container today-feature-inner reveal">
         <p class="eyebrow gold">
@@ -265,7 +289,8 @@
     </section>
 
     <!-- FAMILIENBETRIEB -->
-    <section class="landing-greeting">
+    <section class="landing-greeting chapter" data-chapter="II">
+      <span class="chapter-mark" aria-hidden="true">II</span>
       <span class="section-shout" aria-hidden="true">Familie</span>
       <div class="container landing-greeting-inner reveal">
         <p class="eyebrow"><span class="num">·</span> Familienbetrieb</p>
@@ -289,7 +314,8 @@
     </div>
 
     <!-- TEASER-CARDS -->
-    <section class="section landing-cards">
+    <section class="section landing-cards chapter" data-chapter="III">
+      <span class="chapter-mark" aria-hidden="true">III</span>
       <div class="container">
         <div class="section-head reveal">
           <p class="eyebrow"><span class="num">·</span> Vier Gründe</p>
@@ -324,20 +350,24 @@
       </div>
     </section>
 
-    <!-- ZITATE / STAMMGÄSTE -->
-    <section class="landing-quotes">
+    <!-- ZITATE / STAMMGÄSTE -- Editorial Pull-Quote Spread -->
+    <section class="landing-quotes landing-pullquote chapter" data-chapter="IV">
+      <span class="chapter-mark" aria-hidden="true">IV</span>
       <div class="container">
         <p class="quotes-eyebrow"><span class="num">·</span> Was Gäste sagen</p>
-        <div class="quotes-grid">
-          <figure class="quote-card reveal">
-            <blockquote>„Das beste Franzbrötchen östlich der Alster."</blockquote>
-            <figcaption>— Stammgast, seit 2014</figcaption>
-          </figure>
-          <figure class="quote-card reveal quote-card--tilt-left">
+        <figure class="pullquote-hero reveal">
+          <span class="pullquote-mark" aria-hidden="true">&ldquo;</span>
+          <blockquote class="pullquote-text">
+            Das beste Franzbrötchen <em>östlich der Alster.</em>
+          </blockquote>
+          <figcaption class="pullquote-cite">— Stammgast, seit 2014</figcaption>
+        </figure>
+        <div class="pullquote-row reveal">
+          <figure class="pullquote-small">
             <blockquote>„Hier kennt man dich beim zweiten Besuch."</blockquote>
             <figcaption>— Tripadvisor</figcaption>
           </figure>
-          <figure class="quote-card reveal">
+          <figure class="pullquote-small">
             <blockquote>„Der Croque-Madame ist nicht zum Aushalten."</blockquote>
             <figcaption>— Bürokollegin von gegenüber</figcaption>
           </figure>
@@ -346,7 +376,8 @@
     </section>
 
     <!-- VISIT-US-STRIP -->
-    <section class="section landing-visit landing-visit-dark">
+    <section class="section landing-visit landing-visit-dark chapter chapter-dark" data-chapter="V">
+      <span class="chapter-mark" aria-hidden="true">V</span>
       <span class="section-shout shout-on-dark" aria-hidden="true">Hohenfelde</span>
       <div class="container landing-visit-inner reveal">
         <div>
@@ -376,8 +407,9 @@
       <span class="ornament-glyph">· · ·</span>
     </div>
 
-    <!-- WARMER ABSCHIED -->
-    <section class="landing-closer">
+    <!-- WARMER ABSCHIED · Editorial Sign-Off -->
+    <section class="landing-closer chapter chapter-finis" data-chapter="FIN">
+      <span class="chapter-mark chapter-mark-fin" aria-hidden="true">Fin.</span>
       <div class="container">
         <p class="landing-closer-quote reveal">
           Sie können auch <em>zwei Stunden</em><br/>
@@ -446,8 +478,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r30" defer></script>
-  <script src="db.js?v=2026-05-10-r30" defer></script>
-  <script src="script.js?v=2026-05-10-r30" defer></script>
+  <script src="config.js?v=2026-05-10-r31" defer></script>
+  <script src="db.js?v=2026-05-10-r31" defer></script>
+  <script src="script.js?v=2026-05-10-r31" defer></script>
 </body>
 </html>
