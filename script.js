@@ -942,6 +942,117 @@ function initPremiumPolish() {
 
   // 4. Custom Cursor · Dot + Ring, magnetisch auf CTAs
   initCustomCursor(reduceMotion);
+
+  // 5. Edition-Strip auf allen Seiten ausser Admin
+  injectEditionStripIfMissing();
+
+  // 6. Page-Transition · sanftes Fade beim Wechsel zwischen Seiten
+  initPageTransitions(reduceMotion);
+
+  // 7. Scroll-Hint am Hero · floating "scrollen"-Marker
+  initHeroScrollHint();
+}
+
+function injectEditionStripIfMissing() {
+  if (document.body.classList.contains('admin-body')) return;
+  if (document.querySelector('.edition-strip')) return;
+
+  const strip = document.createElement('aside');
+  strip.className = 'edition-strip';
+  strip.setAttribute('aria-hidden', 'true');
+  const now = new Date();
+  const fmt = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+  const dayOfYear = Math.floor(diff / 86400000);
+
+  strip.innerHTML = `
+    <div class="container edition-inner">
+      <span class="edition-cell edition-date">${fmt}</span>
+      <span class="edition-cell edition-vol">Vol. <em>XVI</em> &middot; No. <em>${String(dayOfYear).padStart(3, '0')}</em></span>
+      <span class="edition-cell edition-place">Ifflandstr. 45 &middot; Hamburg-Hohenfelde</span>
+    </div>
+  `;
+
+  // Vor der Topbar einsetzen, oder hinter dem Notice-Banner wenn der existiert
+  const notice = document.getElementById('notice-banner');
+  const topbar = document.querySelector('.topbar');
+  if (notice && notice.parentNode) {
+    notice.parentNode.insertBefore(strip, notice.nextSibling);
+  } else if (topbar && topbar.parentNode) {
+    topbar.parentNode.insertBefore(strip, topbar);
+  }
+}
+
+function initPageTransitions(reduceMotion) {
+  if (reduceMotion) return;
+  if (!('animate' in HTMLElement.prototype)) return;
+
+  // Fade-In beim Laden
+  document.documentElement.animate(
+    [
+      { opacity: 0.001, transform: 'translateY(6px)' },
+      { opacity: 1, transform: 'translateY(0)' }
+    ],
+    { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' }
+  );
+
+  // Fade-Out bei internem Link-Klick
+  const sameOrigin = (href) => {
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return false;
+    try { return new URL(href, location.href).origin === location.origin; } catch { return false; }
+  };
+
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    if (a.target === '_blank') return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (e.button !== 0) return;
+    const href = a.getAttribute('href');
+    if (!sameOrigin(href)) return;
+    if (a.hasAttribute('download')) return;
+
+    // Wenn es ein Hash-Link auf der gleichen Seite ist: nichts tun
+    const url = new URL(href, location.href);
+    if (url.pathname === location.pathname && url.hash) return;
+
+    e.preventDefault();
+    document.documentElement.animate(
+      [
+        { opacity: 1, transform: 'translateY(0)' },
+        { opacity: 0.001, transform: 'translateY(-4px)' }
+      ],
+      { duration: 240, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' }
+    ).onfinish = () => { location.href = href; };
+  });
+}
+
+function initHeroScrollHint() {
+  const hero = document.querySelector('.hero-cinematic');
+  if (!hero) return;
+  if (document.querySelector('.hero-scroll-hint')) return;
+
+  const hint = document.createElement('div');
+  hint.className = 'hero-scroll-hint';
+  hint.setAttribute('aria-hidden', 'true');
+  hint.innerHTML = `
+    <span class="hero-scroll-line"></span>
+    <span class="hero-scroll-label">scrollen</span>
+  `;
+  hero.appendChild(hint);
+
+  // Verschwindet sobald der User gescrollt hat
+  let hidden = false;
+  const onScroll = () => {
+    if (hidden) return;
+    if (window.scrollY > 120) {
+      hint.classList.add('is-hidden');
+      hidden = true;
+      window.removeEventListener('scroll', onScroll);
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
 }
 
 function initCustomCursor(reduceMotion) {

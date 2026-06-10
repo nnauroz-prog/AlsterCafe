@@ -5040,3 +5040,60 @@ body { overflow-x: hidden; }
 }
 .chapter.today-feature .today-feature-inner { max-width: 820px; }
 
+/* ---------- HERO-SCROLL-HINT ----------
+   Schwebt am unteren Rand der Hero-Sektion. Diskret. */
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 80px;
+  right: clamp(20px, 4vw, 56px);
+  z-index: 4;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: .68rem;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.7;
+  pointer-events: none;
+  animation: hero-scroll-hint-in 1.6s var(--ease-out) 1.4s backwards;
+  transition: opacity .5s var(--ease-out), transform .5s var(--ease-out);
+}
+.hero-scroll-hint.is-hidden {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.hero-scroll-line {
+  width: 1px;
+  height: 56px;
+  background: linear-gradient(180deg, transparent, var(--gold));
+  animation: hero-scroll-line 2.4s var(--ease-in-out) infinite;
+  transform-origin: top center;
+}
+.hero-scroll-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: 1;
+}
+@keyframes hero-scroll-hint-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 0.7; transform: translateY(0); }
+}
+@keyframes hero-scroll-line {
+  0%   { transform: scaleY(0.3); transform-origin: top center; opacity: 0.3; }
+  50%  { transform: scaleY(1);   transform-origin: top center; opacity: 1; }
+  51%  { transform: scaleY(1);   transform-origin: bottom center; }
+  100% { transform: scaleY(0.3); transform-origin: bottom center; opacity: 0.3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-hint, .hero-scroll-line { animation: none; }
+}
+@media (max-width: 760px) {
+  .hero-scroll-hint { display: none; }
+}
+
+/* ---------- PAGE-TRANSITION GUARD ----------
+   Verhindert weissen Flash beim Fade-Out: html-Background
+   stimmt mit Body-Background ueberein. */
+html { background: var(--paper); }
+
