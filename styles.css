@@ -4529,3 +4529,83 @@ body { overflow-x: hidden; }
 .menu-list li { transition: padding-left var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out); }
 .menu-list li:hover { background: linear-gradient(90deg, rgba(184, 137, 62, 0.05), transparent 80%); padding-left: 14px; }
 
+/* U. Refined Reservierungs-Formular · animierter Underline-Sweep beim Focus */
+.reservation-form label {
+  position: relative;
+}
+.reservation-form input,
+.reservation-form select,
+.reservation-form textarea {
+  position: relative;
+  background-image:
+    linear-gradient(var(--gold), var(--gold)),
+    linear-gradient(var(--line), var(--line));
+  background-size: 0% 1.5px, 100% 1.5px;
+  background-position: 0 100%, 0 100%;
+  background-repeat: no-repeat;
+  border-bottom: 0;
+  transition:
+    background-size var(--dur-base) var(--ease-out),
+    padding var(--dur-base) var(--ease-out);
+}
+.reservation-form input:focus,
+.reservation-form select:focus,
+.reservation-form textarea:focus {
+  border-bottom: 0;
+  box-shadow: none;
+  background-size: 100% 1.5px, 100% 1.5px;
+}
+.reservation-form input:focus-visible,
+.reservation-form select:focus-visible,
+.reservation-form textarea:focus-visible {
+  box-shadow: none;
+  background-size: 100% 1.5px, 100% 1.5px;
+}
+
+/* V. Refined Today-Feature-Dish · etwas groesser und Lichter
+   Das heutige Tagesgericht ist der wichtigste Inhalt der Startseite. */
+.today-feature-dish {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 400;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.018em;
+}
+.today-feature-kicker {
+  font-size: .72rem;
+  letter-spacing: .28em;
+}
+
+/* W. Refined Page-Hero-Eyebrow auf Sub-Pages · centrierter Ton */
+.page-hero-editorial .eyebrow {
+  margin-bottom: 16px;
+  letter-spacing: .28em;
+}
+
+/* X. Refined Footer · Hairline zwischen Brand und Nav-Reihe */
+.site-footer {
+  padding: 64px 0 0;
+}
+.footer-grid { position: relative; }
+.footer-grid::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: -28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 179, 128, 0.18), transparent);
+}
+@media (max-width: 1080px) {
+  .footer-grid::before { display: none; }
+}
+
+/* Y. Refined Brand-Name · feiner Spacing-Tweak fuer den Wortmark */
+.brand-name {
+  letter-spacing: -0.018em;
+  font-variation-settings: "opsz" 48;
+}
+
+/* Z. Refined Lunch-Today-Tag · etwas runderer Glow */
+.lunch-today-tag {
+  background: rgba(212, 179, 128, 0.06);
+}
+
