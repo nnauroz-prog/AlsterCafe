@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initStickyToday);
   safeRun(initCounters);
   safeRun(initMagnetic);
+  safeRun(initPremiumPolish);
   safeRun(initReservationForm);
   safeRun(initOrderForm);
   safeRun(initLiveStatus);
@@ -862,6 +863,56 @@ function initMagnetic() {
     el.addEventListener('mousemove', onMove);
     el.addEventListener('mouseleave', onLeave);
   });
+}
+
+/* ---------- Premium-Polish: Scroll-Progress + Hero-Parallax ----------
+   Bringt zwei ruhige Mikro-Details auf die Seite, die nur dann
+   wirken, wenn sie unauffaellig sind: Scroll-Hairline ganz oben
+   plus subtiles Watermark-Parallax am Hero. */
+function initPremiumPolish() {
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 1. Scroll-Progress-Hairline (auf allen Seiten ausser admin.html)
+  if (!document.body.classList.contains('admin-body')) {
+    let bar = document.querySelector('.scroll-progress');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'scroll-progress';
+      bar.setAttribute('aria-hidden', 'true');
+      const fill = document.createElement('div');
+      fill.className = 'scroll-progress-fill';
+      bar.appendChild(fill);
+      document.body.appendChild(bar);
+    }
+    const fill = bar.querySelector('.scroll-progress-fill');
+    let rafProg = 0;
+    const updateProgress = () => {
+      const doc = document.documentElement;
+      const max = Math.max(1, doc.scrollHeight - window.innerHeight);
+      const pct = Math.min(100, Math.max(0, (window.scrollY / max) * 100));
+      fill.style.width = pct.toFixed(2) + '%';
+      rafProg = 0;
+    };
+    window.addEventListener('scroll', () => {
+      if (!rafProg) rafProg = requestAnimationFrame(updateProgress);
+    }, { passive: true });
+    updateProgress();
+  }
+
+  // 2. Hero-Watermark-Parallax (nur Desktop, nur ohne reduced-motion)
+  const est = document.querySelector('.hero-est');
+  if (est && !reduceMotion && !matchMedia('(pointer: coarse)').matches) {
+    let rafPar = 0;
+    const updatePar = () => {
+      const y = Math.min(60, window.scrollY * 0.18);
+      est.style.setProperty('--hero-parallax-y', `${y}px`);
+      rafPar = 0;
+    };
+    window.addEventListener('scroll', () => {
+      if (!rafPar) rafPar = requestAnimationFrame(updatePar);
+    }, { passive: true });
+    updatePar();
+  }
 }
 
 /* Counter-Animation: zaehlt hoch, wenn das Element ins Viewport kommt */
