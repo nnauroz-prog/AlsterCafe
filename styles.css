@@ -3679,9 +3679,60 @@ body.is-editing [data-editable]:focus::before {
   transition: transform var(--dur-slow) var(--ease-out);
 }
 .gallery-item:hover img { transform: scale(1.04); }
+
+/* Empty-State (nur fuer den Inhaber sichtbar) — klare Handlungsaufforderung */
+.gallery-empty-cta {
+  grid-column: 1 / -1;
+  grid-row: span 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px;
+  padding: 48px 32px;
+  background: var(--paper);
+  border: 2px dashed var(--gold-soft);
+  border-radius: var(--radius);
+  text-align: center;
+  text-decoration: none;
+  color: var(--bean);
+  transition: border-color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+.gallery-empty-cta:hover {
+  border-color: var(--gold);
+  background: var(--cream);
+  transform: translateY(-2px);
+}
+.gallery-empty-icon {
+  width: 64px; height: 64px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--paper);
+  font-size: 2.2rem; line-height: 1; font-weight: 300;
+  font-family: 'Inter', sans-serif;
+}
+.gallery-empty-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+  color: var(--bean);
+}
+.gallery-empty-desc {
+  font-size: .94rem;
+  color: var(--muted);
+  max-width: 480px;
+  line-height: 1.55;
+}
+.gallery-empty-link {
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+
 @media (max-width: 760px) {
   .gallery-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 160px; }
   .gallery-item, .gallery-item.is-feature { grid-column: span 2; grid-row: auto; }
+  .gallery-empty-cta { padding: 36px 24px; }
   .hero-photo { width: 280px; height: 280px; }
 }
 

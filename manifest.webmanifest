@@ -21,12 +21,17 @@
     {
       "name": "Heutiger Mittagstisch",
       "short_name": "Mittagstisch",
-      "url": "./#mittagstisch"
+      "url": "./mittagstisch.html"
     },
     {
-      "name": "Online bestellen",
-      "short_name": "Bestellen",
-      "url": "https://croquenoah.simplywebshop.de/storedata/listStore"
+      "name": "Brötchen vorbestellen",
+      "short_name": "Brötchen",
+      "url": "./broetchen.html"
+    },
+    {
+      "name": "Tisch reservieren",
+      "short_name": "Reservieren",
+      "url": "./reservierung.html"
     },
     {
       "name": "Mitgliederbereich",

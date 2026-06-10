@@ -2,6 +2,14 @@
 
 Diese Datei beschreibt, was vor dem produktiven Einsatz noch zu tun ist und wie der Mitgliederbereich genutzt wird.
 
+## Live-Adresse (Stand heute)
+```
+https://nnauroz-prog.github.io/AlsterCafe/
+```
+Auf der eigenen Domain `alstercafe.de` läuft die Seite, sobald die DNS-Umstellung gemacht ist — Anleitung in [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md).
+
+Jede Änderung am Code geht automatisch innerhalb von ~1 Minute auf die Live-Adresse — kein manuelles Hochladen.
+
 ## 1. Was Sie als Inhaberin tun müssen (einmalig, ca. 30 Minuten)
 
 ### Schritt 1 – Supabase-Konto vorbereiten

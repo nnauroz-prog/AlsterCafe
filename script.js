@@ -478,10 +478,31 @@ function initDesign() {
 function renderHomeGallery(images) {
   const gallery = Array.isArray(images) ? images.filter(Boolean) : [];
   let section = document.getElementById('galerie');
-  if (!gallery.length) {
+
+  // Owner-Hinweis (nur im Bearbeitungs-Modus): leere Galerie zeigt sichtbaren
+  // CTA zum Hochladen. Fuer normale Besucher bleibt die Sektion versteckt.
+  const isEditing = (() => {
+    try {
+      if (new URLSearchParams(location.search).get('edit') === '1') return true;
+      if (localStorage.getItem('alstercafe.auth') === '1') return true;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          try {
+            const v = JSON.parse(localStorage.getItem(k) || 'null');
+            if (v && v.access_token) return true;
+          } catch {}
+        }
+      }
+    } catch {}
+    return false;
+  })();
+
+  if (!gallery.length && !isEditing) {
     if (section) section.hidden = true;
     return;
   }
+
   if (!section) {
     section = document.createElement('section');
     section.id = 'galerie';
@@ -502,6 +523,22 @@ function renderHomeGallery(images) {
   section.hidden = false;
   const grid = section.querySelector('.gallery-grid');
   grid.innerHTML = '';
+
+  if (!gallery.length) {
+    // Owner sieht einen Platzhalter mit klarer Handlungsaufforderung
+    const ph = document.createElement('a');
+    ph.className = 'gallery-empty-cta';
+    ph.href = 'admin.html';
+    ph.innerHTML = `
+      <span class="gallery-empty-icon" aria-hidden="true">+</span>
+      <span class="gallery-empty-title">Hier fehlen noch Fotos</span>
+      <span class="gallery-empty-desc">Bis zu 6 Bilder hochladen — Eckcafé, Croques, Brötchen, Innenraum. Im Mitgliederbereich unter „Bilder hochladen".</span>
+      <span class="gallery-empty-link">Zum Mitgliederbereich →</span>
+    `;
+    grid.appendChild(ph);
+    return;
+  }
+
   gallery.forEach((src, i) => {
     const item = document.createElement('figure');
     item.className = 'gallery-item' + (i === 0 ? ' is-feature' : '');
