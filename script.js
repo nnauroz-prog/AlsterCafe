@@ -960,6 +960,87 @@ function initPremiumPolish() {
 
   // 10. Chapter-Rail · floating Magazin-Index rechts
   initChapterRail();
+
+  // 11. SVG-Flourish-Dividers in existierende ornament-Boxen einsetzen
+  initFlourishDividers();
+
+  // 12. Chapter-Marks beim Sichtbarwerden einblenden
+  initChapterMarkReveal();
+
+  // 13. Closer-em-Highlight beim Sichtbarwerden zeichnen
+  initEmHighlightReveal();
+}
+
+function initFlourishDividers() {
+  const ornaments = document.querySelectorAll('.ornament');
+  if (!ornaments.length) return;
+
+  const svgMarkup = `
+    <svg class="flourish" viewBox="0 0 280 28" aria-hidden="true">
+      <path d="M2 14 C 30 14, 60 20, 90 14 S 140 8, 175 14 S 230 20, 268 14 L 278 14"/>
+      <path d="M134 8 C 138 10, 142 10, 146 8 M 138 18 C 140 16, 142 16, 142 16" opacity="0.6"/>
+    </svg>
+  `;
+
+  ornaments.forEach(orn => {
+    if (orn.querySelector('.flourish')) return;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = svgMarkup.trim();
+    const flourish = tmp.firstElementChild;
+    orn.insertBefore(flourish, orn.firstChild);
+    const glyph = orn.querySelector('.ornament-glyph');
+    if (glyph) glyph.style.display = 'none';
+  });
+
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.flourish').forEach(f => f.classList.add('is-drawn'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('is-drawn');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.flourish').forEach(f => io.observe(f));
+}
+
+function initChapterMarkReveal() {
+  const chapters = document.querySelectorAll('.chapter');
+  if (!chapters.length) return;
+  if (!('IntersectionObserver' in window)) {
+    chapters.forEach(c => c.classList.add('is-mark-in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('is-mark-in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -15% 0px', threshold: 0.05 });
+  chapters.forEach(c => io.observe(c));
+}
+
+function initEmHighlightReveal() {
+  const closer = document.querySelector('.chapter-finis');
+  if (!closer) return;
+  if (!('IntersectionObserver' in window)) {
+    closer.classList.add('is-em-drawn');
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('is-em-drawn');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  io.observe(closer);
 }
 
 function initHeroCharReveal(reduceMotion) {
@@ -1044,12 +1125,23 @@ function initChapterRail() {
   const items = Array.from(rail.querySelectorAll('.chapter-rail-item'));
   if ('IntersectionObserver' in window) {
     const map = new Map(chapters.map((sec, i) => [sec, items[i]]));
+    let lastActive = null;
     const io = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (!e.isIntersecting) return;
         const item = map.get(e.target);
         if (!item) return;
         items.forEach(x => x.classList.toggle('is-active', x === item));
+
+        // Pulse beim Aktivwerden
+        if (lastActive !== item) {
+          item.classList.remove('is-pulse');
+          // force reflow, dann wieder rein
+          void item.offsetWidth;
+          item.classList.add('is-pulse');
+          setTimeout(() => item.classList.remove('is-pulse'), 720);
+          lastActive = item;
+        }
 
         // Dunkler Hintergrund? Rail invertieren
         const onDark = e.target.classList.contains('chapter-dark') ||

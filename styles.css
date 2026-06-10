@@ -5622,3 +5622,239 @@ html { background: var(--paper); }
    Wenn JS smooth-scroll laeuft, CSS smooth-behavior off. */
 html.has-js-scroll { scroll-behavior: auto; }
 
+/* ===============================================
+   GRAND OVERHAUL IV · Animation & Flourish
+   =============================================== */
+
+/* ---------- SVG-FLOURISH-DIVIDER ----------
+   Hand-drawn Linie zwischen Sections, die per
+   IntersectionObserver eingezeichnet wird. */
+.flourish {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  height: 28px;
+  color: var(--gold);
+  opacity: 0.55;
+}
+.flourish path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  transition: stroke-dashoffset 1600ms var(--ease-out);
+}
+.flourish.is-drawn path { stroke-dashoffset: 0; }
+.ornament .flourish { max-width: 220px; }
+@media (prefers-reduced-motion: reduce) {
+  .flourish path { stroke-dashoffset: 0; transition: none; }
+}
+
+/* ---------- ANIMATED EM-HIGHLIGHT ----------
+   Der gold-Rechteck-Hintergrund unter "Sie da" wird jetzt
+   in-view animiert: Background-Size waechst von 0% auf 100%. */
+.hero-cinema-h1 .head-2 em,
+.chapter-finis .landing-closer-quote em {
+  background-image: linear-gradient(180deg, transparent 62%, rgba(184, 137, 62, 0.32) 62%, rgba(184, 137, 62, 0.32) 92%, transparent 92%);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  transition: background-size 1000ms var(--ease-out) 800ms;
+  padding: 0 0.04em;
+}
+.hero-cinema-h1.is-char-revealed .head-2 em,
+.chapter-finis.is-em-drawn .landing-closer-quote em {
+  background-size: 100% 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-cinema-h1 .head-2 em,
+  .chapter-finis .landing-closer-quote em {
+    background-size: 100% 100%;
+    transition: none;
+  }
+}
+
+/* ---------- BRAND-INK-STAMP ----------
+   Der Logo-Mark "tropft" beim Page-Load sanft auf:
+   leichte Bleed-Blur + Rotation, das wirkt wie ein Stempel. */
+.brand-logo {
+  animation: brand-stamp 1400ms var(--ease-out) backwards;
+}
+@keyframes brand-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(0.84) rotate(-12deg);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0.5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+    filter: blur(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo { animation: none; }
+}
+
+/* ---------- DOTTED-LEADER-Animation in Hours-Liste ----------
+   Editorial: Punkte zwischen "Mo - Fr" und "06:30 - 15:00",
+   die beim Scroll in den View animiert werden. */
+.hours-list li {
+  position: relative;
+  align-items: baseline;
+  gap: 12px;
+}
+.hours-list li > span:first-child::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background-image: radial-gradient(circle, currentColor 1px, transparent 1.4px);
+  background-size: 8px 2px;
+  background-position: 0 50%;
+  background-repeat: repeat-x;
+  margin: 0 6px;
+  opacity: 0.18;
+  align-self: center;
+  display: inline-block;
+  min-width: 30px;
+}
+/* Auf hellen Hintergruenden: dunkler dots */
+.hours-inline .hours-list li > span:first-child::after { opacity: 0.22; color: var(--bean); }
+/* In den Spreads ist span:first-child kein flex-item, daher Override */
+.landing-visit .hours-list li,
+.contact .hours-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+}
+.landing-visit .hours-list li > span:first-child,
+.contact .hours-list li > span:first-child {
+  display: contents;
+}
+
+/* ---------- ANIMATED MENU-LIST-Leader ----------
+   Dotted leader zwischen Item-Name und (fehlendem) Preis
+   wirkt premium auf Speisekarte. */
+.menu-list li {
+  position: relative;
+}
+.menu-list strong {
+  display: inline;
+  background:
+    radial-gradient(circle, var(--line) 1px, transparent 1.4px) 0 100% / 8px 2px repeat-x;
+  background-clip: padding-box;
+}
+/* Die Dotted-Leader sollten nicht stoeren — sind eigentlich
+   schon zu viel. Drum dezent: nur opacity am Hover */
+.menu-list strong {
+  background-image: none;
+}
+
+/* ---------- REFINED STICKY HEADER ----------
+   Beim Scrollen: Brand-Name wird italic, Spacing weiter,
+   wirkt wie eine Kolumne. */
+.site-header.is-scrolled .brand-name {
+  font-style: italic;
+  letter-spacing: -0.024em;
+  font-variation-settings: "opsz" 36;
+}
+.site-header.is-scrolled .nav-container {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* ---------- REFINED CHAPTER-MARK-Drama ----------
+   Beim ersten Sichtbarwerden zeichnet sich der Marker
+   subtil auf — alle Numerals starten gedimmt und gewinnen
+   Opazitaet beim Sichtbarwerden. */
+.chapter-mark {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.96);
+  transition: opacity 1.4s var(--ease-out), transform 1.4s var(--ease-out);
+}
+.chapter.is-mark-in .chapter-mark {
+  opacity: 0.5;
+  transform: translateY(0) scale(1);
+}
+.chapter.is-mark-in.chapter-dark .chapter-mark { opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  .chapter-mark { opacity: 0.5; transform: none; transition: none; }
+  .chapter.chapter-dark .chapter-mark { opacity: 0.55; }
+}
+
+/* ---------- REFINED HERO-CTA STAMP-MICRO-ROTATION ----------
+   Beim Klick wirkt der Primary-Button wie ein gestempelter
+   Abdruck — minimale Rotation als Press-Feedback. */
+.btn-stamp:active { transform: translateY(0) rotate(-1.4deg) scale(.98); }
+
+/* ---------- CHAPTER-RAIL · Active-Pulse-Glow ----------
+   Wenn das aktive Item wechselt, kurzer Gold-Glow-Puls
+   auf dem Mark. Wird per JS via .is-pulse-Klasse getriggert. */
+.chapter-rail-item.is-pulse .chapter-rail-mark {
+  animation: rail-pulse 700ms var(--ease-out) 1;
+}
+@keyframes rail-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(184, 137, 62, 0.4); }
+  100% { box-shadow: 0 0 0 12px rgba(184, 137, 62, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter-rail-item.is-pulse .chapter-rail-mark { animation: none; }
+}
+
+/* ---------- HERO-CTA REFINED ARROW-DRAW ----------
+   Beim Hover auf Online-bestellen-Button wandert die
+   Arrow-Icon nach rechts UND der Underline-Sweep zieht mit. */
+.btn-primary .ico,
+.btn-gold .ico,
+.btn-stamp .ico {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.btn-primary:hover .ico,
+.btn-gold:hover .ico,
+.btn-stamp:hover .ico {
+  transform: translateX(4px);
+}
+
+/* ---------- REFINED IMAGE TONE ----------
+   Warm-Brown Duotone-Overlay auf Galerie-Bildern.
+   Wirkt wie Print-Halbton. */
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.gallery-item::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(140deg, rgba(184, 137, 62, 0.08), rgba(42, 24, 16, 0.12));
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.gallery-item img {
+  transition: transform 1.2s var(--ease-out), filter 1.2s var(--ease-out);
+  filter: contrast(1.06) saturate(0.92);
+}
+.gallery-item:hover img {
+  transform: scale(1.04);
+  filter: contrast(1.1) saturate(1);
+}
+
+/* ---------- REFINED RESERVE-PAGE Form als Ticket ----------
+   Perforation-Hairline am oberen + unteren Rand. */
+.reservation-form::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 14px; right: 14px;
+  height: 1px;
+  background:
+    repeating-linear-gradient(90deg, var(--line) 0, var(--line) 6px, transparent 6px, transparent 12px);
+}
+
