@@ -5365,3 +5365,260 @@ html { background: var(--paper); }
 }
 .footer-credit em { color: var(--gold-soft); font-style: italic; }
 
+/* ===============================================
+   GRAND OVERHAUL III · Magazin Vollausbau
+   =============================================== */
+
+/* ---------- CHAPTER-RAIL · Floating Magazin-Index ----------
+   Rechts schwebende, vertikale Liste der Kapitel. Zeigt
+   aktive Section per JS, ist klickbar zum Springen. */
+.chapter-rail {
+  position: fixed;
+  right: clamp(16px, 2.5vw, 32px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex; flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.chapter-rail.is-visible { opacity: 1; }
+.chapter-rail-item {
+  pointer-events: auto;
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+  padding: 6px 0;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: .82rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  opacity: 0.4;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    gap var(--dur-base) var(--ease-out);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.chapter-rail-label {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(8px);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+.chapter-rail-mark {
+  display: inline-block;
+  width: 18px; height: 1px;
+  background: var(--bean);
+  transition: width var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
+}
+.chapter-rail-item:hover { opacity: 1; color: var(--bean); }
+.chapter-rail-item:hover .chapter-rail-label,
+.chapter-rail-item.is-active .chapter-rail-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.chapter-rail-item.is-active {
+  opacity: 1;
+  color: var(--gold);
+}
+.chapter-rail-item.is-active .chapter-rail-mark {
+  width: 36px;
+  background: var(--gold);
+}
+@media (max-width: 980px) { .chapter-rail { display: none; } }
+
+/* Auf dunklen Sektionen das Rail invertieren */
+.chapter-rail.is-on-dark .chapter-rail-item { color: var(--linen); }
+.chapter-rail.is-on-dark .chapter-rail-mark { background: var(--linen); }
+.chapter-rail.is-on-dark .chapter-rail-item.is-active { color: var(--gold-soft); }
+.chapter-rail.is-on-dark .chapter-rail-item.is-active .chapter-rail-mark { background: var(--gold-soft); }
+
+/* ---------- SPEISEKARTE · Editorial Spread ----------
+   Jede Kategorie wird zur eigenen breit ausgespielten Page,
+   mit Mega-Nummer links und Items rechts in zwei Spalten. */
+.menu-cols {
+  display: flex; flex-direction: column;
+  gap: clamp(70px, 10vw, 130px);
+  margin-top: clamp(60px, 8vw, 100px);
+}
+.menu-col {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) 2fr;
+  gap: clamp(36px, 5vw, 80px);
+  align-items: start;
+  padding-top: clamp(40px, 5vw, 60px);
+  border-top: 1px solid var(--line);
+  position: relative;
+}
+.menu-col:first-child { border-top: 0; padding-top: 0; }
+.menu-col-num {
+  position: static;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(6rem, 14vw, 13rem);
+  line-height: 0.85;
+  color: var(--gold);
+  opacity: 0.4;
+  letter-spacing: -0.04em;
+  font-variation-settings: "opsz" 144;
+  pointer-events: none;
+  user-select: none;
+  display: block;
+  margin: 0 0 12px;
+}
+.menu-col-head {
+  display: flex; flex-direction: column; gap: 14px;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border: 0;
+  align-items: flex-start;
+}
+.menu-col-head .ico {
+  width: 32px; height: 32px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.menu-col-head h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  margin: 0;
+  letter-spacing: -0.024em;
+  color: var(--bean);
+  line-height: 0.95;
+  font-variation-settings: "opsz" 144;
+}
+.menu-col-body { display: contents; }
+.menu-col .menu-list {
+  list-style: none; padding: 0; margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 clamp(28px, 4vw, 56px);
+  column-gap: clamp(28px, 4vw, 56px);
+}
+.menu-col .menu-list li {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-soft);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.menu-col .menu-list li:last-child { border-bottom: 0; }
+.menu-col .menu-list strong { font-size: 1.06rem; }
+@media (max-width: 880px) {
+  .menu-col { grid-template-columns: 1fr; gap: 24px; }
+  .menu-col .menu-list { grid-template-columns: 1fr; }
+}
+
+/* ---------- ÜBER UNS · Article-Editorial-Treatment ----------
+   Drop-Cap, refined spacing, refined feature-list. */
+.about-text .lead-soft:first-of-type::first-letter {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 5rem;
+  line-height: 0.9;
+  float: left;
+  margin: 6px 14px 0 0;
+  padding-top: 4px;
+  color: var(--gold);
+  font-variation-settings: "opsz" 144;
+}
+.about-text .lead-soft strong { color: var(--bean); font-weight: 500; }
+.about-text .lead-soft {
+  font-size: 1.12rem;
+  line-height: 1.72;
+  color: var(--ink);
+  margin-bottom: 26px;
+}
+
+/* Pull-Quote-Aside auf Über-Uns: groesseres Anfuehrungszeichen, gold */
+.about-aside {
+  padding: clamp(36px, 5vw, 56px);
+  background:
+    radial-gradient(800px 200px at 0% 0%, rgba(184, 137, 62, 0.12), transparent 60%),
+    var(--cream);
+}
+.about-aside::before {
+  font-size: 6.5rem;
+  line-height: 0.6;
+  color: var(--gold);
+  opacity: 0.7;
+  margin-bottom: -10px;
+}
+.about-aside blockquote {
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  line-height: 1.32;
+  letter-spacing: -0.014em;
+  font-variation-settings: "opsz" 96;
+}
+.about-aside blockquote em { color: var(--gold); font-style: italic; }
+.about-aside blockquote p { margin: 0; }
+
+/* Features-Liste editorialer: kleine Nummer + groessere Typo */
+.about-text .features { gap: 22px 32px; margin-top: 24px; }
+.about-text .features li {
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.about-text .features strong {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.06rem;
+  font-variation-settings: "opsz" 48;
+}
+
+/* ---------- REFINED ABOUT-SECTION on Sub-Page ----------
+   Padding hoch, mehr Atem. */
+.section.about {
+  padding: clamp(70px, 9vw, 130px) 0;
+}
+
+/* ---------- FAQ-SECTION REFINED ----------
+   Editorial: jede FAQ wird zu einer kleinen Magazin-Frage. */
+.faq-summary {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1.25rem, 2vw, 1.45rem);
+  letter-spacing: -0.012em;
+  font-variation-settings: "opsz" 96;
+}
+.faq-item { padding: 4px 0; }
+.faq-item:hover .faq-summary { color: var(--gold); }
+
+/* ---------- REFINED LANDING-VISIT INNER ---------- */
+.landing-visit-inner h2 {
+  font-feature-settings: "kern" 1, "liga" 1, "dlig" 1, "ss01" 1;
+}
+
+/* ---------- REFINED RESERVATION-PAGE ----------
+   Form wirkt jetzt wie ein Ticket: dichter, premium. */
+.reservation.chapter { padding: clamp(70px, 9vw, 130px) 0; }
+.reservation-form {
+  border-radius: 2px;
+  padding: clamp(40px, 5vw, 60px);
+  background: var(--paper);
+  position: relative;
+}
+.reservation-form::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+
+/* ---------- SMOOTH-SCROLL-FALLBACK ----------
+   Wenn JS smooth-scroll laeuft, CSS smooth-behavior off. */
+html.has-js-scroll { scroll-behavior: auto; }
+

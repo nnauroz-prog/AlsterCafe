@@ -957,6 +957,9 @@ function initPremiumPolish() {
 
   // 9. Footer-Credit-Zeile injizieren
   injectFooterCredit();
+
+  // 10. Chapter-Rail · floating Magazin-Index rechts
+  initChapterRail();
 }
 
 function initHeroCharReveal(reduceMotion) {
@@ -995,6 +998,67 @@ function initHeroCharReveal(reduceMotion) {
     Array.from(line.childNodes).forEach(walk);
   });
   h1.classList.add('is-char-revealed');
+}
+
+function initChapterRail() {
+  if (document.body.classList.contains('admin-body')) return;
+  if (document.querySelector('.chapter-rail')) return;
+
+  const chapters = Array.from(document.querySelectorAll('[data-chapter]'));
+  if (chapters.length < 2) return;
+
+  // Jede Chapter braucht eine ID zum Springen
+  chapters.forEach((sec, i) => {
+    if (!sec.id) {
+      const num = sec.getAttribute('data-chapter') || (i + 1);
+      sec.id = `chapter-${String(num).toLowerCase()}`;
+    }
+  });
+
+  const rail = document.createElement('aside');
+  rail.className = 'chapter-rail';
+  rail.setAttribute('aria-label', 'Inhalt');
+  rail.innerHTML = chapters.map((sec, i) => {
+    const num = sec.getAttribute('data-chapter') || String(i + 1);
+    const safeId = sec.id.replace(/"/g, '');
+    return `<a class="chapter-rail-item" href="#${safeId}" data-target="${safeId}">
+      <span class="chapter-rail-label">${num}</span>
+      <span class="chapter-rail-mark" aria-hidden="true"></span>
+    </a>`;
+  }).join('');
+  document.body.appendChild(rail);
+
+  // Sichtbar machen, sobald wir aus dem Hero raus sind
+  let visible = false;
+  const checkVisible = () => {
+    const should = window.scrollY > 200;
+    if (should !== visible) {
+      visible = should;
+      rail.classList.toggle('is-visible', visible);
+    }
+  };
+  window.addEventListener('scroll', checkVisible, { passive: true });
+  checkVisible();
+
+  // Aktives Kapitel per IntersectionObserver
+  const items = Array.from(rail.querySelectorAll('.chapter-rail-item'));
+  if ('IntersectionObserver' in window) {
+    const map = new Map(chapters.map((sec, i) => [sec, items[i]]));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const item = map.get(e.target);
+        if (!item) return;
+        items.forEach(x => x.classList.toggle('is-active', x === item));
+
+        // Dunkler Hintergrund? Rail invertieren
+        const onDark = e.target.classList.contains('chapter-dark') ||
+                       e.target.matches('.lunch, .reservation, .today-feature, .landing-visit-dark');
+        rail.classList.toggle('is-on-dark', onDark);
+      });
+    }, { rootMargin: '-30% 0px -50% 0px', threshold: 0 });
+    chapters.forEach(sec => io.observe(sec));
+  }
 }
 
 function injectFooterCredit() {
