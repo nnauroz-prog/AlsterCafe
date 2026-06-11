@@ -6876,3 +6876,293 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-variation-settings: "opsz" 144;
 }
 
+/* ===============================================
+   GRAND OVERHAUL IX · Mobile-Nav, Inputs, Wochengrid
+   =============================================== */
+
+/* ---------- MOBILE-NAV als Editorial-Cover ----------
+   Wenn das Burger-Menue offen ist, sieht es aus wie eine
+   Magazin-Cover-Innenseite: groesse italic Links mit
+   Roman-Numerals + Issue-Header. */
+@media (max-width: 980px) {
+  .primary-nav {
+    background:
+      radial-gradient(900px 400px at 80% 20%, rgba(184, 137, 62, 0.16), transparent 60%),
+      linear-gradient(160deg, var(--bean) 0%, var(--espresso) 100%);
+    padding: 140px var(--gutter) calc(80px + env(safe-area-inset-bottom, 0));
+    counter-reset: navitem;
+  }
+  .primary-nav::before {
+    content: 'Index · Vol. XVI';
+    position: absolute;
+    top: 80px;
+    left: var(--gutter);
+    right: var(--gutter);
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(212, 179, 128, 0.18);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: .92rem;
+    letter-spacing: 0.02em;
+    color: var(--gold-soft);
+    opacity: 0.7;
+  }
+  .primary-nav a {
+    counter-increment: navitem;
+    position: relative;
+    padding: 14px 0 14px 48px;
+    border: 0;
+    border-bottom: 1px solid rgba(212, 179, 128, 0.10);
+    text-transform: none;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+    letter-spacing: -0.018em;
+    font-variation-settings: "opsz" 144;
+    color: var(--linen);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out), color 200ms var(--ease-out);
+  }
+  .primary-nav a::before {
+    content: counter(navitem, upper-roman);
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-size: .66rem;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    opacity: 0.55;
+    line-height: 1;
+    width: 36px;
+  }
+  .primary-nav a::after { display: none; }
+  .primary-nav.open a {
+    opacity: 0.92;
+    transform: translateY(0);
+  }
+  .primary-nav.open a:nth-child(1) { transition-delay: 100ms; }
+  .primary-nav.open a:nth-child(2) { transition-delay: 160ms; }
+  .primary-nav.open a:nth-child(3) { transition-delay: 220ms; }
+  .primary-nav.open a:nth-child(4) { transition-delay: 280ms; }
+  .primary-nav.open a:nth-child(5) { transition-delay: 340ms; }
+  .primary-nav.open a:nth-child(6) { transition-delay: 400ms; }
+  .primary-nav.open a:nth-child(7) { transition-delay: 460ms; }
+  .primary-nav a:hover,
+  .primary-nav a.is-active { color: var(--gold-soft); opacity: 1; }
+  .primary-nav a:hover::before,
+  .primary-nav a.is-active::before { opacity: 1; color: var(--gold); }
+
+  /* Webshop-Link als ausgestellte Box */
+  .primary-nav .nav-shop {
+    margin-top: 24px;
+    padding: 18px 0 18px 48px;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(.88rem, 3.4vw, 1.02rem);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+    font-style: normal;
+    color: var(--gold-soft);
+    background: transparent;
+    border-radius: 0;
+  }
+  .primary-nav .nav-shop::before { content: 'Ext.'; }
+
+  /* Fuss-Linie mit Adresse + Telefon */
+  .primary-nav::after {
+    content: 'Ifflandstr. 45 · 040 22 69 28 91';
+    position: absolute;
+    bottom: calc(40px + env(safe-area-inset-bottom, 0));
+    left: var(--gutter);
+    right: var(--gutter);
+    padding-top: 18px;
+    border-top: 1px solid rgba(212, 179, 128, 0.18);
+    font-family: 'Inter', sans-serif;
+    font-size: .76rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(241, 231, 211, 0.5);
+    text-align: center;
+  }
+}
+
+/* ---------- RESERVATION-FORM Inputs als Coupon-Slots ----------
+   Inputs wirken wie ausgeschnittene Felder mit Hairline-Border
+   und animated underline-fill beim Focus. */
+.reservation-form .form-row,
+.reservation-form > label {
+  position: relative;
+  margin-bottom: 4px;
+}
+.reservation-form label {
+  margin-bottom: 22px;
+}
+.reservation-form label > span {
+  display: block;
+  margin-bottom: 10px;
+  padding-left: 2px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: .82rem;
+  letter-spacing: 0.02em;
+  color: var(--coffee);
+  text-transform: none;
+  font-variation-settings: "opsz" 48;
+}
+.reservation-form label > span em {
+  color: var(--gold);
+  font-style: italic;
+  margin-left: 2px;
+}
+.reservation-form input,
+.reservation-form select,
+.reservation-form textarea {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.15rem;
+  color: var(--bean);
+  padding: 10px 2px 14px;
+  font-variation-settings: "opsz" 48;
+  letter-spacing: -0.005em;
+}
+.reservation-form input::placeholder,
+.reservation-form textarea::placeholder {
+  color: rgba(120, 97, 82, 0.42);
+  font-style: italic;
+}
+.reservation-form input:focus,
+.reservation-form select:focus,
+.reservation-form textarea:focus {
+  color: var(--bean);
+}
+.reservation-form .form-row {
+  display: grid;
+  gap: clamp(20px, 3vw, 30px);
+  margin-bottom: 8px;
+}
+.reservation-form label.checkbox {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: .88rem;
+  color: var(--muted);
+  margin-top: 14px;
+}
+
+/* ---------- MITTAGSTISCH Wochengrid als Editorial-Tabelle ----------
+   Statt brave 7er-Card-Grid: refined Stack mit Tabellenrhythmus. */
+.lunch-week:not(.lunch-week-empty) {
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  padding: 4px;
+}
+.lunch-day {
+  padding: 22px 18px 24px;
+  border: 1px solid rgba(241, 231, 211, .10);
+  border-radius: 4px;
+  background: rgba(255, 252, 244, 0.025);
+  transition:
+    border-color var(--dur-slow) var(--ease-out),
+    background-color var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.lunch-day-head {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(241, 231, 211, .12);
+}
+.lunch-day-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.5rem;
+  letter-spacing: -0.018em;
+  color: var(--gold-soft);
+  line-height: 1;
+  font-variation-settings: "opsz" 144;
+}
+.lunch-day-date {
+  display: block;
+  margin-top: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: .66rem;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: rgba(241, 231, 211, .42);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.lunch-day.is-today {
+  border-color: var(--gold);
+  background:
+    radial-gradient(600px 200px at 0% 0%, rgba(184, 137, 62, 0.12), transparent 60%),
+    rgba(184, 137, 62, 0.06);
+  transform: translateY(-2px);
+}
+.lunch-day.is-today .lunch-day-name {
+  color: var(--gold);
+  background-image: linear-gradient(180deg, transparent 64%, rgba(184, 137, 62, 0.24) 64%, rgba(184, 137, 62, 0.24) 92%, transparent 92%);
+  background-position: 0 100%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 0 0.06em;
+}
+.lunch-day-body {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: 1.08rem;
+  line-height: 1.32;
+  color: var(--paper);
+  letter-spacing: -0.005em;
+  font-variation-settings: "opsz" 48;
+}
+.lunch-day-side {
+  margin-top: 8px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .88rem;
+  color: rgba(241, 231, 211, .58);
+  font-variation-settings: "opsz" 48;
+}
+.lunch-pending,
+.lunch-closed {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .9rem;
+  color: rgba(241, 231, 211, .35);
+}
+.lunch-note {
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: rgba(241, 231, 211, .55);
+  font-size: .98rem;
+  letter-spacing: -0.005em;
+  margin: 22px auto 0;
+  max-width: 540px;
+  font-variation-settings: "opsz" 48;
+}
+.lunch-note a {
+  color: var(--gold);
+  background-image: linear-gradient(var(--gold-soft), var(--gold-soft));
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  font-style: italic;
+}
+.lunch-note a:hover { color: var(--gold-soft); }
+
+@media (max-width: 1080px) {
+  .lunch-week:not(.lunch-week-empty) { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 760px) {
+  .lunch-week:not(.lunch-week-empty) { grid-template-columns: 1fr 1fr; }
+}
+
