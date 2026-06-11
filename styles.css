@@ -8132,7 +8132,6 @@ html.has-js-scroll { scroll-behavior: auto; }
     font-size: clamp(1.8rem, 7vw, 2.6rem);
     line-height: 1.12;
   }
-  .landing-closer-note { transform: rotate(-1.2deg); margin-bottom: 18px; }
   .landing-closer-sign { font-size: 1rem; }
 }
 
@@ -8150,19 +8149,24 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-size: 1.4rem;
   letter-spacing: 0.04em;
   color: var(--muted);
-  opacity: 0.7;
+  opacity: 0.85;
   font-variation-settings: "opsz" 96;
 }
 .closer-fin-line {
-  flex: 0 0 60px;
+  flex: 0 0 70px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-soft), transparent);
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.75;
 }
 
-/* "(Tun viele.)" jetzt ruhig zentriert — kein schraeger Versatz */
+/* "(Tun viele.)" als eigener Block, ruhig zentriert.
+   WICHTIG: display:block sonst rutscht es neben den Sign-Off
+   und das Layout faellt zusammen. */
 .landing-closer-note {
+  display: block;
   transform: none;
-  margin: -8px 0 36px;
+  margin: -4px auto 32px;
+  max-width: 480px;
   font-family: 'Fraunces', serif;
   font-style: italic;
   font-size: 1.05rem;
@@ -8170,5 +8174,18 @@ html.has-js-scroll { scroll-behavior: auto; }
   color: var(--muted);
   text-align: center;
   opacity: 0.85;
+}
+
+/* Sign-Off auch als Block, sonst kollidieren die zwei
+   inline-block-Paragraphen. */
+.landing-closer-sign {
+  display: block;
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.closer-sign-line {
+  display: block;
+  margin: 0 auto 16px;
 }
 
