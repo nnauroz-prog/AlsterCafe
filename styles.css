@@ -8248,6 +8248,120 @@ html.has-js-scroll { scroll-behavior: auto; }
   .hero-partner-line { width: 24px; }
 }
 
+/* ---------- MOBILE-POLITUR III · Section-Shouts dezenter ----------
+   Auf Mobile waren die riesigen Hintergrund-Worte ("FAMILIE",
+   "MITTAG", "HOHENFELDE") teilweise sichtbar und wirkten eher
+   wie Artefakte als bewusste Akzente. Kleiner und weiter
+   nach links damit sie wirklich nur am Rand peeken. */
+@media (max-width: 760px) {
+  .section-shout {
+    font-size: clamp(5rem, 24vw, 11rem);
+    left: -8vw;
+    opacity: 0.035;
+  }
+  .section-shout.shout-light { opacity: 0.06; }
+  .section-shout.shout-on-dark { opacity: 0.04; }
+}
+
+/* ---------- MOBILE Hero-Ticker tighter ---------- */
+@media (max-width: 640px) {
+  .hero-ticker-track {
+    font-size: clamp(0.92rem, 4.6vw, 1.15rem);
+    padding: 16px 0;
+    gap: 24px;
+  }
+  .hero-ticker::before,
+  .hero-ticker::after { width: 36px; }
+}
+
+/* ---------- MOBILE Today-Feature-Inner kompakter ---------- */
+@media (max-width: 640px) {
+  .today-feature-inner { padding: 0 6px; }
+  .today-feature-kicker {
+    margin-bottom: 12px;
+    font-size: .66rem;
+    letter-spacing: 0.22em;
+  }
+  .chapter.today-feature .today-feature-dish {
+    font-size: clamp(1.9rem, 7.5vw, 2.6rem);
+    line-height: 1.1;
+  }
+  .today-feature-side { margin-bottom: 24px; }
+  .today-feature-cta { gap: 16px; flex-direction: column; }
+  .today-feature-cta .btn { width: 100%; justify-content: center; }
+}
+
+/* ---------- MOBILE Family-Greeting dichter ---------- */
+@media (max-width: 640px) {
+  .greeting-line {
+    font-size: clamp(1.7rem, 7.5vw, 2.4rem);
+    margin: 6px 0 24px;
+  }
+  .greeting-text {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  .greeting-text::first-letter {
+    font-size: 3.4rem;
+    margin: 6px 10px 0 0;
+  }
+  .greeting-signature { margin-top: 22px; }
+  .greeting-signature-name { font-size: clamp(2rem, 8vw, 2.6rem); }
+}
+
+/* ---------- MOBILE Spread-Cards (Cards-Section) Spacing ---------- */
+@media (max-width: 640px) {
+  .spread-grid { gap: 14px; }
+  .spread-card { padding: 24px 22px 22px; }
+  .spread-card-hero { padding: 28px 24px 24px; }
+  .spread-num { font-size: clamp(3rem, 14vw, 5rem); margin-bottom: 8px; }
+  .spread-card-hero .spread-num { font-size: clamp(4.4rem, 18vw, 6.4rem); }
+  .spread-card h3 { font-size: clamp(1.5rem, 6.5vw, 1.9rem); }
+  .spread-card-hero h3 { font-size: clamp(1.9rem, 8vw, 2.4rem); }
+  .spread-card p { font-size: .94rem; margin-bottom: 16px; }
+}
+
+/* ---------- MOBILE Pull-Quote (Was Gäste sagen) ---------- */
+@media (max-width: 640px) {
+  .landing-pullquote .quotes-eyebrow { margin-bottom: 18px; }
+  .pullquote-hero { margin-bottom: 36px; }
+  .pullquote-mark {
+    font-size: 4.4rem;
+    margin: 0 0 -.18em -.04em;
+  }
+  .pullquote-text {
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+    line-height: 1.1;
+  }
+  .pullquote-cite { margin-top: 16px; font-size: .72rem; }
+  .pullquote-row { padding-top: 26px; gap: 22px; }
+  .pullquote-small blockquote { font-size: 1.05rem; }
+}
+
+/* ---------- MOBILE Landing-Visit (Hohenfelde) ---------- */
+@media (max-width: 640px) {
+  .chapter.landing-visit-dark h2 {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+    line-height: 1.02;
+  }
+  .landing-visit-tag { font-size: .96rem; }
+  .landing-visit .hours-list li {
+    font-size: .98rem;
+    padding: 10px 0;
+  }
+  .landing-visit-cta { flex-direction: column; align-items: stretch; gap: 12px; }
+  .landing-visit-cta .btn { justify-content: center; }
+}
+
+/* ---------- HERO-EST Watermark mobile dezenter ---------- */
+@media (max-width: 640px) {
+  .hero-est {
+    opacity: 0.025;
+    right: -8vw;
+    font-size: clamp(5rem, 22vw, 10rem);
+  }
+}
+
 /* ---------- CLOSER "Fin." als Buch-Ende ----------
    "Fin." ist jetzt eine zentrale Schluss-Zeile am Ende
    der Sektion — nicht mehr in der oberen Ecke. */
