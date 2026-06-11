@@ -899,13 +899,13 @@ function initPremiumPolish() {
     updateProgress();
   }
 
-  // 2. Hero-Watermark-Parallax (nur Desktop, nur ohne reduced-motion)
-  const est = document.querySelector('.hero-est');
-  if (est && !reduceMotion && !matchMedia('(pointer: coarse)').matches) {
+  // 2. Hero-Watermark-Parallax + Sub-Page-Watermarks (nur Desktop)
+  const wmarks = document.querySelectorAll('.hero-est, .page-hero-watermark');
+  if (wmarks.length && !reduceMotion && !matchMedia('(pointer: coarse)').matches) {
     let rafPar = 0;
     const updatePar = () => {
       const y = Math.min(60, window.scrollY * 0.18);
-      est.style.setProperty('--hero-parallax-y', `${y}px`);
+      wmarks.forEach(el => el.style.setProperty('--hero-parallax-y', `${y}px`));
       rafPar = 0;
     };
     window.addEventListener('scroll', () => {
@@ -972,6 +972,79 @@ function initPremiumPolish() {
 
   // 14. H2-Line-Reveal ueber die ganze Seite
   initH2LineReveal();
+
+  // 15. Footer-Umbau zu 3-Spalten-Editorial-Standfuss
+  enhanceFooterEditorial();
+}
+
+function enhanceFooterEditorial() {
+  const footer = document.querySelector('.site-footer');
+  if (!footer) return;
+  const grid = footer.querySelector('.footer-grid');
+  if (!grid) return;
+  if (grid.dataset.editorialReady === '1') return;
+  grid.dataset.editorialReady = '1';
+
+  // Sammle die existierende Navigation
+  const oldNav = grid.querySelector('.footer-nav');
+  const navHtml = oldNav ? oldNav.outerHTML : '';
+  const oldMeta = grid.querySelector('.footer-meta');
+  const metaText = oldMeta ? oldMeta.textContent.trim() : '';
+
+  // Brand-Block bleibt erhalten — verbessern wir nur die Typo via CSS
+  const brand = grid.querySelector('.footer-brand');
+
+  // Hours- und Address-Spalten zusammenstellen
+  const adresseCol = document.createElement('div');
+  adresseCol.className = 'footer-col footer-col-adresse';
+  adresseCol.innerHTML = `
+    <p class="footer-col-label">Besuch</p>
+    <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener">Ifflandstraße 45</a>
+    <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener">22087 Hamburg</a>
+    <a href="tel:+494022692891">040 – 22 69 28 91</a>
+    <a href="mailto:info@alstercafe.de">info@alstercafe.de</a>
+  `;
+
+  const hoursCol = document.createElement('div');
+  hoursCol.className = 'footer-col footer-col-hours';
+  hoursCol.innerHTML = `
+    <p class="footer-col-label">Geöffnet</p>
+    <div class="footer-line"><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></div>
+    <div class="footer-line"><span>Samstag</span><span class="time">07:30 – 15:00</span></div>
+    <div class="footer-line"><span>Sonntag</span><span class="time">07:30 – 15:00</span></div>
+  `;
+
+  // Neue Reihenfolge: brand | adresse | hours
+  grid.innerHTML = '';
+  if (brand) grid.appendChild(brand);
+  grid.appendChild(adresseCol);
+  grid.appendChild(hoursCol);
+
+  // Nav-Reihe wird unter dem Grid eingesetzt als eigener Block
+  if (navHtml) {
+    const navWrap = document.createElement('div');
+    navWrap.className = 'footer-nav-wrap container';
+    navWrap.innerHTML = `
+      <p class="footer-col-label" style="margin-bottom:14px">Index</p>
+      ${navHtml}
+    `;
+    // Footer-Credit (von injectFooterCredit) bleibt darunter
+    footer.querySelector('.container').insertAdjacentElement('afterend', navWrap);
+  }
+
+  // Bottom-Strip mit Edition-Vol + Meta
+  const now = new Date();
+  const year = now.getFullYear();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+  const dayOfYear = Math.floor(diff / 86400000);
+  const strip = document.createElement('div');
+  strip.className = 'footer-bottom-strip container';
+  strip.innerHTML = `
+    <span>© ${year} <em>Alstercafé</em> · Croquenoah Cafe</span>
+    <span>Vol. <em>XVI</em> · No. <em>${String(dayOfYear).padStart(3, '0')}</em></span>
+  `;
+  footer.appendChild(strip);
 }
 
 function initH2LineReveal() {

@@ -6312,3 +6312,326 @@ html.has-js-scroll { scroll-behavior: auto; }
   letter-spacing: -0.005em;
 }
 
+/* ===============================================
+   GRAND OVERHAUL VII · Footer & Sub-Page Politur
+   =============================================== */
+
+/* ---------- FOOTER · Editorial 3-Spalten-Magazin-Standfuss ----------
+   Aufgeteilt in Adresse | Hours | Navigation. Bottom-Strip
+   mit Edition-No und Issue-Vol als Pagina. */
+.site-footer {
+  padding: clamp(60px, 8vw, 100px) 0 0;
+  background: var(--espresso);
+  position: relative;
+  overflow: hidden;
+}
+.site-footer .footer-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1.3fr;
+  gap: clamp(36px, 5vw, 80px);
+  align-items: start;
+  text-align: left;
+  position: relative;
+  z-index: 2;
+  padding-bottom: clamp(40px, 5vw, 60px);
+}
+.footer-brand {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  color: rgba(241, 231, 211, 0.75);
+}
+.footer-brand .brand-logo {
+  width: 56px; height: 56px;
+}
+.footer-brand strong {
+  display: block;
+  font-size: 1.6rem;
+  letter-spacing: -0.016em;
+  font-variation-settings: "opsz" 96;
+  margin-bottom: 6px;
+  color: var(--linen);
+}
+.footer-brand p {
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.02rem;
+  color: rgba(241, 231, 211, 0.62);
+  line-height: 1.4;
+}
+.footer-col {
+  display: flex; flex-direction: column;
+  gap: 14px;
+}
+.footer-col-label {
+  font-family: 'Inter', sans-serif;
+  font-size: .66rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.footer-col .footer-line {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(241, 231, 211, 0.10);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .98rem;
+  color: var(--linen);
+  letter-spacing: -0.005em;
+}
+.footer-col .footer-line:last-child { border-bottom: 0; }
+.footer-col .footer-line .time {
+  color: var(--gold-soft);
+  font-variant-numeric: tabular-nums;
+  font-size: .96rem;
+}
+.footer-col a {
+  color: var(--linen);
+  text-decoration: none;
+  transition: color var(--dur-base) var(--ease-out);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .98rem;
+}
+.footer-col a:hover { color: var(--gold-soft); }
+.footer-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 24px;
+}
+.footer-nav a {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: .82rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(241, 231, 211, 0.66);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(241, 231, 211, 0.08);
+}
+.footer-nav a:hover { color: var(--gold-soft); }
+.footer-bottom-strip {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid rgba(212, 179, 128, 0.16);
+  padding: 20px 0;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-family: 'Inter', sans-serif;
+  font-size: .76rem;
+  color: rgba(241, 231, 211, 0.5);
+  letter-spacing: 0.08em;
+}
+.footer-bottom-strip em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .92rem;
+  color: var(--gold-soft);
+  letter-spacing: 0.02em;
+  font-variation-settings: "opsz" 48;
+}
+.footer-bottom-strip .footer-bottom-meta { margin: 0; }
+.footer-meta { display: none; } /* alte Position wird ersetzt */
+.site-footer .footer-credit { margin: 0 0 14px; }
+
+@media (max-width: 980px) {
+  .site-footer .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    text-align: left;
+  }
+  .footer-bottom-strip { justify-content: center; text-align: center; }
+}
+
+/* Footer-Wordmark dezenter (war 0.10), passt jetzt zum Boden */
+.site-footer::after {
+  margin-top: 0;
+  font-size: clamp(8rem, 22vw, 22rem);
+  opacity: 0.08;
+}
+
+/* ---------- PAGE-HERO-WATERMARK Parallax ----------
+   Watermark auf Sub-Page-Heroes scrollt mit subtilem Versatz. */
+.page-hero-watermark {
+  transform: translate(-50%, -50%) rotate(-3deg) translate3d(0, var(--hero-parallax-y, 0px), 0);
+  transition: transform 60ms linear;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-hero-watermark { transform: translate(-50%, -50%) rotate(-3deg); transition: none; }
+}
+
+/* ---------- SPEISEKARTE · Croque & Brötchen-CTA als Editorial-Spreads ----------
+   Beide Calls-To-Action werden zu kleinen Spreads mit Mega-Typo. */
+.menu-croque {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(56px, 7vw, 90px) clamp(36px, 5vw, 64px);
+  text-align: left;
+  background:
+    radial-gradient(900px 300px at 100% 0%, rgba(184, 137, 62, 0.18), transparent 60%),
+    var(--cream);
+  border: 1px solid var(--gold-soft);
+  border-radius: 4px;
+  margin-top: clamp(60px, 8vw, 100px);
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: clamp(28px, 4vw, 60px);
+  align-items: end;
+}
+.menu-croque::before {
+  content: '№ I';
+  position: absolute;
+  top: 24px; right: 32px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  color: var(--bean);
+  opacity: 0.18;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 144;
+}
+.menu-croque > div { max-width: none; }
+.menu-croque .eyebrow { margin-bottom: 24px; }
+.menu-croque h2 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  line-height: 0.96;
+  letter-spacing: -0.024em;
+  margin: 0 0 18px;
+  font-variation-settings: "opsz" 144;
+}
+.menu-croque p {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--coffee);
+  margin: 0 0 24px;
+  max-width: 36ch;
+  font-variation-settings: "opsz" 48;
+}
+@media (max-width: 760px) {
+  .menu-croque { grid-template-columns: 1fr; padding: 36px 28px; }
+  .menu-croque::before { font-size: 2rem; top: 16px; right: 20px; }
+}
+
+/* Belegte-Brötchen-CTA-Banner als dunkle Spread */
+.menu-broetchen-cta {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: clamp(28px, 4vw, 60px);
+  align-items: end;
+  padding: clamp(48px, 6vw, 80px) clamp(36px, 5vw, 60px);
+  margin-top: clamp(40px, 5vw, 60px);
+}
+.menu-broetchen-cta::before {
+  content: '№ II';
+  position: absolute;
+  top: 24px; right: 32px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  color: var(--gold-soft);
+  opacity: 0.28;
+  letter-spacing: -0.02em;
+  font-variation-settings: "opsz" 144;
+}
+.menu-broetchen-cta h2 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.024em;
+  margin: 0 0 16px;
+  font-variation-settings: "opsz" 144;
+}
+.menu-broetchen-cta p {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.02rem, 1.5vw, 1.18rem);
+  line-height: 1.55;
+  color: rgba(241, 231, 211, 0.78);
+  margin: 0;
+  max-width: 36ch;
+  font-variation-settings: "opsz" 48;
+}
+.menu-broetchen-cta .btn { align-self: end; justify-self: end; }
+@media (max-width: 760px) {
+  .menu-broetchen-cta { grid-template-columns: 1fr; align-items: start; }
+}
+
+/* ---------- ÜBER-UNS · Aside-Foto-Slot-Placeholder ----------
+   Wenn kein Bild da ist: ein editorialer Slot mit Crop-Marken,
+   der zeigt wo Maria spaeter ein Bild hochlaedt. */
+.about-aside {
+  position: relative;
+}
+.about-aside-photo-slot {
+  margin: 32px -8px -12px;
+  height: 280px;
+  background:
+    repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(184, 137, 62, 0.06) 14px, rgba(184, 137, 62, 0.06) 15px),
+    rgba(255, 252, 244, 0.4);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  position: relative;
+  display: flex;
+  align-items: center; justify-content: center;
+}
+.about-aside-photo-slot::before,
+.about-aside-photo-slot::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  border-color: var(--gold);
+  border-style: solid;
+  border-width: 0;
+}
+.about-aside-photo-slot::before {
+  top: -1px; left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.about-aside-photo-slot::after {
+  bottom: -1px; right: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+.about-aside-photo-slot-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .88rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-align: center;
+  max-width: 220px;
+  line-height: 1.4;
+}
+.about-aside-photo-slot-label em { color: var(--gold); font-style: italic; }
+
+/* ---------- REFINED PAGE-HERO-EDITORIAL ----------
+   Padding auf Sub-Pages etwas hoher, Lead etwas weiter unten. */
+.page-hero-editorial > .container > .page-lead {
+  margin-top: 24px;
+  max-width: 640px;
+}
+.page-hero-editorial h1 em {
+  background-image: linear-gradient(180deg, transparent 64%, rgba(184, 137, 62, 0.16) 64%, rgba(184, 137, 62, 0.16) 92%, transparent 92%);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0 0.04em;
+}
+
