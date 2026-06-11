@@ -8097,3 +8097,42 @@ html.has-js-scroll { scroll-behavior: auto; }
   color: var(--gold);
 }
 
+/* ===============================================
+   MOBILE-POLITUR · Dichtere Padding-Rhythmik
+   =============================================== */
+
+/* Dunkle Sektionen sollen am Boden nicht riesig leer stehen */
+@media (max-width: 760px) {
+  .chapter.landing-visit-dark {
+    padding: 56px 0 48px;
+  }
+  .chapter.today-feature {
+    padding: 56px 0 48px;
+  }
+  .chapter.landing-greeting {
+    padding: 56px 0 40px;
+  }
+  .ornament { padding: 14px var(--gutter); }
+  .chapter.landing-cards { padding: 48px 0; }
+  .landing-pullquote { padding: 48px 0; }
+  .chapter-finis.landing-closer { padding: 48px 0 56px; }
+
+  /* Chapter-Mark auf Mobile noch dezenter, damit er bei kurzen
+     Sektionen nicht ueber den Content laeuft */
+  .chapter-mark { font-size: 1.8rem; opacity: 0.3; top: 12px; right: 14px; }
+  .chapter-mark-fin { font-size: 1.3rem; opacity: 0.55; }
+
+  /* Pull-Quote-Hero etwas kompakter */
+  .pullquote-hero { margin-bottom: 40px; }
+  .pullquote-mark { font-size: 5.4rem; line-height: 0.5; margin: 0 0 -.18em -.04em; }
+  .pullquote-text { font-size: clamp(1.8rem, 8vw, 2.6rem); line-height: 1.05; }
+
+  /* Closer-Quote weniger gigantisch */
+  .chapter-finis .landing-closer-quote {
+    font-size: clamp(1.8rem, 7vw, 2.6rem);
+    line-height: 1.12;
+  }
+  .landing-closer-note { transform: rotate(-1.2deg); margin-bottom: 18px; }
+  .landing-closer-sign { font-size: 1rem; }
+}
+
