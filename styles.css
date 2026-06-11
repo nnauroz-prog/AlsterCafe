@@ -7678,3 +7678,231 @@ html.has-js-scroll { scroll-behavior: auto; }
   margin: 0;
 }
 
+/* ===============================================
+   GRAND OVERHAUL XII · Order-Slip, Save-Bar, Ticker
+   =============================================== */
+
+/* ---------- BROETCHEN Cart-Summary als Order-Slip ----------
+   Das Warenkorb-Sidebar wirkt jetzt wie ein gedruckter
+   Bestellzettel mit Perforation und italic Item-Liste. */
+.order-summary-card {
+  border-radius: 4px;
+  background:
+    radial-gradient(800px 200px at 0% 0%, rgba(184, 137, 62, 0.16), transparent 60%),
+    linear-gradient(160deg, var(--bean) 0%, var(--espresso) 100%);
+  padding: clamp(28px, 4vw, 40px) clamp(24px, 3.5vw, 32px);
+  box-shadow:
+    0 40px 80px -40px rgba(42, 24, 16, 0.65),
+    inset 0 0 0 6px var(--bean),
+    inset 0 0 0 7px rgba(212, 179, 128, 0.22);
+}
+.order-summary-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+.order-summary-card::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 14px; right: 14px;
+  height: 1px;
+  background:
+    repeating-linear-gradient(90deg, var(--gold-soft) 0, var(--gold-soft) 4px, transparent 4px, transparent 9px);
+  opacity: 0.35;
+}
+.order-summary-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: .62rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+.order-summary-count {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.8rem, 6vw, 4rem);
+  line-height: 1;
+  margin: 0 0 20px;
+  color: var(--paper);
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.024em;
+}
+.order-summary-count #order-count { font-variant-numeric: tabular-nums; }
+.order-summary-unit {
+  font-style: italic;
+  font-size: 0.42em;
+  color: var(--gold-soft);
+  margin-left: 6px;
+  letter-spacing: 0.02em;
+  font-variation-settings: "opsz" 48;
+}
+.order-summary-list {
+  border-top: 1px solid rgba(212, 179, 128, 0.14);
+  border-bottom: 1px solid rgba(212, 179, 128, 0.14);
+  padding: 14px 0;
+  margin: 0 0 18px;
+}
+.order-summary-list li {
+  display: flex; justify-content: space-between; gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(212, 179, 128, 0.06);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1rem;
+  letter-spacing: -0.005em;
+  color: var(--linen);
+  font-variation-settings: "opsz" 48;
+}
+.order-summary-list li:last-child { border-bottom: 0; }
+.order-summary-qty {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  color: var(--gold-soft);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: .92rem;
+  letter-spacing: .04em;
+}
+.order-summary-qty::before { content: '× '; opacity: 0.5; }
+.order-summary-empty {
+  color: rgba(241, 231, 211, 0.4) !important;
+  font-style: italic;
+  border-bottom: 0 !important;
+}
+.order-min-note {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .92rem;
+  margin: 0 0 22px;
+  color: rgba(241, 231, 211, 0.55);
+  font-variation-settings: "opsz" 48;
+}
+.order-min-note.is-met { color: #b6dab6; }
+.order-min-note.is-below { color: var(--gold-soft); }
+.order-submit {
+  width: 100%;
+  padding: 16px 24px;
+  font-size: .76rem;
+  letter-spacing: .24em;
+  border-radius: 2px;
+}
+.order-summary-fineprint {
+  margin: 18px 0 0;
+  font-family: 'Inter', sans-serif;
+  font-size: .76rem;
+  line-height: 1.5;
+  color: rgba(241, 231, 211, 0.42);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- ADMIN SAVE-BAR als Press-Notiz ----------
+   Sticky Save-Bar wirkt jetzt wie eine schwebende
+   Editorial-Notiz mit Gold-Hairline + Doppel-Border. */
+.save-bar {
+  border-radius: 4px;
+  background: rgba(255, 252, 244, 0.96);
+  border: 1px solid var(--gold-soft);
+  padding: 14px 22px;
+  box-shadow:
+    0 24px 50px -22px rgba(42, 24, 16, 0.32),
+    inset 0 0 0 4px var(--paper),
+    inset 0 0 0 5px rgba(184, 137, 62, 0.12);
+}
+.save-bar::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+.save-status {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .98rem;
+  color: var(--coffee);
+  letter-spacing: -0.005em;
+  font-variation-settings: "opsz" 48;
+}
+.save-status.ok { color: #2e7d32; }
+.save-status.error { color: #b3382c; }
+.save-actions .btn {
+  padding: 11px 22px;
+  font-size: .76rem;
+  letter-spacing: .22em;
+  border-radius: 2px;
+}
+
+/* ---------- HERO-TICKER refined editorial ----------
+   Marquee-Items italic Fraunces statt brave Inter. */
+.hero-ticker-track {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  letter-spacing: -0.005em;
+  color: var(--linen);
+  font-variation-settings: "opsz" 96;
+}
+.hero-ticker-track > span:nth-child(even) {
+  color: var(--gold);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 0.82em;
+  opacity: 0.7;
+}
+
+/* ---------- RESERVATION Form-Submit als Stempel-Button ----------
+   Submit wirkt jetzt wie ein grosser Theater-Stempel. */
+.reservation-form .form-submit {
+  margin-top: 24px;
+  padding: 18px 32px;
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  letter-spacing: .28em;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 2px;
+  background: var(--bean);
+  color: var(--paper);
+  border: 1px solid var(--bean);
+  box-shadow: 0 18px 40px -22px rgba(42, 24, 16, 0.5);
+  position: relative;
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
+}
+.reservation-form .form-submit::before {
+  content: '↗';
+  position: absolute;
+  right: 18px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--gold);
+  letter-spacing: 0;
+  text-transform: none;
+  font-variation-settings: "opsz" 48;
+  transition: transform var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+}
+.reservation-form .form-submit:hover {
+  transform: translateY(-2px) rotate(-0.8deg);
+  background: var(--espresso);
+  box-shadow: 0 22px 50px -18px rgba(42, 24, 16, 0.6);
+}
+.reservation-form .form-submit:hover::before {
+  transform: translateY(-50%) translateX(4px);
+  color: var(--gold-soft);
+}
+.reservation-form .form-submit:active {
+  transform: translateY(0) rotate(-1.4deg) scale(.98);
+}
+
+/* ---------- HEAD-NAV-CONTAINER refined: subtle border-bottom transition ---------- */
+.site-header.is-scrolled .nav-container {
+  border-bottom-color: rgba(184, 137, 62, 0.12);
+}
+
