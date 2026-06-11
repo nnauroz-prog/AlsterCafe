@@ -999,6 +999,30 @@ function initPremiumPolish() {
 
   // 21. Reservation-Tipp-Karte
   injectReservationTips();
+
+  // 22. Brand-Wordmark Letter-by-Letter-Animation
+  initBrandWordmarkReveal(reduceMotion);
+}
+
+function initBrandWordmarkReveal(reduceMotion) {
+  if (reduceMotion) return;
+  // Beim ersten Paint pro Session — nicht jedes Mal nach Navigation
+  if (sessionStorage.getItem('alstercafe.wordmark-seen') === '1') return;
+
+  document.querySelectorAll('.brand-name').forEach(el => {
+    if (el.dataset.wordmarkReady === '1') return;
+    el.dataset.wordmarkReady = '1';
+    const text = el.textContent;
+    let html = '';
+    let charIdx = 0;
+    for (const ch of text) {
+      if (ch === ' ') { html += ' '; continue; }
+      html += `<span class="bn-char" style="--bn-i:${charIdx}">${ch}</span>`;
+      charIdx++;
+    }
+    el.innerHTML = html;
+  });
+  try { sessionStorage.setItem('alstercafe.wordmark-seen', '1'); } catch {}
 }
 
 function initMenuTOC() {

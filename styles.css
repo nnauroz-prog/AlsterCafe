@@ -8135,6 +8135,119 @@ html.has-js-scroll { scroll-behavior: auto; }
   .landing-closer-sign { font-size: 1rem; }
 }
 
+/* ===============================================
+   MOBILE-POLITUR PART 2 · Hero-Drama, Brand-Animation
+   =============================================== */
+
+/* ---------- BRAND-WORDMARK Letter-by-Letter Reveal ----------
+   Beim ersten Paint zeichnen sich die Buchstaben von "Alstercafé"
+   nacheinander ein. Subtile Eleganz im Header. */
+.brand-name {
+  display: inline-block;
+  overflow: hidden;
+}
+.brand-name .bn-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: brand-name-char-in 600ms var(--ease-out) forwards;
+  animation-delay: calc(var(--bn-i, 0) * 35ms + 200ms);
+}
+@keyframes brand-name-char-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-name .bn-char { opacity: 1; transform: none; animation: none; }
+}
+
+/* ---------- MOBILE-HERO CTA refined ----------
+   Auf Mobile soll der Primary-Button die volle Breite einnehmen,
+   damit er als klarer Call-to-Action wirkt. */
+@media (max-width: 640px) {
+  .hero-cta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-top: 28px;
+  }
+  .hero-cta .btn-primary,
+  .hero-cta .btn-stamp {
+    width: 100%;
+    justify-content: center;
+    padding: 18px 28px;
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+  }
+  .hero-cta .btn-link {
+    text-align: center;
+    align-self: center;
+    margin-top: 4px;
+  }
+}
+
+/* ---------- MOBILE Hero-Cinema h1 etwas tighter ----------
+   Auf Mobile war der h1 von 3.8rem an immer noch ein wenig viel
+   fuer kurze Viewports — wir tighten leicht. */
+@media (max-width: 640px) {
+  .hero-cinema-h1 {
+    font-size: clamp(2.8rem, 13vw, 4.2rem);
+    line-height: 0.92;
+  }
+  .hero-cinematic .hero-masthead {
+    padding-top: clamp(36px, 7vw, 60px);
+    padding-bottom: clamp(14px, 3vw, 24px);
+  }
+  .hero-cinematic .hero-spread {
+    padding-top: clamp(28px, 5vw, 48px);
+    padding-bottom: clamp(48px, 7vw, 80px);
+  }
+}
+
+/* ---------- HERO-COORD-Aside Mobile-optimiert ---------- */
+@media (max-width: 920px) {
+  .hero-coord {
+    margin: 0;
+    max-width: none;
+    padding: 22px 22px 18px;
+  }
+  .hero-coord-clock-time { font-size: 1.2rem; }
+  .hero-coord-row { padding-bottom: 10px; }
+  .hero-coord-mark { padding-top: 12px; }
+  .hero-coord-logo { width: 38px; height: 38px; }
+  .hero-coord-stamp { font-size: .88rem; }
+}
+
+/* ---------- LIVE-STATUS-Pille refined ----------
+   Groessere pulsierende Aura beim "open"-Zustand. */
+.live-status[data-state="open"] {
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(74, 168, 91, 0.18),
+    0 12px 30px -16px rgba(74, 168, 91, 0.42);
+}
+.live-status[data-state="open"]::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1px solid rgba(74, 168, 91, 0.18);
+  animation: live-status-halo 2.6s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+@keyframes live-status-halo {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50%      { transform: scale(1.08); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-status[data-state="open"]::after { animation: none; opacity: 0.4; }
+}
+
+/* ---------- MOBILE Hero-Partner-Block kompakter ---------- */
+@media (max-width: 640px) {
+  .hero-partner { margin-top: 22px; font-size: .68rem; letter-spacing: 0.24em; }
+  .hero-partner-line { width: 24px; }
+}
+
 /* ---------- CLOSER "Fin." als Buch-Ende ----------
    "Fin." ist jetzt eine zentrale Schluss-Zeile am Ende
    der Sektion — nicht mehr in der oberen Ecke. */
