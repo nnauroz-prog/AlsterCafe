@@ -969,6 +969,45 @@ function initPremiumPolish() {
 
   // 13. Closer-em-Highlight beim Sichtbarwerden zeichnen
   initEmHighlightReveal();
+
+  // 14. H2-Line-Reveal ueber die ganze Seite
+  initH2LineReveal();
+}
+
+function initH2LineReveal() {
+  // Alle h2 in section-head, today-feature, landing-visit, etc.
+  const heads = document.querySelectorAll(
+    '.section-head h2, .landing-visit-inner h2, .menu-broetchen-cta h2, .menu-croque h2, .today-feature-inner h2, .lunch-head h2, .about-aside h2'
+  );
+  if (!heads.length) return;
+
+  heads.forEach(h2 => {
+    if (h2.classList.contains('h2-reveal')) return;
+    // Inhalt in Lines aufteilen (durch <br> getrennt)
+    const html = h2.innerHTML;
+    const lines = html.split(/<br\s*\/?>/i);
+    if (lines.length < 2) {
+      // Keine <br> — eine einzelne Line erzeugen
+      h2.innerHTML = `<span class="h2-line">${html}</span>`;
+    } else {
+      h2.innerHTML = lines.map(l => `<span class="h2-line">${l}</span>`).join('');
+    }
+    h2.classList.add('h2-reveal');
+  });
+
+  if (!('IntersectionObserver' in window)) {
+    heads.forEach(h => h.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.15 });
+  heads.forEach(h => io.observe(h));
 }
 
 function initFlourishDividers() {

@@ -5858,3 +5858,219 @@ html.has-js-scroll { scroll-behavior: auto; }
     repeating-linear-gradient(90deg, var(--line) 0, var(--line) 6px, transparent 6px, transparent 12px);
 }
 
+/* ===============================================
+   GRAND OVERHAUL V · Editorial-Vollausbau Teil 2
+   =============================================== */
+
+/* ---------- 404 · EDITORIAL ERRATA ----------
+   Riesige 404 als Watermark, Vol.-Issue-Strip, Fin.-Marker.
+   Wirkt wie eine Errata-Seite in einer Druckausgabe. */
+.error-editorial {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding: clamp(80px, 12vw, 160px) var(--gutter);
+  background:
+    radial-gradient(1200px 600px at 50% 20%, rgba(184, 137, 62, 0.10), transparent 60%),
+    var(--paper);
+}
+.error-watermark {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-3deg);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(14rem, 36vw, 36rem);
+  line-height: 0.85;
+  letter-spacing: -0.06em;
+  color: var(--bean);
+  opacity: 0.05;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  font-variation-settings: "opsz" 144;
+  z-index: 0;
+}
+.error-inner { position: relative; z-index: 1; max-width: 720px; text-align: left; }
+.error-issue {
+  display: flex; align-items: center; gap: 14px;
+  flex-wrap: wrap;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .92rem;
+  color: var(--muted);
+  margin: 0 0 28px;
+  letter-spacing: 0.02em;
+}
+.error-issue-dot { color: var(--gold); opacity: 0.7; }
+.error-headline {
+  display: flex; flex-direction: column;
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(2.8rem, 7vw, 5.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.028em;
+  color: var(--bean);
+  margin: 8px 0 32px;
+  font-variation-settings: "opsz" 144;
+}
+.error-headline em {
+  font-style: italic;
+  color: var(--coffee);
+}
+.error-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: hero-line 900ms var(--ease-out) forwards;
+}
+.error-line:nth-child(1) { animation-delay: 100ms; }
+.error-line:nth-child(2) { animation-delay: 260ms; }
+.error-line:nth-child(3) { animation-delay: 420ms; }
+.error-lead {
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.6;
+  max-width: 580px;
+  margin: 0 0 40px;
+}
+.error-cta {
+  display: flex; gap: 22px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 50px;
+}
+.error-fin {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--muted);
+  opacity: 0.6;
+  margin: 0 0 14px;
+  letter-spacing: 0.02em;
+}
+.error-meta {
+  font-size: .76rem;
+  color: var(--muted);
+  letter-spacing: .04em;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  opacity: 0.8;
+}
+@media (prefers-reduced-motion: reduce) {
+  .error-line { opacity: 1; transform: none; animation: none; }
+}
+
+/* ---------- H2 LINE-REVEAL ueber die ganze Seite ----------
+   Alle h2 in section-head und vergleichbaren Stellen
+   reveal sich line-by-line beim Sichtbarwerden. */
+.h2-reveal {
+  overflow: hidden;
+}
+.h2-reveal .h2-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(0.4em);
+  transition: opacity 900ms var(--ease-out), transform 900ms var(--ease-out);
+}
+.h2-reveal.in .h2-line {
+  opacity: 1;
+  transform: translateY(0);
+}
+.h2-reveal.in .h2-line:nth-child(1) { transition-delay: 60ms; }
+.h2-reveal.in .h2-line:nth-child(2) { transition-delay: 200ms; }
+.h2-reveal.in .h2-line:nth-child(3) { transition-delay: 340ms; }
+@media (prefers-reduced-motion: reduce) {
+  .h2-reveal .h2-line { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------- COOKIE-BANNER · Editorial Notice ----------
+   Wirkt wie ein gedruckter Hinweis am unteren Seitenrand,
+   keine moderne Cookie-Wall. */
+.cookie-banner {
+  border-top: 2px solid var(--bean);
+  border-bottom: 0;
+  background:
+    radial-gradient(800px 200px at 50% 0%, rgba(184, 137, 62, 0.06), transparent 60%),
+    var(--paper);
+}
+.cookie-banner::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+  margin: 6px 12px 0;
+}
+.cookie-inner {
+  padding: 24px 32px 26px;
+}
+.cookie-text {
+  font-family: 'Inter', sans-serif;
+  font-size: .92rem;
+  line-height: 1.6;
+}
+.cookie-text strong {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--bean);
+  margin: 0 0 4px;
+  letter-spacing: -0.005em;
+  font-variation-settings: "opsz" 48;
+}
+.cookie-accept {
+  font-size: .8rem;
+  letter-spacing: .06em;
+  padding: 13px 24px;
+}
+.cookie-decline {
+  font-size: .8rem;
+  letter-spacing: .06em;
+  padding: 13px 22px;
+}
+
+/* ---------- PRESS-STAMP-INK-Bleed bei Klick ----------
+   Beim Aktiv-Klick auf primary/gold/stamp wirkt der Button
+   wie ein nasser Stempel-Druck: kurzer Dunkel-Halo. */
+.btn-primary,
+.btn-gold,
+.btn-stamp {
+  position: relative;
+}
+.btn-primary:active::after,
+.btn-gold:active::after,
+.btn-stamp:active::after {
+  background: radial-gradient(120% 120% at 50% 50%, rgba(42, 24, 16, 0.18), transparent 60%);
+  opacity: 1;
+}
+
+/* ---------- REFINED LIVE-STATUS ----------
+   Live-Status-Pille im Hero kriegt jetzt einen subtilen
+   pulsierenden Halo-Rand. */
+.live-status[data-state="open"] {
+  box-shadow: 0 0 0 1px rgba(74, 168, 91, 0.12), 0 12px 24px -16px rgba(74, 168, 91, 0.3);
+}
+
+/* ---------- REFINED HEADER-BRAND on Hover Mark ----------
+   Beim Hover auf Brand-Logo rotiert es subtil, das Stempel-
+   Gefuehl bleibt erhalten. */
+.brand-logo {
+  transition: transform var(--dur-slow) var(--ease-spring), filter var(--dur-base) var(--ease-out);
+}
+.brand:hover .brand-logo {
+  transform: rotate(-6deg) scale(1.04);
+}
+
+/* ---------- BIGGER TODAY-FEATURE-KICKER ----------
+   Tagesgericht im Hero-Kontext groesser, dramatischer. */
+.today-feature-inner h2,
+.today-feature-inner .today-feature-dish {
+  font-size: clamp(2.6rem, 6vw, 4.4rem);
+}
+.today-feature-kicker {
+  font-size: .76rem;
+}
+
