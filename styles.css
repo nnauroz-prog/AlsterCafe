@@ -8136,3 +8136,39 @@ html.has-js-scroll { scroll-behavior: auto; }
   .landing-closer-sign { font-size: 1rem; }
 }
 
+/* ---------- CLOSER "Fin." als Buch-Ende ----------
+   "Fin." ist jetzt eine zentrale Schluss-Zeile am Ende
+   der Sektion — nicht mehr in der oberen Ecke. */
+.chapter-finis .chapter-mark { display: none; }
+.closer-fin {
+  display: flex; align-items: center; justify-content: center;
+  gap: 18px;
+  margin: clamp(40px, 6vw, 80px) 0 0;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0.7;
+  font-variation-settings: "opsz" 96;
+}
+.closer-fin-line {
+  flex: 0 0 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-soft), transparent);
+}
+
+/* "(Tun viele.)" jetzt ruhig zentriert — kein schraeger Versatz */
+.landing-closer-note {
+  transform: none;
+  margin: -8px 0 36px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  letter-spacing: -0.005em;
+  color: var(--muted);
+  text-align: center;
+  opacity: 0.85;
+}
+

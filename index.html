@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r44" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r45" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r44';
+      var V='2026-05-10-r45';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -421,7 +421,6 @@
 
     <!-- WARMER ABSCHIED · Editorial Sign-Off -->
     <section class="landing-closer chapter chapter-finis" data-chapter="FIN">
-      <span class="chapter-mark chapter-mark-fin" aria-hidden="true">Fin.</span>
       <div class="container">
         <p class="landing-closer-quote reveal">
           Sie können auch <em>zwei Stunden</em><br/>
@@ -433,6 +432,11 @@
         <p class="landing-closer-sign reveal">
           <span class="closer-sign-line"></span>
           Bis dann — Ihre Familie<br/>vom <em>Alstercafé</em>
+        </p>
+        <p class="closer-fin reveal" aria-hidden="true">
+          <span class="closer-fin-line"></span>
+          Fin.
+          <span class="closer-fin-line"></span>
         </p>
       </div>
     </section>
@@ -490,8 +494,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r44" defer></script>
-  <script src="db.js?v=2026-05-10-r44" defer></script>
-  <script src="script.js?v=2026-05-10-r44" defer></script>
+  <script src="config.js?v=2026-05-10-r45" defer></script>
+  <script src="db.js?v=2026-05-10-r45" defer></script>
+  <script src="script.js?v=2026-05-10-r45" defer></script>
 </body>
 </html>
