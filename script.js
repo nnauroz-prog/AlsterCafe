@@ -523,8 +523,12 @@ function renderHomeGallery(images) {
         <div class="gallery-grid"></div>
       </div>
     `;
+    // Reihenfolge: Galerie kommt VOR dem Closer mit "Fin.",
+    // sonst macht das Schlusszeichen keinen Sinn.
+    const closer = document.querySelector('.landing-closer');
     const reservation = document.getElementById('reservierung');
-    if (reservation) reservation.parentElement.insertBefore(section, reservation);
+    if (closer) closer.parentElement.insertBefore(section, closer);
+    else if (reservation) reservation.parentElement.insertBefore(section, reservation);
     else document.querySelector('main').appendChild(section);
   }
   section.hidden = false;
