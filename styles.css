@@ -7166,3 +7166,253 @@ html.has-js-scroll { scroll-behavior: auto; }
   .lunch-week:not(.lunch-week-empty) { grid-template-columns: 1fr 1fr; }
 }
 
+/* ===============================================
+   GRAND OVERHAUL X · Übergänge, Speisekarte, Admin
+   =============================================== */
+
+/* ---------- CHAPTER-CURTAIN ----------
+   An jeder chapter-Section sitzt am oberen Rand eine
+   Gold-Hairline, die beim Sichtbarwerden von links nach
+   rechts einzeichnet. Subtiler Magazin-Trenner. */
+.chapter::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1400ms var(--ease-out);
+  z-index: 3;
+  pointer-events: none;
+}
+.chapter.is-mark-in::before { transform: scaleX(1); }
+.chapter.chapter-dark::before {
+  background: linear-gradient(90deg, transparent, var(--gold-soft) 30%, var(--gold-soft) 70%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter::before { transform: scaleX(1); transition: none; }
+}
+
+/* ---------- SPEISEKARTE Hover-Item-Spread ----------
+   Bei Hover: Name lift, Beschreibung wird kraeftiger,
+   gold-Hairline zeichnet sich am linken Rand. */
+.menu-col .menu-list li {
+  position: relative;
+  padding: 18px 0 18px 20px;
+  border-bottom: 1px solid var(--line-soft);
+  transition:
+    padding var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+.menu-col .menu-list li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 30%; bottom: 30%;
+  width: 2px;
+  background: var(--gold);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.menu-col .menu-list li:hover {
+  padding-left: 28px;
+  background: linear-gradient(90deg, rgba(184, 137, 62, 0.04), transparent 70%);
+}
+.menu-col .menu-list li:hover::before {
+  transform: scaleY(1);
+}
+.menu-col .menu-list strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.12rem;
+  color: var(--bean);
+  letter-spacing: -0.005em;
+  font-variation-settings: "opsz" 96;
+  transition: color var(--dur-base) var(--ease-out);
+}
+.menu-col .menu-list strong::after { display: none; }
+.menu-col .menu-list span {
+  font-family: 'Inter', sans-serif;
+  font-size: .9rem;
+  color: var(--muted);
+  line-height: 1.5;
+  transition: color var(--dur-base) var(--ease-out);
+}
+.menu-col .menu-list li:hover strong { color: var(--gold); }
+.menu-col .menu-list li:hover span { color: var(--coffee); }
+
+/* ---------- ADMIN-LOGIN refined Editorial ----------
+   Das Login-Karte sieht jetzt aus wie eine Press-Karte. */
+.admin-login {
+  background:
+    radial-gradient(1000px 400px at 50% 0%, rgba(184, 137, 62, 0.07), transparent 60%),
+    var(--cream);
+}
+.login-card {
+  text-align: left;
+}
+.login-card-eyebrow {
+  display: flex; align-items: center; gap: 12px;
+  margin: 0 0 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: .66rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.login-card-eyebrow::before {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--gold);
+}
+.login-card h1 {
+  margin: 0 0 12px;
+}
+.login-card h1 em {
+  font-style: italic;
+  color: var(--gold);
+  background-image: linear-gradient(180deg, transparent 64%, rgba(184, 137, 62, 0.18) 64%, rgba(184, 137, 62, 0.18) 92%, transparent 92%);
+  background-position: 0 100%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 0 0.04em;
+}
+.login-lead {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.06rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0 0 30px;
+  font-variation-settings: "opsz" 48;
+}
+.login-form label {
+  display: block;
+  margin-bottom: 18px;
+}
+.login-form label > span {
+  display: block;
+  margin-bottom: 8px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .82rem;
+  color: var(--coffee);
+  font-variation-settings: "opsz" 48;
+}
+.login-form input {
+  width: 100%;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--bean);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 2px 12px;
+  transition: border-color var(--dur-base) var(--ease-out);
+  font-variation-settings: "opsz" 48;
+}
+.login-form input:focus {
+  outline: none;
+  border-bottom-color: var(--gold);
+}
+.login-card .login-stamp {
+  position: absolute;
+  bottom: 20px; right: 20px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .76rem;
+  color: var(--muted);
+  opacity: 0.55;
+  letter-spacing: 0.02em;
+}
+.login-card .login-stamp em {
+  color: var(--gold);
+  font-style: italic;
+  font-variation-settings: "opsz" 48;
+}
+
+/* ---------- ADMIN-OVERVIEW refined Editorial ----------
+   Die Overview-Karte oben sieht jetzt aus wie das Editor-
+   Dashboard einer Tageszeitung. */
+.admin-overview {
+  border-radius: 4px;
+  padding: clamp(32px, 4vw, 48px);
+  background:
+    radial-gradient(800px 300px at 100% 0%, rgba(184, 137, 62, 0.06), transparent 60%),
+    var(--paper);
+  border: 1px solid var(--gold-soft);
+  box-shadow:
+    0 40px 80px -50px rgba(42, 24, 16, 0.32),
+    inset 0 0 0 6px var(--paper),
+    inset 0 0 0 7px rgba(184, 137, 62, 0.12);
+}
+.admin-overview::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+.admin-welcome h2,
+.admin-overview h2 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  letter-spacing: -0.018em;
+  font-variation-settings: "opsz" 144;
+  margin: 0 0 8px;
+}
+
+/* Overview-Status-Karte refined */
+.overview-status-card {
+  background:
+    radial-gradient(600px 200px at 0% 0%, rgba(184, 137, 62, 0.07), transparent 60%),
+    var(--cream);
+  border: 1px solid var(--gold-soft);
+  border-radius: 4px;
+  padding: clamp(28px, 4vw, 40px);
+  position: relative;
+  margin-top: 28px;
+}
+.overview-status-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+.overview-status-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: .66rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.overview-status-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  margin: 0 0 18px;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.018em;
+}
+.overview-status-title span {
+  color: var(--gold);
+  background-image: linear-gradient(180deg, transparent 64%, rgba(184, 137, 62, 0.18) 64%, rgba(184, 137, 62, 0.18) 92%, transparent 92%);
+  background-position: 0 100%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 0 0.04em;
+}
+
