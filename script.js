@@ -987,6 +987,53 @@ function initPremiumPolish() {
 
   // 17. Reservation-Form: Coupon-Header voranstellen
   enhanceReservationCoupon();
+
+  // 18. Topbar-Live-Status injizieren
+  injectTopbarLiveStatus();
+}
+
+function injectTopbarLiveStatus() {
+  const topbar = document.querySelector('.topbar-inner');
+  if (!topbar) return;
+  if (topbar.querySelector('.topbar-live')) return;
+
+  // Live-Status berechnen (parallel zur grossen Hero-Pille)
+  const now = new Date();
+  const dayIdx = now.getDay(); // 0=So, 1=Mo, ..., 6=Sa
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  // Mo-Fr: 06:30-15:00 = 390-900, Sa/So: 07:30-15:00 = 450-900
+  const open = (dayIdx >= 1 && dayIdx <= 5) ? 390 : 450;
+  const close = 900;
+  const isOpen = minutes >= open && minutes < close;
+
+  const formatHour = (mins) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
+
+  const el = document.createElement('span');
+  el.className = 'topbar-live' + (isOpen ? '' : ' is-closed');
+  if (isOpen) {
+    el.innerHTML = `Geöffnet bis <em>${formatHour(close)}</em>`;
+  } else if (minutes < open) {
+    el.innerHTML = `Heute ab <em>${formatHour(open)}</em>`;
+  } else {
+    // Nach 15:00 — morgen früh
+    const tomorrow = (dayIdx + 1) % 7;
+    const tomorrowOpen = (tomorrow >= 1 && tomorrow <= 5) ? 390 : 450;
+    el.innerHTML = `Morgen ab <em>${formatHour(tomorrowOpen)}</em>`;
+  }
+
+  // Vor dem ersten Separator einsetzen (am Anfang der Inner-Row)
+  const firstSep = topbar.querySelector('.topbar-sep');
+  if (firstSep) {
+    const sepClone = firstSep.cloneNode(true);
+    topbar.insertBefore(el, topbar.firstChild);
+    topbar.insertBefore(sepClone, el.nextSibling);
+  } else {
+    topbar.insertBefore(el, topbar.firstChild);
+  }
 }
 
 function enhanceSplashMark() {

@@ -7416,3 +7416,265 @@ html.has-js-scroll { scroll-behavior: auto; }
   padding: 0 0.04em;
 }
 
+/* ===============================================
+   GRAND OVERHAUL XI · Topbar, Legal, Dashboard-Tabs
+   =============================================== */
+
+/* ---------- TOPBAR-LIVE-STATUS ----------
+   Direkt in der Topbar ein "Geöffnet"-Indicator mit Gold-Puls.
+   Wird per JS gefuellt und zwischen den anderen Topbar-Items
+   gesetzt. */
+.topbar-live {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .82rem;
+  letter-spacing: 0.02em;
+  color: var(--gold-soft);
+  font-variation-settings: "opsz" 48;
+}
+.topbar-live::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgba(184, 137, 62, 0.5);
+  animation: pulse-gold 2.4s var(--ease-in-out) infinite;
+}
+.topbar-live.is-closed { color: rgba(241, 231, 211, 0.6); }
+.topbar-live.is-closed::before {
+  background: rgba(241, 231, 211, 0.4);
+  animation: none;
+  box-shadow: none;
+}
+.topbar-live em {
+  font-style: italic;
+  color: var(--linen);
+  margin: 0 4px;
+}
+@media (max-width: 720px) {
+  .topbar-live { display: none; }
+}
+
+/* ---------- LEGAL-PAGES als Editorial-Articles ----------
+   Impressum und Datenschutz wirken jetzt wie ein
+   Magazin-Article mit Drop-Cap, italic h2, refined Spacing. */
+.legal-main {
+  padding: clamp(50px, 7vw, 100px) 0 clamp(60px, 8vw, 100px);
+  background:
+    radial-gradient(900px 300px at 0% 0%, rgba(184, 137, 62, 0.05), transparent 60%),
+    var(--paper);
+}
+.legal-article {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.legal-article h1 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: -0.024em;
+  font-variation-settings: "opsz" 144;
+  margin: 0 0 18px;
+}
+.legal-article h1 em { color: var(--gold); }
+.legal-lead {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0 0 50px;
+  font-variation-settings: "opsz" 48;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.legal-article section {
+  margin-bottom: 44px;
+  position: relative;
+}
+.legal-article section + section { padding-top: 8px; }
+.legal-article h2 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 2.4vw, 1.95rem);
+  letter-spacing: -0.018em;
+  margin: 0 0 18px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--bean);
+  font-variation-settings: "opsz" 96;
+}
+.legal-article h3 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.12rem;
+  color: var(--coffee);
+  margin: 28px 0 10px;
+  font-variation-settings: "opsz" 48;
+}
+.legal-article p, .legal-article li {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.legal-article p { margin: 0 0 14px; }
+.legal-article strong {
+  color: var(--bean);
+  font-weight: 500;
+}
+.legal-article a {
+  color: var(--bean);
+  background-image: linear-gradient(var(--gold), var(--gold));
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition: background-size var(--dur-slow) var(--ease-out), color var(--dur-base) var(--ease-out);
+  border: 0;
+}
+.legal-article a:hover { color: var(--gold); background-size: 100% 2px; }
+.legal-source {
+  margin-top: 60px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .92rem;
+  color: var(--muted);
+  font-variation-settings: "opsz" 48;
+}
+
+/* ---------- ADMIN-DASHBOARD Tabs als Magazin-Index ----------
+   Tabs werden zu nummerierten Kapitel-Buttons mit italic
+   Fraunces statt brave Caps. */
+.admin-tabs {
+  counter-reset: tab;
+}
+.admin-tab {
+  counter-increment: tab;
+  position: relative;
+  padding: 10px 20px 10px 44px !important;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.02rem !important;
+  letter-spacing: -0.005em !important;
+  text-transform: none !important;
+  font-variation-settings: "opsz" 96;
+  color: var(--coffee);
+  border-radius: 2px;
+  transition: color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
+}
+.admin-tab::before {
+  content: counter(tab, upper-roman);
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: var(--gold);
+  opacity: 0.55;
+  line-height: 1;
+}
+.admin-tab.is-active {
+  color: var(--bean);
+  background: rgba(184, 137, 62, 0.08);
+}
+.admin-tab.is-active::before { opacity: 1; color: var(--gold); }
+.admin-tab:hover { color: var(--bean); }
+
+/* ---------- EDIT-MODE FAB · Refined Press-Karte ----------
+   Der schwebende Button "Texte bearbeiten" wirkt jetzt
+   nicht mehr wie ein gewoehnlicher Aktion-Button, sondern
+   wie eine kleine Press-Karte am Bildschirmrand. */
+.edit-fab {
+  border-radius: 4px !important;
+  background: var(--paper) !important;
+  color: var(--bean) !important;
+  border: 1px solid var(--gold-soft) !important;
+  padding: 10px 16px 10px 14px !important;
+  box-shadow:
+    0 24px 50px -22px rgba(42, 24, 16, 0.45),
+    inset 0 0 0 4px var(--paper),
+    inset 0 0 0 5px rgba(184, 137, 62, 0.18) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: .72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: .22em !important;
+  text-transform: uppercase !important;
+}
+.edit-fab::before {
+  content: '№';
+  margin-right: 8px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1rem;
+  letter-spacing: 0;
+  color: var(--gold);
+  text-transform: none;
+  font-variation-settings: "opsz" 48;
+}
+.edit-fab:hover {
+  background: var(--cream) !important;
+  border-color: var(--gold) !important;
+  transform: translateY(-1px);
+}
+.edit-fab.is-editing {
+  background: var(--gold) !important;
+  color: var(--bean) !important;
+  border-color: var(--gold) !important;
+}
+.edit-fab.is-editing::before { color: var(--bean); }
+
+/* ---------- NOTICE-BANNER refined ----------
+   Hinweis-Banner sieht jetzt aus wie eine Press-Mitteilung. */
+.notice-banner {
+  background:
+    radial-gradient(800px 200px at 0% 0%, rgba(255, 255, 255, 0.20), transparent 60%),
+    var(--gold);
+  color: var(--bean);
+  font-family: 'Inter', sans-serif;
+  font-size: .92rem;
+  position: relative;
+}
+.notice-banner::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background:
+    repeating-linear-gradient(90deg, var(--bean) 0, var(--bean) 6px, transparent 6px, transparent 12px);
+  opacity: 0.3;
+}
+.notice-inner { padding: 14px 28px; gap: 18px; }
+.notice-tag {
+  background: var(--bean);
+  color: var(--gold-soft);
+  font-family: 'Inter', sans-serif;
+  font-size: .62rem;
+  letter-spacing: .28em;
+  padding: 5px 11px;
+  font-weight: 700;
+  border-radius: 2px;
+}
+.notice-banner p {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.02rem;
+  letter-spacing: -0.005em;
+  font-variation-settings: "opsz" 48;
+  margin: 0;
+}
+
