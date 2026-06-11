@@ -6635,3 +6635,244 @@ html.has-js-scroll { scroll-behavior: auto; }
   padding: 0 0.04em;
 }
 
+/* ===============================================
+   GRAND OVERHAUL VIII · Splash, Coupon, Sticky
+   =============================================== */
+
+/* ---------- SPLASH-Stempel ----------
+   Splash zeigt jetzt einen animierten Kreis-Stempel:
+   AC-Monogram, "Est. 2010"-Ring, Zentral-Hairlines. */
+.app-splash {
+  background:
+    radial-gradient(600px 300px at 50% 50%, rgba(184, 137, 62, 0.06), transparent 60%),
+    var(--paper);
+}
+.app-splash-mark {
+  width: 180px;
+  height: 180px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.app-splash-mark svg { width: 100%; height: 100%; }
+.app-splash-mark .splash-ring {
+  fill: none;
+  stroke: var(--bean);
+  stroke-width: 1;
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: splash-ring-draw 1400ms var(--ease-out) 200ms forwards;
+}
+.app-splash-mark .splash-ring-inner {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 0.7;
+  stroke-dasharray: 540;
+  stroke-dashoffset: 540;
+  animation: splash-ring-draw 1400ms var(--ease-out) 400ms forwards;
+}
+.app-splash-mark .splash-mono {
+  fill: var(--bean);
+  opacity: 0;
+  transform: scale(0.92);
+  transform-origin: center;
+  animation: splash-mono-in 700ms var(--ease-spring) 900ms forwards;
+}
+.app-splash-mark .splash-est-arc {
+  fill: var(--gold);
+  font-family: 'Inter', sans-serif;
+  font-size: 5.2px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  opacity: 0;
+  animation: splash-est-in 600ms var(--ease-out) 1200ms forwards;
+}
+@keyframes splash-ring-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes splash-mono-in {
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-est-in {
+  to { opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-splash-mark .splash-ring,
+  .app-splash-mark .splash-ring-inner { stroke-dashoffset: 0; animation: none; }
+  .app-splash-mark .splash-mono { opacity: 1; transform: none; animation: none; }
+  .app-splash-mark .splash-est-arc { opacity: 0.9; animation: none; }
+}
+
+/* Wenn das Splash schliesst — soft fade-out */
+.app-splash.is-leaving { opacity: 0; transition: opacity 600ms var(--ease-out); }
+
+/* ---------- RESERVATION als COUPON ----------
+   Form wirkt wie eine alte Theater-Reservierungs-Karte:
+   gold Perforation oben+unten, "STEMPEL"-Akzente. */
+.reservation-form {
+  background:
+    radial-gradient(900px 200px at 0% 0%, rgba(184, 137, 62, 0.05), transparent 60%),
+    var(--paper);
+  border: 1px solid var(--gold-soft);
+  border-radius: 2px;
+  box-shadow:
+    0 60px 80px -60px rgba(42, 24, 16, 0.5),
+    inset 0 0 0 6px var(--paper),
+    inset 0 0 0 7px rgba(184, 137, 62, 0.18);
+  padding: clamp(36px, 5vw, 56px) clamp(28px, 4vw, 44px);
+}
+.reservation-form-coupon-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 18px;
+  margin: 0 0 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.reservation-form-coupon-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: .66rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0;
+}
+.reservation-form-coupon-eyebrow em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  letter-spacing: -0.005em;
+  color: var(--bean);
+  text-transform: none;
+  font-weight: 400;
+  margin-left: 8px;
+  font-variation-settings: "opsz" 48;
+}
+.reservation-form-coupon-stamp {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--gold);
+  border-radius: 2px;
+  font-family: 'Inter', sans-serif;
+  font-size: .64rem;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+  transform: rotate(-2deg);
+}
+.reservation-form::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+
+/* ---------- RESERVATION-Hero Drama ----------
+   Auf der Reservation-Page der Hero etwas dramatischer. */
+.reservation-page::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(184, 137, 62, 0.10) 1px, transparent 2px),
+    radial-gradient(circle at 30% 70%, rgba(184, 137, 62, 0.10) 1px, transparent 2px);
+  background-size: 60px 60px, 80px 80px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.reservation-page .reservation-intro {
+  position: relative;
+}
+.reservation-intro p {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+  line-height: 1.55;
+  color: rgba(241, 231, 211, 0.85);
+  margin-bottom: 22px;
+  font-variation-settings: "opsz" 48;
+}
+
+/* ---------- STICKY-TODAY refined dramatic ----------
+   Bigger drama, eleganter Glas, italic Dish. */
+.sticky-today {
+  padding: 14px 22px 14px 24px;
+  gap: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(212, 179, 128, 0.22);
+  background: rgba(42, 24, 16, 0.92);
+  box-shadow:
+    0 28px 60px -24px rgba(42, 24, 16, 0.65),
+    inset 0 1px 0 rgba(255, 252, 244, 0.06);
+  max-width: min(720px, calc(100vw - 32px));
+}
+.sticky-today-tag {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: .82rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--gold-soft);
+  flex-shrink: 0;
+  font-variation-settings: "opsz" 48;
+}
+.sticky-today-tag::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin-right: 8px;
+  vertical-align: 1px;
+  box-shadow: 0 0 0 0 rgba(184, 137, 62, 0.4);
+  animation: pulse-gold 2.4s var(--ease-in-out) infinite;
+}
+.sticky-today-dish {
+  font-size: 1.05rem;
+  letter-spacing: -0.005em;
+  max-width: 380px;
+}
+.sticky-today-cta {
+  background: var(--gold);
+  color: var(--bean);
+  font-family: 'Inter', sans-serif;
+  font-size: .76rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 2px;
+}
+.sticky-today-cta:hover { background: var(--gold-soft); transform: translateY(-1px); color: var(--bean); }
+
+/* ---------- ADMIN-LOGIN als Editorial-Card ----------
+   Member-Bereich-Login wirkt jetzt wie eine Press-Karte. */
+.login-card {
+  border-radius: 2px;
+  border: 1px solid var(--gold-soft);
+  padding: clamp(48px, 6vw, 64px) clamp(36px, 5vw, 48px);
+  background:
+    radial-gradient(800px 200px at 50% 0%, rgba(184, 137, 62, 0.08), transparent 60%),
+    var(--paper);
+  box-shadow:
+    0 60px 80px -60px rgba(42, 24, 16, 0.4),
+    inset 0 0 0 6px var(--paper),
+    inset 0 0 0 7px rgba(184, 137, 62, 0.18);
+}
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+.login-card h1 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  letter-spacing: -0.018em;
+  font-variation-settings: "opsz" 144;
+}
+

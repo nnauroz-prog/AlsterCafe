@@ -216,8 +216,14 @@ function initMagneticButtons() {
 function hideSplash() {
   const splash = document.getElementById('app-splash');
   if (!splash) return;
-  splash.classList.add('is-leaving');
-  setTimeout(() => splash.remove(), 600);
+  // Premium-Stempel braucht ~1.4s zum Einzeichnen — wir warten,
+  // damit Maria's Brand-Mark sich ruhig setzen kann
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dwell = reduceMotion ? 0 : 1400;
+  setTimeout(() => {
+    splash.classList.add('is-leaving');
+    setTimeout(() => splash.remove(), 600);
+  }, dwell);
 }
 
 /* ---------- Live-Status-Pille ("Aktuell geöffnet") ---------- */
@@ -975,6 +981,58 @@ function initPremiumPolish() {
 
   // 15. Footer-Umbau zu 3-Spalten-Editorial-Standfuss
   enhanceFooterEditorial();
+
+  // 16. Splash-Screen-Markenstempel als SVG-Animation
+  enhanceSplashMark();
+
+  // 17. Reservation-Form: Coupon-Header voranstellen
+  enhanceReservationCoupon();
+}
+
+function enhanceSplashMark() {
+  const splash = document.getElementById('app-splash');
+  if (!splash) return;
+  const oldLogo = splash.querySelector('img.app-splash-logo');
+  if (!oldLogo) return;
+
+  const mark = document.createElement('div');
+  mark.className = 'app-splash-mark';
+  mark.innerHTML = `
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <defs>
+        <path id="splash-arc" d="M 100,100 m -78,0 a 78,78 0 1,1 156,0 a 78,78 0 1,1 -156,0" fill="none"/>
+      </defs>
+      <circle class="splash-ring" cx="100" cy="100" r="96"/>
+      <circle class="splash-ring-inner" cx="100" cy="100" r="86"/>
+      <g class="splash-mono">
+        <text x="100" y="120" text-anchor="middle"
+              font-family="'Fraunces', serif" font-style="italic"
+              font-size="78" font-weight="400">A</text>
+      </g>
+      <text class="splash-est-arc">
+        <textPath href="#splash-arc" startOffset="50%" text-anchor="middle">
+          EST · 2010 · HOHENFELDE · HAMBURG ·
+        </textPath>
+      </text>
+    </svg>
+  `;
+  oldLogo.replaceWith(mark);
+}
+
+function enhanceReservationCoupon() {
+  const form = document.querySelector('.reservation-form');
+  if (!form) return;
+  if (form.querySelector('.reservation-form-coupon-header')) return;
+
+  const header = document.createElement('div');
+  header.className = 'reservation-form-coupon-header';
+  const now = new Date();
+  const fmt = now.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' });
+  header.innerHTML = `
+    <p class="reservation-form-coupon-eyebrow">Ausgegeben am <em>${fmt}</em></p>
+    <span class="reservation-form-coupon-stamp">№ Reservierung</span>
+  `;
+  form.insertBefore(header, form.firstChild);
 }
 
 function enhanceFooterEditorial() {
