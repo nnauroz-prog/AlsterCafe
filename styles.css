@@ -7906,3 +7906,194 @@ html.has-js-scroll { scroll-behavior: auto; }
   border-bottom-color: rgba(184, 137, 62, 0.12);
 }
 
+/* ===============================================
+   GRAND OVERHAUL XIII · TOC, Live-Clock, Tipp-Karte
+   =============================================== */
+
+/* ---------- SPEISEKARTE-SIDEBAR-TOC ----------
+   Schwebt links neben den Menue-Kategorien, zeigt
+   per JS welche Kategorie gerade sichtbar ist. */
+.menu-toc {
+  position: sticky;
+  top: 120px;
+  display: flex; flex-direction: column;
+  gap: 14px;
+  padding: 22px 18px;
+  border-left: 1px solid var(--line);
+  align-self: start;
+  margin-right: clamp(24px, 3vw, 40px);
+  max-width: 220px;
+}
+.menu-toc-label {
+  font-family: 'Inter', sans-serif;
+  font-size: .62rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.menu-toc a {
+  display: flex; align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.05rem;
+  color: var(--muted);
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  transition: color var(--dur-base) var(--ease-out);
+  font-variation-settings: "opsz" 48;
+}
+.menu-toc a::before {
+  content: attr(data-num);
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: var(--gold);
+  opacity: 0.5;
+  flex-shrink: 0;
+  width: 18px;
+  text-transform: uppercase;
+}
+.menu-toc a:hover { color: var(--bean); }
+.menu-toc a:hover::before { opacity: 1; }
+.menu-toc a.is-active {
+  color: var(--gold);
+}
+.menu-toc a.is-active::before { opacity: 1; }
+.menu-toc-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .menu-toc { display: none; }
+  .menu-toc-wrap { grid-template-columns: 1fr; }
+}
+
+/* ---------- HERO-COORD-Aside Live-Clock ----------
+   In das hero-coord-aside kommt jetzt eine Uhrzeit-Zeile,
+   die per JS jede Minute aktualisiert wird. */
+.hero-coord-clock {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 16px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 4px;
+}
+.hero-coord-clock-label {
+  font-family: 'Inter', sans-serif;
+  font-size: .62rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.hero-coord-clock-time {
+  display: inline-flex; align-items: baseline;
+  gap: 8px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--bean);
+  letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: "opsz" 96;
+}
+.hero-coord-clock-time::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 0 rgba(184, 137, 62, 0.4);
+  animation: pulse-gold 2.4s var(--ease-in-out) infinite;
+}
+.hero-coord-clock.is-closed .hero-coord-clock-time::before {
+  background: rgba(120, 97, 82, 0.5);
+  animation: none;
+  box-shadow: none;
+}
+
+/* ---------- RESERVATION Tipp-Karte ----------
+   In der Reservation-Intro-Spalte ergaenzen wir eine
+   "Was ist gut zu wissen?"-Karte mit einigen Hinweisen. */
+.reservation-tips {
+  margin-top: 36px;
+  padding: 26px 24px;
+  border: 1px solid rgba(212, 179, 128, 0.28);
+  border-radius: 2px;
+  background: rgba(255, 252, 244, 0.04);
+  position: relative;
+}
+.reservation-tips::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 14px; right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-soft) 50%, transparent);
+}
+.reservation-tips-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: .62rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+.reservation-tips-list {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.reservation-tips-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(212, 179, 128, 0.10);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: rgba(241, 231, 211, 0.85);
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  font-variation-settings: "opsz" 48;
+}
+.reservation-tips-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.reservation-tips-list li::before {
+  content: attr(data-mark);
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: var(--gold);
+  margin-top: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.reservation-tips-list li em {
+  color: var(--gold-soft);
+  font-style: italic;
+}
+
+/* ---------- HERO-COORD-Aside ergaenzte Reihen ----------
+   Der hero-coord-Datenblock kriegt jetzt noch eine
+   "Stammgaeste"-Zeile fuer Drama. */
+.hero-coord-row.is-accent {
+  background: rgba(184, 137, 62, 0.06);
+  margin: 0 -8px;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 2px;
+}
+.hero-coord-row.is-accent .hero-coord-label {
+  color: var(--gold);
+}
+

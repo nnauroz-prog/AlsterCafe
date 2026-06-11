@@ -990,6 +990,115 @@ function initPremiumPolish() {
 
   // 18. Topbar-Live-Status injizieren
   injectTopbarLiveStatus();
+
+  // 19. Speisekarte-TOC Sidebar
+  initMenuTOC();
+
+  // 20. Hero-Coord Live-Clock
+  initHeroCoordClock();
+
+  // 21. Reservation-Tipp-Karte
+  injectReservationTips();
+}
+
+function initMenuTOC() {
+  const menuCols = document.querySelector('.menu-cols');
+  if (!menuCols) return;
+  if (document.querySelector('.menu-toc')) return;
+  const cols = menuCols.querySelectorAll('.menu-col');
+  if (cols.length < 2) return;
+
+  const toc = document.createElement('aside');
+  toc.className = 'menu-toc';
+  toc.setAttribute('aria-label', 'Kategorien');
+
+  let items = '<p class="menu-toc-label">Karte</p>';
+  cols.forEach((col, i) => {
+    if (!col.id) col.id = 'menu-col-' + (i + 1);
+    const h3 = col.querySelector('h3');
+    const title = h3 ? h3.textContent.trim() : ('Kategorie ' + (i + 1));
+    const num = String(i + 1).padStart(2, '0');
+    items += `<a href="#${col.id}" data-num="${num}" data-target="${col.id}">${title}</a>`;
+  });
+  toc.innerHTML = items;
+
+  // Wrapper um TOC + bestehendes menu-cols-Element
+  const wrap = document.createElement('div');
+  wrap.className = 'menu-toc-wrap container';
+  menuCols.parentNode.insertBefore(wrap, menuCols);
+  wrap.appendChild(toc);
+  wrap.appendChild(menuCols);
+  // Ueberblendung: das menu-cols-Element verliert sein eigenes container
+  // (es ist jetzt im Wrap). Falls menu-cols selbst kein container war,
+  // gibt es kein Problem. Wenn doch, behalten wir die Padding.
+  menuCols.classList.remove('container');
+
+  // Aktive Section per IntersectionObserver
+  if ('IntersectionObserver' in window) {
+    const links = toc.querySelectorAll('a');
+    const map = new Map();
+    cols.forEach((col, i) => map.set(col, links[i]));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const link = map.get(e.target);
+        if (!link) return;
+        links.forEach(l => l.classList.toggle('is-active', l === link));
+      });
+    }, { rootMargin: '-30% 0px -50% 0px', threshold: 0 });
+    cols.forEach(c => io.observe(c));
+  }
+}
+
+function initHeroCoordClock() {
+  const aside = document.querySelector('.hero-coord');
+  if (!aside) return;
+  if (aside.querySelector('.hero-coord-clock')) return;
+
+  const clock = document.createElement('div');
+  clock.className = 'hero-coord-clock';
+  clock.innerHTML = `
+    <span class="hero-coord-clock-label">Gerade jetzt</span>
+    <span class="hero-coord-clock-time" id="hero-clock-time">—</span>
+  `;
+  aside.insertBefore(clock, aside.firstChild);
+
+  const timeEl = clock.querySelector('#hero-clock-time');
+  const update = () => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const wd = now.toLocaleDateString('de-DE', { weekday: 'short' });
+    timeEl.textContent = `${wd}, ${hh}:${mm}`;
+
+    // Closed-Status
+    const dayIdx = now.getDay();
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const open = (dayIdx >= 1 && dayIdx <= 5) ? 390 : 450;
+    const close = 900;
+    const isOpen = minutes >= open && minutes < close;
+    clock.classList.toggle('is-closed', !isOpen);
+  };
+  update();
+  setInterval(update, 30 * 1000);
+}
+
+function injectReservationTips() {
+  const intro = document.querySelector('.reservation-intro');
+  if (!intro) return;
+  if (intro.querySelector('.reservation-tips')) return;
+
+  const tips = document.createElement('aside');
+  tips.className = 'reservation-tips';
+  tips.innerHTML = `
+    <p class="reservation-tips-eyebrow">Gut zu wissen</p>
+    <ul class="reservation-tips-list">
+      <li data-mark="·">Sonntag- und Samstagvormittag ist <em>am stärksten</em> nachgefragt.</li>
+      <li data-mark="·">Größere Gruppen (ab 6 Pers.) bitte einen Tag <em>vorher</em>.</li>
+      <li data-mark="·">Wir melden uns am <em>gleichen Tag</em> per Anruf oder Mail zurück.</li>
+    </ul>
+  `;
+  intro.appendChild(tips);
 }
 
 function injectTopbarLiveStatus() {
