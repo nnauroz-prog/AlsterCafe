@@ -4851,15 +4851,6 @@ body { overflow-x: hidden; }
 .chapter-dark .chapter-mark::before { color: rgba(241, 231, 211, 0.4); }
 
 /* Fin. Marker fuer Closer-Sektion · subtiler, lateinisch */
-.chapter-mark-fin {
-  font-style: italic;
-  letter-spacing: -0.01em;
-  font-size: clamp(1.6rem, 2.4vw, 2.4rem);
-  color: var(--muted);
-  opacity: 0.6;
-}
-.chapter-mark-fin::before { content: ''; display: none; }
-
 @media (max-width: 760px) {
   .chapter-mark { top: 14px; right: 16px; font-size: 2.2rem; opacity: 0.35; }
 }
@@ -8120,7 +8111,6 @@ html.has-js-scroll { scroll-behavior: auto; }
   /* Chapter-Mark auf Mobile noch dezenter, damit er bei kurzen
      Sektionen nicht ueber den Content laeuft */
   .chapter-mark { font-size: 1.8rem; opacity: 0.3; top: 12px; right: 14px; }
-  .chapter-mark-fin { font-size: 1.3rem; opacity: 0.55; }
 
   /* Pull-Quote-Hero etwas kompakter */
   .pullquote-hero { margin-bottom: 40px; }
@@ -8620,28 +8610,8 @@ html.has-js-scroll { scroll-behavior: auto; }
 }
 
 /* ---------- CLOSER "Fin." als Buch-Ende ----------
-   "Fin." ist jetzt eine zentrale Schluss-Zeile am Ende
-   der Sektion — nicht mehr in der oberen Ecke. */
+   Chapter-Mark in der Closer-Sektion wird ausgeblendet. */
 .chapter-finis .chapter-mark { display: none; }
-.closer-fin {
-  display: flex; align-items: center; justify-content: center;
-  gap: 18px;
-  margin: clamp(40px, 6vw, 80px) 0 0;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 400;
-  font-size: 1.4rem;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  opacity: 0.85;
-  font-variation-settings: "opsz" 96;
-}
-.closer-fin-line {
-  flex: 0 0 70px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  opacity: 0.75;
-}
 
 /* "(Tun viele.)" als eigener Block, ruhig zentriert.
    WICHTIG: display:block sonst rutscht es neben den Sign-Off
