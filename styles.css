@@ -7289,11 +7289,11 @@ html.has-js-scroll { scroll-behavior: auto; }
   margin: 0 0 30px;
   font-variation-settings: "opsz" 48;
 }
-.login-form label {
+#login-form label {
   display: block;
   margin-bottom: 18px;
 }
-.login-form label > span {
+#login-form label > span {
   display: block;
   margin-bottom: 8px;
   font-family: 'Fraunces', serif;
