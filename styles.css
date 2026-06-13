@@ -7302,7 +7302,8 @@ html.has-js-scroll { scroll-behavior: auto; }
   color: var(--coffee);
   font-variation-settings: "opsz" 48;
 }
-.login-card .login-form input {
+#login-form input,
+.login-card #login-form input {
   width: 100%;
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -7316,7 +7317,8 @@ html.has-js-scroll { scroll-behavior: auto; }
   transition: border-color var(--dur-base) var(--ease-out);
   font-variation-settings: "opsz" 48;
 }
-.login-card .login-form input:focus {
+#login-form input:focus,
+.login-card #login-form input:focus {
   outline: none;
   border-bottom-color: var(--gold);
 }
