@@ -1092,12 +1092,21 @@ function initHeroCoordClock() {
   aside.insertBefore(clock, aside.firstChild);
 
   const timeEl = clock.querySelector('#hero-clock-time');
+  let lastText = '';
   const update = () => {
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
     const wd = now.toLocaleDateString('de-DE', { weekday: 'short' });
-    timeEl.textContent = `${wd}, ${hh}:${mm}`;
+    const next = `${wd}, ${hh}:${mm}`;
+    if (next !== lastText) {
+      timeEl.textContent = next;
+      if (lastText) {
+        timeEl.classList.add('is-tick');
+        setTimeout(() => timeEl.classList.remove('is-tick'), 700);
+      }
+      lastText = next;
+    }
 
     // Closed-Status
     const dayIdx = now.getDay();

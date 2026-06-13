@@ -8560,6 +8560,65 @@ html.has-js-scroll { scroll-behavior: auto; }
   }
 }
 
+/* ===============================================
+   MIKRO-POLITUR · Clock-Tick, Sticky-Today, Topbar
+   =============================================== */
+
+/* ---------- LIVE-CLOCK Minuten-Tick-Animation ----------
+   Wenn die Uhrzeit wechselt, soll der Time-Text kurz
+   gold aufleuchten — Hinweis darauf dass es live ist. */
+.hero-coord-clock-time { transition: color 600ms var(--ease-out); }
+.hero-coord-clock-time.is-tick { color: var(--gold); }
+
+/* ---------- STICKY-TODAY mobile besseres Fitting ---------- */
+@media (max-width: 480px) {
+  .sticky-today {
+    padding: 11px 14px 11px 16px;
+    gap: 10px;
+    max-width: calc(100vw - 24px);
+  }
+  .sticky-today-dish {
+    max-width: 140px;
+    font-size: .92rem;
+  }
+  .sticky-today-cta {
+    padding: 7px 12px;
+    font-size: .68rem;
+    letter-spacing: 0.16em;
+  }
+}
+@media (max-width: 380px) {
+  .sticky-today-dish { max-width: 100px; }
+}
+
+/* ---------- TOPBAR-LIVE auch zwischen 720-880px sichtbar ---------- */
+@media (max-width: 880px) {
+  .topbar-live { font-size: .76rem; }
+  .topbar-inner { gap: 4px 12px; }
+}
+@media (max-width: 640px) {
+  .topbar-live { display: inline-flex; font-size: .72rem; }
+  .topbar-link { font-size: .76rem; }
+}
+@media (max-width: 480px) {
+  .topbar-live em { font-size: .8rem; }
+  .topbar { font-size: .76rem; }
+  .topbar-inner { padding: 7px var(--gutter); }
+}
+
+/* ---------- RESERVATION-TIPP-Karte Mobile dichter ---------- */
+@media (max-width: 480px) {
+  .reservation-tips { padding: 18px 16px; margin-top: 22px; }
+  .reservation-tips-eyebrow { font-size: .58rem; letter-spacing: 0.24em; }
+  .reservation-tips-list li {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    font-size: .92rem;
+    padding: 8px 0;
+  }
+  .reservation-tips-list li::before { font-size: .6rem; }
+}
+
 /* ---------- CLOSER "Fin." als Buch-Ende ----------
    "Fin." ist jetzt eine zentrale Schluss-Zeile am Ende
    der Sektion — nicht mehr in der oberen Ecke. */
