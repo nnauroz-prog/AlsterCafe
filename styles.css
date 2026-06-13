@@ -8652,3 +8652,70 @@ html.has-js-scroll { scroll-behavior: auto; }
   margin: 0 auto 16px;
 }
 
+/* ---------- Brötchen Order-Form Editorial-Inputs ----------
+   Konsistent zur Reservierungs-Form: italic Fraunces,
+   Hairline-Underline, kein Box-Style. */
+.order-form label > span {
+  display: block;
+  margin-bottom: 6px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: .78rem;
+  color: var(--coffee);
+  font-variation-settings: "opsz" 48;
+}
+.order-form label > span em {
+  color: var(--gold);
+  font-style: italic;
+}
+.order-form input[type="text"],
+.order-form input[type="tel"],
+.order-form input[type="email"],
+.order-form input[type="date"],
+.order-form input[type="time"],
+.order-form textarea,
+.order-form select {
+  width: 100%;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--bean);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 8px 2px 10px;
+  transition: border-color var(--dur-base) var(--ease-out);
+  font-variation-settings: "opsz" 48;
+}
+.order-form input::placeholder,
+.order-form textarea::placeholder {
+  color: rgba(120, 97, 82, 0.42);
+  font-style: italic;
+}
+.order-form input:focus,
+.order-form textarea:focus,
+.order-form select:focus {
+  outline: none;
+  border-bottom-color: var(--gold);
+}
+.order-form label {
+  display: block;
+  margin-bottom: 18px;
+}
+.order-form label.checkbox {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: .88rem;
+  color: var(--muted);
+}
+.order-form label.checkbox input {
+  width: auto;
+  margin-top: 4px;
+  border: 1px solid var(--line);
+}
+.order-form .order-submit {
+  margin-top: 14px;
+}
+
