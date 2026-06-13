@@ -1593,9 +1593,18 @@ function initPageTransitions(reduceMotion) {
     if (!sameOrigin(href)) return;
     if (a.hasAttribute('download')) return;
 
-    // Wenn es ein Hash-Link auf der gleichen Seite ist: nichts tun
+    // Edge-Cases auf gleicher Seite skippen
     const url = new URL(href, location.href);
-    if (url.pathname === location.pathname && url.hash) return;
+    if (url.pathname === location.pathname) {
+      // Hash-Link → Browser/Smooth-Scroll uebernimmt
+      if (url.hash) return;
+      // Exact same URL inkl. Query → einfach Top-Scroll, kein Reload
+      if (url.search === location.search) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
 
     e.preventDefault();
     document.documentElement.animate(
