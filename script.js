@@ -1414,28 +1414,34 @@ function initHeroCharReveal(reduceMotion) {
 
   const lines = h1.querySelectorAll('.head-1, .head-2, .head-3');
   lines.forEach(line => {
-    // Inner-HTML in Wort- und Char-Spans aufteilen, em-Tags bewahren
+    // Text-Knoten in WORT-Spans aufteilen (nowrap), darin Char-Spans.
+    // Ohne Word-Wrapper konnte die Zeile zwischen zwei beliebigen
+    // Buchstaben brechen — "Kommen Sie vorbei" wurde zu "Kommen S\nie vorbei.".
+    let charIdx = 0;
     const walk = (node) => {
       if (node.nodeType === 3) {
-        // Text-Knoten: jeden Char in ein span wrappen
         const frag = document.createDocumentFragment();
-        const text = node.textContent;
-        let charIdx = 0;
-        for (const ch of text) {
-          if (ch === ' ') {
-            frag.appendChild(document.createTextNode(' '));
+        const parts = node.textContent.split(/(\s+)/);
+        for (const part of parts) {
+          if (!part) continue;
+          if (/^\s+$/.test(part)) {
+            frag.appendChild(document.createTextNode(part));
             continue;
           }
-          const span = document.createElement('span');
-          span.className = 'hero-char';
-          span.style.setProperty('--char-i', charIdx);
-          span.textContent = ch;
-          frag.appendChild(span);
-          charIdx++;
+          const wordSpan = document.createElement('span');
+          wordSpan.className = 'hero-word';
+          for (const ch of part) {
+            const span = document.createElement('span');
+            span.className = 'hero-char';
+            span.style.setProperty('--char-i', charIdx);
+            span.textContent = ch;
+            wordSpan.appendChild(span);
+            charIdx++;
+          }
+          frag.appendChild(wordSpan);
         }
         node.replaceWith(frag);
       } else if (node.nodeType === 1) {
-        // Element: rekursiv reinwandern
         Array.from(node.childNodes).forEach(walk);
       }
     };

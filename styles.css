@@ -5287,7 +5287,13 @@ html { background: var(--paper); }
 
 /* ---------- HERO-CHAR-REVEAL ----------
    Char-by-Char-Animation auf den Hero-Lines. JS umwickelt
-   jeden Buchstaben mit span.hero-char. */
+   jeden Buchstaben mit span.hero-char und jedes Wort mit
+   span.hero-word (nowrap), damit die Zeile nicht mitten
+   im Wort bricht. */
+.hero-cinema-h1 .hero-word {
+  display: inline-block;
+  white-space: nowrap;
+}
 .hero-cinema-h1 .hero-char {
   display: inline-block;
   opacity: 0;
