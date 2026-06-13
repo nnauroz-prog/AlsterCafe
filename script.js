@@ -1825,6 +1825,11 @@ function renderTodayLunch(weekData, today) {
   if (nameEl) nameEl.textContent = dayLabel;
   const emptyText = document.querySelector('.lunch-empty-text');
 
+  // Wenn die GANZE Woche leer ist: kein Today-Empty-State zeigen,
+  // sonst kommt die Info zweimal (heute + Wochenkarte beide leer).
+  const days = weekData?.days || {};
+  const wholeWeekEmpty = !DAY_KEYS.some(k => days[k]?.dish || days[k]?.closed);
+
   if (entry?.dish && !entry.closed) {
     const dishEl = document.getElementById('today-dish');
     const sideEl = document.getElementById('today-side');
@@ -1840,8 +1845,14 @@ function renderTodayLunch(weekData, today) {
     if (emptyText) emptyText.innerHTML = 'Heute servieren wir Frühstück &amp; Backwaren — kein Mittagstisch.';
     todayBox.hidden = true;
     emptyBox.hidden = false;
+  } else if (wholeWeekEmpty) {
+    // Ganze Woche leer → renderWeekList zeigt schon eine Konsolidierte
+    // Karte. Today-Section nicht doppelt zeigen.
+    todayBox.hidden = true;
+    emptyBox.hidden = true;
   } else {
-    // Nicht eingetragen — ehrlich kommunizieren statt "kein Mittagstisch" zu behaupten
+    // Heute nicht eingetragen, aber die Woche hat anderswo Eintraege —
+    // ehrlich kommunizieren statt "kein Mittagstisch" zu behaupten.
     if (emptyText) emptyText.innerHTML = 'Die heutige Karte wird gerade aktualisiert. <a href="tel:+494022692891">040 / 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.';
     todayBox.hidden = true;
     emptyBox.hidden = false;
