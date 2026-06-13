@@ -8362,6 +8362,204 @@ html.has-js-scroll { scroll-behavior: auto; }
   }
 }
 
+/* ===============================================
+   MOBILE-POLITUR IV · Sub-Pages
+   =============================================== */
+
+/* ---------- MOBILE Page-Hero ---------- */
+@media (max-width: 640px) {
+  .page-hero-editorial {
+    padding: clamp(70px, 11vw, 110px) 0 clamp(36px, 6vw, 60px);
+  }
+  .page-hero-editorial h1 {
+    font-size: clamp(2.4rem, 10vw, 3.8rem);
+    line-height: 0.98;
+  }
+  .page-hero-editorial::after {
+    font-size: clamp(1.6rem, 6vw, 2.4rem);
+    top: clamp(28px, 5vw, 60px);
+    right: clamp(14px, 4vw, 32px);
+  }
+  .page-hero-watermark {
+    opacity: 0.035;
+    font-size: clamp(5rem, 22vw, 9rem);
+  }
+  .page-lead { font-size: 1.05rem; }
+  .page-hero-meta { gap: 12px; margin: 20px 0 12px; }
+  .page-hero-year-line { flex-basis: 50px; }
+}
+
+/* ---------- MOBILE Mittagstisch Today-Card ---------- */
+@media (max-width: 640px) {
+  .lunch.chapter { padding: 50px 0; }
+  .lunch-today {
+    padding: 36px 24px;
+    gap: 16px;
+    margin: 0 0 40px;
+  }
+  .lunch-today-tag {
+    font-size: .62rem;
+    letter-spacing: 0.24em;
+    padding: 6px 12px;
+    margin-bottom: 14px;
+  }
+  .lunch-today-dish {
+    font-size: clamp(2rem, 9vw, 3rem);
+    line-height: 1.04;
+    margin-bottom: 12px;
+  }
+  .lunch-today-side {
+    font-size: 1rem;
+    margin-bottom: 22px;
+  }
+  .lunch-today .btn-gold {
+    width: 100%;
+    justify-content: center;
+    padding: 16px 24px;
+  }
+  .lunch-week:not(.lunch-week-empty) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .lunch-day {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 16px;
+    padding: 16px 18px;
+    min-height: auto;
+  }
+  .lunch-day-head {
+    flex-shrink: 0;
+    width: 88px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .lunch-day-name { font-size: 1.2rem; }
+  .lunch-day-date { font-size: .62rem; margin-top: 4px; }
+  .lunch-day-body { font-size: .98rem; flex: 1; }
+  .lunch-day-side { font-size: .82rem; }
+}
+
+/* ---------- MOBILE Kontakt-Block ---------- */
+@media (max-width: 640px) {
+  .section.contact.chapter { padding: 50px 0; }
+  .contact-info-block { padding: 28px 22px; }
+  .contact-cols { grid-template-columns: 1fr; gap: 22px; margin: 0 0 24px; }
+  .contact-col .col-value {
+    font-size: 1.2rem;
+    line-height: 1.36;
+  }
+  .col-label { font-size: .62rem; letter-spacing: 0.24em; }
+  .hours-inline { padding-top: 24px; }
+  .hours-inline .hours-list li { font-size: 1rem; padding: 11px 0; }
+  .social { gap: 14px; flex-wrap: wrap; }
+  .social a { font-size: .88rem; }
+  .map-card { min-height: 280px; }
+  .map-card iframe { min-height: 280px; }
+}
+
+/* ---------- MOBILE Reservierungs-Form ---------- */
+@media (max-width: 640px) {
+  .reservation.chapter { padding: 50px 0; }
+  .reservation-form { padding: 28px 22px; }
+  .reservation-form-coupon-header {
+    gap: 12px;
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+  }
+  .reservation-form-coupon-eyebrow { font-size: .62rem; letter-spacing: 0.22em; }
+  .reservation-form-coupon-eyebrow em { font-size: 1.05rem; }
+  .reservation-form-coupon-stamp { font-size: .58rem; padding: 5px 10px; letter-spacing: 0.2em; }
+  .reservation-form label > span { font-size: .76rem; }
+  .reservation-form input,
+  .reservation-form select,
+  .reservation-form textarea {
+    font-size: 1.06rem;
+    padding: 9px 2px 12px;
+  }
+  .reservation-form .form-submit {
+    padding: 16px 28px;
+    font-size: .76rem;
+    letter-spacing: 0.24em;
+  }
+  .reservation-form .form-submit::before { font-size: 1.2rem; right: 16px; }
+  .reservation-intro p { font-size: 1.02rem; }
+  .reservation-tips { padding: 22px 20px; margin-top: 28px; }
+  .reservation-tips-list li { font-size: .96rem; padding: 10px 0; }
+}
+
+/* ---------- MOBILE Speisekarte ---------- */
+@media (max-width: 640px) {
+  .section.menu.chapter { padding: 50px 0; }
+  .menu-cols { gap: 50px; margin-top: 36px; }
+  .menu-col {
+    padding-top: 30px;
+    gap: 18px;
+  }
+  .menu-col-num {
+    font-size: clamp(4rem, 18vw, 7rem);
+    line-height: 0.82;
+    margin-bottom: 6px;
+  }
+  .menu-col-head .ico { width: 26px; height: 26px; margin-bottom: 4px; }
+  .menu-col-head h3 {
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+    line-height: 0.98;
+  }
+  .menu-col .menu-list li { padding: 14px 0 14px 18px; }
+  .menu-col .menu-list li:hover { padding-left: 24px; }
+  .menu-col .menu-list strong { font-size: 1.06rem; }
+  .menu-col .menu-list span { font-size: .88rem; }
+
+  .menu-croque,
+  .menu-broetchen-cta {
+    grid-template-columns: 1fr;
+    padding: 32px 24px;
+    gap: 18px;
+  }
+  .menu-croque h2,
+  .menu-broetchen-cta h2 {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+    line-height: 1;
+  }
+  .menu-croque p,
+  .menu-broetchen-cta p { font-size: 1.02rem; }
+  .menu-croque::before,
+  .menu-broetchen-cta::before {
+    font-size: 1.8rem; top: 16px; right: 18px;
+  }
+  .menu-broetchen-cta .btn { width: 100%; justify-content: center; }
+}
+
+/* ---------- MOBILE Brötchen-Bestellseite ---------- */
+@media (max-width: 640px) {
+  .section.order-section.chapter { padding: 50px 0; }
+  .order-grid { gap: 32px; }
+  .order-legend {
+    font-size: clamp(1.4rem, 6.5vw, 1.9rem);
+    line-height: 1.02;
+  }
+  .broetchen-row {
+    padding: 18px 0 18px 44px;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .broetchen-row::before {
+    font-size: 1.1rem;
+    top: 20px;
+  }
+  .broetchen-info { flex: 1 1 60%; min-width: 0; }
+  .broetchen-name { font-size: 1.08rem; }
+  .broetchen-desc { font-size: .82rem; }
+  .qty-stepper { flex-shrink: 0; }
+  .qty-btn { width: 38px; height: 38px; font-size: 1.2rem; }
+  .order-summary-card { padding: 26px 22px; }
+  .order-summary-count {
+    font-size: clamp(2.4rem, 11vw, 3.4rem);
+  }
+}
+
 /* ---------- CLOSER "Fin." als Buch-Ende ----------
    "Fin." ist jetzt eine zentrale Schluss-Zeile am Ende
    der Sektion — nicht mehr in der oberen Ecke. */
