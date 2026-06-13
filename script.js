@@ -842,7 +842,7 @@ function initLandingTeaser() {
   } else {
     block.dataset.state = 'empty';
     if (kickerEl) kickerEl.textContent = showTomorrow
-      ? `Morgen · ${DAY_LABELS[dayIdx]}`
+      ? 'Karte folgt in Kürze'
       : 'Schauen Sie einfach vorbei';
     dishEl.textContent = showTomorrow
       ? 'Eintrag folgt in Kürze.'
