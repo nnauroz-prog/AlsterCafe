@@ -177,40 +177,9 @@ function initContent() {
   });
 }
 
-/* ---------- Spotlight (subtiler Maus-Halo, nur Desktop) ---------- */
-function initSpotlight() {
-  if (matchMedia('(pointer: coarse)').matches) return;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const el = document.createElement('div');
-  el.className = 'spotlight';
-  el.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(el);
-  let raf = 0, x = 0, y = 0;
-  window.addEventListener('mousemove', (e) => {
-    x = e.clientX; y = e.clientY;
-    if (!raf) raf = requestAnimationFrame(() => {
-      el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      raf = 0;
-    });
-  }, { passive: true });
-}
-
-/* ---------- Magnetic Buttons (subtile Maus-Anziehung) ---------- */
-function initMagneticButtons() {
-  if (matchMedia('(pointer: coarse)').matches) return; // nicht auf Touch-Geraeten
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  document.querySelectorAll('.btn-primary, .btn-gold, .nav-shop').forEach(btn => {
-    btn.addEventListener('mousemove', (e) => {
-      const r = btn.getBoundingClientRect();
-      const x = e.clientX - r.left - r.width / 2;
-      const y = e.clientY - r.top - r.height / 2;
-      btn.style.transform = `translate(${x * 0.18}px, ${y * 0.18}px)`;
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.transform = '';
-    });
-  });
-}
+/* Hinweis: initSpotlight() und initMagneticButtons() wurden entfernt —
+   sie waren definiert aber nie aufgerufen. initMagnetic() (weiter
+   unten) ist die aktive Variante mit translate3d/RAF. */
 
 /* ---------- Loading-Splash beim ersten Laden ---------- */
 function hideSplash() {
