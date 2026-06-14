@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r65" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r66" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r65';
+      var V='2026-05-10-r66';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -114,7 +114,7 @@
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
   <div class="app-splash" id="app-splash" aria-hidden="true">
-    <img src="image.png" alt="" class="app-splash-logo" />
+    <img src="image.png" alt="" class="app-splash-logo" width="64" height="64" decoding="async" />
   </div>
 
   <!-- SVG-Sprite -->
@@ -167,7 +167,7 @@
   <header class="site-header" id="top">
     <div class="container nav-container">
       <a class="brand" href="index.html" aria-label="Alstercafé Startseite">
-        <img src="image.png" alt="" class="brand-logo" />
+        <img src="image.png" alt="" class="brand-logo" width="46" height="46" decoding="async" />
         <span class="brand-name">Alstercafé</span>
       </a>
       <button class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="primary-nav">
@@ -241,7 +241,7 @@
             <span class="hero-coord-value" id="hero-coord-today">—</span>
           </div>
           <div class="hero-coord-mark">
-            <img src="image.png" alt="" class="hero-coord-logo" />
+            <img src="image.png" alt="" class="hero-coord-logo" width="42" height="42" decoding="async" />
             <span class="hero-coord-stamp">Est. 2010 · Hohenfelde</span>
           </div>
         </aside>
@@ -466,7 +466,7 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <img src="image.png" alt="" class="brand-logo small" loading="lazy" />
+        <img src="image.png" alt="" class="brand-logo small" width="56" height="56" loading="lazy" decoding="async" />
         <p>
           <strong>Alstercafé</strong><br/>
           Ifflandstr. 45 · 22087 Hamburg
@@ -489,8 +489,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r65" defer></script>
-  <script src="db.js?v=2026-05-10-r65" defer></script>
-  <script src="script.js?v=2026-05-10-r65" defer></script>
+  <script src="config.js?v=2026-05-10-r66" defer></script>
+  <script src="db.js?v=2026-05-10-r66" defer></script>
+  <script src="script.js?v=2026-05-10-r66" defer></script>
 </body>
 </html>
