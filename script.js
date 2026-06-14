@@ -634,6 +634,20 @@ function initCookieBanner() {
     banner.hidden = false;
     banner.scrollIntoView({ behavior: 'smooth', block: 'end' });
   });
+
+  // Event-Delegation: enhanceFooterEditorial baut den Footer neu auf
+  // und ersetzt #cookie-reset durch ein NEUES Element. Der oben
+  // angeheftete Handler haengt dann an einem detached Element.
+  // Mit Delegation auf document fangen wir Clicks unabhaengig vom
+  // Zeitpunkt der Element-Erzeugung ab.
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('#cookie-reset');
+    if (!target) return;
+    e.preventDefault();
+    try { localStorage.removeItem(STORAGE_CONSENT); } catch {}
+    banner.hidden = false;
+    banner.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  });
 }
 
 function readConsent() {
