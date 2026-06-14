@@ -4444,22 +4444,7 @@ body { overflow-x: hidden; }
   .quote-card--tilt-left { transform: none !important; }
 }
 
-/* K. Refined Body-Link · sanfter animierter Underline-Wipe
-   Wirkt nur auf bewusst editorialen Text-Links (.ed-link). */
-.ed-link {
-  position: relative;
-  color: var(--bean);
-  background-image: linear-gradient(var(--gold), var(--gold));
-  background-position: 0 100%;
-  background-repeat: no-repeat;
-  background-size: 0% 1px;
-  padding-bottom: 2px;
-  transition: background-size var(--dur-slow) var(--ease-out), color var(--dur-base) var(--ease-out);
-}
-.ed-link:hover {
-  background-size: 100% 1px;
-  color: var(--coffee);
-}
+/* K. Hinweis: .ed-link CSS-Klasse war ungenutzt — entfernt. */
 
 /* L. Refined Typography · ruhigere Display-Rhythmik
    Fraunces auf grossen Groessen optisch lichter, mit besseren Ligaturen. */
