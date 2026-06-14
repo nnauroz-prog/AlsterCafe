@@ -553,7 +553,10 @@ function renderHomeGallery(images) {
   gallery.forEach((src, i) => {
     const item = document.createElement('figure');
     item.className = 'gallery-item' + (i === 0 ? ' is-feature' : '');
-    item.innerHTML = `<img src="${src}" alt="" loading="lazy" />`;
+    // Galerie-Photos haben (noch) keine individuellen Alt-Texte.
+    // Generischer aber sinnvoller Text fuer Screen-Reader bis Maria
+    // im Admin Captions hinterlegen kann.
+    item.innerHTML = `<img src="${src}" alt="Eindruck aus dem Alstercafé in Hamburg-Hohenfelde" loading="lazy" />`;
     grid.appendChild(item);
   });
 }
