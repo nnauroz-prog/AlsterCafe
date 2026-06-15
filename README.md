@@ -115,4 +115,10 @@ Kein Build, kein npm, kein nichts.
 
 ## Übergabe an Maria
 
-Komplette Schritt-für-Schritt-Anleitung: [`UEBERGABE.md`](UEBERGABE.md).
+| Dokument | Zweck |
+|---|---|
+| [`UEBERGABE.md`](UEBERGABE.md) | Komplettes Setup (einmalig) |
+| [`MARIA-ROUTINE.md`](MARIA-ROUTINE.md) | Tägliche 5-Minuten-Routine — als Druckkarte |
+| [`PHOTOS.md`](PHOTOS.md) | Welche Fotos knipsen und wie hochladen |
+| [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md) | DNS auf alstercafe.de schalten |
+| [`WHATSAPP-SETUP.md`](WHATSAPP-SETUP.md) | Optional: Notifications aufs Handy |

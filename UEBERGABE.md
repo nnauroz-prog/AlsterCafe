@@ -2,6 +2,18 @@
 
 Diese Datei beschreibt, was vor dem produktiven Einsatz noch zu tun ist und wie der Mitgliederbereich genutzt wird.
 
+## 📋 Kurz-Übersicht
+
+Drei Dokumente für drei Zwecke:
+
+| Datei | Für wen | Wozu |
+|---|---|---|
+| **UEBERGABE.md** (diese) | Verkäufer + Dev | Einmaliges Setup |
+| [**MARIA-ROUTINE.md**](MARIA-ROUTINE.md) | Maria | Tägliche 5-Minuten-Routine (Druckkarte) |
+| [**PHOTOS.md**](PHOTOS.md) | Maria | Welche Fotos sie knipsen und wie hochladen |
+| [**CUSTOM-DOMAIN.md**](CUSTOM-DOMAIN.md) | Dev | DNS-Konfiguration alstercafe.de |
+| [**WHATSAPP-SETUP.md**](WHATSAPP-SETUP.md) | Dev | Optionale WhatsApp-Notifications |
+
 ## Live-Adresse (Stand heute)
 ```
 https://nnauroz-prog.github.io/AlsterCafe/
