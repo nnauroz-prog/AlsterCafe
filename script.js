@@ -602,7 +602,33 @@ function initReveal() {
 
 /* ---------- Cookie-Banner ---------- */
 function initCookieBanner() {
-  const banner   = document.getElementById('cookie-banner');
+  // Wenn kein Banner im HTML ist (Sub-Pages haben ihn nicht): injizieren.
+  // Sonst kann der Besucher von Sub-Pages aus weder Consent geben noch
+  // ueber den "Cookies anpassen"-Link das Consent zuruecksetzen.
+  let banner = document.getElementById('cookie-banner');
+  if (!banner && !document.body.classList.contains('admin-body')) {
+    banner = document.createElement('div');
+    banner.className = 'cookie-banner';
+    banner.id = 'cookie-banner';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', 'Cookie-Hinweis');
+    banner.hidden = true;
+    banner.innerHTML = `
+      <div class="container cookie-inner">
+        <div class="cookie-text">
+          <strong>Wir respektieren Ihre Privatsphäre.</strong>
+          Diese Webseite verwendet ausschließlich technisch notwendige Speicherfunktionen.
+          Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
+        </div>
+        <div class="cookie-actions">
+          <button type="button" class="btn btn-link cookie-decline" id="cookie-decline">Nur notwendige</button>
+          <button type="button" class="btn btn-primary cookie-accept" id="cookie-accept">Alle akzeptieren</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(banner);
+  }
+
   const accept   = document.getElementById('cookie-accept');
   const decline  = document.getElementById('cookie-decline');
   if (!banner) return;
