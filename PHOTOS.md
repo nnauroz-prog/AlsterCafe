@@ -98,4 +98,4 @@ So bleibt die Galerie aktuell und Stammgäste sehen „die Jahreszeiten kennen d
 
 ---
 
-*Diese Anleitung gilt ab Cache-Version r70. Bei Änderungen am Admin-UI bitte aktualisieren.*
+*Stand: Juni 2026. Bei Änderungen am Admin-UI bitte aktualisieren.*

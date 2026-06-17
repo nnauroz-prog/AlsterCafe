@@ -42,12 +42,18 @@ In der Datei `config.js`:
 Alles andere bleibt wie es ist.
 
 ### Schritt 3 – Hosting
-Die Seite ist statisches HTML und kann überall liegen, das einfachste ist **Netlify** (kostenlos):
+Die Seite läuft bereits auf **GitHub Pages** (kostenlos, automatisch).
+Der Branch `gh-pages` wird per GitHub Action automatisch aktualisiert
+sobald auf den Feature-Branch gepusht wird — Sie selbst müssen nichts
+deployen.
 
-1. Konto auf netlify.com anlegen
-2. „Add new site" → „Deploy manually" → den Projektordner auf die Seite ziehen
-3. Im Site-Settings die eigene Domain `alstercafe.de` verknüpfen und die angezeigten DNS-Einträge bei Ihrem Domain-Anbieter eintragen
-4. HTTPS aktiviert sich automatisch
+**Eigene Domain `alstercafe.de` anbinden:**
+1. Bei Ihrem Domain-Anbieter (z. B. IONOS, Strato, GoDaddy) anmelden
+2. DNS-Einträge gemäß [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md) setzen
+3. HTTPS aktiviert sich automatisch via Let's Encrypt
+
+Alternative Hosts (Netlify, Vercel) sind möglich — `netlify.toml` und
+`_headers` sind im Repo, falls der Wechsel später gewünscht ist.
 
 ### Schritt 4 – Test
 1. `https://alstercafe.de/admin.html` öffnen, mit Ihrer E-Mail + Passwort einloggen
@@ -128,4 +134,20 @@ Einrichtung (einmalig, ca. 15 Min.): siehe **WHATSAPP-SETUP.md**.
 ---
 
 ## 5. Bei Fragen
-Verkäufer-Kontaktdaten hier eintragen.
+
+| Anliegen | Kontakt |
+|---|---|
+| Allgemeine Fragen / Inhalte / Bedienung | _Verkäufer-Kontaktdaten hier eintragen_ |
+| Technisch (Supabase-Login vergessen, Domain-Probleme) | _Dev-Kontaktdaten hier eintragen_ |
+| Supabase-Support (Backend) | support@supabase.io |
+| Domain-Provider (DNS) | _Ihr Domain-Provider-Support_ |
+
+---
+
+## 6. Wichtige Quick-Links
+
+- **Live-Site:** https://alstercafe.de (sobald DNS umgestellt)
+- **Mitgliederbereich:** https://alstercafe.de/admin.html
+- **Webshop Croquenoah:** https://croquenoah.simplywebshop.de/storedata/listStore
+- **Supabase-Dashboard:** https://supabase.com (Login mit Inhaber-E-Mail)
+- **GitHub-Repo (Code):** _Repo-URL hier eintragen_

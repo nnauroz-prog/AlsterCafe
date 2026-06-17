@@ -59,4 +59,4 @@ Supabase-Support: support@supabase.io
 
 ---
 
-*Diese Karte gilt für Cache-Version r70+. Stand: Juni 2026.*
+*Stand: Juni 2026. Bei Änderungen am Admin-UI Dev fragen.*

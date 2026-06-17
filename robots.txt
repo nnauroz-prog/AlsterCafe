@@ -2,5 +2,16 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
+# Dev-/Handover-Dokumentation nicht indexieren
+Disallow: /README.md
+Disallow: /UEBERGABE.md
+Disallow: /MARIA-ROUTINE.md
+Disallow: /PHOTOS.md
+Disallow: /CUSTOM-DOMAIN.md
+Disallow: /DEPLOYMENT.md
+Disallow: /WHATSAPP-SETUP.md
+Disallow: /MASTERPROMPT.md
+Disallow: /PROMPT.md
+Disallow: /setup.sql
 
 Sitemap: https://alstercafe.de/sitemap.xml
