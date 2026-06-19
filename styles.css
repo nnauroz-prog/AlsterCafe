@@ -8200,6 +8200,12 @@ html.has-js-scroll { scroll-behavior: auto; }
   .hero-coord-logo { width: 38px; height: 38px; }
   .hero-coord-stamp { font-size: .88rem; }
 }
+@media (max-width: 480px) {
+  .hero-coord { padding: 16px 18px 14px; gap: 10px; }
+  .hero-coord-row { padding-bottom: 8px; }
+  .hero-coord-value { font-size: .96rem; }
+  .hero-coord-mark { display: none; }
+}
 
 /* ---------- LIVE-STATUS-Pille refined ----------
    Groessere pulsierende Aura beim "open"-Zustand. */
