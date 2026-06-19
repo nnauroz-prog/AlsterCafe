@@ -8704,3 +8704,107 @@ html.has-js-scroll { scroll-behavior: auto; }
   margin-top: 14px;
 }
 
+/* ===============================================
+   BEWERTUNGEN · ehrliche Verlinkung zu externen Plattformen
+   statt erfundener Zitate. Drei Cards (Tripadvisor / Google /
+   Instagram), klare Conversion-Pfade nach extern.
+   =============================================== */
+.landing-reviews {
+  padding: clamp(80px, 11vw, 140px) 0;
+  background: var(--paper);
+}
+.reviews-h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.026em;
+  color: var(--bean);
+  margin: 0 0 24px;
+  font-variation-settings: "opsz" 144;
+  text-wrap: balance;
+}
+.reviews-h2 em {
+  font-style: italic;
+  color: var(--coffee);
+  background-image: linear-gradient(180deg, transparent 62%, rgba(184, 137, 62, 0.18) 62%, rgba(184, 137, 62, 0.18) 92%, transparent 92%);
+  padding: 0 0.04em;
+}
+.reviews-lead {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  color: var(--muted);
+  max-width: 580px;
+  margin: 0 0 clamp(36px, 5vw, 56px);
+  line-height: 1.55;
+  font-variation-settings: "opsz" 48;
+}
+.reviews-cta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2.4vw, 28px);
+}
+.reviews-card {
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(28px, 3.5vw, 40px) clamp(24px, 3vw, 32px);
+  min-height: 180px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  transition:
+    transform var(--dur-slow) var(--ease-out),
+    border-color var(--dur-slow) var(--ease-out),
+    box-shadow var(--dur-slow) var(--ease-out);
+}
+.reviews-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.reviews-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold-soft);
+  box-shadow:
+    0 30px 60px -32px rgba(42, 24, 16, 0.28),
+    0 12px 24px -16px rgba(184, 137, 62, 0.18);
+}
+.reviews-card:hover::after { transform: scaleX(1); }
+.reviews-card-platform {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  color: var(--bean);
+  letter-spacing: -0.018em;
+  font-variation-settings: "opsz" 96;
+  margin-bottom: 32px;
+}
+.reviews-card-action {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: .78rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--bean);
+  font-weight: 600;
+}
+.reviews-card:hover .reviews-card-action { color: var(--gold); }
+.reviews-card-action .ico { transition: transform var(--dur-base) var(--ease-out); }
+.reviews-card:hover .reviews-card-action .ico { transform: translateX(4px); }
+
+@media (max-width: 880px) {
+  .reviews-cta-grid { grid-template-columns: 1fr; }
+  .reviews-card { min-height: auto; padding: 24px 22px; flex-direction: row; align-items: center; gap: 16px; }
+  .reviews-card-platform { font-size: 1.4rem; margin-bottom: 0; flex: 1; }
+}
+

@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r77" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r78" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r77';
+      var V='2026-05-10-r78';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -362,27 +362,29 @@
       </div>
     </section>
 
-    <!-- ZITATE / STAMMGÄSTE -- Editorial Pull-Quote Spread -->
-    <section class="landing-quotes landing-pullquote chapter" data-chapter="IV">
+    <!-- BEWERTUNGEN · ehrliche Verlinkung zu echten Quellen statt erfundener Zitate -->
+    <section class="landing-reviews chapter" data-chapter="IV">
       <span class="chapter-mark" aria-hidden="true">IV</span>
       <div class="container">
-        <p class="quotes-eyebrow"><span class="num">·</span> Was Gäste sagen</p>
-        <figure class="pullquote-hero reveal">
-          <span class="pullquote-mark" aria-hidden="true">&ldquo;</span>
-          <blockquote class="pullquote-text">
-            Das beste Franzbrötchen <em>östlich der Alster.</em>
-          </blockquote>
-          <figcaption class="pullquote-cite">— Stammgast, seit 2014</figcaption>
-        </figure>
-        <div class="pullquote-row reveal">
-          <figure class="pullquote-small">
-            <blockquote>„Hier kennt man dich beim zweiten Besuch."</blockquote>
-            <figcaption>— Tripadvisor</figcaption>
-          </figure>
-          <figure class="pullquote-small">
-            <blockquote>„Der Croque-Madame ist nicht zum Aushalten."</blockquote>
-            <figcaption>— Bürokollegin von gegenüber</figcaption>
-          </figure>
+        <p class="quotes-eyebrow"><span class="num">·</span> Was unsere Gäste sagen</p>
+        <h2 class="reviews-h2">Bewertungen lesen Sie<br/><em>am besten selbst.</em></h2>
+        <p class="reviews-lead">
+          Statt erfundener Zitate hier die echten Stimmen unserer Gäste —
+          auf den Plattformen, denen Sie schon vertrauen.
+        </p>
+        <div class="reviews-cta-grid">
+          <a class="reviews-card" href="https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html" target="_blank" rel="noopener noreferrer">
+            <span class="reviews-card-platform">Tripadvisor</span>
+            <span class="reviews-card-action">Bewertungen ansehen <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          </a>
+          <a class="reviews-card" href="https://www.google.com/maps/search/?api=1&query=Alstercafe+Ifflandstra%C3%9Fe+45+Hamburg" target="_blank" rel="noopener noreferrer">
+            <span class="reviews-card-platform">Google Maps</span>
+            <span class="reviews-card-action">Bewertungen ansehen <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          </a>
+          <a class="reviews-card" href="https://www.instagram.com/alstercafe/" target="_blank" rel="noopener noreferrer">
+            <span class="reviews-card-platform">Instagram</span>
+            <span class="reviews-card-action">@alstercafe folgen <svg class="ico ico-sm"><use href="#i-arrow"/></svg></span>
+          </a>
         </div>
       </div>
     </section>
@@ -489,8 +491,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r77" defer></script>
-  <script src="db.js?v=2026-05-10-r77" defer></script>
-  <script src="script.js?v=2026-05-10-r77" defer></script>
+  <script src="config.js?v=2026-05-10-r78" defer></script>
+  <script src="db.js?v=2026-05-10-r78" defer></script>
+  <script src="script.js?v=2026-05-10-r78" defer></script>
 </body>
 </html>
