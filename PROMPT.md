@@ -53,8 +53,9 @@ Git-Repository.
   Coffee (#5C3C20), Gold (#B8893E), Linen (#F1E7D3).
 - Akzent-Farbe gold, sparsam eingesetzt.
 - Typografie: Fraunces für Headlines (Optical-Sizing 96 für Display,
-  italic für Akzente), Inter für Body, ALLE Eyebrows in 0.22em
-  letter-spacing UPPERCASE mit nummeriertem Kreis-Tag (01, 02, ...).
+  **immer aufrecht — kein Kursiv**, Akzente nur via Farbe/Marker),
+  Inter für Body, ALLE Eyebrows in 0.22em letter-spacing UPPERCASE
+  mit nummeriertem Kreis-Tag (01, 02, ...).
 - Sektionen-Polster: `clamp(72px, 9vw, 130px)` vertikal.
 - Soft-Shadow-System (4 Stufen: xs/sm/base/lg), niemals harte Schatten.
 - Premium-Easing-Curve global: `cubic-bezier(0.22, 1, 0.36, 1)`.
@@ -67,23 +68,23 @@ Git-Repository.
 ## SEITEN-AUFBAU (öffentliche Hauptseite)
 
 1. **Topbar** (dünn, espresso-braun): Telefon · Adresse · Freies WLAN
-2. **Sticky Header** mit Logo + Marken-Schriftzug (Fraunces italic) +
+2. **Sticky Header** mit Logo + Marken-Schriftzug (Fraunces aufrecht) +
    Hauptnavigation. Auf Scroll: Blur-Background + verkleinertes Logo.
    Goldener "Webshop ↗"-Button rechts in der Nav (falls externer Shop).
 3. **Hero** mit:
    - Eyebrow "Café · Bäckerei · <<Stadtteil>>"
-   - 3-zeilige Headline mit Italic-Akzent
+   - 3-zeilige Headline mit Farb-Akzent (gold/coffee, kein Kursiv)
    - Lead-Text (max. 3 Zeilen)
    - Primary-CTA "Online bestellen" (zum Webshop) + Secondary-Link
    - Visual rechts: CSS-illustrierte Kaffeetasse mit animiertem Dampf
      (kein Bild, reines CSS) — wird im Design-Studio durch echtes
      Foto ersetzbar.
 4. **Mittagstisch** (dunkel, espresso-Hintergrund):
-   - "Heute"-Karte mit pulsierendem Gold-Dot, großem Italic-Gericht
+   - "Heute"-Karte mit pulsierendem Gold-Dot, großem Gericht (Fraunces aufrecht)
    - 7-Tage-Wochenkarte (Grid), heute hervorgehoben mit Gold-Akzent-Linie
    - Telefon-CTA "Tisch reservieren · ab 12:00" in Gold
 5. **Über uns**: 1.4fr Text + 1fr Aside mit Quote (großes deutsches
-   Anführungszeichen `„`, italic Fraunces).
+   Anführungszeichen `„`, Fraunces aufrecht).
 6. **Speisekarte** (3 Spalten): Frühstück | Backwaren | Heiße Getränke
    — Items mit Hover-Padding-Shift, dotted Trennlinien.
 7. **Reservierung** (dunkel): Form mit Underline-Inputs, Loading-Spinner +

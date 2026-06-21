@@ -134,8 +134,9 @@ Inline-kritisches CSS direkt im `<head>` jeder Seite (Hintergrund-Farbe, Body-Fo
 ```
 
 ## Typografie
-- Überschriften: `Fraunces` mit `font-variation-settings: "opsz" XX` passend zur Größe. Tracking leicht negativ. Gelegentlich kursive Wortbeispiele (`<em>`).
+- Überschriften: `Fraunces` mit `font-variation-settings: "opsz" XX` passend zur Größe. Tracking leicht negativ. **Immer aufrecht — Akzente nur über Farbe (gold/coffee) oder Gold-Marker-Hintergrundstreifen, nie über Kursiv.** `<em>` ist im CSS auf `font-style: normal !important` gestellt (Schluss-Regel am Ende von `styles.css`). Diese Regel ist Marias ausdrücklicher Wunsch — nicht ohne Rückfrage entfernen.
 - Fließtext: `Inter`, 300/400/500/600.
+- Google-Fonts-URL lädt bewusst nur die upright-Achse von Fraunces (`Fraunces:opsz,wght@…`), kein italic.
 - Eyebrows (`.eyebrow`): all-caps, .68rem, letter-spacing .16em, mit Nummerierung wie `01`, `02` — gibt der Seite eine editorial-redaktionelle Anmutung.
 
 ## Tonalität
