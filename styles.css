@@ -4841,8 +4841,8 @@ body { overflow-x: hidden; }
    Marker, Pull-Quote-Spread, Sign-Off "Fin." */
 
 /* ---------- EDITION-STRIP ----------
-   Schmaler Streifen ueber der Topbar: Datum, Vol., Standort.
-   Macht aus der Seite eine gedruckte Ausgabe vom heutigen Tag. */
+   Schmaler Streifen ueber der Topbar: Datum + Standort.
+   (Vol/No-Theater wurde bewusst entfernt — kein realer Bezug.) */
 .edition-strip {
   background: var(--paper);
   border-bottom: 1px solid var(--line);
@@ -6084,7 +6084,7 @@ html.has-js-scroll { scroll-behavior: auto; }
    =============================================== */
 
 /* ---------- 404 · EDITORIAL ERRATA ----------
-   Riesige 404 als Watermark, Vol.-Issue-Strip, Fin.-Marker.
+   Riesige 404 als Watermark, Errata-Strip, Fin.-Marker.
    Wirkt wie eine Errata-Seite in einer Druckausgabe. */
 .error-editorial {
   position: relative;
