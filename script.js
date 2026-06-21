@@ -701,14 +701,41 @@ function loadMap() {
 
 /* ---------- Hinweis-Banner ---------- */
 function initNotice() {
-  const banner = document.getElementById('notice-banner');
-  const text   = document.getElementById('notice-text');
+  let banner = document.getElementById('notice-banner');
+
+  // Auf Sub-Pages (Speisekarte, Kontakt, Reservierung etc.) fehlt der Banner
+  // im HTML — injizieren, damit Brueckentag-Hinweise UEBERALL erscheinen,
+  // nicht nur auf der Startseite. Admin-Body wird ausgenommen.
+  if (!banner && !document.body.classList.contains('admin-body')) {
+    banner = document.createElement('div');
+    banner.className = 'notice-banner';
+    banner.id = 'notice-banner';
+    banner.hidden = true;
+    banner.innerHTML = `
+      <div class="container notice-inner">
+        <span class="notice-tag">Hinweis</span>
+        <p id="notice-text"></p>
+      </div>
+    `;
+    // Direkt OBERHALB der Topbar einsetzen — entspricht der Position
+    // auf index.html (wo der Banner statisch im HTML sitzt).
+    const topbar = document.querySelector('.topbar');
+    if (topbar && topbar.parentNode) {
+      topbar.parentNode.insertBefore(banner, topbar);
+    } else {
+      document.body.insertBefore(banner, document.body.firstChild);
+    }
+  }
+
+  const text = banner?.querySelector('#notice-text');
   if (!banner || !text) return;
   let value = '';
   try { value = (localStorage.getItem(STORAGE_NOTICE) || '').trim(); } catch {}
   if (value) {
     text.textContent = value;
     banner.hidden = false;
+  } else {
+    banner.hidden = true;
   }
 }
 
