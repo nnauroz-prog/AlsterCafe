@@ -144,10 +144,53 @@ Einrichtung (einmalig, ca. 15 Min.): siehe **WHATSAPP-SETUP.md**.
 
 ---
 
-## 6. Wichtige Quick-Links
+## 6. Hinweise für Dev / Code-Pflege
+
+Diese vier Punkte sind nicht im Admin-Bereich änderbar — wer Code anfasst, sollte sie kennen.
+
+### Cache-Buster (kritisch nach jeder CSS- oder JS-Änderung)
+Browser cachen `styles.css`, `script.js`, `config.js`, `db.js` aggressiv. Damit Änderungen verlässlich bei allen Besuchern ankommen, trägt jede HTML-Datei einen Versions-Stempel an den Asset-URLs:
+
+```html
+<link rel="stylesheet" href="styles.css?v=2026-05-10-r81" />
+<script src="script.js?v=2026-05-10-r81" defer></script>
+```
+
+Der gleiche Stempel steht zusätzlich in einem Inline-Script-Block, der bei Mismatch den LocalStorage-Cache verwirft. **Bei jeder Änderung an CSS oder JS:** den Stempel in allen 11 HTML-Dateien hochzählen (`r81` → `r82` …). Schnellkommando:
+
+```bash
+for f in *.html; do sed -i 's/2026-05-10-r81/2026-05-10-r82/g' "$f"; done
+```
+
+### Branch- & Deploy-Policy
+- Entwickelt wird auf `claude/bakery-website-redesign-vyyXQ` (oder einem neuen Feature-Branch).
+- Push auf den Feature-Branch ⇒ GitHub Action baut automatisch den `gh-pages`-Branch und Live-Site ist binnen ~60 s aktuell.
+- Niemals direkt auf `main` oder `gh-pages` committen.
+
+### Design-Entscheidung: kein Kursiv
+Maria wollte am 21.06.2026 weg von der geschwungenen italic-Schrift. Implementiert als **eine einzige Schluss-Regel** am Ende von `styles.css`:
+
+```css
+*, *::before, *::after { font-style: normal !important; }
+```
+
+Außerdem lädt die Google-Fonts-URL bewusst keine italic-Achse mehr (`Fraunces:opsz,wght@…`). Wer kursiv reaktivieren will, muss beides rückgängig machen.
+
+### Externe Profile pflegen
+Die Startseite verlinkt jetzt auf echte Bewertungsplattformen statt erfundene Zitate:
+
+- **Tripadvisor:** [Alstercafe Hamburg](https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html)
+- **Google Business:** Suche „Alstercafe Ifflandstraße 45" — Foto- und Öffnungszeiten-Pflege
+- **Instagram:** [@alstercafe](https://www.instagram.com/alstercafe/)
+
+Diese drei sind ab jetzt Teil der Vitrine. Ein veraltetes Google-Profil schadet mehr als ein fehlendes Zitat auf der eigenen Seite. Faustregel: pro Quartal ein bis zwei neue Fotos auf Google + Instagram.
+
+---
+
+## 7. Wichtige Quick-Links
 
 - **Live-Site:** https://alstercafe.de (sobald DNS umgestellt)
 - **Mitgliederbereich:** https://alstercafe.de/admin.html
 - **Webshop Croquenoah:** https://croquenoah.simplywebshop.de/storedata/listStore
 - **Supabase-Dashboard:** https://supabase.com (Login mit Inhaber-E-Mail)
-- **GitHub-Repo (Code):** _Repo-URL hier eintragen_
+- **GitHub-Repo (Code):** https://github.com/nnauroz-prog/alstercafe
