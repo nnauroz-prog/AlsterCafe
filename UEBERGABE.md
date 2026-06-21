@@ -181,6 +181,13 @@ Maria wollte am 21.06.2026 weg von der geschwungenen italic-Schrift. Implementie
 
 Außerdem lädt die Google-Fonts-URL bewusst keine italic-Achse mehr (`Fraunces:opsz,wght@…`). Wer kursiv reaktivieren will, muss beides rückgängig machen.
 
+### Gründungsdatum: 2013 (nicht 2010)
+Nadims Recherche (Northdata + Webarchiv + KI-Verifikation am 21.06.2026) hat klar belegt:
+- Das Alstercafé wurde **2013** in der Ifflandstraße 45 eröffnet.
+- Davor (seit etwa 2004) war an gleicher Adresse der **Alstermarkt** — ein Getränkemarkt der gleichen Familie (OHG Ibrahim Bayrakcioglu). Der „Alster" im Namen ist von dort geblieben.
+- Frühere „Est. 2010" / „seit über 15 Jahren"-Angaben waren nachprüfbar falsch und wurden konsistent korrigiert (Hero-Stempel, Splash-Ring, Footer-Credit, Hochzähl-Counter 0→12, JSON-LD `foundingDate: "2013"`).
+- Wer die Zahl wieder ändert: bitte erst die Tripadvisor-Ersteinträge oder das Webarchiv von alstercafe.de prüfen. Im Zweifel: lieber konservativ („über 12 Jahre" passt bis Mitte 2026).
+
 ### Design-Entscheidungen im Mitgliederbereich
 Maria hat per WhatsApp gemeldet, dass die Formation des Admin-Bereichs „blöd" wirkte. Folgende Vereinfachungen wurden bewusst getroffen — vor dem Rückbau erst nachfragen:
 
