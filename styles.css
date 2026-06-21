@@ -3486,6 +3486,15 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   border: 1px solid var(--line);
 }
 
+/* Brand im Admin-Header ist bewusst keine Verlinkung — Maria soll
+   nicht versehentlich den Admin verlassen. Aussehen muss aber wie
+   Brand-Block bleiben (kein Hover, kein Cursor-Pointer). */
+.brand.brand-static {
+  cursor: default;
+  text-decoration: none;
+}
+.brand.brand-static:hover { background: transparent; }
+
 /* Brötchen-Sorten-Editor im Admin */
 .broetchen-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .broetchen-edit-row {

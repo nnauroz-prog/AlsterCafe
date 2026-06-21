@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r87" />
-  <script>(function(){var V='2026-05-10-r87';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r88" />
+  <script>(function(){var V='2026-05-10-r88';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -50,11 +50,14 @@
 
   <header class="admin-header">
     <div class="container nav-container">
-      <a class="brand" href="index.html" aria-label="Zur Webseite">
+      <!-- Brand bewusst nicht klickbar — "Vorschau" rechts oeffnet die
+           Webseite gefahrlos im neuen Tab. Verhindert Versehen-Verlassen
+           des Admin-Bereichs durch Tap auf's Logo. -->
+      <span class="brand brand-static">
         <img src="image.png" alt="" class="brand-logo" width="46" height="46" decoding="async" fetchpriority="low" />
         <span class="brand-name">Alstercafé</span>
         <span class="admin-pill">Mitgliederbereich</span>
-      </a>
+      </span>
       <div class="admin-actions" id="admin-actions" hidden>
         <span class="user-badge" id="user-badge" title="Angemeldetes Konto"></span>
         <a class="btn btn-link" href="index.html" target="_blank" rel="noopener">
@@ -690,8 +693,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r87" defer></script>
-  <script src="db.js?v=2026-05-10-r87" defer></script>
-  <script src="admin.js?v=2026-05-10-r87" defer></script>
+  <script src="config.js?v=2026-05-10-r88" defer></script>
+  <script src="db.js?v=2026-05-10-r88" defer></script>
+  <script src="admin.js?v=2026-05-10-r88" defer></script>
 </body>
 </html>
