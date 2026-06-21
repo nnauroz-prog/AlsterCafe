@@ -132,6 +132,19 @@ async function init() {
   dom.exportJson.addEventListener('click', onExportJson);
   dom.resetWeek.addEventListener('click', onResetWeek);
 
+  // "Mehr"-Dropdown in Wochenplan-Toolbar: nach Menue-Klick und bei
+  // Klick ausserhalb wieder schliessen, damit es nicht offen klebt.
+  document.querySelectorAll('.toolbar-more').forEach(d => {
+    d.querySelectorAll('.toolbar-more-menu button').forEach(b =>
+      b.addEventListener('click', () => d.removeAttribute('open'))
+    );
+  });
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.toolbar-more[open]').forEach(d => {
+      if (!d.contains(e.target)) d.removeAttribute('open');
+    });
+  });
+
   // Notice
   dom.noticeForm.addEventListener('submit', onSaveNotice);
   dom.noticeClear.addEventListener('click', onClearNotice);

@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r85" />
-  <script>(function(){var V='2026-05-10-r85';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r86" />
+  <script>(function(){var V='2026-05-10-r86';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -73,14 +73,14 @@
     <!-- LOGIN -->
     <section class="admin-login" id="login-view">
       <div class="login-card reveal in">
-        <p class="login-card-eyebrow">Mitgliederbereich · Vol. XVI</p>
+        <p class="login-card-eyebrow">Mitgliederbereich</p>
         <h1>Schön, dass <em>Sie da</em> sind.</h1>
         <p class="login-lead">Bitte melden Sie sich an, um Inhalte zu bearbeiten.</p>
         <svg class="ico ico-card lock-ico" hidden><use href="#i-lock"/></svg>
 
         <form id="login-form" autocomplete="off" novalidate>
           <label>
-            <span>Benutzername</span>
+            <span>E-Mail-Adresse</span>
             <input type="text"
                    name="username"
                    required
@@ -88,7 +88,7 @@
                    autocapitalize="none"
                    autocorrect="off"
                    spellcheck="false"
-                   placeholder="z. B. inhaber"
+                   placeholder="ihre@adresse.de"
                    value="" />
           </label>
           <label>
@@ -282,18 +282,23 @@
               <button type="button" class="btn btn-link" id="week-today">Heute</button>
             </div>
             <div class="toolbar-actions">
-              <button type="button" class="btn btn-link" id="copy-prev" title="Eintraege der Vorwoche uebernehmen">
+              <button type="button" class="btn btn-link" id="copy-prev" title="Einträge der Vorwoche übernehmen">
                 <svg class="ico ico-sm"><use href="#i-copy"/></svg>
                 Vorwoche kopieren
               </button>
-              <button type="button" class="btn btn-link" id="export-json" title="Als JSON-Datei exportieren">
-                <svg class="ico ico-sm"><use href="#i-download"/></svg>
-                Export
-              </button>
-              <button type="button" class="btn btn-link danger" id="reset-week">
-                <svg class="ico ico-sm"><use href="#i-trash"/></svg>
-                Woche leeren
-              </button>
+              <details class="toolbar-more">
+                <summary aria-label="Weitere Aktionen">Mehr</summary>
+                <div class="toolbar-more-menu" role="menu">
+                  <button type="button" id="export-json" title="Als JSON-Datei sichern" role="menuitem">
+                    <svg class="ico ico-sm"><use href="#i-download"/></svg>
+                    Sicherungskopie
+                  </button>
+                  <button type="button" class="is-danger" id="reset-week" role="menuitem">
+                    <svg class="ico ico-sm"><use href="#i-trash"/></svg>
+                    Woche leeren
+                  </button>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -683,8 +688,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r85" defer></script>
-  <script src="db.js?v=2026-05-10-r85" defer></script>
-  <script src="admin.js?v=2026-05-10-r85" defer></script>
+  <script src="config.js?v=2026-05-10-r86" defer></script>
+  <script src="db.js?v=2026-05-10-r86" defer></script>
+  <script src="admin.js?v=2026-05-10-r86" defer></script>
 </body>
 </html>

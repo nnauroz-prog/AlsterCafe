@@ -3362,6 +3362,68 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .admin-actions .user-badge { display: none; }
 }
 
+/* "Mehr"-Dropdown in der Wochenplan-Toolbar — versteckt fortge-
+   schrittene Aktionen (Sicherungskopie, Woche leeren) hinter
+   einem Klick, damit "Vorwoche kopieren" als Haupt-Aktion klar
+   sichtbar ist. */
+.toolbar-more {
+  position: relative;
+  display: inline-block;
+}
+.toolbar-more > summary {
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: .82rem;
+  color: var(--muted);
+  transition: background-color .2s var(--ease-out), color .2s var(--ease-out);
+}
+.toolbar-more > summary::-webkit-details-marker { display: none; }
+.toolbar-more > summary::after {
+  content: '⌄';
+  font-size: 1rem;
+  line-height: 1;
+  margin-top: -2px;
+  transition: transform .2s var(--ease-out);
+}
+.toolbar-more[open] > summary { color: var(--bean); background: var(--cream); }
+.toolbar-more[open] > summary::after { transform: rotate(180deg); }
+.toolbar-more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -18px rgba(42, 24, 16, 0.28);
+  min-width: 220px;
+  padding: 6px;
+  display: flex; flex-direction: column;
+}
+.toolbar-more-menu button {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: .88rem;
+  color: var(--bean);
+}
+.toolbar-more-menu button:hover { background: var(--cream); }
+.toolbar-more-menu button.is-danger { color: #B53A2E; }
+.toolbar-more-menu button.is-danger:hover { background: rgba(181, 58, 46, 0.08); }
+.toolbar-more-menu .ico { width: 16px; height: 16px; flex-shrink: 0; }
+@media (max-width: 540px) {
+  .toolbar-more-menu { right: auto; left: 0; }
+}
+
 /* Brötchen-Sorten-Editor im Admin */
 .broetchen-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .broetchen-edit-row {
