@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r90" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r91" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r90';
+      var V='2026-05-10-r91';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -136,11 +136,11 @@
     </div>
   </div>
 
-  <!-- Editorial Edition-Strip: Datum, Ausgabe, Standort -->
+  <!-- Editorial Edition-Strip: Datum + Standort. Vol/No-Theater entfernt
+       — hatte keinen realen Bezug zur 13 Jahre alten Baeckerei. -->
   <aside class="edition-strip" aria-hidden="true">
     <div class="container edition-inner">
       <span class="edition-cell edition-date" id="edition-date"></span>
-      <span class="edition-cell edition-vol">Vol. <em>XVI</em> &middot; No. <em id="edition-no">—</em></span>
       <span class="edition-cell edition-place">Ifflandstr. 45 &middot; Hamburg-Hohenfelde</span>
     </div>
   </aside>
@@ -496,8 +496,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r90" defer></script>
-  <script src="db.js?v=2026-05-10-r90" defer></script>
-  <script src="script.js?v=2026-05-10-r90" defer></script>
+  <script src="config.js?v=2026-05-10-r91" defer></script>
+  <script src="db.js?v=2026-05-10-r91" defer></script>
+  <script src="script.js?v=2026-05-10-r91" defer></script>
 </body>
 </html>

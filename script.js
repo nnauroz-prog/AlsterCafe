@@ -943,15 +943,8 @@ function initPremiumPolish() {
     const fmt = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
     editionDate.textContent = fmt;
   }
-  const editionNo = document.getElementById('edition-no');
-  if (editionNo) {
-    // No. = Tag im Jahr (1..366) — wie eine Tageszeitung
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
-    const dayOfYear = Math.floor(diff / 86400000);
-    editionNo.textContent = String(dayOfYear).padStart(3, '0');
-  }
+  // Vol/No-Element wurde entfernt — editoriales Magazintheater ohne
+  // realen Bezug zur Baeckerei. Datum + Standort sind genug.
   const heroToday = document.getElementById('hero-coord-today');
   if (heroToday) {
     const now = new Date();
@@ -1295,18 +1288,11 @@ function enhanceFooterEditorial() {
     footer.querySelector('.container').insertAdjacentElement('afterend', navWrap);
   }
 
-  // Bottom-Strip mit Edition-Vol + Meta
-  const now = new Date();
-  const year = now.getFullYear();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
-  const dayOfYear = Math.floor(diff / 86400000);
+  // Bottom-Strip: Copyright + Inhaber. Vol/No-Theater entfernt.
+  const year = new Date().getFullYear();
   const strip = document.createElement('div');
   strip.className = 'footer-bottom-strip container';
-  strip.innerHTML = `
-    <span>© ${year} <em>Alstercafé</em> · Croquenoah Cafe</span>
-    <span>Vol. <em>XVI</em> · No. <em>${String(dayOfYear).padStart(3, '0')}</em></span>
-  `;
+  strip.innerHTML = `<span>© ${year} <em>Alstercafé</em> · Croquenoah Cafe</span>`;
   footer.appendChild(strip);
 }
 
@@ -1560,14 +1546,10 @@ function injectEditionStripIfMissing() {
   strip.setAttribute('aria-hidden', 'true');
   const now = new Date();
   const fmt = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
-  const dayOfYear = Math.floor(diff / 86400000);
 
   strip.innerHTML = `
     <div class="container edition-inner">
       <span class="edition-cell edition-date">${fmt}</span>
-      <span class="edition-cell edition-vol">Vol. <em>XVI</em> &middot; No. <em>${String(dayOfYear).padStart(3, '0')}</em></span>
       <span class="edition-cell edition-place">Ifflandstr. 45 &middot; Hamburg-Hohenfelde</span>
     </div>
   `;
