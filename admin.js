@@ -177,10 +177,6 @@ function cacheDom() {
     // Tabs
     tabs:         document.querySelectorAll('.admin-tab'),
     panels:       document.querySelectorAll('.admin-panel'),
-    // Stats
-    statFilled:   document.getElementById('stat-filled'),
-    statWeek:     document.getElementById('stat-week'),
-    statSaved:    document.getElementById('stat-saved'),
     // Week
     menuForm:     document.getElementById('menu-form'),
     dayGrid:      document.getElementById('day-grid'),
@@ -449,15 +445,9 @@ function renderWeek() {
   const sunday = new Date(currentMonday); sunday.setDate(sunday.getDate() + 6);
   dom.weekKw.textContent = sundaySpillover ? `Heute + KW ${weekKw}` : `KW ${weekKw}`;
   dom.weekRange.textContent = `${formatShort(currentMonday)} – ${formatShort(sunday)}`;
-  if (dom.statWeek) dom.statWeek.textContent = `KW ${weekKw}`;
 
   const all = loadAll();
   const stored = all[isoDate(currentMonday)] || { days: {} };
-  const filledCount = Object.values(stored.days || {}).filter(d => (d.dish && !d.closed) || d.closed).length;
-  if (dom.statFilled) dom.statFilled.textContent = String(filledCount);
-  if (dom.statSaved) dom.statSaved.textContent = stored.updatedAt
-    ? formatRelative(new Date(stored.updatedAt))
-    : '–';
 
   dom.dayGrid.innerHTML = '';
 
@@ -1202,9 +1192,15 @@ function buildAnfrageItem(r) {
         <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
         <div class="anfrage-actions">
           ${isDone
-            ? `<button type="button" class="btn btn-link" data-mark="${escapeAttr(r.id)}">Erneut öffnen</button>`
-            : `<button type="button" class="btn btn-link" data-mark="${escapeAttr(r.id)}">Als erledigt markieren</button>`}
-          <button type="button" class="btn btn-link danger" data-del="${escapeAttr(r.id)}">Löschen</button>
+            ? `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${escapeAttr(r.id)}">Erneut öffnen</button>`
+            : `<button type="button" class="anfrage-btn anfrage-btn-mark is-primary" data-mark="${escapeAttr(r.id)}">
+                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
+                Als erledigt markieren
+              </button>`}
+          <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(r.id)}" aria-label="Anfrage löschen">
+            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
+            Löschen
+          </button>
         </div>
       </div>
     </li>
@@ -1321,9 +1317,15 @@ function buildOrderItem(o) {
         <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
         <div class="anfrage-actions">
           ${isDone
-            ? `<button type="button" class="btn btn-link" data-mark="${escapeAttr(o.id)}">Erneut öffnen</button>`
-            : `<button type="button" class="btn btn-link" data-mark="${escapeAttr(o.id)}">Als erledigt markieren</button>`}
-          <button type="button" class="btn btn-link danger" data-del="${escapeAttr(o.id)}">Löschen</button>
+            ? `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${escapeAttr(o.id)}">Erneut öffnen</button>`
+            : `<button type="button" class="anfrage-btn anfrage-btn-mark is-primary" data-mark="${escapeAttr(o.id)}">
+                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
+                Als erledigt markieren
+              </button>`}
+          <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(o.id)}" aria-label="Bestellung löschen">
+            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
+            Löschen
+          </button>
         </div>
       </div>
     </li>

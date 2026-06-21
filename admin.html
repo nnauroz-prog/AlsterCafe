@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r83" />
-  <script>(function(){var V='2026-05-10-r83';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r84" />
+  <script>(function(){var V='2026-05-10-r84';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -128,52 +128,19 @@
       <div class="container">
 
         <!-- Hero / Welcome -->
-        <div class="admin-welcome">
-          <div>
-            <p class="eyebrow"><span class="num">·</span> Willkommen zurück</p>
-            <h1 id="welcome-name">Inhaber-Dashboard</h1>
-            <p class="admin-sub">
-              Verwalten Sie hier <em>Mittagstisch</em>, <em>Speisekarte</em>,
-              <em>Öffnungszeiten</em> und das <em>Erscheinungsbild</em>. Mit
-              <em>Texte bearbeiten</em> oben rechts ändern Sie Überschriften und
-              Absätze direkt auf der Webseite.
-            </p>
-          </div>
-          <div class="admin-stats">
-            <div class="stat">
-              <span class="stat-value" id="stat-filled">0</span>
-              <span class="stat-label">von 7 Tagen<br/>befüllt</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value" id="stat-week">–</span>
-              <span class="stat-label">Aktuelle<br/>Kalenderwoche</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value" id="stat-saved">–</span>
-              <span class="stat-label">Zuletzt<br/>gespeichert</span>
-            </div>
-          </div>
+        <div class="admin-welcome admin-welcome-slim">
+          <h1 id="welcome-name">Mitgliederbereich</h1>
+          <p class="admin-sub">Tippen Sie unten auf den Bereich, den Sie pflegen möchten.</p>
         </div>
 
         <!-- OVERVIEW (Dashboard-Startansicht) -->
         <section class="admin-overview" id="overview-view">
-          <header class="overview-head">
-            <div>
-              <p class="overview-eyebrow">Inhalte verwalten</p>
-              <h2 class="overview-title-main">Was möchten Sie ändern?</h2>
-            </div>
-            <span class="overview-status" aria-label="Status: online">
-              <span class="overview-status-dot" aria-hidden="true"></span>
-              Online
-            </span>
-          </header>
-
-          <details class="overview-help" open>
-            <summary>So bedienen Sie Ihre Seite — in 3 Schritten</summary>
+          <details class="overview-help">
+            <summary>Kurze Anleitung — in 3 Schritten</summary>
             <ol class="overview-help-steps">
               <li><strong>Bereich wählen.</strong> Tippen Sie unten auf die Kachel, die Sie ändern möchten (z. B. „Mittagsmenü bearbeiten").</li>
               <li><strong>Ändern.</strong> Tragen Sie ein, was Sie möchten — Texte überschreiben, Felder ausfüllen, Bilder hochladen.</li>
-              <li><strong>Speichern.</strong> Klicken Sie unten auf den grünen Knopf „… speichern". <em>Erst dann</em> wird die Änderung übernommen — und erscheint von selbst auf der Webseite, auch auf den Handys Ihrer Gäste.</li>
+              <li><strong>Speichern.</strong> Klicken Sie unten auf den grünen Knopf „… speichern". Erst dann wird die Änderung übernommen — und erscheint von selbst auf der Webseite, auch auf den Handys Ihrer Gäste.</li>
             </ol>
             <p class="overview-help-note">
               Über „← Zurück zur Übersicht" oben kommen Sie immer wieder hierher.
@@ -249,7 +216,6 @@
             </button>
           </div>
 
-          <p class="overview-meta" id="overview-meta">Bereit für Ihre Änderungen.</p>
         </section>
 
         <!-- WORKSPACE (Tabs + Panels — eingeblendet sobald eine Karte gewählt wird) -->
@@ -738,8 +704,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r83" defer></script>
-  <script src="db.js?v=2026-05-10-r83" defer></script>
-  <script src="admin.js?v=2026-05-10-r83" defer></script>
+  <script src="config.js?v=2026-05-10-r84" defer></script>
+  <script src="db.js?v=2026-05-10-r84" defer></script>
+  <script src="admin.js?v=2026-05-10-r84" defer></script>
 </body>
 </html>

@@ -3254,7 +3254,44 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   font-size: .8rem;
   color: var(--muted);
 }
-.anfrage-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.anfrage-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Anfrage- & Bestell-Aktionen · klare Knoepfe statt winziger Text-Links.
+   Maria soll auf einen Blick sehen, was die Haupt- und was die Neben-
+   Aktion ist (primary green vs. danger outline). */
+.anfrage-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px;
+  min-height: 40px;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--bean);
+  cursor: pointer;
+  transition: background-color .2s var(--ease-out), border-color .2s var(--ease-out), color .2s var(--ease-out);
+}
+.anfrage-btn:hover { border-color: var(--bean); }
+.anfrage-btn-mark.is-primary {
+  background: #2F7D3D;
+  color: #FFFCF4;
+  border-color: #2F7D3D;
+}
+.anfrage-btn-mark.is-primary:hover { background: #246130; border-color: #246130; }
+.anfrage-btn-mark.is-primary .ico { color: currentColor; }
+.anfrage-btn-del {
+  color: #B53A2E;
+  border-color: rgba(181, 58, 46, 0.32);
+}
+.anfrage-btn-del:hover {
+  background: rgba(181, 58, 46, 0.08);
+  border-color: #B53A2E;
+  color: #8A2A20;
+}
+.anfrage-btn .ico { width: 16px; height: 16px; }
 
 /* Brötchen-Sorten-Editor im Admin */
 .broetchen-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
