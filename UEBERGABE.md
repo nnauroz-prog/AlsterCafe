@@ -70,15 +70,20 @@ Alternative Hosts (Netlify, Vercel) sind möglich — `netlify.toml` und
 `alstercafe.de/admin.html` aufrufen, E-Mail und Passwort eingeben.
 
 ### Übersicht
-Nach dem Login sehen Sie große Karten. Jede führt zu einem Bereich:
+Nach dem Login sehen Sie zwei Gruppen großer Karten:
 
+**Täglich** (das, was Sie morgens nutzen):
 - **Mittagsmenü bearbeiten** — Tagesgerichte für die Woche
+- **Reservierungsanfragen** — wer möchte einen Tisch? (Karte hebt sich gold ab, wenn Neue da sind, mit Anzahl)
+- **Brötchen-Bestellungen** — Vorbestellungen für belegte Brötchen (gleicher Gold-Hinweis bei Neuen)
+
+**Selten ändern** (Pflege und Einrichtung):
 - **Speisekarte pflegen** — Frühstück, Backwaren, Getränke
+- **Bilder hochladen** — Logo, Hero-Bild, Über-uns-Bild, Galerie (Akzentfarbe unter „selten nötig" eingeklappt)
 - **Hinweisbanner aktivieren** — Brückentage, Sonderaktionen
-- **Anfragen ansehen** — eingegangene Reservierungen (Badge zeigt Anzahl)
-- **Brötchen-Bestellungen** — Vorbestellungen für belegte Brötchen (Badge zeigt Anzahl)
-- **Bilder hochladen** — Logo, Bilder, Galerie, Akzentfarbe
 - **Öffnungszeiten ändern** — Tage und Zeiten
+
+Unter den Karten gibt es einen leisen Link „Texte direkt auf der Webseite ändern" — für den Fall, dass Sie Hero-Titel, „Über uns"-Absätze oder ähnliches anpassen möchten.
 
 Mit „Zurück zur Übersicht" oben links kommen Sie immer wieder zurück.
 Bei Bestellungen und Reservierungen zeigt eine Pille **„Heute"** oder **„Morgen"** an,
@@ -93,8 +98,8 @@ was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten is
 ### Anfragen
 - Neue Anfragen erscheinen automatisch oben in der Liste, mit goldenem „Neu"-Tag
 - Telefonnummer und E-Mail sind anklickbar — direkt anrufen oder antworten
-- „Als erledigt markieren" wenn Sie sich gekümmert haben; die Anfrage bleibt erhalten, aber zählt nicht mehr im Badge
-- „Löschen" entfernt die Anfrage endgültig
+- Grüner Knopf **„Als erledigt markieren"** wenn Sie sich gekümmert haben; die Anfrage bleibt erhalten, aber zählt nicht mehr im Badge
+- Roter Knopf **„Löschen"** entfernt die Anfrage endgültig (mit Rückfrage)
 
 ### Brötchen-Bestellungen
 - Kunden bestellen belegte Brötchen über die Seite **Brötchen-Service** (ab 10 Stück).
@@ -175,6 +180,19 @@ Maria wollte am 21.06.2026 weg von der geschwungenen italic-Schrift. Implementie
 ```
 
 Außerdem lädt die Google-Fonts-URL bewusst keine italic-Achse mehr (`Fraunces:opsz,wght@…`). Wer kursiv reaktivieren will, muss beides rückgängig machen.
+
+### Design-Entscheidungen im Mitgliederbereich
+Maria hat per WhatsApp gemeldet, dass die Formation des Admin-Bereichs „blöd" wirkte. Folgende Vereinfachungen wurden bewusst getroffen — vor dem Rückbau erst nachfragen:
+
+- **Keine Setup-Gamification** (kein „Sie haben X von Y Schritten erledigt"-Fortschrittsbalken). Maria führt seit 15 Jahren einen Laden, sie braucht kein Onboarding-Spiel.
+- **Keine Dashboard-Stats** (kein „0 von 7 Tagen befüllt", keine KW-Anzeige, keine „Zuletzt gespeichert"-Pille). Saas-Theater hat im Bäckerei-Backend nichts verloren.
+- **Tiles in zwei Gruppen** statt einem 7er-Raster: „Täglich" (3) vs. „Selten ändern" (4) — die drei oben sind die drei Aktionen, die Maria jeden Morgen macht.
+- **Tab-Navigation auf Mobile ausgeblendet.** Maria nutzt den Tile-Picker statt eines zweiten Navigations-Layers. Auf Desktop bleibt die Tab-Leiste als Quick-Switcher.
+- **„Texte bearbeiten" ist kein Header-Knopf**, sondern ein leiser Utility-Link unter dem Tile-Grid. Das ist ein Spezialfeature (`?edit=1`-Modus auf der Webseite), kein täglicher Workflow.
+- **Brand im Admin-Header ist nicht klickbar.** Tap-Falle entfernt — „Vorschau" rechts erfüllt den „Webseite ansehen"-Bedarf gefahrlos im neuen Tab.
+- **Aktionen auf Anfragen/Bestellungen sind echte Knöpfe** (grün für „Erledigt", rot für „Löschen"). Vorher waren beide winzige Text-Links nebeneinander — verwirrend und schlecht trefflich.
+- **Akzentfarbe im Bilder-Panel eingeklappt.** Maria ändert das Brand-Gold praktisch nie.
+- **Empty-States freundlich**, nicht klinisch („Hier erscheinen Anfragen, sobald jemand das Formular ausfüllt" statt „Noch keine Anfragen.").
 
 ### Externe Profile pflegen
 Die Startseite verlinkt jetzt auf echte Bewertungsplattformen statt erfundene Zitate:
