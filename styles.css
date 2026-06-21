@@ -1299,7 +1299,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   padding: 0;
 }
 
-/* Riesiges "Est. 2010" als Wasserzeichen rechts oben */
+/* Riesiges "Est. 2013" als Wasserzeichen rechts oben */
 .hero-est {
   position: absolute;
   top: 8%;
@@ -1544,7 +1544,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   font-weight: 600;
 }
 .hero-mark-line { display: block; }
-.hero-mark-line:first-child::before { content: 'Est. 2010  ·  '; color: var(--gold); }
+.hero-mark-line:first-child::before { content: 'Est. 2013  ·  '; color: var(--gold); }
 .hero-mark-big {
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -5234,7 +5234,7 @@ body { overflow-x: hidden; }
 }
 
 /* ---------- HERO-EST ANPASSEN AUF VOLLE BREITE ----------
-   Das Wasserzeichen Est. 2010 sitzt jetzt hinter dem
+   Das Wasserzeichen Est. 2013 sitzt jetzt hinter dem
    cinematic Hero, nicht mehr nur in der rechten Spalte. */
 .hero-cinematic .hero-est {
   top: clamp(60px, 8vw, 110px);
@@ -6862,7 +6862,7 @@ html.has-js-scroll { scroll-behavior: auto; }
 
 /* ---------- SPLASH-Stempel ----------
    Splash zeigt jetzt einen animierten Kreis-Stempel:
-   AC-Monogram, "Est. 2010"-Ring, Zentral-Hairlines. */
+   AC-Monogram, "Est. 2013"-Ring, Zentral-Hairlines. */
 .app-splash {
   background:
     radial-gradient(600px 300px at 50% 50%, rgba(184, 137, 62, 0.06), transparent 60%),

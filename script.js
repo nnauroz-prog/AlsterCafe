@@ -1216,7 +1216,7 @@ function enhanceSplashMark() {
       </g>
       <text class="splash-est-arc">
         <textPath href="#splash-arc" startOffset="50%" text-anchor="middle">
-          EST · 2010 · HOHENFELDE · HAMBURG ·
+          EST · 2013 · HOHENFELDE · HAMBURG ·
         </textPath>
       </text>
     </svg>
@@ -1541,7 +1541,7 @@ function injectFooterCredit() {
 
   const credit = document.createElement('p');
   credit.className = 'footer-credit';
-  credit.innerHTML = 'Eine Familien-Backstube — <em>seit 2010 in Hohenfelde.</em>';
+  credit.innerHTML = 'Eine Familien-Backstube — <em>seit 2013 in Hohenfelde.</em>';
   // Nach dem footer-grid einsetzen
   const grid = footer.querySelector('.footer-grid');
   if (grid) {

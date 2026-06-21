@@ -184,7 +184,7 @@ Außerdem lädt die Google-Fonts-URL bewusst keine italic-Achse mehr (`Fraunces:
 ### Design-Entscheidungen im Mitgliederbereich
 Maria hat per WhatsApp gemeldet, dass die Formation des Admin-Bereichs „blöd" wirkte. Folgende Vereinfachungen wurden bewusst getroffen — vor dem Rückbau erst nachfragen:
 
-- **Keine Setup-Gamification** (kein „Sie haben X von Y Schritten erledigt"-Fortschrittsbalken). Maria führt seit 15 Jahren einen Laden, sie braucht kein Onboarding-Spiel.
+- **Keine Setup-Gamification** (kein „Sie haben X von Y Schritten erledigt"-Fortschrittsbalken). Maria führt seit über zehn Jahren einen Laden, sie braucht kein Onboarding-Spiel.
 - **Keine Dashboard-Stats** (kein „0 von 7 Tagen befüllt", keine KW-Anzeige, keine „Zuletzt gespeichert"-Pille). Saas-Theater hat im Bäckerei-Backend nichts verloren.
 - **Tiles in zwei Gruppen** statt einem 7er-Raster: „Täglich" (3) vs. „Selten ändern" (4) — die drei oben sind die drei Aktionen, die Maria jeden Morgen macht.
 - **Tab-Navigation auf Mobile ausgeblendet.** Maria nutzt den Tile-Picker statt eines zweiten Navigations-Layers. Auf Desktop bleibt die Tab-Leiste als Quick-Switcher.
