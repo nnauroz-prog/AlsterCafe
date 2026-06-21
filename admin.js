@@ -1165,7 +1165,7 @@ function renderAnfragen() {
   if (!dom.anfragenList) return;
 
   if (items.length === 0) {
-    dom.anfragenList.innerHTML = '<li class="anfragen-empty">Noch keine Anfragen.</li>';
+    dom.anfragenList.innerHTML = '<li class="anfragen-empty">Hier erscheinen Reservierungsanfragen, sobald jemand das Formular auf der Webseite ausfüllt.</li>';
     return;
   }
   dom.anfragenList.innerHTML = items.map(r => buildAnfrageItem(r)).join('');
@@ -1288,7 +1288,7 @@ function renderOrders() {
   if (!dom.ordersList) return;
 
   if (items.length === 0) {
-    dom.ordersList.innerHTML = '<li class="anfragen-empty">Noch keine Bestellungen.</li>';
+    dom.ordersList.innerHTML = '<li class="orders-empty">Hier erscheinen Brötchen-Bestellungen, sobald die ersten über den Brötchen-Service eingehen.</li>';
     return;
   }
   dom.ordersList.innerHTML = items.map(o => buildOrderItem(o)).join('');

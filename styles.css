@@ -3424,6 +3424,68 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .toolbar-more-menu { right: auto; left: 0; }
 }
 
+/* Tab-Navigation im Workspace auf Mobile ausblenden — Maria nutzt
+   sowieso "Zurueck zur Uebersicht" + neue Tile-Auswahl, die 8
+   horizontal scrollbaren Tabs sind dort nur visueller Krach. Desktop:
+   weiterhin als Quick-Switcher fuer Power-User sichtbar. */
+@media (max-width: 720px) {
+  .admin-tabs { display: none; }
+}
+
+/* Akzentfarbe als collapsible -- Maria aendert die Brand-Farbe
+   praktisch nie. Im Bilder-Panel als kleines "Akzentfarbe aendern
+   (selten noetig)"-Details verstecken, damit es nicht ablenkt. */
+.design-collapsed {
+  margin-top: 20px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 20px;
+}
+.design-collapsed > summary {
+  cursor: pointer;
+  font-size: .92rem;
+  color: var(--muted);
+  padding: 8px 0;
+  list-style: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.design-collapsed > summary::-webkit-details-marker { display: none; }
+.design-collapsed > summary::before {
+  content: '+';
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--gold);
+  line-height: 1;
+}
+.design-collapsed[open] > summary::before { content: '−'; }
+.design-collapsed[open] > summary { color: var(--bean); }
+.design-row-inline { padding-top: 14px; }
+
+/* Empty-States freundlicher — wenn Maria das erste Mal einloggt
+   sind alle Listen leer. Das soll einladend wirken, nicht klinisch. */
+.anfragen-empty,
+.orders-empty {
+  text-align: center;
+  padding: 36px 20px;
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+.anfragen-empty::before,
+.orders-empty::before {
+  content: '';
+  display: block;
+  width: 40px; height: 40px;
+  margin: 0 auto 12px;
+  background: var(--cream);
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
 /* Brötchen-Sorten-Editor im Admin */
 .broetchen-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .broetchen-edit-row {

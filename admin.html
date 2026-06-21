@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r86" />
-  <script>(function(){var V='2026-05-10-r86';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r87" />
+  <script>(function(){var V='2026-05-10-r87';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -374,7 +374,7 @@
             <div class="design-row">
               <div class="design-info">
                 <h4>Logo</h4>
-                <p>Erscheint im Kopfbereich und im Footer. Quadratisch oder rund, max. 400 × 400 px.</p>
+                <p>Quadratisches Bild — wird oben im Kopfbereich und im Footer der Webseite angezeigt.</p>
               </div>
               <div class="design-control">
                 <div class="image-slot" data-design-key="logo" data-aspect="1">
@@ -394,8 +394,8 @@
             <!-- Hero-Bild -->
             <div class="design-row">
               <div class="design-info">
-                <h4>Hero-Bild</h4>
-                <p>Ersetzt die animierte Kaffeetasse im Header der Hauptseite. Empfohlen: 1200 × 1200 px, zentriertes Motiv.</p>
+                <h4>Bild ganz oben (Hero)</h4>
+                <p>Das große Bild auf der Startseite. Zum Beispiel eine schöne Außenansicht oder ein appetitlicher Croque.</p>
               </div>
               <div class="design-control">
                 <div class="image-slot" data-design-key="heroImage" data-aspect="1">
@@ -415,8 +415,8 @@
             <!-- Über-uns-Bild -->
             <div class="design-row">
               <div class="design-info">
-                <h4>Über-uns-Bild</h4>
-                <p>Wird in der „Über uns"-Sektion über dem Zitat angezeigt. Empfohlen: 1200 × 800 px.</p>
+                <h4>Bild auf „Über uns"</h4>
+                <p>Erscheint in der „Über uns"-Sektion über dem Zitat. Querformat passt am besten — z. B. ein Foto aus der Backstube.</p>
               </div>
               <div class="design-control">
                 <div class="image-slot" data-design-key="aboutImage" data-aspect="1.5">
@@ -437,7 +437,7 @@
             <div class="design-row">
               <div class="design-info">
                 <h4>Galerie</h4>
-                <p>Bis zu 6 Bilder erscheinen als eigene Sektion auf der Hauptseite. Wird automatisch ein- oder ausgeblendet.</p>
+                <p>Bis zu 6 Bilder. Sind welche da, erscheint die Galerie automatisch auf der Webseite. Sind keine da, ist die Sektion ausgeblendet.</p>
               </div>
               <div class="design-control">
                 <div class="gallery-grid-edit" id="gallery-grid-edit"></div>
@@ -450,28 +450,30 @@
               </div>
             </div>
 
-            <!-- Akzentfarbe -->
-            <div class="design-row">
-              <div class="design-info">
-                <h4>Akzentfarbe</h4>
-                <p>Beeinflusst Akzent-Linien, Buttons und Highlights. Wir empfehlen das warme Original-Gold.</p>
-              </div>
-              <div class="design-control">
-                <div class="color-picker">
-                  <div class="color-presets" id="color-presets">
-                    <button type="button" class="color-chip" data-color="#B8893E" title="Original Gold" aria-label="Akzentfarbe Original Gold" style="--c:#B8893E"></button>
-                    <button type="button" class="color-chip" data-color="#A1542A" title="Kupfer"        aria-label="Akzentfarbe Kupfer"        style="--c:#A1542A"></button>
-                    <button type="button" class="color-chip" data-color="#7C8B6F" title="Salbei"        aria-label="Akzentfarbe Salbei"        style="--c:#7C8B6F"></button>
-                    <button type="button" class="color-chip" data-color="#8C6F4F" title="Mocca"         aria-label="Akzentfarbe Mocca"         style="--c:#8C6F4F"></button>
-                    <button type="button" class="color-chip" data-color="#3D2415" title="Espresso"      aria-label="Akzentfarbe Espresso"      style="--c:#3D2415"></button>
+            <!-- Akzentfarbe (eingeklappt, weil Maria fast nie aendert) -->
+            <details class="design-collapsed">
+              <summary>Akzentfarbe ändern (selten nötig)</summary>
+              <div class="design-row design-row-inline">
+                <div class="design-info">
+                  <p>Beeinflusst Linien, Knöpfe und Highlights. Wir empfehlen das warme Original-Gold.</p>
+                </div>
+                <div class="design-control">
+                  <div class="color-picker">
+                    <div class="color-presets" id="color-presets">
+                      <button type="button" class="color-chip" data-color="#B8893E" title="Original Gold" aria-label="Akzentfarbe Original Gold" style="--c:#B8893E"></button>
+                      <button type="button" class="color-chip" data-color="#A1542A" title="Kupfer"        aria-label="Akzentfarbe Kupfer"        style="--c:#A1542A"></button>
+                      <button type="button" class="color-chip" data-color="#7C8B6F" title="Salbei"        aria-label="Akzentfarbe Salbei"        style="--c:#7C8B6F"></button>
+                      <button type="button" class="color-chip" data-color="#8C6F4F" title="Mocca"         aria-label="Akzentfarbe Mocca"         style="--c:#8C6F4F"></button>
+                      <button type="button" class="color-chip" data-color="#3D2415" title="Espresso"      aria-label="Akzentfarbe Espresso"      style="--c:#3D2415"></button>
+                    </div>
+                    <label class="color-custom">
+                      <input type="color" id="color-input" value="#B8893E" />
+                      <span>Eigene Farbe wählen</span>
+                    </label>
                   </div>
-                  <label class="color-custom">
-                    <input type="color" id="color-input" value="#B8893E" />
-                    <span>Eigene Farbe wählen</span>
-                  </label>
                 </div>
               </div>
-            </div>
+            </details>
 
             <div class="save-bar inline">
               <p class="save-status" id="design-status">Änderungen werden automatisch übernommen.</p>
@@ -688,8 +690,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r86" defer></script>
-  <script src="db.js?v=2026-05-10-r86" defer></script>
-  <script src="admin.js?v=2026-05-10-r86" defer></script>
+  <script src="config.js?v=2026-05-10-r87" defer></script>
+  <script src="db.js?v=2026-05-10-r87" defer></script>
+  <script src="admin.js?v=2026-05-10-r87" defer></script>
 </body>
 </html>
