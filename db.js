@@ -293,23 +293,21 @@
   }
 
   async function updateReservationStatus(id, status) {
-    if (!useSupabase) {
-      const list = readCache('reservations') || [];
-      const next = (Array.isArray(list) ? list : []).map(r => r.id === id ? { ...r, status } : r);
-      writeCache('reservations', next);
-      return true;
-    }
+    // Cache sofort aktualisieren — in-memory + localStorage —
+    // sonst sieht renderAnfragen() den alten Zustand bis zum naechsten Refresh.
+    const cur = readCache('reservations') || [];
+    const next = (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, status } : r);
+    writeCache('reservations', next);
+    if (!useSupabase) return true;
     const { error } = await sb.from('reservations').update({ status }).eq('id', id);
     return !error;
   }
 
   async function deleteReservation(id) {
-    if (!useSupabase) {
-      const list = readCache('reservations') || [];
-      const next = (Array.isArray(list) ? list : []).filter(r => r.id !== id);
-      writeCache('reservations', next);
-      return true;
-    }
+    const cur = readCache('reservations') || [];
+    const next = (Array.isArray(cur) ? cur : []).filter(r => r.id !== id);
+    writeCache('reservations', next);
+    if (!useSupabase) return true;
     const { error } = await sb.from('reservations').delete().eq('id', id);
     return !error;
   }
@@ -372,23 +370,19 @@
   }
 
   async function updateOrderStatus(id, status) {
-    if (!useSupabase) {
-      const list = readCache('orders') || [];
-      const next = (Array.isArray(list) ? list : []).map(o => o.id === id ? { ...o, status } : o);
-      writeCache('orders', next);
-      return true;
-    }
+    const cur = readCache('orders') || [];
+    const next = (Array.isArray(cur) ? cur : []).map(o => o.id === id ? { ...o, status } : o);
+    writeCache('orders', next);
+    if (!useSupabase) return true;
     const { error } = await sb.from('orders').update({ status }).eq('id', id);
     return !error;
   }
 
   async function deleteOrder(id) {
-    if (!useSupabase) {
-      const list = readCache('orders') || [];
-      const next = (Array.isArray(list) ? list : []).filter(o => o.id !== id);
-      writeCache('orders', next);
-      return true;
-    }
+    const cur = readCache('orders') || [];
+    const next = (Array.isArray(cur) ? cur : []).filter(o => o.id !== id);
+    writeCache('orders', next);
+    if (!useSupabase) return true;
     const { error } = await sb.from('orders').delete().eq('id', id);
     return !error;
   }

@@ -328,71 +328,7 @@ async function showDashboard() {
 function showOverview() {
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
-  renderOverviewStatus();
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
-}
-
-/* Zeigt der Inhaberin, was im Setup noch fehlt — als anklickbare Checkliste */
-function renderOverviewStatus() {
-  const card = document.getElementById('overview-status-card');
-  const list = document.getElementById('overview-status-list');
-  const pctEl = document.getElementById('overview-progress-pct');
-  const barEl = document.getElementById('overview-progress-bar');
-  if (!card || !list) return;
-
-  const get = (k) => { try { return window.alsterDb?.get(k); } catch { return null; } };
-  const weekly = get('weekly-menu');
-  const hours = get('hours');
-  const notice = get('notice');
-  const menu = get('menu');
-  const design = get('design') || {};
-  const broetchen = get('broetchen-items');
-
-  // Aktuelle Woche befuellt? (lokales Datum nutzen, sonst Tag-Versatz durch UTC)
-  let weeklyDone = false;
-  if (weekly && typeof weekly === 'object') {
-    const wk = weekly[isoDate(mondayOf(new Date()))];
-    if (wk?.days) weeklyDone = Object.values(wk.days).some(d => d?.dish || d?.closed);
-  }
-
-  // Hilfs-Prüfungen — ehrlich (leere Objekte/Arrays gelten nicht als erledigt)
-  const hasMenuContent = menu && typeof menu === 'object' &&
-    Object.values(menu).some(cat => cat && Array.isArray(cat.items) && cat.items.length > 0);
-  const hasHoursContent = Array.isArray(hours) && hours.length > 0;
-  const hasBroetchen = Array.isArray(broetchen) && broetchen.length > 0;
-  const galleryCount = Array.isArray(design.gallery) ? design.gallery.length : 0;
-
-  const items = [
-    { key: 'weekly', label: 'Wochenplan für diese Woche eintragen',           done: weeklyDone,             tab: 'week' },
-    { key: 'menu',   label: 'Speisekarte überprüfen',                          done: hasMenuContent,        tab: 'menu' },
-    { key: 'broet',  label: 'Brötchen-Sorten für den Service festlegen',       done: hasBroetchen,          tab: 'bestellungen' },
-    { key: 'hours',  label: 'Öffnungszeiten kontrollieren',                    done: hasHoursContent,       tab: 'hours' },
-    { key: 'logo',   label: 'Eigenes Logo hochladen',                          done: !!design.logo,         tab: 'design' },
-    { key: 'hero',   label: 'Hero-Foto (Außenansicht oder Croque) hochladen',  done: !!design.heroImage,    tab: 'design' },
-    { key: 'gallery',label: 'Mindestens 3 Galerie-Fotos hochladen',            done: galleryCount >= 3,     tab: 'design' },
-  ];
-
-  const done = items.filter(i => i.done).length;
-  const total = items.length;
-  const pct = Math.round((done / total) * 100);
-  if (pctEl) pctEl.textContent = `${pct}%`;
-  if (barEl) barEl.style.width = `${pct}%`;
-
-  list.innerHTML = items.map(it => `
-    <li class="overview-status-item ${it.done ? 'is-done' : ''}">
-      <span class="overview-status-icon" aria-hidden="true">${it.done ? '✓' : ''}</span>
-      <span class="overview-status-label">${it.label}</span>
-      ${it.done ? '' : `<button type="button" class="overview-status-go" data-tab="${it.tab}">Öffnen →</button>`}
-    </li>
-  `).join('');
-
-  // Wenn alles fertig: Karte mit Glückwunsch-Banner zeigen, ansonsten Liste
-  card.hidden = false;
-  card.classList.toggle('is-complete', done === total);
-
-  list.querySelectorAll('button[data-tab]').forEach(b =>
-    b.addEventListener('click', () => switchTab(b.dataset.tab))
-  );
 }
 
 function switchTab(name) {
@@ -1305,20 +1241,15 @@ function onMarkAnfrage(id) {
   const list = window.alsterDb?.get('reservations') || [];
   const current = (Array.isArray(list) ? list : []).find(r => r.id === id);
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
-  // Optimistisches Update
-  const optimistic = (Array.isArray(list) ? list : []).map(r => r.id === id ? { ...r, status: nextStatus } : r);
-  try { localStorage.setItem('alstercafe.reservations', JSON.stringify(optimistic)); } catch {}
-  renderAnfragen();
+  // db.js aktualisiert in-memory + localStorage synchron, also vor dem render aufrufen.
   window.alsterDb?.updateReservationStatus(id, nextStatus).finally(() => refreshAnfragen());
+  renderAnfragen();
 }
 
 function onDeleteAnfrage(id) {
   if (!confirm('Diese Anfrage wirklich löschen?')) return;
-  const list = window.alsterDb?.get('reservations') || [];
-  const optimistic = (Array.isArray(list) ? list : []).filter(r => r.id !== id);
-  try { localStorage.setItem('alstercafe.reservations', JSON.stringify(optimistic)); } catch {}
-  renderAnfragen();
   window.alsterDb?.deleteReservation(id).finally(() => refreshAnfragen());
+  renderAnfragen();
 }
 
 /* ---------- Bestellungen (belegte Brötchen) ---------- */
@@ -1403,19 +1334,14 @@ function onMarkOrder(id) {
   const list = window.alsterDb?.get('orders') || [];
   const current = (Array.isArray(list) ? list : []).find(o => o.id === id);
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
-  const optimistic = (Array.isArray(list) ? list : []).map(o => o.id === id ? { ...o, status: nextStatus } : o);
-  try { localStorage.setItem('alstercafe.orders', JSON.stringify(optimistic)); } catch {}
-  renderOrders();
   window.alsterDb?.updateOrderStatus(id, nextStatus).finally(() => refreshOrders());
+  renderOrders();
 }
 
 function onDeleteOrder(id) {
   if (!confirm('Diese Bestellung wirklich löschen?')) return;
-  const list = window.alsterDb?.get('orders') || [];
-  const optimistic = (Array.isArray(list) ? list : []).filter(o => o.id !== id);
-  try { localStorage.setItem('alstercafe.orders', JSON.stringify(optimistic)); } catch {}
-  renderOrders();
   window.alsterDb?.deleteOrder(id).finally(() => refreshOrders());
+  renderOrders();
 }
 
 /* ---------- Brötchen-Sorten-Editor ---------- */
