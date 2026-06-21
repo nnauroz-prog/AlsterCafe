@@ -1211,7 +1211,7 @@ function enhanceSplashMark() {
       <circle class="splash-ring-inner" cx="100" cy="100" r="86"/>
       <g class="splash-mono">
         <text x="100" y="120" text-anchor="middle"
-              font-family="'Fraunces', serif" font-style="italic"
+              font-family="'Fraunces', serif"
               font-size="78" font-weight="400">A</text>
       </g>
       <text class="splash-est-arc">
