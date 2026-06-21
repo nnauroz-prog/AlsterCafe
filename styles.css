@@ -8815,6 +8815,22 @@ html.has-js-scroll { scroll-behavior: auto; }
 }
 
 /* ===============================================
+   HERO-PHONE-CTA · Alman-Deutsche-Zielgruppe
+   Aeltere/konservative Gaeste rufen lieber an als digital
+   zu bestellen. Telefonnummer als gleichwertiger CTA im Hero.
+   =============================================== */
+.hero-cta-phone {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+.hero-cta-phone .ico { color: var(--gold); }
+@media (max-width: 540px) {
+  .hero-cta { gap: 14px 22px; }
+  .hero-cta-phone { width: 100%; padding-top: 4px; }
+}
+
+/* ===============================================
    KEIN KURSIV mehr · Maria-Feedback (WhatsApp 21.06.2026)
    Fraunces bleibt komplett erhalten, aber die "geschwungenen"
    italic-Schnitte werden ueberall auf aufrecht gestellt.
