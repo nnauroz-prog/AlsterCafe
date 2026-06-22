@@ -84,6 +84,11 @@ create policy "Authenticated can delete reservations"
 
 alter publication supabase_realtime add table public.reservations;
 
+-- Index fuer schnelles Sortieren der Inbox (admin.js listReservations
+-- macht order by received_at DESC limit 200).
+create index if not exists reservations_received_at_idx
+  on public.reservations (received_at desc);
+
 -- 4b. Bestellungen-Tabelle (belegte Broetchen): anonym einreichen, nur Inhaber liest
 create table if not exists public.orders (
   id           text primary key,
@@ -123,6 +128,10 @@ create policy "Authenticated can delete orders"
   using (auth.role() = 'authenticated');
 
 alter publication supabase_realtime add table public.orders;
+
+-- Index analog zur reservations-Tabelle.
+create index if not exists orders_received_at_idx
+  on public.orders (received_at desc);
 
 -- 5. Storage-Bucket "images" anlegen + public lesbar
 insert into storage.buckets (id, name, public)
