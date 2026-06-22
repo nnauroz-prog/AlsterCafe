@@ -3733,7 +3733,63 @@ body.is-editing [data-editable]:focus::before {
 .design-info p { color: var(--muted); font-size: .88rem; line-height: 1.55; margin: 0; }
 .design-control { min-width: 0; }
 
-.image-slot { display: flex; flex-direction: column; gap: 12px; }
+.image-slot { display: flex; flex-direction: column; gap: 12px; position: relative; }
+
+/* Upload-Loading-Overlay direkt am Slot — sonst sieht Maria sekunden-
+   lang nichts und tippt vielleicht erneut. */
+.image-slot.is-uploading .image-preview {
+  position: relative;
+  pointer-events: none;
+}
+.image-slot.is-uploading .image-preview::after {
+  content: 'Wird hochgeladen …';
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 252, 244, 0.92);
+  font-family: 'Fraunces', serif;
+  font-size: 1rem;
+  color: var(--bean);
+  border-radius: inherit;
+  z-index: 2;
+  animation: upload-pulse 1.4s ease-in-out infinite;
+}
+.image-slot.is-uploading .image-actions { opacity: .4; pointer-events: none; }
+.image-slot.is-uploading::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: 10px;
+  border: 2px solid var(--gold);
+  border-top-color: transparent;
+  animation: upload-spin 0.9s linear infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes upload-pulse { 0%,100% { opacity: 1; } 50% { opacity: .65; } }
+@keyframes upload-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .image-slot.is-uploading::before { animation: none; }
+  .image-slot.is-uploading .image-preview::after { animation: none; }
+}
+
+/* Galerie-Button-Loading-State */
+.upload-btn.is-uploading {
+  pointer-events: none;
+  opacity: .6;
+  position: relative;
+}
+.upload-btn.is-uploading::after {
+  content: '';
+  display: inline-block;
+  width: 14px; height: 14px;
+  margin-left: 8px;
+  border: 2px solid var(--gold);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: upload-spin 0.9s linear infinite;
+  vertical-align: -3px;
+}
 .image-preview {
   width: 100%; max-width: 360px;
   background:

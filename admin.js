@@ -818,6 +818,10 @@ function initDesignEditor() {
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      // Visuelles Loading direkt am Slot — sonst sieht Maria sekunden-
+      // lang nichts, waehrend Canvas-Kompression + Upload laufen, und
+      // tippt evtl. erneut.
+      slot.classList.add('is-uploading');
       flashDesignStatus('Bild wird hochgeladen …');
       try {
         const url = await window.alsterDb.uploadImage(file, key);
@@ -829,6 +833,7 @@ function initDesignEditor() {
       } catch (err) {
         flashDesignStatus('Fehler beim Upload: ' + err.message, 'error');
       } finally {
+        slot.classList.remove('is-uploading');
         fileInput.value = '';
       }
     });
@@ -843,25 +848,32 @@ function initDesignEditor() {
 
   // Galerie-Upload
   const galleryInput = document.getElementById('gallery-upload-input');
+  const galleryUploadBtn = document.getElementById('gallery-upload-btn');
   galleryInput?.addEventListener('change', async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
+    galleryUploadBtn?.classList.add('is-uploading');
     flashDesignStatus(`${files.length} Bild(er) werden hochgeladen …`);
     const design = loadDesign();
     const gallery = Array.isArray(design.gallery) ? design.gallery.slice() : [];
     let added = 0;
+    let skipped = 0;
     for (const file of files) {
-      if (gallery.length >= GALLERY_MAX) break;
+      if (gallery.length >= GALLERY_MAX) { skipped++; continue; }
       try {
         const url = await window.alsterDb.uploadImage(file, 'gallery');
         gallery.push(url);
         added++;
-      } catch (err) { console.warn('Upload skipped', err); }
+      } catch (err) { console.warn('Upload skipped', err); skipped++; }
     }
     design.gallery = gallery;
     saveDesign(design);
     renderGalleryEdit();
-    flashDesignStatus(`${added} Bild(er) hinzugefügt.`);
+    galleryUploadBtn?.classList.remove('is-uploading');
+    const msg = skipped > 0
+      ? `${added} Bild(er) hinzugefügt, ${skipped} übersprungen (Max ${GALLERY_MAX} oder Fehler).`
+      : `${added} Bild(er) hinzugefügt.`;
+    flashDesignStatus(msg, added > 0 ? 'ok' : 'error');
     galleryInput.value = '';
   });
 
