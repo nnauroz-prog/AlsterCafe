@@ -12,8 +12,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r100" />
-  <script>(function(){var V='2026-05-10-r100';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r101" />
+  <script>(function(){var V='2026-05-10-r101';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -274,6 +274,7 @@
 
         <!-- TAB: WOCHENPLAN -->
         <div class="admin-panel is-active" id="panel-week" role="tabpanel">
+          <h2 class="panel-title">Mittagsmenü</h2>
           <p class="panel-help">Bei jedem Tag das Gericht und die Beilage eintippen. Kein Mittagstisch an einem Tag? Den Schalter „An diesem Tag geschlossen" umlegen. Zum Schluss unten auf <strong>„Wochenplan speichern"</strong> klicken — fertig.</p>
           <div class="panel-toolbar">
             <div class="week-switch">
@@ -538,6 +539,24 @@
 
         <!-- TAB: BESTELLUNGEN -->
         <div class="admin-panel" id="panel-bestellungen" role="tabpanel" hidden>
+          <!-- Inbox zuerst — der haeufigste Grund, diese Seite zu oeffnen.
+               Der Sorten-Editor wandert nach unten als Setup-Sektion. -->
+          <div class="panel-card wide">
+            <div class="anfragen-head">
+              <div>
+                <h3>Eingegangene Bestellungen</h3>
+                <p class="panel-card-sub">
+                  Vorbestellungen für belegte Brötchen, die über den
+                  Brötchen-Service auf der Webseite eingehen — neueste zuerst.
+                </p>
+              </div>
+              <span class="anfragen-count" id="orders-count" hidden></span>
+            </div>
+            <ul class="anfragen-list" id="orders-list">
+              <li class="orders-empty">Hier erscheinen Brötchen-Bestellungen, sobald die ersten über den Brötchen-Service eingehen.</li>
+            </ul>
+          </div>
+
           <div class="panel-card wide">
             <h3>Bestellbare Brötchen-Sorten</h3>
             <p class="panel-help">Diese Sorten kann der Kunde auswählen. Pro Zeile: Name (z. B. „Käse") und kurze Beschreibung. „vegetarisch" ankreuzen, wenn fleischlos. Mit „+ Sorte hinzufügen" erweitern. Dann auf <strong>„Sorten speichern"</strong> klicken.</p>
@@ -555,22 +574,6 @@
                 </div>
               </div>
             </form>
-          </div>
-
-          <div class="panel-card wide">
-            <div class="anfragen-head">
-              <div>
-                <h3>Eingegangene Bestellungen</h3>
-                <p class="panel-card-sub">
-                  Vorbestellungen für belegte Brötchen, die über den
-                  Brötchen-Service auf der Webseite eingehen — neueste zuerst.
-                </p>
-              </div>
-              <span class="anfragen-count" id="orders-count" hidden></span>
-            </div>
-            <ul class="anfragen-list" id="orders-list">
-              <li class="anfragen-empty">Noch keine Bestellungen.</li>
-            </ul>
           </div>
         </div>
 
@@ -694,8 +697,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r100" defer></script>
-  <script src="db.js?v=2026-05-10-r100" defer></script>
-  <script src="admin.js?v=2026-05-10-r100" defer></script>
+  <script src="config.js?v=2026-05-10-r101" defer></script>
+  <script src="db.js?v=2026-05-10-r101" defer></script>
+  <script src="admin.js?v=2026-05-10-r101" defer></script>
 </body>
 </html>
