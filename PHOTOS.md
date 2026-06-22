@@ -56,23 +56,24 @@ Vier bis sechs gute iPhone-Fotos heben die Seite enorm.
 1. iPhone → **alstercafe.de/admin.html** öffnen
 2. **Einloggen** mit Maria's E-Mail + Passwort
 3. Karte **„Bilder hochladen"** antippen
-4. Bei **„Galerie"** auf **„+ Bild hinzufügen"** tippen
-5. Bild auswählen → wird hochgeladen + komprimiert automatisch
+4. Bei **„Galerie"** auf **„Bild hinzufügen"** tippen
+5. Bild auswählen → wird hochgeladen, komprimiert und **sofort übernommen**
 6. Maximal 6 Bilder gleichzeitig in der Galerie
-7. **„Speichern"** ganz unten
+
+**Wichtig:** Bilder haben **keinen extra Speichern-Knopf** — sobald der Upload durch ist, sind sie live. Ein Bild loswerden? Auf „Entfernen" tippen.
 
 **Reihenfolge:** Das erste Bild wird groß, die anderen kleiner. Croque-Madame nach oben.
 
 ---
 
-## 🎨 Über-uns-Photo-Slot
+## 🎨 Bild auf „Über uns"
 
 Auf der **Über uns**-Seite gibt es einen speziellen Platzhalter rechts neben dem Text. Da gehört das **Backstube-Familie-Foto** rein (Punkt 6 oben).
 
 Hochladen:
-1. Admin → **„Bilder hochladen"** → **„Über-uns-Bild"**-Bereich
-2. Bild auswählen
-3. Speichern
+1. Admin → **„Bilder hochladen"** → Bereich **„Bild auf 'Über uns'"**
+2. **„Hochladen"** antippen, Bild auswählen
+3. Wird sofort übernommen — kein extra Speichern
 
 ---
 

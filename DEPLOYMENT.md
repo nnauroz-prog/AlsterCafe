@@ -10,22 +10,25 @@ abgesicherten Webseite mit echter Cloud-Anmeldung.
 - **Echte Anmeldung** mit E-Mail/Passwort, gehasht auf Server (bcrypt)
 - **Cloud-Datenbank** (PostgreSQL via Supabase) — Inhaber-Eingaben
   erscheinen für *alle* Webseiten-Besucher live
-- **Cloud-Bilderspeicher** statt localStorage (skaliert beliebig)
+- **Cloud-Bilderspeicher** statt localStorage, mit automatischer
+  Kompression vor Upload (480 px Logo, 1400 px Hero/Über-uns, 1200 px Galerie)
 - **Passwort-Reset per E-Mail** out-of-the-box
 - **Brute-Force-Schutz** durch Supabase
-- **HTTPS-Hosting** mit eigener Domain
+- **HTTPS-Hosting** mit eigener Domain (GitHub Pages oder Netlify)
 - **Realtime-Sync**: Bäcker editiert auf Handy → Webseite aktualisiert sich
   überall ohne Reload
-- **PWA**: „Add to Home Screen" auf iPhone & Android — Bäcker hat den
-  Mitgliederbereich als App
-- **Offline-Fähigkeit** (Service Worker cached Shell-Assets)
+- **PWA-Manifest**: „Add to Home Screen" auf iPhone & Android — Bäcker hat den
+  Mitgliederbereich als App-Icon. (Kein Service Worker im Einsatz — die Seite
+  ist klein genug, dass Browser-Cache + Cache-Buster reichen. Ein altes SW
+  wird bei jedem Pageload aktiv entfernt.)
 - **Live-Status-Pille** „Aktuell geöffnet · schließt in X Min." auf
   Basis der Öffnungszeiten
 - **Drag & Drop Sortierung** für Speisekarten-Items und Galerie-Bilder
 - **Aktivitäts-Verlauf** im Mitgliederbereich
 - **Print-optimierte Speisekarte** (Cmd+P liefert druckbare Karte)
 - **404-Seite** im Brand-Stil
-- **JSON-LD Menu/FAQ-Schemas** für Google Rich Results
+- **JSON-LD Schema.org** auf Index (`CafeOrCoffeeShop` mit Öffnungszeiten +
+  foundingDate 2013) und auf jeder Sub-Page (`BreadcrumbList`)
 
 ---
 
@@ -99,34 +102,45 @@ window.ALSTERCAFE_CONFIG = {
 
 ## Schritt 5 · Webseite hosten *(5 Min.)*
 
-Empfohlen: **Netlify** (kostenlos, automatisches HTTPS, automatische Deploys
-bei jedem Git-Push).
+Aktueller Stand: **GitHub Pages** (kostenlos, automatischer Deploy aus dem
+Feature-Branch in den `gh-pages`-Branch via GitHub Action).
 
-### Variante A · Netlify mit GitHub *(empfohlen)*
+### Variante A · GitHub Pages *(aktive Konfiguration)*
+
+1. Push auf den Feature-Branch (`claude/bakery-website-redesign-vyyXQ` oder
+   `main`) löst automatisch den Workflow aus.
+2. Live-URL: `https://nnauroz-prog.github.io/AlsterCafe/`
+3. Custom-Domain einrichten: siehe `CUSTOM-DOMAIN.md`.
+4. Hinweis: GitHub Pages liest **nicht** `_headers` oder `netlify.toml` —
+   die dort definierten Security-Header (HSTS, CSP, X-Frame-Options,
+   Permissions-Policy) sind dort **nicht aktiv**. Auf der Seite selbst ist
+   `Referrer-Policy` als `<meta>` gesetzt, das funktioniert host-unabhängig.
+
+### Variante B · Netlify (alternativ, kostenlos)
+
+Falls voll funktionierende Security-Header gewünscht sind, ist Netlify
+eine Alternative — die liest `_headers` und `netlify.toml` automatisch.
 
 1. Auf <https://app.netlify.com> mit GitHub anmelden
 2. **Add new site** → **Import an existing project**
-3. **Deploy with GitHub** → das Repository `nnauroz-prog/AlsterCafe` wählen
-4. Branch: `main` (oder den Branch, auf dem Sie arbeiten)
-5. **Deploy site** klicken
-6. Nach ~30 Sek. ist die Seite live unter `https://[zufallsname].netlify.app`
-
-### Variante B · Drag & Drop
-
-1. Alle Dateien des Ordners als ZIP packen (oder den Ordner direkt)
-2. Auf <https://app.netlify.com/drop> ziehen — fertig
+3. **Deploy with GitHub** → Repository `nnauroz-prog/AlsterCafe` wählen
+4. Branch: `main`
+5. **Deploy site** klicken — fertig
 
 ---
 
 ## Schritt 6 · Eigene Domain anbinden *(5 Min.)*
 
-1. **Domain bei z. B. Strato/IONOS/Domains.coop registrieren**
-   (z. B. `alstercafe.de` — falls noch frei) — kostet 5–15 €/Jahr
-2. In Netlify: **Domain settings** → **Add custom domain** → `alstercafe.de`
-3. Netlify gibt zwei DNS-Records vor (CNAME + A-Record)
-4. Beim Domain-Anbieter im DNS-Bereich diese Records eintragen
-5. Nach 5 Min. – einigen Stunden ist die Domain aktiv (DNS-Propagation)
-6. Netlify aktiviert automatisch **HTTPS** (Let's Encrypt)
+Siehe ausführliche Anleitung in **`CUSTOM-DOMAIN.md`** (DNS-Records,
+GitHub-Pages-Setting, CNAME-Datei im Source-Branch). Inhalt in Kurz:
+
+1. **Domain bei z. B. Strato/IONOS registrieren** — kostet 5–15 €/Jahr
+2. **DNS-Records setzen:** vier `A`-Records auf die GitHub-Pages-IPs +
+   ein `CNAME` für `www` → `nnauroz-prog.github.io`
+3. **In GitHub:** Settings → Pages → Custom domain `alstercafe.de` eintragen
+4. **HTTPS aktivieren:** „Enforce HTTPS" anhaken (Let's Encrypt, kostenlos)
+5. **CNAME-Datei** in den Source-Branch übernehmen, sonst überschreibt
+   der Auto-Deploy die Custom-Domain
 
 ---
 
@@ -189,18 +203,19 @@ Bäckerei-Webseite irrelevant.
 
 ## Sicherheits-Checkliste vor Go-Live
 
-- [ ] **Demo-Passwort entfernen:** `demoPassword: ''` in `config.js` setzen
-      (sobald supabaseUrl konfiguriert ist, ist die Demo-Auth ohnehin
-      nicht mehr aktiv — entfernt aber den String aus dem Source)
+- [x] **Demo-Passwort entfernt** (bereits erledigt — `config.js` enthält
+      keinen `demoPassword`-Schlüssel mehr)
 - [ ] **GitHub-Repository auf privat stellen:**
       `https://github.com/nnauroz-prog/AlsterCafe/settings`
       → Danger Zone → Change visibility → Make private
 - [ ] Echtes Inhaber-Passwort ist mindestens 12 Zeichen
 - [ ] Inhaber-E-Mail ist verifiziert
 - [ ] HTTPS ist aktiv (grünes Schloss in der Browser-Adressleiste)
-- [ ] Security-Headers werden ausgeliefert (testen unter
-      <https://securityheaders.com/?q=alstercafe.de>)
-- [ ] Impressum-Daten sind korrekt
+- [ ] Security-Headers prüfen unter <https://securityheaders.com/?q=alstercafe.de>:
+      auf GitHub Pages werden NUR Referrer-Policy (via `<meta>`) und
+      HSTS (von GitHub gesetzt) ausgeliefert. Für CSP/X-Frame-Options
+      Cloudflare davorhängen oder zu Netlify wechseln.
+- [ ] Impressum-Daten sind korrekt (Croquenoah Cafe, Inh. Maria Bayrakcioglu)
 - [ ] Datenschutzerklärung-Daten sind korrekt
 - [ ] Sitemap zeigt auf die richtige Domain
       (`sitemap.xml` ggf. anpassen)
