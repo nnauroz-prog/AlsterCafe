@@ -31,7 +31,6 @@ Dann ist Mo–Fr morgens nur „Hauptgericht überprüfen".
 |---|---|
 | **Reservierung-Mail** | → kurz zurückrufen oder antworten → im Admin „Erledigt" |
 | **Brötchen-Bestellung-Mail** | → bestätigen + auf Wunschtermin notieren → im Admin „Erledigt" |
-| **WhatsApp-Notification** (falls eingerichtet) | → in den Admin gehen für Details |
 
 ---
 

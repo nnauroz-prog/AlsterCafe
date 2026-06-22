@@ -12,7 +12,6 @@ Drei Dokumente für drei Zwecke:
 | [**MARIA-ROUTINE.md**](MARIA-ROUTINE.md) | Maria | Tägliche 5-Minuten-Routine (Druckkarte) |
 | [**PHOTOS.md**](PHOTOS.md) | Maria | Welche Fotos sie knipsen und wie hochladen |
 | [**CUSTOM-DOMAIN.md**](CUSTOM-DOMAIN.md) | Dev | DNS-Konfiguration alstercafe.de |
-| [**WHATSAPP-SETUP.md**](WHATSAPP-SETUP.md) | Dev | Optionale WhatsApp-Notifications |
 
 ## Live-Adresse (Stand heute)
 ```
@@ -119,15 +118,6 @@ was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten is
 
 ---
 
-## 3b. Optional: WhatsApp-Benachrichtigung aufs Handy
-
-Auf Wunsch bekommt der Inhaber bei jeder neuen Bestellung und Reservierung
-sofort eine WhatsApp-Nachricht — ganz ohne Mitgliederbereich-öffnen.
-Die Nachricht enthält keine Kundendaten (nur Anzahl + Termin), die Details
-stehen weiterhin sicher im Mitgliederbereich.
-
-Einrichtung (einmalig, ca. 15 Min.): siehe **WHATSAPP-SETUP.md**.
-
 ---
 
 ## 4. Wartung
@@ -189,7 +179,7 @@ Nadims Recherche (Northdata + Webarchiv + KI-Verifikation am 21.06.2026) hat kla
 - Wer die Zahl wieder ändert: bitte erst die Tripadvisor-Ersteinträge oder das Webarchiv von alstercafe.de prüfen. Im Zweifel: lieber konservativ („über 12 Jahre" passt bis Mitte 2026).
 
 ### Design-Entscheidungen im Mitgliederbereich
-Maria hat per WhatsApp gemeldet, dass die Formation des Admin-Bereichs „blöd" wirkte. Folgende Vereinfachungen wurden bewusst getroffen — vor dem Rückbau erst nachfragen:
+Maria hat gemeldet, dass die Formation des Admin-Bereichs „blöd" wirkte. Folgende Vereinfachungen wurden bewusst getroffen — vor dem Rückbau erst nachfragen:
 
 - **Keine Setup-Gamification** (kein „Sie haben X von Y Schritten erledigt"-Fortschrittsbalken). Maria führt seit über zehn Jahren einen Laden, sie braucht kein Onboarding-Spiel.
 - **Keine Dashboard-Stats** (kein „0 von 7 Tagen befüllt", keine KW-Anzeige, keine „Zuletzt gespeichert"-Pille). Saas-Theater hat im Bäckerei-Backend nichts verloren.

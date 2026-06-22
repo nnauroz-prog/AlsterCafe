@@ -36,8 +36,6 @@ Auto-Deploy: jeder Push auf den Feature-Branch wird per GitHub Actions in `gh-pa
 ├── image.png                        Logo
 │
 ├── setup.sql                        Vollständiges Supabase-Setup
-├── supabase/functions/
-│   └── notify-whatsapp/index.ts     Edge Function: WhatsApp-Benachrichtigung
 │
 ├── .github/workflows/
 │   └── deploy.yml                   Auto-Deploy nach gh-pages
@@ -45,7 +43,6 @@ Auto-Deploy: jeder Push auf den Feature-Branch wird per GitHub Actions in `gh-pa
 └── docs/
     ├── UEBERGABE.md                 Schritt-für-Schritt für die Inhaberin
     ├── CUSTOM-DOMAIN.md             alstercafe.de auf Pages umstellen
-    ├── WHATSAPP-SETUP.md            Benachrichtigung aktivieren
     └── MASTERPROMPT.md              Re-Use als Template für andere Cafés
 ```
 
@@ -55,7 +52,6 @@ Auto-Deploy: jeder Push auf den Feature-Branch wird per GitHub Actions in `gh-pa
 - **Schriften:** Fraunces (Editorial-Serif) + Inter (Sans), via Google Fonts.
 - **Backend:** Supabase (Postgres + Auth + Storage + Realtime). Anon-Key im Frontend, Sicherheit durch Row-Level-Security.
 - **Hosting:** GitHub Pages mit Auto-Deploy.
-- **Benachrichtigungen:** Supabase Edge Function → WhatsApp (CallMeBot), optional.
 
 ## Daten-Layer
 
