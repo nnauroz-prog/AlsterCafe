@@ -8786,14 +8786,21 @@ html.has-js-scroll { scroll-behavior: auto; }
    Auf Desktop bleibt der Blur-Effekt erhalten.
    =============================================== */
 @media (max-width: 760px) {
-  .topbar,
-  .site-header.is-scrolled,
+  .admin-header,
+  .live-status,
   .save-bar,
+  .sticky-today,
   .cookie-banner,
   .hero-coord {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+  /* Etwas mehr Opacity damit der fehlende Blur den Hintergrund
+     nicht durchscheinen laesst. */
+  .admin-header { background: rgba(255, 252, 244, 0.96); }
+  .live-status { background: rgba(255, 252, 244, 0.92); }
+  .sticky-today { background: rgba(42, 24, 16, 0.98); }
+  .hero-coord { background: rgba(255, 252, 244, 0.85); }
 }
 
 /* ===============================================
