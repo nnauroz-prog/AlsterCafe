@@ -201,6 +201,11 @@ Maria hat per WhatsApp gemeldet, dass die Formation des Admin-Bereichs „blöd"
 - **Akzentfarbe im Bilder-Panel eingeklappt.** Maria ändert das Brand-Gold praktisch nie.
 - **Empty-States freundlich**, nicht klinisch („Hier erscheinen Anfragen, sobald jemand das Formular ausfüllt" statt „Noch keine Anfragen.").
 
+### Security-Header
+- `Referrer-Policy: strict-origin-when-cross-origin` ist als `<meta name="referrer">` auf allen 11 Seiten gesetzt — wirkt unabhängig vom Host. Sorgt dafür, dass Maria's Kunden beim Anklicken externer Links (Tripadvisor, Google Maps, Croquenoah-Webshop) nicht den vollen Referrer leaken.
+- `_headers` und `netlify.toml` definieren zusätzlich HSTS, X-Frame-Options, CSP und Permissions-Policy. **Diese werden auf GitHub Pages NICHT angewendet** (nur auf Netlify). Falls die Seite irgendwann auf Netlify wechselt, sind sie automatisch aktiv. Auf GitHub Pages bleibt der Header-Schutz reduziert auf das, was per Meta möglich ist.
+- Konsequenz für Maria: Niedriges Risiko, weil keine sensiblen Kunden-Daten im Frontend liegen (Reservierungen + Bestellungen sind hinter Supabase-RLS authentifiziert). Aber: kein automatischer Schutz gegen Clickjacking via iFrame. Wenn das je akut wird → Hosting wechseln oder Cloudflare davorhängen.
+
 ### Externe Profile pflegen
 Die Startseite verlinkt jetzt auf echte Bewertungsplattformen statt erfundene Zitate:
 
