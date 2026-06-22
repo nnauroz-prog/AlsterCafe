@@ -171,7 +171,12 @@ function initContent() {
   const content = validateContent(raw) || {};
   document.querySelectorAll('[data-editable]').forEach(el => {
     const key = el.dataset.editable;
-    if (typeof content[key] === 'string' && content[key].length < 5000) {
+    // Nur uebernehmen, wenn auch tatsaechlicher Text drinsteht. Schuetzt
+    // gegen versehentliches Leeren im Edit-Modus — sonst waere der Hero
+    // ploetzlich komplett leer.
+    if (typeof content[key] === 'string'
+        && content[key].trim().length > 0
+        && content[key].length < 5000) {
       el.innerHTML = content[key];
     }
   });
@@ -380,6 +385,13 @@ async function onEditBlur(e) {
   const original = el.dataset.editOriginal || '';
   if (newValue === original) {
     setEditStatus('Keine Änderung.');
+    return;
+  }
+  // Versehentliches Leeren verhindern — Text muss tatsaechlich Inhalt haben.
+  // Sonst wuerde der Standard-Text der Seite ueberschrieben durch nichts.
+  if (newValue.replace(/<[^>]*>/g, '').trim().length === 0) {
+    el.innerHTML = original;
+    setEditStatus('Feld darf nicht leer sein — Original wiederhergestellt.', 'error');
     return;
   }
   const content = window.alsterDb?.get('content') || {};
