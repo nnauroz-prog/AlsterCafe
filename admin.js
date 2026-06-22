@@ -368,6 +368,10 @@ function switchTab(name) {
     });
     try { sessionStorage.setItem(ACTIVE_TAB_KEY, name); } catch {}
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
+    // Beim Wechsel auf Mittagsmenue: heutigen Tag in den Sichtbereich
+    // rollen (renderWeek hat diese Logik, fueht sie aber nur aus wenn
+    // das Panel sichtbar ist — jetzt ist es).
+    if (name === 'week') renderWeek();
   };
   // Smooth Tab-Wechsel via View-Transitions API (Chromium); Fallback: direkt
   if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -513,6 +517,22 @@ function renderWeek() {
     const card = cb.closest('.day-card');
     cb.addEventListener('change', () => card.classList.toggle('is-closed', cb.checked));
   });
+
+  // Heutigen Tag in den Sichtbereich rollen — sonst muss Maria am
+  // Mittwoch erst durch Mo/Di scrollen. Nur wenn das Wochen-Panel
+  // tatsaechlich gerade sichtbar ist (sonst wuerde renderWeek beim
+  // Dashboard-Boot die Seite nach oben werfen).
+  const panelWeek = document.getElementById('panel-week');
+  if (panelWeek && !panelWeek.hidden && panelWeek.classList.contains('is-active')) {
+    requestAnimationFrame(() => {
+      const todayCard = dom.dayGrid.querySelector('.day-card.is-today');
+      if (todayCard) {
+        todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        dom.dayGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
 
   setStatus(dom.saveStatus,
     stored.updatedAt
