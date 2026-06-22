@@ -264,26 +264,38 @@ async function isAuthenticated() {
 
 async function onLogin(e) {
   e.preventDefault();
+  // Doppel-Submit-Schutz: Login-Knopf sofort sperren. Sonst koennte ein
+  // Doppel-Tap zwei parallele Auth-Requests starten und das Konto
+  // bei Supabase rate-limiten.
+  const submitBtn = dom.loginForm.querySelector('button[type="submit"]');
+  if (submitBtn?.disabled) return;
+  if (submitBtn) submitBtn.disabled = true;
+
   const data = new FormData(dom.loginForm);
   const u = data.get('username');
   const p = data.get('password');
 
   setStatus(dom.loginStatus, 'Anmeldung läuft …');
-  const result = await window.alsterDb.auth.signIn(u, p);
-
-  if (result.ok) {
-    setStatus(dom.loginStatus, '');
-    // Bei "?next=edit": direkt zurück in den Bearbeitungsmodus
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('next') === 'edit') {
-      window.location.href = 'index.html?edit=1';
-      return;
+  try {
+    const result = await window.alsterDb.auth.signIn(u, p);
+    if (result.ok) {
+      setStatus(dom.loginStatus, '');
+      // Bei "?next=edit": direkt zurück in den Bearbeitungsmodus
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('next') === 'edit') {
+        window.location.href = 'index.html?edit=1';
+        return;
+      }
+      await showDashboard();
+    } else {
+      setStatus(dom.loginStatus,
+        result.error || 'Benutzername oder Passwort ist nicht korrekt.',
+        'error');
+      if (submitBtn) submitBtn.disabled = false;
     }
-    await showDashboard();
-  } else {
-    setStatus(dom.loginStatus,
-      result.error || 'Benutzername oder Passwort ist nicht korrekt.',
-      'error');
+  } catch (err) {
+    setStatus(dom.loginStatus, 'Anmeldung fehlgeschlagen — bitte erneut versuchen.', 'error');
+    if (submitBtn) submitBtn.disabled = false;
   }
 }
 
