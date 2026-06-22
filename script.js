@@ -190,10 +190,11 @@ function initContent() {
 function hideSplash() {
   const splash = document.getElementById('app-splash');
   if (!splash) return;
-  // Premium-Stempel braucht ~1.4s zum Einzeichnen — wir warten,
-  // damit Maria's Brand-Mark sich ruhig setzen kann
+  // Knappes Dwell — Maria's Kunden sollen die Seite schnell sehen,
+  // nicht auf einen Stempel warten. War 1400ms (Editorial-Flair),
+  // jetzt 350ms (genug fuer das Logo-Fade).
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const dwell = reduceMotion ? 0 : 1400;
+  const dwell = reduceMotion ? 0 : 350;
   setTimeout(() => {
     splash.classList.add('is-leaving');
     setTimeout(() => splash.remove(), 600);

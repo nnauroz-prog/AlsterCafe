@@ -637,100 +637,6 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 
 .landing-cards { background: var(--paper); }
-.teaser-grid {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  grid-auto-rows: minmax(0, 1fr);
-  gap: 18px;
-  align-items: stretch;
-}
-/* Erste Karte (Croques) spannt die volle Hoehe — die anderen drei stapeln rechts */
-.teaser-grid > .teaser-feature {
-  grid-row: span 3;
-}
-.teaser-card {
-  display: flex; flex-direction: column;
-  padding: 36px 32px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  color: inherit;
-  transition:
-    transform var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-base) var(--ease-out);
-  position: relative;
-  overflow: hidden;
-}
-.teaser-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--gold);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform var(--dur-base) var(--ease-out);
-}
-.teaser-card:hover {
-  border-color: var(--gold-soft);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-.teaser-card:hover::after { transform: scaleX(1); }
-.teaser-num {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-size: 1.4rem;
-  color: var(--gold);
-  margin: 0 0 18px;
-}
-.teaser-card h3 {
-  font-size: 1.6rem;
-  margin: 0 0 12px;
-  font-weight: 500;
-}
-.teaser-card p {
-  color: var(--muted);
-  font-size: .98rem;
-  line-height: 1.55;
-  margin: 0 0 24px;
-}
-.teaser-link {
-  margin-top: auto;
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: .82rem;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--bean);
-  font-weight: 600;
-}
-.teaser-feature {
-  background:
-    radial-gradient(600px 200px at 0% 0%, rgba(184, 137, 62, 0.10), transparent 60%),
-    var(--cream);
-  border-color: var(--gold-soft);
-  padding: 48px 40px;
-}
-.teaser-feature .teaser-num { color: var(--bean); font-size: 2rem; }
-.teaser-feature h3 { font-size: clamp(1.9rem, 3.4vw, 2.4rem); line-height: 1.1; }
-.teaser-feature p { font-size: 1.05rem; max-width: 32ch; }
-.teaser-card .teaser-num {
-  transition: transform var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
-}
-.teaser-card:hover .teaser-num {
-  transform: rotate(-6deg) translateY(-3px);
-  color: var(--gold);
-}
-.teaser-link .ico { transition: transform var(--dur-base) var(--ease-out); }
-.teaser-card:hover .teaser-link .ico { transform: translateX(6px); }
-.teaser-card:hover { border-color: var(--gold); box-shadow: 0 18px 40px -22px rgba(42, 24, 16, 0.32); }
-@media (max-width: 760px) {
-  .teaser-grid { grid-template-columns: 1fr; }
-  .teaser-grid > .teaser-feature { grid-row: auto; }
-  .teaser-feature { padding: 36px 28px; }
-}
 
 /* STICKY HEUTE-BAR (Startseite) */
 .sticky-today {
@@ -962,13 +868,9 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .order-summary { position: static; }
 }
 
-/* STAMMGAST-ZITATE-Sektion */
-.landing-quotes {
-  padding: clamp(64px, 9vw, 110px) 0;
-  background: var(--paper);
-  position: relative;
-  overflow: hidden;
-}
+/* .quotes-eyebrow wird noch von .reviews-Block verwendet (Markup-Stand
+   nach Reviews-Refactor) — daher hier behalten, .landing-quotes selbst
+   wurde mit den Fake-Quotes entfernt. */
 .quotes-eyebrow {
   text-align: center;
   font-size: .72rem;
@@ -979,58 +881,6 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   margin: 0 0 40px;
 }
 .quotes-eyebrow .num { color: var(--gold); margin-right: 8px; }
-.quotes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 36px;
-  align-items: start;
-}
-.quote-card {
-  margin: 0;
-  padding: 32px 28px;
-  background: var(--cream);
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  position: relative;
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
-}
-.quote-card::before {
-  content: '"';
-  position: absolute;
-  top: -22px; left: 18px;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-size: 5.5rem;
-  color: var(--gold);
-  line-height: 1;
-  opacity: 0.5;
-  font-variation-settings: "opsz" 144;
-}
-.quote-card blockquote {
-  margin: 0 0 18px;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-size: clamp(1.15rem, 2vw, 1.4rem);
-  line-height: 1.4;
-  color: var(--bean);
-  letter-spacing: -0.005em;
-}
-.quote-card figcaption {
-  font-size: 0.82rem;
-  color: var(--muted);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-.quote-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm); }
-.quote-card--tilt-left { transform: rotate(-1deg); }
-.quote-card--tilt-left:hover { transform: rotate(-1deg) translateY(-3px); }
-.quote-card:nth-child(1) { transform: rotate(0.8deg); }
-.quote-card:nth-child(1):hover { transform: rotate(0.8deg) translateY(-3px); }
-@media (max-width: 880px) {
-  .quotes-grid { grid-template-columns: 1fr; gap: 24px; }
-  .quote-card:nth-child(1), .quote-card--tilt-left { transform: none; }
-  .quote-card:nth-child(1):hover, .quote-card--tilt-left:hover { transform: translateY(-3px); }
-}
 
 .landing-visit {
   background: var(--bean);
@@ -2359,17 +2209,6 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 
 /* Edit-Mode-Button im Admin-Header */
-.edit-mode-btn {
-  font-size: .78rem !important;
-  letter-spacing: .12em !important;
-  text-transform: uppercase;
-  padding: 9px 16px !important;
-  min-height: 36px !important;
-}
-@media (max-width: 720px) {
-  .edit-mode-btn span:not(.sr) { display: none; }
-}
-
 /* ============================================
    ADMIN AREA
    ============================================ */
@@ -4598,19 +4437,8 @@ body { overflow-x: hidden; }
     0 1px 0 rgba(255, 252, 244, 0.04) inset;
 }
 
-/* J. Refined Quote-Card-Tilt · weniger schief, mehr Edition-Feeling */
-.quote-card { transform: none; }
-.quote-card:nth-child(1) { transform: rotate(0.4deg); }
-.quote-card:nth-child(1):hover { transform: rotate(0.4deg) translateY(-3px); }
-.quote-card--tilt-left { transform: rotate(-0.5deg); }
-.quote-card--tilt-left:hover { transform: rotate(-0.5deg) translateY(-3px); }
-@media (max-width: 880px) {
-  .quote-card,
-  .quote-card:nth-child(1),
-  .quote-card--tilt-left { transform: none !important; }
-}
-
-/* K. Hinweis: .ed-link CSS-Klasse war ungenutzt — entfernt. */
+/* K. Hinweis: .ed-link CSS-Klasse war ungenutzt — entfernt.
+   J. Quote-Card-Refinements wurden mit den Fake-Quotes selbst entfernt. */
 
 /* L. Refined Typography · ruhigere Display-Rhythmik
    Fraunces auf grossen Groessen optisch lichter, mit besseren Ligaturen. */
