@@ -8780,6 +8780,23 @@ html.has-js-scroll { scroll-behavior: auto; }
 }
 
 /* ===============================================
+   PERFORMANCE · backdrop-filter auf Mobile abschalten
+   GPU-Compositing pro Frame ist auf aelteren iPhones / Android-
+   Mid-Range das groesste Frust-Symptom ("Seite ist langsam").
+   Auf Desktop bleibt der Blur-Effekt erhalten.
+   =============================================== */
+@media (max-width: 760px) {
+  .topbar,
+  .site-header.is-scrolled,
+  .save-bar,
+  .cookie-banner,
+  .hero-coord {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ===============================================
    KEIN KURSIV mehr · Maria-Feedback (21.06.2026)
    Fraunces bleibt komplett erhalten, aber die "geschwungenen"
    italic-Schnitte werden ueberall auf aufrecht gestellt.
