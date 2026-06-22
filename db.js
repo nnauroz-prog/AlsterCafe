@@ -205,21 +205,24 @@
 
   /* ---------- Image Upload ---------- */
   async function uploadImage(file, slot) {
+    // Kompression vor Upload — egal ob Demo oder Production. Spart auf
+    // Maria's Speicherplatz und macht die Seite fuer Besucher schnell.
+    // HEIC vom iPhone wird durch <img>-decode automatisch auf JPEG
+    // konvertiert (Safari/iOS macht das transparent).
+    const blob = await compressImageToBlob(file, slot);
     if (!useSupabase) {
-      // Demo: data-URL zurückgeben (wie bisher)
-      return await fileToCompressedDataUrl(file, slot);
+      return await blobToDataUrl(blob);
     }
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const path = `${slot}/${Date.now()}.${ext}`;
+    const path = `${slot}/${Date.now()}.jpg`;
     const { error } = await sb.storage
       .from(cfg.storageBucket || 'images')
-      .upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type });
+      .upload(path, blob, { upsert: true, cacheControl: '3600', contentType: 'image/jpeg' });
     if (error) { console.error('Storage-Upload fehlgeschlagen', error); throw error; }
     const { data } = sb.storage.from(cfg.storageBucket || 'images').getPublicUrl(path);
     return data.publicUrl;
   }
 
-  function fileToCompressedDataUrl(file, slot) {
+  function compressImageToBlob(file, slot) {
     const MAX = { logo: 480, heroImage: 1400, aboutImage: 1400, gallery: 1200 };
     const max = MAX[slot] || 1200;
     return new Promise((resolve, reject) => {
@@ -227,7 +230,7 @@
       r.onerror = () => reject(new Error('Datei konnte nicht gelesen werden'));
       r.onload = e => {
         const img = new Image();
-        img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
+        img.onerror = () => reject(new Error('Bild konnte nicht geladen werden — wird das Format unterstuetzt?'));
         img.onload = () => {
           const scale = Math.min(1, max / Math.max(img.width, img.height));
           const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
@@ -236,11 +239,21 @@
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL('image/jpeg', 0.85));
+          c.toBlob(b => b ? resolve(b) : reject(new Error('Bild-Konvertierung fehlgeschlagen')),
+                   'image/jpeg', 0.85);
         };
         img.src = e.target.result;
       };
       r.readAsDataURL(file);
+    });
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onerror = () => reject(new Error('Blob konnte nicht gelesen werden'));
+      r.onload = e => resolve(e.target.result);
+      r.readAsDataURL(blob);
     });
   }
 

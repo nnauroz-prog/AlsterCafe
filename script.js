@@ -266,7 +266,10 @@ function parseHoursFromDom() {
     if (spans.length < 2) return;
     const label = spans[0].textContent.trim().toLowerCase();
     const time = spans[1].textContent.trim();
-    const match = time.match(/(\d{1,2}):(\d{2})\s*[–\-]\s*(\d{1,2}):(\d{2})/);
+    // Akzeptiert alle gaengigen Trenner: ASCII-Hyphen, En-Dash, Em-Dash,
+    // Minus-Zeichen, sowie das deutsche "bis" — gegen iPhone-Autocorrect-
+    // Variationen unempfindlich.
+    const match = time.match(/(\d{1,2}):(\d{2})\s*(?:[‐-―−\-]|bis)\s*(\d{1,2}):(\d{2})/i);
     if (!match) return;
     const openMin = parseInt(match[1]) * 60 + parseInt(match[2]);
     const closeMin = parseInt(match[3]) * 60 + parseInt(match[4]);
@@ -2031,16 +2034,22 @@ function initOrderForm() {
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    // Sofort gegen Doppel-Submit sperren — vor jeder weiteren Logik,
+    // sonst koennte ein Doppel-Tap zwei Bestellungen anlegen.
+    if (submitBtn?.disabled) return;
+    if (submitBtn) submitBtn.disabled = true;
     const items = getItems();
     const total = items.reduce((s, it) => s + it.qty, 0);
     if (total < MIN_ORDER) {
       setFormStatus(status, `Bitte wählen Sie mindestens ${MIN_ORDER} Brötchen.`, 'error');
+      if (submitBtn) submitBtn.disabled = false;
       return;
     }
     if (!form.checkValidity()) {
       const firstInvalid = form.querySelector(':invalid');
       if (firstInvalid) firstInvalid.focus();
       setFormStatus(status, 'Bitte füllen Sie alle Pflichtfelder (*) aus.', 'error');
+      if (submitBtn) submitBtn.disabled = false;
       return;
     }
     const data = new FormData(form);
@@ -2055,7 +2064,7 @@ function initOrderForm() {
       status: 'new'
     };
 
-    if (submitBtn) { submitBtn.classList.add('is-loading'); submitBtn.disabled = true; }
+    if (submitBtn) submitBtn.classList.add('is-loading');
     setFormStatus(status, 'Bestellung wird gesendet …');
 
     let saved = false;
@@ -2100,14 +2109,18 @@ function initReservationForm() {
   }
   const submitBtn = form.querySelector('.form-submit');
   form.addEventListener('submit', async e => {
+    e.preventDefault();
+    // Sofort gegen Doppel-Submit sperren — vor jeder weiteren Logik,
+    // sonst koennte ein Doppel-Tap zwei Reservierungen anlegen.
+    if (submitBtn?.disabled) return;
+    if (submitBtn) submitBtn.disabled = true;
     if (!form.checkValidity()) {
-      e.preventDefault();
       const firstInvalid = form.querySelector(':invalid');
       if (firstInvalid) firstInvalid.focus();
       setFormStatus(status, 'Bitte füllen Sie alle Pflichtfelder (*) aus.', 'error');
+      if (submitBtn) submitBtn.disabled = false;
       return;
     }
-    e.preventDefault();
     const data = new FormData(form);
     const entry = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -2122,10 +2135,7 @@ function initReservationForm() {
       status:  'new'
     };
 
-    if (submitBtn) {
-      submitBtn.classList.add('is-loading');
-      submitBtn.disabled = true;
-    }
+    if (submitBtn) submitBtn.classList.add('is-loading');
     setFormStatus(status, 'Anfrage wird gesendet …');
 
     let saved = false;
