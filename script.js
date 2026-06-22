@@ -620,8 +620,7 @@ function initCookieBanner() {
       <div class="container cookie-inner">
         <div class="cookie-text">
           <strong>Wir respektieren Ihre Privatsphäre.</strong>
-          Diese Webseite verwendet ausschließlich technisch notwendige Speicherfunktionen.
-          Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
+          Wir verwenden nur technisch notwendige Speicherfunktionen. „Alle akzeptieren" lädt zusätzlich die Google-Karte auf der Kontaktseite — die setzt eigene Cookies. Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
         </div>
         <div class="cookie-actions">
           <button type="button" class="btn btn-link cookie-decline" id="cookie-decline">Nur notwendige</button>
