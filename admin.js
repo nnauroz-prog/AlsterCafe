@@ -69,6 +69,10 @@ const DAYS = [
 
 const dom = {};
 let currentMonday = mondayOf(new Date());
+// Flag: beim naechsten renderWeek() zu heute/Day-Grid-Anfang scrollen.
+// Gesetzt von switchTab('week') und changeWeek(), bewusst NICHT von
+// onSaveWeek (sonst springt der Viewport beim Speichern zurueck).
+let pendingScrollOnRender = false;
 
 // Sonntag-Modus: zeigt heutigen Sonntag + naechste Woche (8 Tage)
 // Aktiv wenn der Inhaber sonntags den Admin oeffnet — er kann den
@@ -126,6 +130,7 @@ async function init() {
     sundaySpillover = false;
     currentMonday = mondayOf(new Date());
     maybeEnableSundaySpillover();
+    pendingScrollOnRender = true;
     renderWeek();
   });
   dom.copyPrev.addEventListener('click', onCopyFromPrevious);
@@ -369,9 +374,8 @@ function switchTab(name) {
     try { sessionStorage.setItem(ACTIVE_TAB_KEY, name); } catch {}
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
     // Beim Wechsel auf Mittagsmenue: heutigen Tag in den Sichtbereich
-    // rollen (renderWeek hat diese Logik, fueht sie aber nur aus wenn
-    // das Panel sichtbar ist — jetzt ist es).
-    if (name === 'week') renderWeek();
+    // rollen (renderWeek hat diese Logik gegen das Flag).
+    if (name === 'week') { pendingScrollOnRender = true; renderWeek(); }
   };
   // Smooth Tab-Wechsel via View-Transitions API (Chromium); Fallback: direkt
   if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -388,6 +392,7 @@ function changeWeek(deltaDays) {
   const d = new Date(currentMonday);
   d.setDate(d.getDate() + deltaDays);
   currentMonday = mondayOf(d);
+  pendingScrollOnRender = true;
   renderWeek();
 }
 
@@ -518,12 +523,13 @@ function renderWeek() {
     cb.addEventListener('change', () => card.classList.toggle('is-closed', cb.checked));
   });
 
-  // Heutigen Tag in den Sichtbereich rollen — sonst muss Maria am
-  // Mittwoch erst durch Mo/Di scrollen. Nur wenn das Wochen-Panel
-  // tatsaechlich gerade sichtbar ist (sonst wuerde renderWeek beim
-  // Dashboard-Boot die Seite nach oben werfen).
-  const panelWeek = document.getElementById('panel-week');
-  if (panelWeek && !panelWeek.hidden && panelWeek.classList.contains('is-active')) {
+  // Wenn ein Scroll-Hinweis gesetzt ist: heutigen Tag oder Day-Grid-
+  // Anfang in den Sichtbereich rollen. Wird vom Tab-Wechsel + von
+  // Wochen-Navigation gesetzt — nicht aber nach jedem Speichern,
+  // damit Maria nicht aus dem aktuellen Bearbeitungs-Kontext
+  // gerissen wird.
+  if (pendingScrollOnRender) {
+    pendingScrollOnRender = false;
     requestAnimationFrame(() => {
       const todayCard = dom.dayGrid.querySelector('.day-card.is-today');
       if (todayCard) {
