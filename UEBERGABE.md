@@ -191,6 +191,13 @@ Maria hat gemeldet, dass die Formation des Admin-Bereichs „blöd" wirkte. Folg
 - **Akzentfarbe im Bilder-Panel eingeklappt.** Maria ändert das Brand-Gold praktisch nie.
 - **Empty-States freundlich**, nicht klinisch („Hier erscheinen Anfragen, sobald jemand das Formular ausfüllt" statt „Noch keine Anfragen.").
 
+### Performance-Hebel (falls die Seite mal langsam wirkt)
+- **Splash-Screen-Dwell:** in `script.js` `hideSplash()` → 350 ms. Plus Safety-Net in `index.html` Inline-Script → 900 ms. Niemals beide deutlich hochschrauben — das war frühere Editorial-Spielerei mit 1400 ms / 2500 ms und fühlte sich direkt langsam an.
+- **backdrop-filter** ist auf Mobile (`max-width: 760px`) für Topbar, Sticky-Header, Save-Bar, Cookie-Banner und Hero-Coord per `!important` ausgeschaltet (siehe Block am Ende von `styles.css`). GPU-Compositing kostet auf älteren iPhones echte Frames. Auf Desktop bleibt der Blur-Effekt erhalten.
+- **Supabase-Preconnect** auf den 8 DB-nutzenden Seiten (index/mittagstisch/speisekarte/kontakt/reservierung/broetchen/ueber-uns/admin). Spart ~150-300 ms beim ersten Datenbank-Roundtrip. Hardcoded auf das aktuelle Projekt — bei Projekt-Wechsel anpassen.
+- **Image-Upload-Kompression** läuft client-seitig (`db.js` `compressImageToBlob`): Logo 480 px, Hero/Über-uns 1400 px, Galerie 1200 px, alle als JPEG Q=0.85. Statt 10 MB iPhone-HEIC zu speichern, wird ein ~150-300 KB JPEG hochgeladen.
+- **CSS-Größe** liegt bei ~248 KB (Stand r108). Bei jedem Cache-Buster-Bump muss Maria sie neu laden. Wenn du grössere visuelle Eingriffe machst, gleichzeitig orphan-CSS prüfen.
+
 ### Security-Header
 - `Referrer-Policy: strict-origin-when-cross-origin` ist als `<meta name="referrer">` auf allen 11 Seiten gesetzt — wirkt unabhängig vom Host. Sorgt dafür, dass Maria's Kunden beim Anklicken externer Links (Tripadvisor, Google Maps, Croquenoah-Webshop) nicht den vollen Referrer leaken.
 - `_headers` und `netlify.toml` definieren zusätzlich HSTS, X-Frame-Options, CSP und Permissions-Policy. **Diese werden auf GitHub Pages NICHT angewendet** (nur auf Netlify). Falls die Seite irgendwann auf Netlify wechselt, sind sie automatisch aktiv. Auf GitHub Pages bleibt der Header-Schutz reduziert auf das, was per Meta möglich ist.
