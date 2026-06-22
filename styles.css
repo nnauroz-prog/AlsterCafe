@@ -2772,6 +2772,40 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   margin: 0 0 14px;
   letter-spacing: -0.012em;
 }
+
+/* Konto-Tab "Erweiterte Einstellungen"-Collapsible: versteckt die
+   3 selten benoetigten Karten (Mitarbeiter / Aktivitaet / Texte-
+   Reset) hinter einem Toggle, damit Maria nicht scrollen muss bis
+   sie zur "Gefahrenzone" durchblaettert. Passwort + Konto-Info
+   stehen weiterhin oben sichtbar. */
+.account-advanced {
+  margin: 22px 0 0;
+}
+.account-advanced > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  font-size: .88rem;
+  color: var(--muted);
+  font-weight: 500;
+  transition: background-color .2s var(--ease-out), color .2s var(--ease-out);
+}
+.account-advanced > summary::-webkit-details-marker { display: none; }
+.account-advanced > summary::before {
+  content: '+';
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--gold);
+  font-weight: 400;
+}
+.account-advanced[open] > summary::before { content: '−'; }
+.account-advanced[open] > summary { color: var(--bean); background: var(--paper); }
+.account-advanced > summary:hover { color: var(--bean); }
+.account-advanced .panel-card { margin-top: 18px; }
 @keyframes panel-fade-in  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes panel-fade-out { to { opacity: 0; transform: translateY(-6px); } }
 ::view-transition-old(panel) { animation: panel-fade-out var(--dur-fast) var(--ease-out) forwards; }
