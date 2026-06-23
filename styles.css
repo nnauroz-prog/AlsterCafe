@@ -2537,6 +2537,15 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   outline: none;
 }
 
+/* Auf Mobile etwas groesser fuer's Daumen-Tappen (Apple-HIG 44px). */
+@media (max-width: 720px) {
+  .back-to-overview {
+    padding: 11px 18px 11px 14px;
+    font-size: .92rem;
+    margin-bottom: 18px;
+  }
+}
+
 
 /* Welcome / Stats */
 .admin-welcome {
