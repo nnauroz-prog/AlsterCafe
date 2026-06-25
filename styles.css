@@ -4170,10 +4170,19 @@ body.is-editing [data-editable]:focus::before {
 
 /* ===== PRINT STYLESHEET ===== */
 @media print {
+  /* Hide: Page-Chrome + interaktive Overlays + dekorative Elemente.
+     NICHT in dieser Liste: .lunch, .reservation (sind auf den
+     gleichnamigen Sub-Pages der gesamte Hauptinhalt — bei Hide
+     blieb die Druckseite leer). Wer wirklich nur den Lunch von
+     der Startseite drucken will, kann sich .today-feature
+     auskommentieren. */
   body::before, .topbar, .site-header, .site-footer, .cookie-banner,
-  .notice-banner, .edit-fab, .reservation, .lunch, .reveal, .nav-toggle,
+  .notice-banner, .edit-fab, .nav-toggle,
   .live-status, .hero-cta, .hero-visual, .map-card, .social, .map-placeholder,
-  .footer-meta, .col-link, .skip-link {
+  .footer-meta, .col-link, .skip-link, .edition-strip, .app-splash,
+  .hero-ticker, .hero-coord, .hero-est, .sticky-today, .chapter-mark,
+  .page-hero-watermark, .section-shout, .ornament,
+  .reservation-form, .order-form {
     display: none !important;
   }
   body { background: white; color: black; font-size: 11pt; }
@@ -4188,7 +4197,10 @@ body.is-editing [data-editable]:focus::before {
   a, a:visited { color: black; text-decoration: none; }
   a[href^="http"]:after { content: ' (' attr(href) ')'; font-size: 0.85em; color: #888; }
   a[href^="mailto"]:after, a[href^="tel"]:after { content: ''; }
-  .reveal { opacity: 1 !important; transform: none !important; }
+  /* Wichtig: .reveal hat im Standard-Stylesheet opacity:0 fuer Scroll-Animation.
+     Im Druck immer voll sichtbar — sonst waere praktisch der gesamte Content
+     unsichtbar, weil .reveal auf fast jedem Block sitzt. */
+  .reveal { opacity: 1 !important; transform: none !important; display: revert !important; }
   .container { max-width: 100%; padding: 0; }
   .hours-list li { display: flex; justify-content: space-between; padding: 4pt 0; border-bottom: 1px dotted #ccc; }
 }
