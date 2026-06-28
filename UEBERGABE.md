@@ -162,6 +162,16 @@ for f in *.html; do sed -i 's/2026-05-10-r81/2026-05-10-r82/g' "$f"; done
 - Push auf den Feature-Branch ⇒ GitHub Action baut automatisch den `gh-pages`-Branch und Live-Site ist binnen ~60 s aktuell.
 - Niemals direkt auf `main` oder `gh-pages` committen.
 
+### Speisekarte: geteilte Datenbasis + Editor + PDF
+Die Frühstückskarte (Stand: Maria's echte PDF, 6 Kategorien, 47 Gerichte) ist ein eigenes kleines System:
+
+- **`menudata.js`** — eine einzige Quelle der Wahrheit: `window.ALSTERCAFE_MENU_DEFAULT = { intro, sections: [{ title, icon, note?, items: [{ name, desc?, price, tag? }] }], footnote }`. Wird von `speisekarte.html` und `admin.html` geladen (vor `script.js` bzw. `admin.js`).
+- **Öffentliche Seite** (`script.js` → `getMenuData()` + `renderKarteHtml()`): rendert die Karte in `#karte-mount` aus dem gespeicherten Override (`alsterDb.get('menu')`) oder dem Default. Die statische Karte im HTML ist nur no-JS-Fallback + SEO.
+- **Admin-Editor** (`admin.js` → `renderMenuEditor`/`buildMenuSection`/`collectMenuData`): Maria pflegt Kategorien + Gerichte selbst. Speichern schreibt nach `content`-Tabelle (id=`menu`), Realtime-Subscribe aktualisiert offene Webseiten-Tabs sofort.
+- **PDF-Export** (`admin.js` → `downloadMenuPdf`/`buildMenuPrintHtml`): rein clientseitig via `window.print()` auf ein eigenständiges Druck-Fenster (eine Seite pro Kategorie). Keine externe Library. Maria wählt im Druckdialog „Als PDF speichern".
+- **Preis-Modell bewusst als freier String** (`"8,90 €"` oder `"2,80 / 3,80 €"`), damit der Editor einfach bleibt (3 Felder: Name/Preis/Beschreibung). Der `tag` (z. B. „vegan") wird im Editor transparent über ein `data-tag`-Attribut erhalten.
+- **Ändern der Default-Karte:** in `menudata.js` editieren. Solange Maria nichts im Admin gespeichert hat, gilt dieser Default überall.
+
 ### Design-Entscheidung: kein Kursiv
 Maria wollte am 21.06.2026 weg von der geschwungenen italic-Schrift. Implementiert als **eine einzige Schluss-Regel** am Ende von `styles.css`:
 

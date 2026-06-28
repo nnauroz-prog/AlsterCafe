@@ -34,6 +34,22 @@ Dann ist Mo–Fr morgens nur „Hauptgericht überprüfen".
 
 ---
 
+## 🥐 Speisekarte ändern + als PDF speichern (selten)
+
+Im Admin unter **„Speisekarte pflegen"** ändern Sie Ihre Frühstückskarte selbst:
+
+1. **Preis ändern:** Beim Gericht ins Preis-Feld tippen, z. B. `8,90 €` → `9,40 €`.
+2. **Neues Gericht:** Unter der Kategorie auf **„Gericht hinzufügen"**, dann Name, Preis und (optional) Beschreibung eintippen.
+3. **Gericht entfernen:** Auf das **✕** rechts daneben.
+4. **Neue Kategorie:** Unten auf **„Neue Kategorie hinzufügen"**.
+5. Zum Schluss auf **„Speisekarte speichern"** — sofort auf der Webseite sichtbar.
+
+**📄 Frische PDF zum Ausdrucken:** Oben auf **„Als PDF herunterladen"** tippen. Es öffnet sich die fertige Karte — im Druckdialog **„Als PDF speichern"** wählen. So bekommen Sie genau die Kartenform wie gewohnt, mit Ihren aktuellen Preisen. Praktisch zum Auslegen oder an die Tür hängen.
+
+**Tipp:** Preis-Feld kann auch zwei Preise (klein/groß) enthalten — einfach `2,80 / 3,80 €` eintippen.
+
+---
+
 ## 🛑 Wenn etwas nicht stimmt
 
 - **Seite zeigt „Karte folgt in Kürze"** → Mittagstisch eintragen!
