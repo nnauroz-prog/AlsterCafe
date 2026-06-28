@@ -28,8 +28,8 @@
   <meta name="apple-mobile-web-app-title" content="Alstercafé" />
   <link rel="apple-touch-icon" href="image.png" />
   <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;color-scheme:only light;background:#FFFCF4;color:#1F140C;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}img{max-width:100%;display:block}[hidden]{display:none!important}</style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r112" />
-  <script>(function(){var V="2026-05-10-r112";try{if(localStorage.getItem("alstercafe.app-version")!==V){localStorage.removeItem("alstercafe.content");localStorage.setItem("alstercafe.app-version",V)}}catch(e){};try{if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r113" />
+  <script>(function(){var V="2026-05-10-r113";try{if(localStorage.getItem("alstercafe.app-version")!==V){localStorage.removeItem("alstercafe.content");localStorage.setItem("alstercafe.app-version",V)}}catch(e){};try{if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -81,9 +81,9 @@
         <p class="eyebrow"><span class="num">02</span> Speisekarte</p>
         <h1>Was Sie bei uns <em>finden.</em></h1>
         <p class="page-lead">
-          Brötchen und Croissants aus eigener Backstube, Croques aus dem Ofen,
-          werktags ein Mittagstisch, Espresso von Mocambo. Hier alles auf
-          einen Blick.
+          Frühstück von klassisch bis orientalisch, alles rund ums Ei,
+          frischer Kaffee und kaltgepresster Orangensaft. Gerne bereiten wir
+          Ihnen Ihr Frühstück nach Wunsch zu — auch für mehrere Personen.
         </p>
       </div>
     </section>
@@ -91,42 +91,201 @@
     <section class="section menu chapter" data-chapter="I">
       <span class="chapter-mark" aria-hidden="true">I</span>
       <div class="container">
-        <div class="menu-cols" id="menu-cols">
-          <div class="menu-col reveal">
-            <span class="menu-col-num" aria-hidden="true">01</span>
-            <div class="menu-col-head"><svg class="ico"><use href="#i-bread"/></svg><h3>Frühstück</h3></div>
-            <ul class="menu-list">
-              <li><strong>Kleines Frühstück</strong><span>Brötchen, Butter, Marmelade, Heißgetränk.</span></li>
-              <li><strong>Großes Frühstück</strong><span>Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.</span></li>
-              <li><strong>Vegetarisch</strong><span>Frischkäse, Avocado, Gemüse, Heißgetränk.</span></li>
-              <li><strong>Croque-Monsieur</strong><span>Schinken &amp; Käse, gratiniert.</span></li>
-              <li><strong>Croque-Madame</strong><span>Croque-Monsieur mit Spiegelei.</span></li>
+
+        <div class="karte-grid">
+          <!-- FRÜHSTÜCK -->
+          <div class="karte-block reveal">
+            <div class="karte-block-head"><svg class="ico"><use href="#i-bread"/></svg><h3>Frühstück</h3></div>
+            <ul class="karte-list">
+              <li>
+                <div class="karte-row"><span class="karte-name">Klassik</span><span class="karte-preis">8,90&nbsp;€</span></div>
+                <p class="karte-desc">2 Brötchen nach Wahl und Butter, mit Gouda, Putensalami, Pute und Kochschinken, dazu Marmelade, Honig oder Nutella.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Käse-Vielfalt</span><span class="karte-preis">9,90&nbsp;€</span></div>
+                <p class="karte-desc">2 Brötchen nach Wahl und Butter, mit Gouda, Weichkäse, Mozzarella und Kräuterfrischkäse.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Süßes</span><span class="karte-preis">6,90&nbsp;€</span></div>
+                <p class="karte-desc">2 frisch gebackene Butter-Croissants mit 2 Aufstrichen zur Auswahl: Butter, Honig, Nutella oder Marmelade.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Fitness</span><span class="karte-preis">6,90&nbsp;€</span></div>
+                <p class="karte-desc">Müsli mit Joghurt, Apfel, Banane und Saisonfrüchten, mit Honig verfeinert.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Avocado-Traum <span class="karte-tag">vegan</span></span><span class="karte-preis">9,90&nbsp;€</span></div>
+                <p class="karte-desc">Frisch zubereitete Avocado-Creme auf zwei gerösteten Brotscheiben, Avocadoscheiben, Körner &amp; Nüsse, Mixsalat und Balsamico.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Avocado-Traum mit Spiegelei</span><span class="karte-preis">11,90&nbsp;€</span></div>
+                <p class="karte-desc">Wie der Avocado-Traum, dazu obendrauf 2 Spiegeleier.</p>
+              </li>
             </ul>
           </div>
-          <div class="menu-col reveal">
-            <span class="menu-col-num" aria-hidden="true">02</span>
-            <div class="menu-col-head"><svg class="ico"><use href="#i-wheat"/></svg><h3>Backwaren</h3></div>
-            <ul class="menu-list">
-              <li><strong>Brot &amp; Brötchen</strong><span>Roggen, Dinkel, Vollkorn, Sauerteig.</span></li>
-              <li><strong>Croissants &amp; Franzbrötchen</strong><span>Frisch jeden Morgen, mit Butter.</span></li>
-              <li><strong>Plundergebäck</strong><span>Süß und herzhaft, wechselnd.</span></li>
-              <li><strong>Torten &amp; Kuchen</strong><span>Hausgemacht, Festtagstorten auf Vorbestellung.</span></li>
-              <li><strong>Belegte Brötchen</strong><span>Frisch belegt, auch nach Wunsch.</span></li>
+
+          <!-- RUND UMS EI -->
+          <div class="karte-block reveal">
+            <div class="karte-block-head"><svg class="ico"><use href="#i-cup"/></svg><h3>Rund ums Ei</h3></div>
+            <ul class="karte-list">
+              <li>
+                <div class="karte-row"><span class="karte-name">Rührei Klassik</span><span class="karte-preis">7,90&nbsp;€</span></div>
+                <p class="karte-desc">Rührei aus 3 Eiern mit Salz, Pfeffer und Milch abgeschmeckt. Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Omelett Natur</span><span class="karte-preis">7,90&nbsp;€</span></div>
+                <p class="karte-desc">Omelett aus 3 Eiern mit Salz, Pfeffer und Milch. Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">3 Spiegeleier klassisch</span><span class="karte-preis">7,90&nbsp;€</span></div>
+                <p class="karte-desc">Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Dreher-Frühstück</span></div>
+                <p class="karte-desc">Geröstetes Brot mit Spiegelei und Käse.</p>
+                <ul class="karte-subprices">
+                  <li><span>2 Scheiben</span><span class="karte-preis">6,90&nbsp;€</span></li>
+                  <li><span>2 Scheiben mit Speck</span><span class="karte-preis">8,90&nbsp;€</span></li>
+                  <li><span>3 Scheiben</span><span class="karte-preis">8,90&nbsp;€</span></li>
+                  <li><span>3 Scheiben mit Speck</span><span class="karte-preis">10,90&nbsp;€</span></li>
+                </ul>
+              </li>
             </ul>
           </div>
-          <div class="menu-col reveal">
-            <span class="menu-col-num" aria-hidden="true">03</span>
-            <div class="menu-col-head"><svg class="ico"><use href="#i-cup"/></svg><h3>Heiße Getränke</h3></div>
-            <ul class="menu-list">
-              <li><strong>Hauskaffee</strong><span>Traditionell gefilterter Kaffee.</span></li>
-              <li><strong>Espresso · Doppelter</strong><span>Klein, heiß, schwarz und kräftig.</span></li>
-              <li><strong>Cappuccino · Latte Macchiato</strong><span>Mit feinem Milchschaum.</span></li>
-              <li><strong>Milchkaffee · Hauskaffee</strong><span>Leicht bekömmlich.</span></li>
-              <li><strong>Heiße Schokolade</strong><span>Lecker schokoladig, auch weiß mit Vanille.</span></li>
-              <li><strong>Tee</strong><span>Fennel, Lemon Sky, Mountain Herbs &amp; mehr.</span></li>
+
+          <!-- ORIENT -->
+          <div class="karte-block reveal">
+            <div class="karte-block-head"><svg class="ico"><use href="#i-leaf"/></svg><h3>Orient</h3></div>
+            <ul class="karte-list">
+              <li>
+                <div class="karte-row"><span class="karte-name">Rührei mit Sucuk</span><span class="karte-preis">9,90&nbsp;€</span></div>
+                <p class="karte-desc">Rührei aus 3 Eiern mit Salz und Pfeffer abgeschmeckt. Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Rührei mit Sucuk &amp; Schafskäse</span><span class="karte-preis">11,90&nbsp;€</span></div>
+                <p class="karte-desc">Rührei aus 3 Eiern mit Sucuk und Schafskäse. Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Omelett mit Sucuk</span><span class="karte-preis">9,90&nbsp;€</span></div>
+                <p class="karte-desc">Omelett mit Sucuk, mit Salz und Pfeffer abgeschmeckt. Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Omelett mit Sucuk &amp; Schafskäse</span><span class="karte-preis">11,90&nbsp;€</span></div>
+                <p class="karte-desc">Omelett mit Sucuk und Schafskäse. Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Spiegelei mit Sucuk</span><span class="karte-preis">8,90&nbsp;€</span></div>
+                <p class="karte-desc">2 Spiegeleier klassisch mit Sucuk. Dazu Butter und 1 Scheibe Brot oder 1 Brötchen.</p>
+              </li>
+            </ul>
+          </div>
+
+          <!-- EXTRAS -->
+          <div class="karte-block reveal">
+            <div class="karte-block-head"><svg class="ico"><use href="#i-wheat"/></svg><h3>Extras</h3></div>
+            <p class="karte-block-note">Nur in Verbindung mit einem Frühstück.</p>
+            <ul class="karte-list karte-list-compact">
+              <li class="karte-row"><span class="karte-name">Käse</span><span class="karte-preis">2,00&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Schafskäse</span><span class="karte-preis">2,90&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Pesto</span><span class="karte-preis">2,00&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Cherry-Tomaten</span><span class="karte-preis">1,50&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Speck (2 Scheiben)</span><span class="karte-preis">2,90&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Speck (4 Scheiben)</span><span class="karte-preis">3,90&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">½ Avocado in Scheiben</span><span class="karte-preis">2,50&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Räucherlachs mit Meerrettich &amp; Zwiebeln</span><span class="karte-preis">3,90&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Butter</span><span class="karte-preis">0,50&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Rührei aus 2 Eiern</span><span class="karte-preis">3,90&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Gekochtes Ei</span><span class="karte-preis">1,50&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Metzger-Zwiebelmett</span><span class="karte-preis">1,50&nbsp;€</span></li>
+              <li class="karte-row"><span class="karte-name">Marmelade, Honig oder Nutella</span><span class="karte-preis">0,70&nbsp;€</span></li>
             </ul>
           </div>
         </div>
+
+        <!-- GETRÄNKE -->
+        <div class="karte-grid karte-grid-drinks">
+          <!-- HEISSE GETRÄNKE -->
+          <div class="karte-block reveal">
+            <div class="karte-block-head"><svg class="ico"><use href="#i-cup"/></svg><h3>Heiße Getränke</h3></div>
+            <p class="karte-block-note">Alle Kaffeesorten auch koffeinfrei erhältlich.</p>
+            <div class="karte-size-head"><span>klein</span><span>groß</span></div>
+            <ul class="karte-list karte-list-drinks">
+              <li>
+                <div class="karte-row"><span class="karte-name">Hauskaffee</span><span class="karte-preis-pair"><span>2,80</span><span>3,80</span></span></div>
+                <p class="karte-desc">Traditionell gefilterter Kaffee.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Café Crema</span><span class="karte-preis-pair"><span>3,10</span><span>4,10</span></span></div>
+                <p class="karte-desc">Frisch gemahlen und zubereitet.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Latte Macchiato</span><span class="karte-preis-pair"><span>3,80</span><span>4,50</span></span></div>
+                <p class="karte-desc">Die italienische Variante zum Milchkaffee. Auch mit Hafermilch (4,20&nbsp;/&nbsp;4,70&nbsp;€).</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Cappuccino</span><span class="karte-preis-pair"><span>3,80</span><span>4,50</span></span></div>
+                <p class="karte-desc">Espresso und feiner Milchschaum. Auch mit Hafermilch (4,20&nbsp;/&nbsp;4,70&nbsp;€).</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Milchkaffee</span><span class="karte-preis-pair"><span>3,80</span><span>4,50</span></span></div>
+                <p class="karte-desc">Leicht und bekömmlich. Auch mit Hafermilch (4,20&nbsp;/&nbsp;4,70&nbsp;€).</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Karamell Macchiato</span><span class="karte-preis-pair"><span>4,50</span><span>4,90</span></span></div>
+                <p class="karte-desc">Mit Karamell-Aroma und Topping. Auch mit Hafermilch (4,90&nbsp;/&nbsp;5,50&nbsp;€).</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Heiße Schokolade oder Weiße</span><span class="karte-preis-pair"><span>3,90</span><span>4,70</span></span></div>
+                <p class="karte-desc">Süß-schokoladig oder cremig-vanillig.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Espresso</span><span class="karte-preis-pair"><span>2,70</span><span>3,70</span></span></div>
+                <p class="karte-desc">Klein, heiß und kräftig.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Americano</span><span class="karte-preis-pair"><span>2,90</span><span>3,90</span></span></div>
+                <p class="karte-desc">Espresso mit heißem Wasser.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Tee (Glas 0,4&nbsp;l)</span><span class="karte-preis">3,30&nbsp;€</span></div>
+                <p class="karte-desc">Feinster Beuteltee in verschiedenen Sorten.</p>
+              </li>
+            </ul>
+          </div>
+
+          <!-- KALTE GETRÄNKE -->
+          <div class="karte-block reveal">
+            <div class="karte-block-head"><svg class="ico"><use href="#i-leaf"/></svg><h3>Kalte Getränke</h3></div>
+            <ul class="karte-list">
+              <li>
+                <div class="karte-row"><span class="karte-name">Frisch gepresster Orangensaft 0,2&nbsp;l</span><span class="karte-preis">3,50&nbsp;€</span></div>
+                <p class="karte-desc">Aus mindestens drei unbehandelten Saftorangen — Vitamine pur.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Frisch gepresster Orangensaft 0,5&nbsp;l</span><span class="karte-preis">5,90&nbsp;€</span></div>
+                <p class="karte-desc">Serviert in der Karaffe.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Sekt trocken 12% · 0,2&nbsp;l</span><span class="karte-preis">4,50&nbsp;€</span></div>
+                <p class="karte-desc">Serviert im Glas, ausgewogen-brut.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Sekt trocken · Flasche 0,7&nbsp;l</span><span class="karte-preis">14,90&nbsp;€</span></div>
+                <p class="karte-desc">Serviert kalt im Kübel.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Mineralwasser still 0,7&nbsp;l</span><span class="karte-preis">4,50&nbsp;€</span></div>
+                <p class="karte-desc">Glasflasche.</p>
+              </li>
+              <li>
+                <div class="karte-row"><span class="karte-name">Mineralwasser still 0,2&nbsp;l</span><span class="karte-preis">2,50&nbsp;€</span></div>
+                <p class="karte-desc">Glasflasche.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="karte-fussnote reveal">Alle Preise in Euro inkl. MwSt. Änderungen vorbehalten. Brot, Brötchen, Croissants und Franzbrötchen kommen frisch aus unserer eigenen Backstube.</p>
 
         <div class="menu-croque reveal">
           <div>
@@ -165,8 +324,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r112" defer></script>
-  <script src="db.js?v=2026-05-10-r112" defer></script>
-  <script src="script.js?v=2026-05-10-r112" defer></script>
+  <script src="config.js?v=2026-05-10-r113" defer></script>
+  <script src="db.js?v=2026-05-10-r113" defer></script>
+  <script src="script.js?v=2026-05-10-r113" defer></script>
 </body>
 </html>
