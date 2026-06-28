@@ -11,41 +11,13 @@ const ACTIVE_TAB_KEY = 'alstercafe.admin.tab';
 const MAX_IMAGE_PX = { logo: 480, heroImage: 1400, aboutImage: 1400, gallery: 1200 };
 const GALLERY_MAX = 6;
 
-const MENU_CATS = [
-  { key: 'fruehstueck', label: 'Frühstück',     defaultIcon: 'i-bread' },
-  { key: 'backwaren',   label: 'Backwaren',     defaultIcon: 'i-wheat' },
-  { key: 'getraenke',   label: 'Heiße Getränke', defaultIcon: 'i-cup'   }
+/* Verfuegbare Icons fuer Karten-Kategorien (Dropdown im Editor) */
+const MENU_ICONS = [
+  { id: 'i-bread', label: 'Brot' },
+  { id: 'i-cup',   label: 'Tasse' },
+  { id: 'i-wheat', label: 'Ähre' },
+  { id: 'i-leaf',  label: 'Blatt' }
 ];
-
-const DEFAULT_MENU = {
-  fruehstueck: {
-    title: 'Frühstück',
-    icon: 'i-bread',
-    items: [
-      { name: 'Kleines Frühstück', description: 'Brötchen, Butter, Marmelade, Heißgetränk.' },
-      { name: 'Großes Frühstück',  description: 'Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.' },
-      { name: 'Vegetarisch',       description: 'Frischkäse, Avocado, Gemüse, Heißgetränk.' }
-    ]
-  },
-  backwaren: {
-    title: 'Backwaren',
-    icon: 'i-wheat',
-    items: [
-      { name: 'Brot & Brötchen',   description: 'Roggen, Dinkel, Vollkorn, Sauerteig.' },
-      { name: 'Feines Gebäck',     description: 'Croissants, Franzbrötchen, Plunder.' },
-      { name: 'Torten & Kuchen',   description: 'Hausgemacht, Festtagstorten auf Vorbestellung.' }
-    ]
-  },
-  getraenke: {
-    title: 'Heiße Getränke',
-    icon: 'i-cup',
-    items: [
-      { name: 'Espresso · Cappuccino · Latte', description: 'Mocambo, frisch gemahlen.' },
-      { name: 'Hauskaffee · Milchkaffee',      description: 'Traditionell gefiltert.' },
-      { name: 'Kakao & Tee',                   description: 'Heiße Schokolade, Kräuter- und Früchtetees.' }
-    ]
-  }
-};
 
 const DEFAULT_HOURS = [
   { label: 'Mo – Fr',  time: '06:30 – 15:00' },
@@ -157,6 +129,8 @@ async function init() {
   // Speisekarte
   dom.menuCardsForm.addEventListener('submit', onSaveMenu);
   dom.menuReset.addEventListener('click', onResetMenu);
+  dom.menuAddSection?.addEventListener('click', () => addMenuSection());
+  dom.menuPdf?.addEventListener('click', downloadMenuPdf);
 
   // Öffnungszeiten
   dom.hoursForm.addEventListener('submit', onSaveHours);
@@ -214,7 +188,11 @@ function cacheDom() {
     noticeClear:  document.getElementById('notice-clear'),
     // Speisekarte
     menuCardsForm: document.getElementById('menu-cards-form'),
-    menuCats:      document.getElementById('menu-cats'),
+    menuSections:  document.getElementById('menu-sections'),
+    menuIntro:     document.getElementById('menu-intro'),
+    menuFootnote:  document.getElementById('menu-footnote'),
+    menuAddSection: document.getElementById('menu-add-section'),
+    menuPdf:       document.getElementById('menu-pdf'),
     menuStatus:    document.getElementById('menu-status'),
     menuReset:     document.getElementById('menu-reset'),
     // Öffnungszeiten
@@ -617,58 +595,82 @@ function onClearNotice() {
 
 /* ---------- Speisekarte ---------- */
 
+function loadMenuData() {
+  const stored = window.alsterDb?.get('menu');
+  if (stored && Array.isArray(stored.sections) && stored.sections.length) {
+    return JSON.parse(JSON.stringify(stored));
+  }
+  if (window.ALSTERCAFE_MENU_DEFAULT) {
+    return JSON.parse(JSON.stringify(window.ALSTERCAFE_MENU_DEFAULT));
+  }
+  return { intro: '', sections: [], footnote: '' };
+}
+
 function renderMenuEditor() {
-  if (!dom.menuCats) return;
-  const data = loadMenu();
-  dom.menuCats.innerHTML = '';
-  MENU_CATS.forEach(cat => {
-    const stored = data[cat.key] || DEFAULT_MENU[cat.key];
-    const block = document.createElement('div');
-    block.className = 'menu-cat';
-    block.dataset.key = cat.key;
-    block.innerHTML = `
-      <div class="menu-cat-head">
-        <input type="text" class="menu-cat-title" value="${escapeAttr(stored.title || cat.label)}" />
-      </div>
-      <div class="menu-items"></div>
-      <button type="button" class="btn btn-link menu-add">
-        <svg class="ico ico-sm"><use href="#i-plus"/></svg>
-        Eintrag hinzufügen
-      </button>
-    `;
-    const itemsBox = block.querySelector('.menu-items');
-    (stored.items || []).forEach(it => itemsBox.appendChild(buildMenuItemRow(it)));
-    block.querySelector('.menu-add').addEventListener('click', () => {
-      itemsBox.appendChild(buildMenuItemRow({ name: '', description: '' }));
-    });
-    dom.menuCats.appendChild(block);
-  });
+  if (!dom.menuSections) return;
+  const data = loadMenuData();
+  if (dom.menuIntro) dom.menuIntro.value = data.intro || '';
+  if (dom.menuFootnote) dom.menuFootnote.value = data.footnote || '';
+  dom.menuSections.innerHTML = '';
+  (data.sections || []).forEach(sec => dom.menuSections.appendChild(buildMenuSection(sec)));
   setStatus(dom.menuStatus, 'Bereit zum Bearbeiten.');
+}
+
+function buildMenuSection(sec) {
+  const block = document.createElement('div');
+  block.className = 'menu-section';
+  const iconOptions = MENU_ICONS.map(ic =>
+    `<option value="${ic.id}" ${sec.icon === ic.id ? 'selected' : ''}>${ic.label}</option>`
+  ).join('');
+  block.innerHTML = `
+    <div class="menu-section-head">
+      <input type="text" class="menu-section-title" value="${escapeAttr(sec.title || '')}" placeholder="Kategorie, z. B. Frühstück" />
+      <select class="menu-section-icon" aria-label="Symbol für diese Kategorie">${iconOptions}</select>
+      <button type="button" class="btn-icon menu-section-remove" aria-label="Ganze Kategorie entfernen" title="Ganze Kategorie entfernen"><svg class="ico ico-sm"><use href="#i-trash"/></svg></button>
+    </div>
+    <input type="text" class="menu-section-note" value="${escapeAttr(sec.note || '')}" placeholder="Hinweis (optional), z. B. Preis klein / groß" />
+    <div class="menu-items"></div>
+    <button type="button" class="btn btn-link menu-add-item">
+      <svg class="ico ico-sm"><use href="#i-plus"/></svg> Gericht hinzufügen
+    </button>
+  `;
+  const itemsBox = block.querySelector('.menu-items');
+  (sec.items || []).forEach(it => itemsBox.appendChild(buildMenuItemRow(it)));
+  block.querySelector('.menu-add-item').addEventListener('click', () => {
+    itemsBox.appendChild(buildMenuItemRow({ name: '', desc: '', price: '' }));
+  });
+  block.querySelector('.menu-section-remove').addEventListener('click', () => {
+    if (confirm('Diese ganze Kategorie mit allen Gerichten entfernen?')) block.remove();
+  });
+  return block;
 }
 
 function buildMenuItemRow(item) {
   const row = document.createElement('div');
   row.className = 'menu-item-row';
   row.draggable = true;
+  // Tag (z. B. "vegan") transparent erhalten — kein eigenes Feld noetig,
+  // damit der Editor einfach bleibt (Name / Preis / Beschreibung).
+  if (item.tag) row.dataset.tag = item.tag;
   row.innerHTML = `
     <span class="drag-handle" aria-label="Verschieben" title="Zum Sortieren ziehen">⠿</span>
     <div class="menu-item-fields">
-      <label>
-        <span>Bezeichnung</span>
-        <input type="text" class="menu-item-name" value="${escapeAttr(item.name || '')}" placeholder="z. B. Cappuccino" />
-      </label>
-      <label>
-        <span>Beschreibung</span>
-        <input type="text" class="menu-item-desc" value="${escapeAttr(item.description || '')}" placeholder="z. B. Espresso mit feinem Milchschaum" />
-      </label>
+      <input type="text" class="menu-item-name" value="${escapeAttr(item.name || '')}" placeholder="Gericht, z. B. Klassik" />
+      <input type="text" class="menu-item-price" value="${escapeAttr(item.price || '')}" placeholder="Preis, z. B. 8,90 €" />
+      <input type="text" class="menu-item-desc" value="${escapeAttr(item.desc || '')}" placeholder="Beschreibung (optional)" />
     </div>
-    <button type="button" class="btn-icon menu-item-remove" aria-label="Eintrag entfernen" title="Eintrag entfernen">
-      <svg class="ico ico-sm"><use href="#i-x"/></svg>
-    </button>
+    <button type="button" class="btn-icon menu-item-remove" aria-label="Gericht entfernen" title="Gericht entfernen"><svg class="ico ico-sm"><use href="#i-x"/></svg></button>
   `;
   row.querySelector('.menu-item-remove').addEventListener('click', () => row.remove());
   attachDragHandlers(row, '.menu-item-row');
   return row;
+}
+
+function addMenuSection() {
+  if (!dom.menuSections) return;
+  const block = buildMenuSection({ title: '', icon: 'i-bread', note: '', items: [{ name: '', desc: '', price: '' }] });
+  dom.menuSections.appendChild(block);
+  block.querySelector('.menu-section-title')?.focus();
 }
 
 /* ---------- Drag & Drop Sortierung ---------- */
@@ -706,48 +708,141 @@ function attachDragHandlers(el, siblingSelector) {
   });
 }
 
-function onSaveMenu(e) {
-  e.preventDefault();
-  const data = {};
-  dom.menuCats.querySelectorAll('.menu-cat').forEach(block => {
-    const key = block.dataset.key;
-    const title = block.querySelector('.menu-cat-title').value.trim() || DEFAULT_MENU[key].title;
+/* Liest den Editor-Stand zurueck ins Daten-Modell. */
+function collectMenuData() {
+  const sections = [];
+  dom.menuSections.querySelectorAll('.menu-section').forEach(block => {
+    const title = block.querySelector('.menu-section-title').value.trim();
+    const icon  = block.querySelector('.menu-section-icon').value;
+    const note  = block.querySelector('.menu-section-note').value.trim();
     const items = [];
     block.querySelectorAll('.menu-item-row').forEach(row => {
-      const name = row.querySelector('.menu-item-name').value.trim();
-      const description = row.querySelector('.menu-item-desc').value.trim();
-      if (name || description) items.push({ name, description });
+      const name  = row.querySelector('.menu-item-name').value.trim();
+      const price = row.querySelector('.menu-item-price').value.trim();
+      const desc  = row.querySelector('.menu-item-desc').value.trim();
+      if (name || price || desc) {
+        const it = { name };
+        if (price) it.price = price;
+        if (desc)  it.desc  = desc;
+        if (row.dataset.tag) it.tag = row.dataset.tag;
+        items.push(it);
+      }
     });
-    data[key] = { title, icon: DEFAULT_MENU[key].icon, items };
+    if (title || items.length) {
+      const sec = { title, icon };
+      if (note) sec.note = note;
+      sec.items = items;
+      sections.push(sec);
+    }
   });
+  return {
+    intro:    (dom.menuIntro?.value || '').trim(),
+    sections,
+    footnote: (dom.menuFootnote?.value || '').trim()
+  };
+}
+
+function onSaveMenu(e) {
+  e.preventDefault();
+  const data = collectMenuData();
+  if (!data.sections.length) {
+    setStatus(dom.menuStatus, 'Mindestens eine Kategorie mit einem Gericht nötig.', 'error');
+    return;
+  }
   window.alsterDb.set('menu', data).then(ok => {
     setStatus(dom.menuStatus,
-      ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
+      ok ? `Gespeichert · ${formatTime(new Date())} — jetzt auf der Webseite sichtbar.` : 'Speichern fehlgeschlagen.',
       ok ? 'ok' : 'error');
     if (ok) logActivity('Speisekarte gespeichert');
   });
 }
 
 function onResetMenu() {
-  if (!confirm('Speisekarte auf Standardwerte zurücksetzen?')) return;
+  if (!confirm('Speisekarte auf die Original-Frühstückskarte zurücksetzen? Ihre Änderungen gehen verloren.')) return;
   window.alsterDb.remove('menu').then(() => {
     renderMenuEditor();
-    setStatus(dom.menuStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
+    setStatus(dom.menuStatus, 'Auf Original zurückgesetzt.', 'ok');
   });
 }
 
-function loadMenu() {
-  const stored = window.alsterDb?.get('menu');
-  const out = JSON.parse(JSON.stringify(DEFAULT_MENU));
-  if (stored && typeof stored === 'object') {
-    Object.keys(out).forEach(k => {
-      if (stored[k]) {
-        out[k].title = stored[k].title || out[k].title;
-        if (Array.isArray(stored[k].items)) out[k].items = stored[k].items;
-      }
-    });
+/* ---------- PDF-Export der Speisekarte ----------
+   Nimmt den AKTUELLEN Editor-Stand (auch ungespeicherte Aenderungen),
+   oeffnet eine eigenstaendige, druckfertige Karte in einem neuen
+   Fenster und ruft den Druckdialog auf — dort waehlt Maria
+   "Als PDF speichern". Eine Seite pro Kategorie, wie ihre
+   Original-Karte. */
+function downloadMenuPdf() {
+  const data = collectMenuData();
+  if (!data.sections.length) {
+    setStatus(dom.menuStatus, 'Bitte zuerst Gerichte eintragen, dann als PDF speichern.', 'error');
+    return;
   }
-  return out;
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Bitte erlauben Sie Pop-up-Fenster für diese Seite, damit die PDF-Ansicht geöffnet werden kann.');
+    return;
+  }
+  win.document.open();
+  win.document.write(buildMenuPrintHtml(data));
+  win.document.close();
+  win.focus();
+  // Kurz warten, bis Layout/Schrift stehen, dann Druckdialog.
+  setTimeout(() => { try { win.print(); } catch {} }, 500);
+  setStatus(dom.menuStatus, 'PDF-Ansicht geöffnet — im Druckdialog „Als PDF speichern" wählen.', 'ok');
+}
+
+function buildMenuPrintHtml(data) {
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const spaced = s => esc(s).split('').join(' ');
+  const introHtml = data.intro
+    ? `<p class="intro">${esc(data.intro)}</p>` : '';
+
+  const pages = data.sections.map((sec, i) => {
+    const items = (sec.items || []).map(it => `
+      <div class="item">
+        <div class="row">
+          <span class="name">${esc(it.name)}${it.tag ? ` <em>${esc(it.tag)}</em>` : ''}</span>
+          <span class="dots"></span>
+          <span class="price">${esc(it.price || '')}</span>
+        </div>
+        ${it.desc ? `<p class="desc">${esc(it.desc)}</p>` : ''}
+      </div>`).join('');
+    const note = sec.note ? `<p class="note">${esc(sec.note)}</p>` : '';
+    return `
+      <section class="page">
+        <div class="brand">www.alstercafe.de</div>
+        <h1>${spaced(sec.title)}</h1>
+        ${i === 0 ? introHtml : ''}
+        ${note}
+        <div class="items">${items}</div>
+        ${i === data.sections.length - 1 && data.footnote ? `<p class="foot">${esc(data.footnote)}</p>` : ''}
+      </section>`;
+  }).join('');
+
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<title>Speisekarte · Alstercafé</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #2a1810; }
+  .page { page-break-after: always; padding-bottom: 8mm; }
+  .page:last-child { page-break-after: auto; }
+  .brand { text-align: center; font-size: 9pt; letter-spacing: 2.5px; color: #aaa; text-transform: lowercase; margin: 0 0 26pt; }
+  h1 { text-align: center; font-size: 21pt; letter-spacing: 4px; font-weight: normal; text-transform: uppercase; margin: 0 0 16pt; color: #3d2415; }
+  .intro { text-align: center; font-size: 9.5pt; color: #6b5a4a; max-width: 360pt; margin: 0 auto 22pt; line-height: 1.55; }
+  .note { text-align: center; font-style: italic; font-size: 9pt; color: #8a7a68; margin: 0 0 16pt; }
+  .items { max-width: 470pt; margin: 0 auto; }
+  .item { margin-bottom: 13pt; }
+  .row { display: flex; align-items: baseline; }
+  .name { font-size: 12pt; font-weight: bold; }
+  .name em { font-weight: normal; font-style: italic; color: #4a6f47; font-size: 8.5pt; }
+  .dots { flex: 1 1 auto; border-bottom: 1px dotted #c9bda9; margin: 0 7pt; height: 9pt; }
+  .price { font-size: 12pt; color: #b8893e; white-space: nowrap; font-weight: bold; }
+  .desc { font-size: 9pt; color: #6b5a4a; margin: 3pt 0 0; line-height: 1.45; max-width: 400pt; }
+  .foot { text-align: center; font-size: 7.5pt; color: #aaa; margin-top: 22pt; padding-top: 10pt; border-top: 1px solid #e8ddca; line-height: 1.5; }
+</style></head><body>${pages}</body></html>`;
 }
 
 /* ---------- Öffnungszeiten ---------- */
