@@ -18,6 +18,7 @@
   --sand:      #E8D9BD;
   --gold:      #B8893E;
   --gold-soft: #D4B380;
+  --gold-text: #8A6420; /* AA-konformes Gold für kleinen Fließtext (5.2:1 auf Paper) */
   --ink:       #1F140C;
   --muted:     #786152;
   --line:      #E0D2B8;
@@ -8928,7 +8929,7 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-family: 'Fraunces', serif;
   font-weight: 500;
   font-size: 1.02rem;
-  color: var(--gold);
+  color: var(--gold-text);
   white-space: nowrap;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
@@ -8980,7 +8981,7 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-family: 'Fraunces', serif;
   font-weight: 500;
   font-size: 1.02rem;
-  color: var(--gold);
+  color: var(--gold-text);
   font-variant-numeric: tabular-nums;
   min-width: 38px;
   text-align: right;
