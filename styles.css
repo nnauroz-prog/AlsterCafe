@@ -8877,7 +8877,7 @@ html.has-js-scroll { scroll-behavior: auto; }
   margin-bottom: 6px;
 }
 .karte-block-head .ico { color: var(--gold); width: 26px; height: 26px; flex-shrink: 0; }
-.karte-block-head h3 {
+.karte-block-head h2 {
   font-family: 'Fraunces', serif;
   font-weight: 500;
   font-size: clamp(1.4rem, 2.4vw, 1.85rem);

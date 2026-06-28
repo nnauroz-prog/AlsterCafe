@@ -812,7 +812,7 @@ function renderKarteHtml(data) {
     }).join('');
     return `
       <div class="karte-block reveal in">
-        <div class="karte-block-head"><svg class="ico"><use href="#${escapeAttr(sec.icon || 'i-bread')}"/></svg><h3>${escapeHtml(sec.title || '')}</h3></div>
+        <div class="karte-block-head"><svg class="ico"><use href="#${escapeAttr(sec.icon || 'i-bread')}"/></svg><h2>${escapeHtml(sec.title || '')}</h2></div>
         ${note}
         <ul class="karte-list${compact ? ' karte-list-compact' : ''}">${items}</ul>
       </div>`;
