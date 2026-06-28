@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r113" />
-  <script>(function(){var V='2026-05-10-r113';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r114" />
+  <script>(function(){var V='2026-05-10-r114';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -325,24 +325,38 @@
 
         <!-- TAB: SPEISEKARTE -->
         <div class="admin-panel" id="panel-menu" role="tabpanel" hidden>
+          <h2 class="panel-title">Speisekarte</h2>
           <div class="panel-card wide">
-            <h3>Speisekarte</h3>
-            <p class="panel-help">Pro Eintrag den Namen und eine kurze Beschreibung eintippen. Mit „+" hinzufügen, mit dem Mülleimer löschen. Zum Schluss unten auf <strong>„Speisekarte speichern"</strong> klicken.</p>
+            <p class="panel-card-sub">
+              Ihre vollständige Frühstückskarte mit allen Gerichten und Preisen
+              steht fest auf der Webseite — Frühstück, Rund ums Ei, Orient,
+              Extras sowie heiße und kalte Getränke.
+            </p>
+            <p class="panel-card-sub">
+              Die Frühstückskarte ändert sich nur selten. Möchten Sie etwas
+              anpassen — etwa einen Preis oder ein neues Gericht — genügt ein
+              kurzer Anruf oder eine Mail an Ihren Betreuer. Die Änderung ist
+              in wenigen Minuten online. So bleibt die Karte immer sauber und
+              fehlerfrei.
+            </p>
+            <div class="account-actions">
+              <a class="btn btn-gold" href="speisekarte.html" target="_blank" rel="noopener">
+                <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+                Speisekarte ansehen
+              </a>
+            </div>
+          </div>
 
-            <form id="menu-cards-form">
-              <div class="menu-cats" id="menu-cats"></div>
-
-              <div class="save-bar inline">
-                <p class="save-status" id="menu-status"></p>
-                <div class="save-actions">
-                  <button type="button" class="btn btn-link danger" id="menu-reset">Auf Standard zurücksetzen</button>
-                  <button type="submit" class="btn btn-primary">
-                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
-                    Speisekarte speichern
-                  </button>
-                </div>
-              </div>
-            </form>
+          <div class="panel-card wide">
+            <h3>Tagesaktuell pflegen Sie selbst</h3>
+            <p class="panel-card-sub">
+              Was Sie täglich ändern, machen Sie bequem hier im Mitgliederbereich:
+            </p>
+            <ul class="menu-selfserve-list">
+              <li><strong>Mittagsmenü</strong> — Wochenplan mit Tagesgerichten</li>
+              <li><strong>Brötchen-Sorten</strong> — was Kunden vorbestellen können</li>
+              <li><strong>Öffnungszeiten</strong> und <strong>Hinweisbanner</strong></li>
+            </ul>
           </div>
         </div>
 
@@ -705,8 +719,8 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r113" defer></script>
-  <script src="db.js?v=2026-05-10-r113" defer></script>
-  <script src="admin.js?v=2026-05-10-r113" defer></script>
+  <script src="config.js?v=2026-05-10-r114" defer></script>
+  <script src="db.js?v=2026-05-10-r114" defer></script>
+  <script src="admin.js?v=2026-05-10-r114" defer></script>
 </body>
 </html>

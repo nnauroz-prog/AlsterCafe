@@ -69,36 +69,6 @@ function validateMenu(m) {
 const DAY_KEYS   = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 
-const DEFAULT_MENU = {
-  fruehstueck: {
-    title: 'Frühstück',
-    icon: 'i-bread',
-    items: [
-      { name: 'Kleines Frühstück', description: 'Brötchen, Butter, Marmelade, Heißgetränk.' },
-      { name: 'Großes Frühstück',  description: 'Brötchenkorb, Käse, Wurst, Ei, Heißgetränk.' },
-      { name: 'Vegetarisch',       description: 'Frischkäse, Avocado, Gemüse, Heißgetränk.' }
-    ]
-  },
-  backwaren: {
-    title: 'Backwaren',
-    icon: 'i-wheat',
-    items: [
-      { name: 'Brot & Brötchen',   description: 'Roggen, Dinkel, Vollkorn, Sauerteig.' },
-      { name: 'Feines Gebäck',     description: 'Croissants, Franzbrötchen, Plunder.' },
-      { name: 'Torten & Kuchen',   description: 'Hausgemacht, Festtagstorten auf Vorbestellung.' }
-    ]
-  },
-  getraenke: {
-    title: 'Heiße Getränke',
-    icon: 'i-cup',
-    items: [
-      { name: 'Espresso · Cappuccino · Latte', description: 'Mocambo, frisch gemahlen.' },
-      { name: 'Hauskaffee · Milchkaffee',      description: 'Traditionell gefiltert.' },
-      { name: 'Kakao & Tee',                   description: 'Heiße Schokolade, Kräuter- und Früchtetees.' }
-    ]
-  }
-};
-
 const DEFAULT_HOURS = [
   { label: 'Mo – Fr',  time: '06:30 – 15:00' },
   { label: 'Samstag',  time: '07:30 – 15:00' },
@@ -755,58 +725,60 @@ function initNotice() {
 }
 
 /* ---------- Speisekarte ----------
-   HTML enthaelt Standard-Inhalte. JS ueberschreibt nur, wenn der
-   Inhaber im Mitgliederbereich eigene Inhalte gespeichert hat. */
-function initMenu() {
-  const root = document.getElementById('menu-cols');
-  if (!root) return;
-
+   Rendert die Karte aus der geteilten Datenbasis (menudata.js).
+   Vorrang: vom Inhaber gespeicherte Daten (Supabase/localStorage),
+   sonst der Default aus window.ALSTERCAFE_MENU_DEFAULT.
+   So sind Webseite, Admin-Editor und PDF immer synchron.
+   Die statische Karte im HTML ist nur no-JS-Fallback. */
+function getMenuData() {
+  // 1. Vom Inhaber gespeicherte Karte (via db.js / Supabase-Cache)
   let stored = null;
-  try {
-    const raw = localStorage.getItem(STORAGE_MENU);
-    if (raw) stored = JSON.parse(raw);
-  } catch {}
-  if (!stored || typeof stored !== 'object') return; // Standard-HTML beibehalten
-
-  const data = mergeMenu(stored);
-  const hasItems = ['fruehstueck','backwaren','getraenke']
-    .some(k => data[k] && Array.isArray(data[k].items) && data[k].items.length);
-  if (!hasItems) return;
-
-  root.innerHTML = '';
-  ['fruehstueck','backwaren','getraenke'].forEach(key => {
-    const cat = data[key];
-    if (!cat || !Array.isArray(cat.items) || !cat.items.length) return;
-    const col = document.createElement('div');
-    col.className = 'menu-col reveal in';
-    col.innerHTML = `
-      <div class="menu-col-head">
-        <svg class="ico"><use href="#${escapeAttr(cat.icon || DEFAULT_MENU[key].icon)}"/></svg>
-        <h3>${escapeHtml(cat.title || DEFAULT_MENU[key].title)}</h3>
-      </div>
-      <ul class="menu-list">
-        ${cat.items.map(it => `
-          <li>
-            <strong>${escapeHtml(it.name || '')}</strong>
-            <span>${escapeHtml(it.description || '')}</span>
-          </li>
-        `).join('')}
-      </ul>
-    `;
-    root.appendChild(col);
-  });
+  try { stored = window.alsterDb?.get('menu'); } catch {}
+  if (!stored) {
+    try {
+      const raw = localStorage.getItem(STORAGE_MENU);
+      if (raw) stored = JSON.parse(raw);
+    } catch {}
+  }
+  if (stored && Array.isArray(stored.sections) && stored.sections.length) return stored;
+  // 2. Default aus der geteilten Datei
+  if (window.ALSTERCAFE_MENU_DEFAULT) return window.ALSTERCAFE_MENU_DEFAULT;
+  return null;
 }
 
-function mergeMenu(stored) {
-  const out = JSON.parse(JSON.stringify(DEFAULT_MENU));
-  Object.keys(out).forEach(k => {
-    if (stored[k]) {
-      out[k].title = stored[k].title || out[k].title;
-      out[k].icon  = stored[k].icon  || out[k].icon;
-      if (Array.isArray(stored[k].items)) out[k].items = stored[k].items;
-    }
-  });
-  return out;
+function initMenu() {
+  const mount = document.getElementById('karte-mount');
+  if (!mount) return;
+  const data = getMenuData();
+  if (!data || !Array.isArray(data.sections) || !data.sections.length) return;
+  mount.innerHTML = renderKarteHtml(data);
+}
+
+/* Baut das Karten-HTML — gleiche CSS-Klassen wie die statische Karte,
+   damit Default-Anblick und Override pixelgleich sind. */
+function renderKarteHtml(data) {
+  const sections = data.sections.filter(s => s && Array.isArray(s.items) && s.items.length);
+  const blocks = sections.map(sec => {
+    const compact = sec.items.every(it => !it.desc);
+    const note = sec.note ? `<p class="karte-block-note">${escapeHtml(sec.note)}</p>` : '';
+    const items = sec.items.map(it => {
+      const tag = it.tag ? ` <span class="karte-tag">${escapeHtml(it.tag)}</span>` : '';
+      const preis = it.price ? `<span class="karte-preis">${escapeHtml(it.price)}</span>` : '';
+      if (compact) {
+        return `<li class="karte-row"><span class="karte-name">${escapeHtml(it.name || '')}${tag}</span>${preis}</li>`;
+      }
+      const desc = it.desc ? `<p class="karte-desc">${escapeHtml(it.desc)}</p>` : '';
+      return `<li><div class="karte-row"><span class="karte-name">${escapeHtml(it.name || '')}${tag}</span>${preis}</div>${desc}</li>`;
+    }).join('');
+    return `
+      <div class="karte-block reveal in">
+        <div class="karte-block-head"><svg class="ico"><use href="#${escapeAttr(sec.icon || 'i-bread')}"/></svg><h3>${escapeHtml(sec.title || '')}</h3></div>
+        ${note}
+        <ul class="karte-list${compact ? ' karte-list-compact' : ''}">${items}</ul>
+      </div>`;
+  }).join('');
+  const foot = data.footnote ? `<p class="karte-fussnote">${escapeHtml(data.footnote)}</p>` : '';
+  return `<div class="karte-grid">${blocks}</div>${foot}`;
 }
 
 /* ---------- Öffnungszeiten ----------
