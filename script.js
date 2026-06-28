@@ -752,6 +752,46 @@ function initMenu() {
   const data = getMenuData();
   if (!data || !Array.isArray(data.sections) || !data.sections.length) return;
   mount.innerHTML = renderKarteHtml(data);
+  injectMenuSchema(data);
+}
+
+/* Schema.org/Menu fuer Google Rich Results — aus denselben Daten.
+   So koennen Gerichte + Preise in der Google-Suche erscheinen. */
+function injectMenuSchema(data) {
+  try {
+    const parsePrice = (p) => {
+      // "8,90 €" -> "8.90"; "2,80 / 3,80 €" -> "2.80" (kleiner Preis)
+      const m = String(p || '').match(/(\d+)[,.](\d{2})/);
+      return m ? `${m[1]}.${m[2]}` : null;
+    };
+    const sections = data.sections.filter(s => s && Array.isArray(s.items) && s.items.length);
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Menu',
+      name: 'Frühstückskarte',
+      inLanguage: 'de',
+      hasMenuSection: sections.map(sec => ({
+        '@type': 'MenuSection',
+        name: sec.title || '',
+        hasMenuItem: sec.items.filter(it => it.name).map(it => {
+          const item = { '@type': 'MenuItem', name: it.name };
+          if (it.desc) item.description = it.desc;
+          const price = parsePrice(it.price);
+          if (price) item.offers = { '@type': 'Offer', price, priceCurrency: 'EUR' };
+          if (it.tag && /vegan/i.test(it.tag)) item.suitableForDiet = 'https://schema.org/VeganDiet';
+          return item;
+        })
+      }))
+    };
+    let el = document.getElementById('menu-schema');
+    if (!el) {
+      el = document.createElement('script');
+      el.type = 'application/ld+json';
+      el.id = 'menu-schema';
+      document.head.appendChild(el);
+    }
+    el.textContent = JSON.stringify(schema);
+  } catch (e) { /* Schema ist optional — niemals die Seite blockieren */ }
 }
 
 /* Baut das Karten-HTML — gleiche CSS-Klassen wie die statische Karte,
