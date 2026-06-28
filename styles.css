@@ -167,7 +167,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   color: var(--coffee);
   margin: 0 0 22px;
 }
-.eyebrow.gold { color: var(--gold-soft); }
+.eyebrow.gold { color: var(--gold-text); } /* AA-konform auf hellem Grund */
 .eyebrow .num {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;
@@ -180,7 +180,10 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   transition: opacity var(--dur-base) var(--ease-out);
 }
 .reveal.in .eyebrow .num { opacity: 1; }
-.eyebrow .num.light { color: var(--gold-soft); }
+.eyebrow .num.light { color: var(--gold-text); }
+/* Auf dunklen Kapiteln bleibt das helle Gold (hoher Kontrast auf Bean) */
+.chapter-dark .eyebrow.gold,
+.chapter-dark .eyebrow .num.light { color: var(--gold-soft); }
 
 /* ===== TOPBAR ===== */
 .topbar {
