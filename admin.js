@@ -25,9 +25,12 @@ const DEFAULT_HOURS = [
   { label: 'Sonntag',  time: '07:30 – 15:00' }
 ];
 
-const VALID_USERNAMES = ['inhaber@alstercafe.de', 'inhaber'];
-const VALID_PASSWORD  = 'IfflandStr45!';
-const DISPLAY_USER    = 'inhaber@alstercafe.de';
+// Anzeige-Fallback fuer das User-Badge, falls die echte E-Mail (aus
+// Supabase) noch nicht geladen ist. Kein Geheimnis — nur eine Adresse.
+// (Die frueheren VALID_USERNAMES/VALID_PASSWORD-Konstanten waren toter
+// Code mit einem Klartext-Passwort und wurden entfernt — die echte
+// Anmeldung laeuft ausschliesslich ueber Supabase-Auth in db.js.)
+const DISPLAY_USER = 'inhaber@alstercafe.de';
 
 const DAYS = [
   { key: 'mon', label: 'Montag' },
