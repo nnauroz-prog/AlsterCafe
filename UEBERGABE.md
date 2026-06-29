@@ -168,9 +168,18 @@ Die Frühstückskarte (Stand: Maria's echte PDF, 6 Kategorien, 47 Gerichte) ist 
 - **`menudata.js`** — eine einzige Quelle der Wahrheit: `window.ALSTERCAFE_MENU_DEFAULT = { intro, sections: [{ title, icon, note?, items: [{ name, desc?, price, tag? }] }], footnote }`. Wird von `speisekarte.html` und `admin.html` geladen (vor `script.js` bzw. `admin.js`).
 - **Öffentliche Seite** (`script.js` → `getMenuData()` + `renderKarteHtml()`): rendert die Karte in `#karte-mount` aus dem gespeicherten Override (`alsterDb.get('menu')`) oder dem Default. Die statische Karte im HTML ist nur no-JS-Fallback + SEO.
 - **Admin-Editor** (`admin.js` → `renderMenuEditor`/`buildMenuSection`/`collectMenuData`): Maria pflegt Kategorien + Gerichte selbst. Speichern schreibt nach `content`-Tabelle (id=`menu`), Realtime-Subscribe aktualisiert offene Webseiten-Tabs sofort.
-- **PDF-Export** (`admin.js` → `downloadMenuPdf`/`buildMenuPrintHtml`): rein clientseitig via `window.print()` auf ein eigenständiges Druck-Fenster (eine Seite pro Kategorie). Keine externe Library. Maria wählt im Druckdialog „Als PDF speichern".
+- **PDF-Export** (`admin.js` → `downloadMenuPdf`/`buildMenuPrintHtml`): rein clientseitig, eine Seite pro Kategorie, keine externe Library. Maria wählt im Druckdialog „Als PDF speichern". **Wichtig — Mechanik:** Es wird **kein** `window.open()`-Popup mehr benutzt (das wurde auf iOS Safari lautlos vom Popup-Blocker geschluckt → „passiert nichts"). Stattdessen wird die Druckansicht in ein **verstecktes, gleich-Ursprung-Iframe** (Blob-URL) geladen; ein im Dokument eingebettetes Skript ruft `window.print()` aus dem eigenen Fenster auf. Ein gemeinsames Flag `__alsterPrinted` verhindert doppelte Dialoge, die Blob-URL wird nach `afterprint` freigegeben. Falls je wieder „nichts passiert": prüfen, ob das Iframe `#menu-print-frame` erzeugt wird und die Blob-URL lädt.
 - **Preis-Modell bewusst als freier String** (`"8,90 €"` oder `"2,80 / 3,80 €"`), damit der Editor einfach bleibt (3 Felder: Name/Preis/Beschreibung). Der `tag` (z. B. „vegan") wird im Editor transparent über ein `data-tag`-Attribut erhalten.
 - **Ändern der Default-Karte:** in `menudata.js` editieren. Solange Maria nichts im Admin gespeichert hat, gilt dieser Default überall.
+
+### Layout-Schranke gegen horizontalen Overflow (`npm test`)
+Damit nie wieder ein seitlich überlaufendes Layout (wie einmal der Admin-Header auf dem Handy) unbemerkt live geht, gibt es eine **automatische Schranke**:
+
+- **`tests/overflow-audit.mjs`** (Playwright): startet einen eigenen Mini-Server und prüft **jede Seite, jeden eingeloggten Admin-Bereich** sowie die Zustände „mobiles Menü offen" und „Hinweis-Banner sichtbar" über **14 Breiten (320–1440 px)**. Kriterium: `documentElement.scrollWidth > clientWidth` ⇒ Fehler. Bei Treffer wird das schuldige Element protokolliert und der Prozess beendet mit Exit ≠ 0.
+- **Lokal ausführen:** `npm install` (einmalig), dann `npm test`. (Lokal ohne CI-Browser: `PW_CHROMIUM=/pfad/zu/chromium npm test`.)
+- **CI-Gate:** `.github/workflows/deploy.yml` hat einen Job `test`, von dem `publish` per `needs:` abhängt. **Findet der Audit Overflow, wird NICHTS nach `gh-pages` gespiegelt.** So ist „sowas darf nirgends passieren" technisch erzwungen, nicht nur per Sichtprüfung.
+- **Neue Seite/Sektion hinzufügen:** in `tests/overflow-audit.mjs` die `PAGES`- bzw. `ADMIN_PANELS`-Liste ergänzen, dann `npm test`.
+- `node_modules` ist in `.gitignore` und wird nicht eingecheckt; die Playwright-Version ist in `package.json` gepinnt.
 
 ### Design-Entscheidung: kein Kursiv
 Maria wollte am 21.06.2026 weg von der geschwungenen italic-Schrift. Implementiert als **eine einzige Schluss-Regel** am Ende von `styles.css`:
