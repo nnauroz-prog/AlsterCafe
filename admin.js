@@ -780,18 +780,44 @@ function downloadMenuPdf() {
     setStatus(dom.menuStatus, 'Bitte zuerst Gerichte eintragen, dann als PDF speichern.', 'error');
     return;
   }
-  const win = window.open('', '_blank');
-  if (!win) {
-    alert('Bitte erlauben Sie Pop-up-Fenster für diese Seite, damit die PDF-Ansicht geöffnet werden kann.');
-    return;
+
+  // Druck über ein verstecktes, gleich-Ursprung-Iframe statt window.open().
+  // Grund: window.open('', '_blank') wird auf Handys — vor allem iOS Safari —
+  // lautlos vom Popup-Blocker geschluckt, dann "passiert nichts". Ein Iframe,
+  // das ein Blob-Dokument lädt, umgeht den Blocker komplett; das eingebettete
+  // Skript ruft window.print() aus seinem EIGENEN Fenster auf und druckt so
+  // zuverlässig genau diese Karte (nicht die Admin-Seite).
+  try {
+    document.getElementById('menu-print-frame')?.remove();
+    const html = buildMenuPrintHtml(data);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    const frame = document.createElement('iframe');
+    frame.id = 'menu-print-frame';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+    frame.src = url;
+    document.body.appendChild(frame);
+
+    // Aufräumen, nachdem gedruckt (oder abgebrochen) wurde.
+    const cleanup = () => { URL.revokeObjectURL(url); setTimeout(() => frame.remove(), 500); };
+    frame.addEventListener('load', () => {
+      try { frame.contentWindow.addEventListener('afterprint', cleanup); } catch (e) {}
+      // Belt-and-Suspenders: zusätzlich vom Eltern-Fenster aus auslösen,
+      // falls das eingebettete Skript blockiert wurde. Das gemeinsame Flag
+      // __alsterPrinted verhindert, dass der Dialog doppelt aufgeht.
+      try {
+        const w = frame.contentWindow;
+        if (w && !w.__alsterPrinted) { w.__alsterPrinted = true; w.focus(); w.print(); }
+      } catch (e) {}
+      setTimeout(cleanup, 60000); // Spätestens nach 1 min Blob freigeben.
+    });
+
+    setStatus(dom.menuStatus, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern".', 'ok');
+  } catch (e) {
+    setStatus(dom.menuStatus, 'PDF konnte nicht erzeugt werden. Bitte erneut versuchen.', 'error');
   }
-  win.document.open();
-  win.document.write(buildMenuPrintHtml(data));
-  win.document.close();
-  win.focus();
-  // Kurz warten, bis Layout/Schrift stehen, dann Druckdialog.
-  setTimeout(() => { try { win.print(); } catch {} }, 500);
-  setStatus(dom.menuStatus, 'PDF-Ansicht geöffnet — im Druckdialog „Als PDF speichern" wählen.', 'ok');
 }
 
 function buildMenuPrintHtml(data) {
@@ -845,7 +871,16 @@ function buildMenuPrintHtml(data) {
   .price { font-size: 12pt; color: #b8893e; white-space: nowrap; font-weight: bold; }
   .desc { font-size: 9pt; color: #6b5a4a; margin: 3pt 0 0; line-height: 1.45; max-width: 400pt; }
   .foot { text-align: center; font-size: 7.5pt; color: #aaa; margin-top: 22pt; padding-top: 10pt; border-top: 1px solid #e8ddca; line-height: 1.5; }
-</style></head><body>${pages}</body></html>`;
+</style></head><body>${pages}
+<script>
+  /* Sobald das Dokument steht, den Druckdialog aus dem EIGENEN Fenster
+     heraus öffnen. So druckt der Browser zuverlässig genau diese Karte —
+     auch im Iframe und auf iOS Safari. */
+  function alsterPrint(){ if (window.__alsterPrinted) return; window.__alsterPrinted = true; try { window.focus(); window.print(); } catch (e) {} }
+  if (document.readyState === 'complete') { setTimeout(alsterPrint, 250); }
+  else { window.addEventListener('load', function(){ setTimeout(alsterPrint, 250); }); }
+</script>
+</body></html>`;
 }
 
 /* ---------- Öffnungszeiten ---------- */
