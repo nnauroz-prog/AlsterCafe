@@ -2136,6 +2136,10 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 /* ===== LEGAL PAGES ===== */
 .legal-main { background: var(--paper); padding: 60px 0 80px; min-height: calc(100vh - 320px); }
 .legal-article { max-width: 820px; }
+/* Lange deutsche Komposita (z. B. „Datenschutzerklärung") und URLs/E-Mails
+   müssen auf schmalen Handys umbrechen, sonst schieben sie die Seite breit. */
+.legal-article h1, .legal-article h2, .legal-article h3,
+.legal-article p, .legal-article li { overflow-wrap: break-word; hyphens: auto; }
 .legal-article h1 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 18px; }
 .legal-lead { color: var(--muted); font-style: italic; font-family: 'Fraunces', serif; margin-bottom: 40px; }
 .legal-article section { margin-bottom: 36px; }
@@ -8826,8 +8830,10 @@ html.has-js-scroll { scroll-behavior: auto; }
 
 @media (max-width: 880px) {
   .reviews-cta-grid { grid-template-columns: 1fr; }
-  .reviews-card { min-height: auto; padding: 24px 22px; flex-direction: row; align-items: center; gap: 16px; }
-  .reviews-card-platform { font-size: 1.4rem; margin-bottom: 0; flex: 1; }
+  /* min-width:0 verhindert, dass die Karte als Grid-Item über ihre Spur
+     hinauswächst (sonst horizontaler Overflow auf sehr schmalen Handys). */
+  .reviews-card { min-height: auto; padding: 24px 22px; flex-direction: row; align-items: center; gap: 16px; min-width: 0; }
+  .reviews-card-platform { font-size: 1.4rem; margin-bottom: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 }
 
 /* ===============================================
