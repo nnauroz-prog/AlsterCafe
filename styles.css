@@ -3086,6 +3086,26 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .admin-actions .user-badge { display: none; }
 }
 
+/* Admin-Header auf Mobile: ohne Anpassung lief die Zeile
+   (Logo + Wortmarke + Pille + Vorschau + Abmelden = 533px) weit ueber
+   den Handy-Rand hinaus, die ganze Seite liess sich seitlich scrollen
+   und "Abmelden" war abgeschnitten. Hier wird kompakt umgebaut. */
+@media (max-width: 600px) {
+  /* Pille ist redundant — die H1 "Mitgliederbereich" steht direkt darunter. */
+  .admin-header .admin-pill { display: none; }
+  .admin-header .nav-container { gap: 10px; }
+  .admin-header .brand { gap: 10px; }
+  .admin-header .brand-logo { width: 36px; height: 36px; }
+  .admin-header .brand-name { font-size: 1.2rem; }
+  .admin-actions { gap: 14px; }
+  .admin-actions .btn-link { font-size: .82rem; gap: 6px; }
+  .admin-actions .btn-link .ico-sm { width: 16px; height: 16px; }
+}
+/* Sehr schmale Geraete (≤360px): Wortmarke weicht, Logo bleibt als Anker. */
+@media (max-width: 360px) {
+  .admin-header .brand-name { display: none; }
+}
+
 /* "Mehr"-Dropdown in der Wochenplan-Toolbar — versteckt fortge-
    schrittene Aktionen (Sicherungskopie, Woche leeren) hinter
    einem Klick, damit "Vorwoche kopieren" als Haupt-Aktion klar
