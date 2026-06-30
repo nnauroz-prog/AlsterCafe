@@ -91,34 +91,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Splash IMMER ausblenden, egal was passiert
   const safeRun = (fn) => { try { fn(); } catch (e) { console.warn('init err:', e); } };
 
+  // 1) Visuelles Grundgerüst SOFORT aufbauen — bewusst VOR dem Warten auf das
+  //    Backend. Reveal, Zähler, Navigation, Splash usw. hängen nur vom DOM ab,
+  //    nicht von Supabase. So erscheint die Seite nie leer oder bleibt im
+  //    Splash hängen, selbst wenn das Backend langsam oder offline ist.
+  safeRun(initYears);
+  safeRun(initNav);
+  safeRun(initStickyHeader);
+  safeRun(initReveal);
+  safeRun(initCounters);
+  safeRun(initMagnetic);
+  safeRun(initPremiumPolish);
+  safeRun(initCookieBanner);
+  safeRun(initReservationForm);
+  safeRun(initOrderForm);
+  safeRun(initEditMode);
+  safeRun(initServiceWorker);
+  hideSplash();
+
+  // 2) Erst jetzt aufs Backend warten — und nur die DATEN-abhängigen Teile
+  //    danach rendern (Speisekarte, Öffnungszeiten, Mittagstisch, Hinweis,
+  //    hochgeladene Bilder/Texte, Live-Status).
   try {
     if (window.alsterDb) await window.alsterDb.ready();
   } catch (e) { console.warn('db ready err:', e); }
 
   safeRun(initDesign);
   safeRun(initContent);
-  safeRun(initNav);
-  safeRun(initStickyHeader);
-  safeRun(initReveal);
-  safeRun(initCookieBanner);
   safeRun(initNotice);
   safeRun(initMenu);
   safeRun(initHours);
   safeRun(initLunchWeek);
   safeRun(initLandingTeaser);
   safeRun(initStickyToday);
-  safeRun(initCounters);
-  safeRun(initMagnetic);
-  safeRun(initPremiumPolish);
-  safeRun(initReservationForm);
-  safeRun(initOrderForm);
   safeRun(initLiveStatus);
-  safeRun(initEditMode);
-  safeRun(initServiceWorker);
-  hideSplash();
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
@@ -1768,6 +1776,18 @@ function initCustomCursor(reduceMotion) {
     });
   });
   mo.observe(document.body, { childList: true, subtree: true });
+}
+
+/* Jahre seit Gründung (2013) automatisch berechnen, damit keine Zahl je
+   veraltet. Füllt alle .js-years-Spans und setzt das Ziel des Jahres-
+   Zählers ([data-counter-years]) dynamisch. Muss VOR initCounters laufen. */
+const FOUNDED_YEAR = 2013;
+function initYears() {
+  const years = Math.max(1, new Date().getFullYear() - FOUNDED_YEAR);
+  document.querySelectorAll('.js-years').forEach(el => { el.textContent = String(years); });
+  document.querySelectorAll('.counter[data-counter-years]').forEach(el => {
+    el.dataset.counterTo = String(years);
+  });
 }
 
 /* Counter-Animation: zaehlt hoch, wenn das Element ins Viewport kommt */

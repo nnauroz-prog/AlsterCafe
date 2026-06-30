@@ -136,7 +136,7 @@ header, footer, main, .topbar, .cookie-banner, .edit-fab, .notice-banner { posit
 /* (Spotlight entfernt — wirkt zu „designer-try-hard") */
 
 h1, h2, h3 {
-  font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+  font-family: 'Fraunces', Georgia, serif;
   font-weight: 500;
   color: var(--bean);
   letter-spacing: -0.018em;
@@ -2228,9 +2228,11 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   display: flex; align-items: center; justify-content: center;
   padding: 80px 24px;
   min-height: calc(100vh - 200px);
-  animation: fade-in var(--dur-base) var(--ease-out);
+  animation: admin-fade-in var(--dur-base) var(--ease-out);
 }
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* Eigener Name, damit diese reine Opacity-Variante nicht das gleichnamige
+   fade-in (mit Slide-up) der Hero-Elemente überschreibt. */
+@keyframes admin-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .login-card {
   width: 100%; max-width: 460px;
   background:
@@ -2316,27 +2318,6 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   margin-bottom: 10px;
   font-weight: 600;
 }
-.demo-pair {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 0;
-  font-size: .9rem;
-}
-.demo-pair span {
-  color: var(--muted);
-  font-size: .82rem;
-  letter-spacing: .04em;
-}
-.demo-pair code {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  background: var(--paper);
-  padding: 4px 12px;
-  border-radius: 3px;
-  color: var(--bean);
-  font-size: .9rem;
-  border: 1px solid var(--line);
-  user-select: all;
-}
-
 /* DASHBOARD */
 .admin-dashboard { padding: 50px 0 100px; }
 
