@@ -1794,10 +1794,16 @@ function initYears() {
 function initCounters() {
   const elements = document.querySelectorAll('.counter[data-counter-to]');
   if (!elements.length) return;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  // Ohne IntersectionObserver oder bei reduzierter Bewegung direkt den
+  // Zielwert zeigen — nie bei "0" hängenbleiben. Der HTML-Fallback (>13<)
+  // deckt zusätzlich Besucher ganz ohne JS ab.
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
     elements.forEach(el => { el.textContent = el.dataset.counterTo; });
     return;
   }
+  // Startwert für die Hochzähl-Animation setzen (Element ist unter dem Fold,
+  // die "0" wird erst beim Heranscrollen sichtbar und zählt dann hoch).
+  elements.forEach(el => { el.textContent = '0'; });
   const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
