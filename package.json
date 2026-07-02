@@ -1,0 +1,14 @@
+{
+  "name": "alstercafe-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Webseite Alstercafé — statische Seite plus Layout-Schranken.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/overflow-audit.mjs",
+    "test:overflow": "node tests/overflow-audit.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

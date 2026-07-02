@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="light" />
+  <title>Mitgliederbereich · Alstercafé</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#3D2415" />
+  <link rel="icon" type="image/png" href="image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r129" />
+  <script>(function(){var V='2026-05-10-r129';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+    img{max-width:100%;display:block}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body class="admin-body">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.5 10.5 0 0 1 12 6c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4M6.6 6.6C3.7 8.3 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></g></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></g></symbol>
+      <symbol id="i-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M10 12h11M18 9l3 3-3 3"/></g></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></g></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></g></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 12l6 6 6-6"/><path d="M5 20h14"/></g></symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21a2 2 0 0 0 4 0"/></g></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></g></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></g></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></g></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 20"/></g></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M5 20h14"/></g></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5h-3"/></g></symbol>
+      <symbol id="i-fork" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8a2 2 0 0 0 2 2v8"/><path d="M11 3v8"/><path d="M15 3c-1 0-2 1-2 3v5c0 1 .5 2 2 2v8"/></g></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h13"/><path d="M8 7h7M8 11h7"/></g></symbol>
+      <symbol id="i-inbox" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-8h12l3 8"/><path d="M3 13v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 13h5l1 3h6l1-3h5"/></g></symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/><path d="M9 8a3 3 0 0 1 6 0"/></g></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
+      <symbol id="i-arrow-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></g></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
+    </defs>
+  </svg>
+
+  <header class="admin-header">
+    <div class="container nav-container">
+      <!-- Brand bewusst nicht klickbar — "Vorschau" rechts oeffnet die
+           Webseite gefahrlos im neuen Tab. Verhindert Versehen-Verlassen
+           des Admin-Bereichs durch Tap auf's Logo. -->
+      <span class="brand brand-static">
+        <img src="image.png" alt="" class="brand-logo" width="46" height="46" decoding="async" fetchpriority="low" />
+        <span class="brand-name">Alstercafé</span>
+        <span class="admin-pill">Mitgliederbereich</span>
+      </span>
+      <div class="admin-actions" id="admin-actions" hidden>
+        <span class="user-badge" id="user-badge" title="Angemeldetes Konto"></span>
+        <a class="btn btn-link" href="index.html" target="_blank" rel="noopener">
+          <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+          Vorschau
+        </a>
+        <button class="btn btn-link" id="logout-btn" type="button">
+          <svg class="ico ico-sm"><use href="#i-out"/></svg>
+          Abmelden
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- LOGIN -->
+    <section class="admin-login" id="login-view">
+      <div class="login-card reveal in">
+        <p class="login-card-eyebrow">Mitgliederbereich</p>
+        <h1>Schön, dass <em>Sie da</em> sind.</h1>
+        <p class="login-lead">Bitte melden Sie sich an, um Inhalte zu bearbeiten.</p>
+        <svg class="ico ico-card lock-ico" hidden><use href="#i-lock"/></svg>
+
+        <form id="login-form" autocomplete="off" novalidate>
+          <label>
+            <span>E-Mail-Adresse</span>
+            <input type="text"
+                   name="username"
+                   required
+                   autocomplete="username"
+                   autocapitalize="none"
+                   autocorrect="off"
+                   spellcheck="false"
+                   placeholder="ihre@adresse.de"
+                   value="" />
+          </label>
+          <label>
+            <span>Passwort</span>
+            <div class="pw-wrap">
+              <input type="password"
+                     name="password"
+                     id="pw-input"
+                     required
+                     autocomplete="current-password"
+                     autocapitalize="none"
+                     autocorrect="off"
+                     spellcheck="false"
+                     placeholder="••••••••" />
+              <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Passwort anzeigen">
+                <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+              </button>
+            </div>
+          </label>
+          <button type="submit" class="btn btn-primary form-submit">Anmelden</button>
+          <p class="form-status" id="login-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <p class="login-help">
+          Passwort vergessen? Bitte wenden Sie sich an Ihren Administrator.
+        </p>
+        <p class="login-stamp" aria-hidden="true">Ifflandstr. 45 · <em>Hohenfelde</em></p>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section class="admin-dashboard" id="dashboard-view" hidden>
+      <div class="container">
+
+        <!-- Hero / Welcome -->
+        <div class="admin-welcome admin-welcome-slim">
+          <h1 id="welcome-name">Mitgliederbereich</h1>
+          <p class="admin-sub">Tippen Sie unten auf den Bereich, den Sie pflegen möchten.</p>
+        </div>
+
+        <!-- OVERVIEW (Dashboard-Startansicht) -->
+        <section class="admin-overview" id="overview-view">
+          <details class="overview-help">
+            <summary>Kurze Anleitung — in 3 Schritten</summary>
+            <ol class="overview-help-steps">
+              <li><strong>Bereich wählen.</strong> Tippen Sie unten auf die Kachel, die Sie ändern möchten (z. B. „Mittagsmenü bearbeiten").</li>
+              <li><strong>Ändern.</strong> Tragen Sie ein, was Sie möchten — Texte überschreiben, Felder ausfüllen, Bilder hochladen.</li>
+              <li><strong>Speichern.</strong> Klicken Sie unten auf den grünen Knopf „… speichern". Erst dann wird die Änderung übernommen — und erscheint von selbst auf der Webseite, auch auf den Handys Ihrer Gäste.</li>
+            </ol>
+            <p class="overview-help-note">
+              Über „← Zurück zur Übersicht" oben kommen Sie immer wieder hierher.
+              Sie können nichts kaputt machen: In jedem Bereich gibt es unten
+              „Auf Standard zurücksetzen".
+            </p>
+          </details>
+
+          <p class="overview-group-label">Täglich</p>
+          <div class="overview-grid">
+            <button class="overview-card" type="button" data-tab="week">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-fork"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Mittagsmenü bearbeiten</span>
+                <span class="overview-card-desc">Wochenplan und Tagesgerichte pflegen</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="anfragen">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-inbox"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Reservierungsanfragen</span>
+                <span class="overview-card-desc">Wer möchte einen Tisch?</span>
+              </span>
+              <span class="overview-card-badge" id="overview-anfragen-badge" hidden></span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="bestellungen">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-bag"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Brötchen-Bestellungen</span>
+                <span class="overview-card-desc">Vorbestellungen für belegte Brötchen</span>
+              </span>
+              <span class="overview-card-badge" id="overview-orders-badge" hidden></span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+          </div>
+
+          <p class="overview-group-label">Selten ändern</p>
+          <div class="overview-grid">
+            <button class="overview-card" type="button" data-tab="menu">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-book"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Speisekarte pflegen</span>
+                <span class="overview-card-desc">Frühstück, Backwaren, Getränke</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="design">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-image"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Bilder hochladen</span>
+                <span class="overview-card-desc">Logo, Hero-Bild, Galerie & Farben</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="notice">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-bell"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Hinweisbanner aktivieren</span>
+                <span class="overview-card-desc">Brückentage und Sonderhinweise</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="hours">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-clock"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Öffnungszeiten ändern</span>
+                <span class="overview-card-desc">Wochentage und Zeiten anpassen</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+          </div>
+
+          <p class="overview-utility">
+            <a href="index.html?edit=1" target="_blank" rel="noopener" class="overview-utility-link">
+              <svg class="ico ico-sm"><use href="#i-image"/></svg>
+              Texte direkt auf der Webseite ändern
+            </a>
+          </p>
+
+        </section>
+
+        <!-- WORKSPACE (Tabs + Panels — eingeblendet sobald eine Karte gewählt wird) -->
+        <div class="admin-workspace" id="workspace-view" hidden>
+          <button type="button" class="back-to-overview" id="back-to-overview">
+            <svg class="ico ico-sm"><use href="#i-arrow-left"/></svg>
+            Zurück zur Übersicht
+          </button>
+
+        <!-- TAB NAV — Reihenfolge an die Tile-Gruppen angeglichen
+             (Taeglich zuerst, dann Pflege, dann Konto) -->
+        <nav class="admin-tabs" role="tablist">
+          <button class="admin-tab is-active" role="tab" aria-selected="true" data-tab="week">
+            Wochenplan
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="anfragen">
+            <svg class="ico ico-sm"><use href="#i-inbox"/></svg>
+            Anfragen
+            <span class="tab-badge" id="tab-anfragen-badge" hidden></span>
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="bestellungen">
+            <svg class="ico ico-sm"><use href="#i-bag"/></svg>
+            Bestellungen
+            <span class="tab-badge" id="tab-orders-badge" hidden></span>
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="menu">
+            Speisekarte
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="design">
+            <svg class="ico ico-sm"><use href="#i-image"/></svg>
+            Bilder
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="notice">
+            <svg class="ico ico-sm"><use href="#i-bell"/></svg>
+            Hinweis
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="hours">
+            Öffnungszeiten
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="account">
+            <svg class="ico ico-sm"><use href="#i-user"/></svg>
+            Konto
+          </button>
+        </nav>
+
+        <!-- TAB: WOCHENPLAN -->
+        <div class="admin-panel is-active" id="panel-week" role="tabpanel">
+          <h2 class="panel-title">Mittagsmenü</h2>
+          <p class="panel-help">Bei jedem Tag das Gericht und die Beilage eintippen. Kein Mittagstisch an einem Tag? Den Schalter „An diesem Tag geschlossen" umlegen. Zum Schluss unten auf <strong>„Wochenplan speichern"</strong> klicken — fertig.</p>
+          <div class="panel-toolbar">
+            <div class="week-switch">
+              <button type="button" class="week-nav" id="week-prev" aria-label="Vorherige Woche">←</button>
+              <div class="week-label">
+                <span class="week-kw" id="week-kw">KW –</span>
+                <span class="week-range" id="week-range">–</span>
+              </div>
+              <button type="button" class="week-nav" id="week-next" aria-label="Nächste Woche">→</button>
+              <button type="button" class="btn btn-link" id="week-today">Heute</button>
+            </div>
+            <div class="toolbar-actions">
+              <button type="button" class="btn btn-link" id="copy-prev" title="Einträge der Vorwoche übernehmen">
+                <svg class="ico ico-sm"><use href="#i-copy"/></svg>
+                Vorwoche kopieren
+              </button>
+              <details class="toolbar-more">
+                <summary aria-label="Weitere Aktionen">Mehr</summary>
+                <div class="toolbar-more-menu" role="menu">
+                  <button type="button" id="export-json" title="Als JSON-Datei sichern" role="menuitem">
+                    <svg class="ico ico-sm"><use href="#i-download"/></svg>
+                    Sicherungskopie
+                  </button>
+                  <button type="button" class="is-danger" id="reset-week" role="menuitem">
+                    <svg class="ico ico-sm"><use href="#i-trash"/></svg>
+                    Woche leeren
+                  </button>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <form id="menu-form" class="menu-form">
+            <div class="day-grid" id="day-grid"></div>
+
+            <div class="save-bar">
+              <p class="save-status" id="save-status">Noch nicht gespeichert.</p>
+              <div class="save-actions">
+                <button type="submit" class="btn btn-primary">
+                  <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                  Wochenplan speichern
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB: SPEISEKARTE -->
+        <div class="admin-panel" id="panel-menu" role="tabpanel" hidden>
+          <h2 class="panel-title">Speisekarte</h2>
+          <p class="panel-help">Hier pflegen Sie Ihre Frühstückskarte. Preise, Gerichte und Beschreibungen ändern Sie direkt — speichern Sie unten, dann erscheint alles sofort auf der Webseite. Mit <strong>„Als PDF herunterladen"</strong> erstellen Sie sich jederzeit eine frische Karte zum Ausdrucken.</p>
+
+          <div class="menu-toolbar">
+            <a class="btn btn-link" href="speisekarte.html" target="_blank" rel="noopener">
+              <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+              Vorschau
+            </a>
+            <button type="button" class="btn btn-gold" id="menu-pdf">
+              <svg class="ico ico-sm"><use href="#i-download"/></svg>
+              Als PDF herunterladen
+            </button>
+          </div>
+
+          <form id="menu-cards-form">
+            <p class="menu-intro-field">
+              <label>
+                <span>Einleitungssatz (über der Karte)</span>
+                <input type="text" id="menu-intro" placeholder="Gerne bereiten wir Ihnen Ihr Frühstück nach Wunsch zu …" />
+              </label>
+            </p>
+
+            <div class="menu-sections" id="menu-sections"></div>
+
+            <button type="button" class="btn btn-link menu-add-section" id="menu-add-section">
+              <svg class="ico ico-sm"><use href="#i-plus"/></svg>
+              Neue Kategorie hinzufügen
+            </button>
+
+            <p class="menu-foot-field">
+              <label>
+                <span>Fußnote (unter der Karte)</span>
+                <input type="text" id="menu-footnote" placeholder="Alle Preise in Euro inkl. MwSt. …" />
+              </label>
+            </p>
+
+            <div class="save-bar inline">
+              <p class="save-status" id="menu-status"></p>
+              <div class="save-actions">
+                <button type="button" class="btn btn-link danger" id="menu-reset">Auf Original zurücksetzen</button>
+                <button type="submit" class="btn btn-primary">
+                  <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                  Speisekarte speichern
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB: ÖFFNUNGSZEITEN -->
+        <div class="admin-panel" id="panel-hours" role="tabpanel" hidden>
+          <div class="panel-card">
+            <h3>Öffnungszeiten</h3>
+            <p class="panel-help">Links steht der Tag (z. B. „Mo – Fr"), rechts die Zeit (z. B. „06:30 – 15:00"). Einfach überschreiben. Dann unten auf <strong>„Öffnungszeiten speichern"</strong> klicken.</p>
+
+            <form id="hours-form">
+              <div class="hours-rows" id="hours-rows"></div>
+              <button type="button" class="btn btn-link" id="hours-add">+ Zeile hinzufügen</button>
+
+              <div class="save-bar inline">
+                <p class="save-status" id="hours-status"></p>
+                <div class="save-actions">
+                  <button type="button" class="btn btn-link danger" id="hours-reset">Auf Standard zurücksetzen</button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Öffnungszeiten speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- TAB: DESIGN -->
+        <div class="admin-panel" id="panel-design" role="tabpanel" hidden>
+          <div class="panel-card wide">
+            <h3>Bilder &amp; Farben</h3>
+            <p class="panel-help">Auf „Hochladen" tippen und ein Foto vom Handy oder Computer auswählen. Bilder werden <strong>sofort übernommen</strong> — hier gibt es keinen extra Speichern-Knopf. Ein Bild wieder loswerden? „Entfernen".</p>
+
+            <!-- Logo -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Logo</h4>
+                <p>Quadratisches Bild — wird oben im Kopfbereich und im Footer der Webseite angezeigt.</p>
+              </div>
+              <div class="design-control">
+                <div class="image-slot" data-design-key="logo" data-aspect="1">
+                  <div class="image-preview"><span class="image-empty">Kein Logo hochgeladen</span></div>
+                  <div class="image-actions">
+                    <label class="btn btn-link upload-btn">
+                      <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                      Hochladen
+                      <input type="file" accept="image/*" hidden />
+                    </label>
+                    <button type="button" class="btn btn-link danger image-remove" hidden>Entfernen</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hero-Bild -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Bild ganz oben (Hero)</h4>
+                <p>Das große Bild auf der Startseite. Zum Beispiel eine schöne Außenansicht oder ein appetitlicher Croque.</p>
+              </div>
+              <div class="design-control">
+                <div class="image-slot" data-design-key="heroImage" data-aspect="1">
+                  <div class="image-preview"><span class="image-empty">Standard: animierte Tasse</span></div>
+                  <div class="image-actions">
+                    <label class="btn btn-link upload-btn">
+                      <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                      Hochladen
+                      <input type="file" accept="image/*" hidden />
+                    </label>
+                    <button type="button" class="btn btn-link danger image-remove" hidden>Auf Standard zurücksetzen</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Über-uns-Bild -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Bild auf „Über uns"</h4>
+                <p>Erscheint in der „Über uns"-Sektion über dem Zitat. Querformat passt am besten — z. B. ein Foto aus der Backstube.</p>
+              </div>
+              <div class="design-control">
+                <div class="image-slot" data-design-key="aboutImage" data-aspect="1.5">
+                  <div class="image-preview"><span class="image-empty">Kein Bild gewählt</span></div>
+                  <div class="image-actions">
+                    <label class="btn btn-link upload-btn">
+                      <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                      Hochladen
+                      <input type="file" accept="image/*" hidden />
+                    </label>
+                    <button type="button" class="btn btn-link danger image-remove" hidden>Entfernen</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Galerie -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Galerie</h4>
+                <p>Bis zu 6 Bilder. Sind welche da, erscheint die Galerie automatisch auf der Webseite. Sind keine da, ist die Sektion ausgeblendet.</p>
+              </div>
+              <div class="design-control">
+                <div class="gallery-grid-edit" id="gallery-grid-edit"></div>
+                <label class="btn btn-link upload-btn" id="gallery-upload-btn">
+                  <svg class="ico ico-sm"><use href="#i-upload"/></svg>
+                  Bild hinzufügen
+                  <input type="file" accept="image/*" id="gallery-upload-input" multiple hidden />
+                </label>
+                <span class="gallery-counter" id="gallery-counter">0 / 6</span>
+              </div>
+            </div>
+
+            <!-- Akzentfarbe (eingeklappt, weil Maria fast nie aendert) -->
+            <details class="design-collapsed">
+              <summary>Akzentfarbe ändern (selten nötig)</summary>
+              <div class="design-row design-row-inline">
+                <div class="design-info">
+                  <p>Beeinflusst Linien, Knöpfe und Highlights. Wir empfehlen das warme Original-Gold.</p>
+                </div>
+                <div class="design-control">
+                  <div class="color-picker">
+                    <div class="color-presets" id="color-presets">
+                      <button type="button" class="color-chip" data-color="#B8893E" title="Original Gold" aria-label="Akzentfarbe Original Gold" style="--c:#B8893E"></button>
+                      <button type="button" class="color-chip" data-color="#A1542A" title="Kupfer"        aria-label="Akzentfarbe Kupfer"        style="--c:#A1542A"></button>
+                      <button type="button" class="color-chip" data-color="#7C8B6F" title="Salbei"        aria-label="Akzentfarbe Salbei"        style="--c:#7C8B6F"></button>
+                      <button type="button" class="color-chip" data-color="#8C6F4F" title="Mocca"         aria-label="Akzentfarbe Mocca"         style="--c:#8C6F4F"></button>
+                      <button type="button" class="color-chip" data-color="#3D2415" title="Espresso"      aria-label="Akzentfarbe Espresso"      style="--c:#3D2415"></button>
+                    </div>
+                    <label class="color-custom">
+                      <input type="color" id="color-input" value="#B8893E" />
+                      <span>Eigene Farbe wählen</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <div class="save-bar inline">
+              <p class="save-status" id="design-status">Änderungen werden automatisch übernommen.</p>
+              <div class="save-actions">
+                <a class="btn btn-link" href="index.html" target="_blank" rel="noopener">
+                  <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+                  Live ansehen
+                </a>
+                <button type="button" class="btn btn-link danger" id="design-reset">Alles zurücksetzen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: NOTICE BANNER -->
+        <div class="admin-panel" id="panel-notice" role="tabpanel" hidden>
+          <div class="panel-card">
+            <h3>Aktueller Hinweis</h3>
+            <p class="panel-help">Text eintippen (z. B. „Am 1. Mai geschlossen") und auf <strong>„Hinweis speichern"</strong> klicken — der gelbe Banner erscheint oben auf der Webseite. Feld leeren oder „Banner ausblenden", wenn der Hinweis wieder weg soll.</p>
+            <form id="notice-form">
+              <label>
+                <span>Hinweistext</span>
+                <textarea name="notice" id="notice-input" rows="3"
+                          placeholder="z. B. „Wir haben am 1. Mai geschlossen. Ihr Alstercafé-Team"></textarea>
+              </label>
+              <div class="save-bar inline">
+                <p class="save-status" id="notice-status"></p>
+                <div class="save-actions">
+                  <button type="button" class="btn btn-link danger" id="notice-clear">Banner ausblenden</button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Hinweis speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- TAB: ANFRAGEN -->
+        <div class="admin-panel" id="panel-anfragen" role="tabpanel" hidden>
+          <div class="panel-card wide">
+            <div class="anfragen-head">
+              <div>
+                <h3>Reservierungsanfragen</h3>
+                <p class="panel-card-sub">
+                  Hier sehen Sie alle Anfragen, die über das Reservierungs-Formular auf
+                  der Webseite eingehen — chronologisch sortiert.
+                </p>
+              </div>
+              <span class="anfragen-count" id="anfragen-count" hidden></span>
+            </div>
+            <ul class="anfragen-list" id="anfragen-list">
+              <li class="anfragen-empty">Noch keine Anfragen.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- TAB: BESTELLUNGEN -->
+        <div class="admin-panel" id="panel-bestellungen" role="tabpanel" hidden>
+          <!-- Inbox zuerst — der haeufigste Grund, diese Seite zu oeffnen.
+               Der Sorten-Editor wandert nach unten als Setup-Sektion. -->
+          <div class="panel-card wide">
+            <div class="anfragen-head">
+              <div>
+                <h3>Eingegangene Bestellungen</h3>
+                <p class="panel-card-sub">
+                  Vorbestellungen für belegte Brötchen, die über den
+                  Brötchen-Service auf der Webseite eingehen — neueste zuerst.
+                </p>
+              </div>
+              <span class="anfragen-count" id="orders-count" hidden></span>
+            </div>
+            <ul class="anfragen-list" id="orders-list">
+              <li class="orders-empty">Hier erscheinen Brötchen-Bestellungen, sobald die ersten über den Brötchen-Service eingehen.</li>
+            </ul>
+          </div>
+
+          <div class="panel-card wide">
+            <h3>Bestellbare Brötchen-Sorten</h3>
+            <p class="panel-help">Diese Sorten kann der Kunde auswählen. Pro Zeile: Name (z. B. „Käse") und kurze Beschreibung. „vegetarisch" ankreuzen, wenn fleischlos. Mit „+ Sorte hinzufügen" erweitern. Dann auf <strong>„Sorten speichern"</strong> klicken.</p>
+            <form id="broetchen-form">
+              <div class="broetchen-editor" id="broetchen-editor"></div>
+              <button type="button" class="btn btn-link" id="broetchen-add">+ Sorte hinzufügen</button>
+              <div class="save-bar inline">
+                <p class="save-status" id="broetchen-status"></p>
+                <div class="save-actions">
+                  <button type="button" class="btn btn-link danger" id="broetchen-reset">Auf Standard zurücksetzen</button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Sorten speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- TAB: ACCOUNT -->
+        <div class="admin-panel" id="panel-account" role="tabpanel" hidden>
+          <div class="panel-card">
+            <h3>Konto</h3>
+            <dl class="account-list">
+              <div>
+                <dt>Angemeldet als</dt>
+                <dd id="account-email">…</dd>
+              </div>
+              <div>
+                <dt>Rolle</dt>
+                <dd>Inhaber · Vollzugriff</dd>
+              </div>
+              <div>
+                <dt>Sicherheit</dt>
+                <dd>Verschlüsselte Verbindung. Sitzung endet automatisch beim Schließen des Browsers.</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="panel-card">
+            <h3>Eigenes Passwort ändern</h3>
+            <p class="panel-help">Zweimal das neue Passwort eintippen (zur Sicherheit identisch) und auf <strong>„Passwort speichern"</strong> klicken. Mindestens 12 Zeichen empfohlen — Buchstaben, Zahlen, ein Sonderzeichen. Beim nächsten Anmelden gilt das neue Passwort.</p>
+            <form id="password-form" class="account-form">
+              <label>
+                <span>Neues Passwort</span>
+                <input type="password" id="new-password" autocomplete="new-password"
+                       minlength="8" required placeholder="••••••••" />
+              </label>
+              <label>
+                <span>Neues Passwort wiederholen</span>
+                <input type="password" id="new-password-confirm" autocomplete="new-password"
+                       minlength="8" required placeholder="••••••••" />
+              </label>
+              <div class="account-form-actions">
+                <p class="save-status" id="password-status"></p>
+                <button type="submit" class="btn btn-primary">
+                  <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                  Passwort speichern
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Selten benoetigte Karten unter einem Toggle, damit Maria
+               nicht durch 6 Sektionen scrollen muss um ihr Passwort zu
+               aendern. -->
+          <details class="account-advanced">
+            <summary>Erweiterte Einstellungen (selten nötig)</summary>
+
+            <div class="panel-card">
+              <h3>Mitarbeiter-Zugang anlegen</h3>
+              <p class="panel-help">E-Mail des Mitarbeiters und ein Start-Passwort eintippen, auf <strong>„Zugang anlegen"</strong> klicken. Sagen Sie der Person beide Angaben — sie kann sich anmelden und ihr Passwort später selbst ändern.</p>
+              <form id="invite-form" class="account-form">
+                <label>
+                  <span>E-Mail-Adresse</span>
+                  <input type="email" id="invite-email" autocomplete="email"
+                         required placeholder="kollege@alstercafe.de" />
+                </label>
+                <label>
+                  <span>Initial-Passwort</span>
+                  <input type="text" id="invite-password" minlength="8"
+                         required placeholder="Mind. 8 Zeichen" />
+                </label>
+                <div class="account-form-actions">
+                  <p class="save-status" id="invite-status"></p>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-user"/></svg>
+                    Zugang anlegen
+                  </button>
+                </div>
+              </form>
+              <ul class="user-list" id="user-list"></ul>
+            </div>
+
+            <div class="panel-card">
+              <h3>Aktivitäts-Verlauf</h3>
+              <p class="panel-card-sub">Letzte Änderungen am Inhalt — automatisch protokolliert.</p>
+              <ul class="activity-log" id="activity-log">
+                <li class="activity-empty">Noch keine Aktivität.</li>
+              </ul>
+            </div>
+
+            <div class="panel-card">
+              <h3>Bearbeitete Texte zurücksetzen</h3>
+              <p class="panel-card-sub">
+                Setzt nur die manuell bearbeiteten Webseiten-Texte (Hero, Über-uns,
+                Reservierung, Kontakt) auf den Original-Zustand zurück. Wochenplan,
+                Speisekarte und Design bleiben erhalten.
+              </p>
+              <div class="account-actions">
+                <button type="button" class="btn btn-link" id="reset-content">
+                  <svg class="ico ico-sm"><use href="#i-undo"/></svg>
+                  Original-Texte wiederherstellen
+                </button>
+              </div>
+            </div>
+          </details>
+
+          <div class="panel-card panel-card-danger">
+            <h3>Gefahrenzone</h3>
+            <p class="panel-card-sub">
+              Setzt alle Inhalte (Wochenplan, Speisekarte, Öffnungszeiten, Banner und
+              Design) auf den Standard zurück. Dieser Schritt kann nicht rückgängig
+              gemacht werden.
+            </p>
+            <div class="account-actions">
+              <button type="button" class="btn btn-link danger" id="reset-all">
+                <svg class="ico ico-sm"><use href="#i-trash"/></svg>
+                Alle Eingaben zurücksetzen
+              </button>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- /workspace -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <div class="container">
+      <p>© <span id="year"></span> Alstercafé · Mitgliederbereich · <a href="index.html">Zur Webseite</a></p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+  <script src="config.js?v=2026-05-10-r129" defer></script>
+  <script src="db.js?v=2026-05-10-r129" defer></script>
+  <script src="menudata.js?v=2026-05-10-r129" defer></script>
+  <script src="admin.js?v=2026-05-10-r129" defer></script>
+</body>
+</html>

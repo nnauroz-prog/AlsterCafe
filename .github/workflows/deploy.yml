@@ -1,0 +1,59 @@
+name: Live-Seite aktualisieren
+
+# Bei jedem Push auf die Arbeitsbranche wird der Stand automatisch
+# in den gh-pages-Branch gespiegelt. GitHub Pages (Modus "Deploy from
+# branch", Branch gh-pages) liefert dann sofort die neue Version aus.
+#
+# WICHTIG: Vor dem Spiegeln läuft die Layout-Schranke (Overflow-Audit).
+# Findet sie horizontalen Overflow auf irgendeiner Seite/Breite, schlägt
+# der Job fehl und es wird NICHTS live gestellt. So kann ein Fehler wie
+# ein seitlich überlaufender Header nie wieder unbemerkt online gehen.
+on:
+  push:
+    branches:
+      - "claude/bakery-website-redesign-vyyXQ"
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "gh-pages-sync"
+  cancel-in-progress: true
+
+jobs:
+  # 1) Layout-Schranke: darf nirgends horizontalen Overflow geben.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Quellcode auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Abhängigkeiten installieren
+        run: npm install --no-audit --no-fund
+
+      - name: Browser installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: Overflow-Audit (alle Seiten · alle Breiten)
+        run: npm test
+
+  # 2) Erst wenn der Audit grün ist, wird live gespiegelt.
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Quellcode auschecken
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Nach gh-pages spiegeln
+        run: |
+          git push origin HEAD:gh-pages --force
