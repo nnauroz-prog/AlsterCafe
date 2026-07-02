@@ -262,6 +262,27 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 
 .primary-nav { display: flex; gap: 26px; align-items: center; }
+/* Sprach-Umschalter (DE/EN) — dezente Pille am Ende der Navigation. */
+.lang-toggle {
+  font-family: 'Inter', sans-serif;
+  font-size: .74rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  color: var(--bean);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  line-height: 1;
+  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
+}
+.lang-toggle:hover,
+.lang-toggle:focus-visible {
+  border-color: var(--gold);
+  color: var(--gold-text);
+  outline: none;
+}
 @media (min-width: 981px) and (max-width: 1120px) {
   .primary-nav { gap: 18px; }
   .primary-nav a { font-size: .92rem; }

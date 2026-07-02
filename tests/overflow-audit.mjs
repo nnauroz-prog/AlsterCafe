@@ -100,10 +100,12 @@ function revealAdminPanel(panel) {
 }
 
 const failures = [];
+let activeTag = '';
 function record(label, w, m) {
   if (m.over > TOLERANCE) {
-    failures.push({ label, w, over: m.over, culprits: m.culprits });
-    console.log(`  ✗ ${label} @${w}px  OVERFLOW +${m.over}px  ${JSON.stringify(m.culprits)}`);
+    const full = activeTag ? `[${activeTag}] ${label}` : label;
+    failures.push({ label: full, w, over: m.over, culprits: m.culprits });
+    console.log(`  ✗ ${full} @${w}px  OVERFLOW +${m.over}px  ${JSON.stringify(m.culprits)}`);
   }
 }
 
@@ -112,9 +114,17 @@ const base = `http://localhost:${PORT}`;
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
 let checks = 0;
 
+// Beide Sprachen prüfen — englischer Text hat andere Längen und könnte
+// eigene Overflows auslösen (der Grund, warum es diese Schranke gibt).
+const LANGS = ['de', 'en'];
+
 try {
+ for (const lang of LANGS) {
+  const context = await browser.newContext();
+  await context.addInitScript((l) => { try { localStorage.setItem('alstercafe.lang', l); } catch (e) {} }, lang);
+  activeTag = lang.toUpperCase();
   for (const w of WIDTHS) {
-    const page = await browser.newPage({ viewport: { width: w, height: 900 }, deviceScaleFactor: 1, isMobile: w < 700 });
+    const page = await context.newPage({ viewport: { width: w, height: 900 }, deviceScaleFactor: 1, isMobile: w < 700 });
     // Externe Requests (Fonts, Supabase) abklemmen — wir testen Layout, nicht Netzwerk.
     await page.route('**/*', (r) => {
       const u = r.request().url();
@@ -163,12 +173,14 @@ try {
 
     await page.close();
   }
+  await context.close();
+ }
 } finally {
   await browser.close();
   srv.close();
 }
 
-console.log(`\n${checks} Prüfungen über ${WIDTHS.length} Breiten.`);
+console.log(`\n${checks} Prüfungen über ${WIDTHS.length} Breiten × ${LANGS.length} Sprachen.`);
 if (failures.length) {
   console.error(`\n❌ ${failures.length} Overflow-Fehler gefunden. Seite darf so nicht live gehen.`);
   process.exit(1);

@@ -68,6 +68,12 @@ function validateMenu(m) {
 
 const DAY_KEYS   = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const DAY_LABELS_EN = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+/* Sprache aus localStorage (von i18n.js gesetzt). Bestimmt, in welcher
+   Sprache die dynamisch erzeugten Datums-/Status-Texte gerendert werden. */
+function alsterLang() { try { return localStorage.getItem('alstercafe.lang') === 'en' ? 'en' : 'de'; } catch (e) { return 'de'; } }
+function dateLocale() { return alsterLang() === 'en' ? 'en-GB' : 'de-DE'; }
+function dayLabels() { return alsterLang() === 'en' ? DAY_LABELS_EN : DAY_LABELS; }
 
 const DEFAULT_HOURS = [
   { label: 'Mo – Fr',  time: '06:30 – 15:00' },
@@ -203,13 +209,14 @@ function computeLiveStatus() {
   const wd = (now.getDay() + 6) % 7; // 0 = Mo, 6 = So
   const today = hours[wd];
   const minutesNow = now.getHours() * 60 + now.getMinutes();
+  const en = alsterLang() === 'en';
   if (today && today.openMin != null && minutesNow >= today.openMin && minutesNow < today.closeMin) {
     const remaining = today.closeMin - minutesNow;
     return {
       state: 'open',
       text: remaining <= 60
-        ? `Aktuell geöffnet · schließt in ${remaining} Min.`
-        : `Aktuell geöffnet · bis ${formatMin(today.closeMin)}`
+        ? (en ? `Open now · closes in ${remaining} min` : `Aktuell geöffnet · schließt in ${remaining} Min.`)
+        : (en ? `Open now · until ${formatMin(today.closeMin)}` : `Aktuell geöffnet · bis ${formatMin(today.closeMin)}`)
     };
   }
   // Geschlossen — nächsten Öffnungszeitpunkt finden
@@ -220,19 +227,19 @@ function computeLiveStatus() {
     if (offset === 0 && minutesNow < day.openMin) {
       return {
         state: 'closed',
-        text: `Geschlossen · öffnet heute um ${formatMin(day.openMin)}`
+        text: en ? `Closed · opens today at ${formatMin(day.openMin)}` : `Geschlossen · öffnet heute um ${formatMin(day.openMin)}`
       };
     }
     if (offset > 0) {
-      const dayName = offset === 1 ? 'morgen'
-                    : ['Mo','Di','Mi','Do','Fr','Sa','So'][idx];
+      const dayName = offset === 1 ? (en ? 'tomorrow' : 'morgen')
+                    : (en ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx] : ['Mo','Di','Mi','Do','Fr','Sa','So'][idx]);
       return {
         state: 'closed',
-        text: `Geschlossen · öffnet ${dayName} um ${formatMin(day.openMin)}`
+        text: en ? `Closed · opens ${dayName} at ${formatMin(day.openMin)}` : `Geschlossen · öffnet ${dayName} um ${formatMin(day.openMin)}`
       };
     }
   }
-  return { state: 'closed', text: 'Aktuell geschlossen' };
+  return { state: 'closed', text: en ? 'Currently closed' : 'Aktuell geschlossen' };
 }
 
 function parseHoursFromDom() {
@@ -891,36 +898,37 @@ function initLandingTeaser() {
   const dayKey = DAY_KEYS[dayIdx];
   const entry  = weekData?.days?.[dayKey];
 
-  if (prefixEl) prefixEl.textContent = showTomorrow ? 'Morgen' : 'Heute';
-  if (dayEl)    dayEl.textContent    = DAY_LABELS[dayIdx];
+  const en = alsterLang() === 'en';
+  if (prefixEl) prefixEl.textContent = showTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
+  if (dayEl)    dayEl.textContent    = dayLabels()[dayIdx];
 
   if (entry?.dish && !entry.closed) {
     block.dataset.state = 'open';
     if (kickerEl) kickerEl.textContent = showTomorrow
-      ? 'Morgen mittag bei uns'
-      : 'Heute mittag bei uns';
+      ? (en ? 'Tomorrow at midday' : 'Morgen mittag bei uns')
+      : (en ? 'At midday today' : 'Heute mittag bei uns');
     dishEl.textContent = entry.dish;
     if (sideEl) {
-      sideEl.textContent = entry.side ? `mit ${entry.side}` : '';
+      sideEl.textContent = entry.side ? (en ? `with ${entry.side}` : `mit ${entry.side}`) : '';
       sideEl.hidden = !entry.side;
     }
   } else if (entry?.closed) {
     block.dataset.state = 'closed';
     if (kickerEl) kickerEl.textContent = showTomorrow
-      ? 'Morgen geschlossen'
-      : 'Wir machen heute Pause';
+      ? (en ? 'Closed tomorrow' : 'Morgen geschlossen')
+      : (en ? 'Closed today' : 'Wir machen heute Pause');
     dishEl.textContent = showTomorrow
-      ? 'Übermorgen geht es weiter — wir freuen uns auf Sie.'
-      : 'Bis morgen — wir freuen uns auf Sie.';
+      ? (en ? 'Back the day after — we look forward to seeing you.' : 'Übermorgen geht es weiter — wir freuen uns auf Sie.')
+      : (en ? 'See you tomorrow — we look forward to your visit.' : 'Bis morgen — wir freuen uns auf Sie.');
     if (sideEl) sideEl.hidden = true;
   } else {
     block.dataset.state = 'empty';
     if (kickerEl) kickerEl.textContent = showTomorrow
-      ? 'Karte folgt in Kürze'
-      : 'Schauen Sie einfach vorbei';
+      ? (en ? 'Menu coming soon' : 'Karte folgt in Kürze')
+      : (en ? 'Just drop by' : 'Schauen Sie einfach vorbei');
     dishEl.textContent = showTomorrow
-      ? 'Eintrag folgt in Kürze.'
-      : 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.';
+      ? (en ? 'Details coming soon.' : 'Eintrag folgt in Kürze.')
+      : (en ? 'Fresh rolls, Croques and coffee — all day long.' : 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.');
     if (sideEl) sideEl.hidden = true;
   }
 }
@@ -1002,7 +1010,7 @@ function initPremiumPolish() {
   const editionDate = document.getElementById('edition-date');
   if (editionDate) {
     const now = new Date();
-    const fmt = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    const fmt = now.toLocaleDateString(dateLocale(), { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
     editionDate.textContent = fmt;
   }
   // Vol/No-Element wurde entfernt — editoriales Magazintheater ohne
@@ -1010,7 +1018,7 @@ function initPremiumPolish() {
   const heroToday = document.getElementById('hero-coord-today');
   if (heroToday) {
     const now = new Date();
-    const wd = now.toLocaleDateString('de-DE', { weekday: 'long' });
+    const wd = now.toLocaleDateString(dateLocale(), { weekday: 'long' });
     const dayIdx = now.getDay(); // 0=So, 1=Mo, ..., 6=Sa
     // Mo-Fr: 06:30-15:00, Sa/So: 07:30-15:00
     const hours = (dayIdx >= 1 && dayIdx <= 5) ? '06:30 – 15:00' : '07:30 – 15:00';
@@ -1164,7 +1172,7 @@ function initHeroCoordClock() {
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
-    const wd = now.toLocaleDateString('de-DE', { weekday: 'short' });
+    const wd = now.toLocaleDateString(dateLocale(), { weekday: 'short' });
     const next = `${wd}, ${hh}:${mm}`;
     if (next !== lastText) {
       timeEl.textContent = next;
@@ -1227,15 +1235,16 @@ function injectTopbarLiveStatus() {
 
   const el = document.createElement('span');
   el.className = 'topbar-live' + (isOpen ? '' : ' is-closed');
+  const enTop = alsterLang() === 'en';
   if (isOpen) {
-    el.innerHTML = `Geöffnet bis <em>${formatHour(close)}</em>`;
+    el.innerHTML = (enTop ? 'Open until ' : 'Geöffnet bis ') + `<em>${formatHour(close)}</em>`;
   } else if (minutes < open) {
-    el.innerHTML = `Heute ab <em>${formatHour(open)}</em>`;
+    el.innerHTML = (enTop ? 'Today from ' : 'Heute ab ') + `<em>${formatHour(open)}</em>`;
   } else {
     // Nach 15:00 — morgen früh
     const tomorrow = (dayIdx + 1) % 7;
     const tomorrowOpen = (tomorrow >= 1 && tomorrow <= 5) ? 390 : 450;
-    el.innerHTML = `Morgen ab <em>${formatHour(tomorrowOpen)}</em>`;
+    el.innerHTML = (enTop ? 'Tomorrow from ' : 'Morgen ab ') + `<em>${formatHour(tomorrowOpen)}</em>`;
   }
 
   // Vor dem ersten Separator einsetzen (am Anfang der Inner-Row)
@@ -1287,7 +1296,7 @@ function enhanceReservationCoupon() {
   const header = document.createElement('div');
   header.className = 'reservation-form-coupon-header';
   const now = new Date();
-  const fmt = now.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' });
+  const fmt = now.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
   header.innerHTML = `
     <p class="reservation-form-coupon-eyebrow">Ausgegeben am <em>${fmt}</em></p>
     <span class="reservation-form-coupon-stamp">№ Reservierung</span>
@@ -1607,7 +1616,7 @@ function injectEditionStripIfMissing() {
   strip.className = 'edition-strip';
   strip.setAttribute('aria-hidden', 'true');
   const now = new Date();
-  const fmt = now.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  const fmt = now.toLocaleDateString(dateLocale(), { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 
   strip.innerHTML = `
     <div class="container edition-inner">
@@ -1883,7 +1892,7 @@ function renderWeekMeta(monday) {
   const el = document.getElementById('lunch-week');
   if (!el) return;
   const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
-  el.textContent = `KW ${isoWeek(monday)} · ${formatShort(monday)} – ${formatShort(sunday)}`;
+  el.textContent = (alsterLang() === 'en' ? 'Week ' : 'KW ') + `${isoWeek(monday)} · ${formatShort(monday)} – ${formatShort(sunday)}`;
 }
 
 function renderTodayLunch(weekData, today) {
@@ -1892,7 +1901,7 @@ function renderTodayLunch(weekData, today) {
   if (!todayBox || !emptyBox) return;
   const dayIdx = (today.getDay() + 6) % 7;
   const dayKey = DAY_KEYS[dayIdx];
-  const dayLabel = DAY_LABELS[dayIdx];
+  const dayLabel = dayLabels()[dayIdx];
   const entry = weekData?.days?.[dayKey];
 
   const nameEl = document.getElementById('today-name');
@@ -1971,7 +1980,7 @@ function renderWeekList(weekData, monday, today) {
     }
     li.innerHTML = `
       <div class="lunch-day-head">
-        <span class="lunch-day-name">${DAY_LABELS[idx]}</span>
+        <span class="lunch-day-name">${dayLabels()[idx]}</span>
         <span class="lunch-day-date">${formatDay(date)}</span>
       </div>
       <div class="lunch-day-body">${body}</div>

@@ -181,6 +181,16 @@ Damit nie wieder ein seitlich überlaufendes Layout (wie einmal der Admin-Header
 - **Neue Seite/Sektion hinzufügen:** in `tests/overflow-audit.mjs` die `PAGES`- bzw. `ADMIN_PANELS`-Liste ergänzen, dann `npm test`.
 - `node_modules` ist in `.gitignore` und wird nicht eingecheckt; die Playwright-Version ist in `package.json` gepinnt.
 
+### Sprachumschaltung Deutsch / English (`i18n.js`)
+Die öffentliche Seite lässt sich per Knopf in der Navigation (DE/EN) auf Englisch umschalten.
+
+- **`i18n.js`** enthält ein einziges Wörterbuch (deutscher Quelltext → Englisch) und eine Übersetzungs-Engine, die über Textknoten + ausgewählte Attribute (placeholder, aria-label, title, alt) läuft. **Kein `data-i18n` an den einzelnen Elementen nötig** — die Datei wird nur geladen, den Rest macht sie selbst. Matching ist whitespace-tolerant (mehrzeilige, eingerückte HTML-Texte matchen trotzdem).
+- **Umschalt-Knopf** wird per JS in `.primary-nav` injiziert. Die Wahl steht in `localStorage['alstercafe.lang']`. Beim Umschalten wird die Seite **neu geladen** — so werden auch die dynamisch von `script.js` erzeugten Texte (Datum, Wochentag, Öffnungsstatus) sauber in der neuen Sprache gerendert.
+- **Dynamische Texte** in `script.js` sind sprachbewusst: `alsterLang()` / `dateLocale()` / `dayLabels()` liefern DE oder EN; Datumsformate laufen über `toLocaleDateString(dateLocale(), …)`, Status-/Teaser-Strings sind mit `en ? … : …` verzweigt.
+- **Neue Texte übersetzen:** den deutschen String als Schlüssel ins `EN`-Objekt in `i18n.js` aufnehmen. Fehlt ein Eintrag, bleibt genau dieser Text deutsch (kein Absturz).
+- **Bewusst NICHT übersetzt:** vom Inhaber eingegebene Tagesinhalte (Mittagsgericht, Hinweisbanner) — die bleiben so, wie Maria sie eintippt. Rechtstexte (Impressum/Datenschutz) bleiben Deutsch (Standard für deutsche Betriebe; die EN-Version wäre nur unverbindlich). Der Mitgliederbereich (`admin.html`) ist rein deutsch — `i18n.js` wird dort nicht geladen.
+- **Layout-Schranke** (`npm test`) prüft Overflow jetzt in **beiden Sprachen** — englischer Text hat andere Längen.
+
 ### Design-Entscheidung: kein Kursiv
 Maria wollte am 21.06.2026 weg von der geschwungenen italic-Schrift. Implementiert als **eine einzige Schluss-Regel** am Ende von `styles.css`:
 
