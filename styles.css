@@ -8289,6 +8289,12 @@ html.has-js-scroll { scroll-behavior: auto; }
   }
   .section-shout.shout-light { opacity: 0.06; }
   .section-shout.shout-on-dark { opacity: 0.04; }
+  /* „Hohenfelde" ist ein langes Wort: bei negativem left wird das erste „H"
+     am Rand abgeschnitten und es liest sich wie „Iohenfelde". Daher hier
+     positiver left-Start (das „H" ist voll sichtbar) — der Wortausklang
+     läuft rechts aus und wird vom overflow:hidden der Sektion sauber
+     abgeschnitten. */
+  .section-shout.shout-on-dark { left: 6vw; right: auto; font-size: clamp(5rem, 20vw, 10rem); }
 }
 
 /* ---------- MOBILE Hero-Ticker tighter ---------- */
