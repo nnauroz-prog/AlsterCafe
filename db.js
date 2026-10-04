@@ -318,8 +318,10 @@
       const list = readCache('reservations') || [];
       return Array.isArray(list) ? list : [];
     }
+    // select('*') statt fester Spaltenliste: so bricht das Lesen nicht, falls
+    // die optionale Spalte 'note' in einer alten DB noch fehlt.
     const { data, error } = await sb.from('reservations')
-      .select('id,name,phone,email,date,time,persons,message,status,received_at')
+      .select('*')
       .order('received_at', { ascending: false })
       .limit(200);
     if (error) { console.warn('Reservierungen-Read fehlgeschlagen', error); return readCache('reservations') || []; }
@@ -328,6 +330,7 @@
       name: r.name, phone: r.phone, email: r.email,
       date: r.date, time: r.time, persons: r.persons,
       message: r.message, status: r.status || 'new',
+      note: r.note || '',
       receivedAt: r.received_at
     }));
     writeCache('reservations', items);
@@ -342,6 +345,15 @@
     writeCache('reservations', next);
     if (!useSupabase) return true;
     const { error } = await sb.from('reservations').update({ status }).eq('id', id);
+    return !noteWriteError(error);
+  }
+
+  async function updateReservationNote(id, note) {
+    const cur = readCache('reservations') || [];
+    const next = (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, note } : r);
+    writeCache('reservations', next);
+    if (!useSupabase) return true;
+    const { error } = await sb.from('reservations').update({ note }).eq('id', id);
     return !noteWriteError(error);
   }
 
@@ -394,8 +406,10 @@
       const list = readCache('orders') || [];
       return Array.isArray(list) ? list : [];
     }
+    // select('*') statt fester Spaltenliste: robust, falls 'note' (interne
+    // Notiz) in einer alten DB noch fehlt.
     const { data, error } = await sb.from('orders')
-      .select('id,name,phone,email,pickup_date,pickup_time,items,total_count,notes,status,received_at')
+      .select('*')
       .order('received_at', { ascending: false })
       .limit(200);
     if (error) { console.warn('Bestellungen-Read fehlgeschlagen', error); return readCache('orders') || []; }
@@ -406,6 +420,7 @@
       items: Array.isArray(o.items) ? o.items : [],
       totalCount: o.total_count || 0,
       notes: o.notes, status: o.status || 'new',
+      note: o.note || '',
       receivedAt: o.received_at
     }));
     writeCache('orders', items);
@@ -418,6 +433,15 @@
     writeCache('orders', next);
     if (!useSupabase) return true;
     const { error } = await sb.from('orders').update({ status }).eq('id', id);
+    return !noteWriteError(error);
+  }
+
+  async function updateOrderNote(id, note) {
+    const cur = readCache('orders') || [];
+    const next = (Array.isArray(cur) ? cur : []).map(o => o.id === id ? { ...o, note } : o);
+    writeCache('orders', next);
+    if (!useSupabase) return true;
+    const { error } = await sb.from('orders').update({ note }).eq('id', id);
     return !noteWriteError(error);
   }
 
@@ -513,11 +537,13 @@
     addReservation,
     listReservations,
     updateReservationStatus,
+    updateReservationNote,
     deleteReservation,
     // Bestellungen (belegte Broetchen)
     addOrder,
     listOrders,
     updateOrderStatus,
+    updateOrderNote,
     deleteOrder
   };
 })();

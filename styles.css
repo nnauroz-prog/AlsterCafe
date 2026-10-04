@@ -2952,10 +2952,68 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   padding: 5px 12px;
   border-radius: 999px;
 }
+/* Suchfeld über der Anfragen-/Bestell-Liste */
+.anfragen-search {
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 14px;
+  font: inherit;
+  font-size: .95rem;
+  color: var(--bean);
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+.anfragen-search:focus { outline: none; border-color: var(--gold); }
+
 .anfragen-list {
   list-style: none; padding: 0; margin: 16px 0 0;
   display: flex; flex-direction: column; gap: 14px;
 }
+/* „Vergangene" eingeklappt */
+.anfragen-past { margin-top: 4px; }
+.anfragen-past > details > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+.anfragen-past > details[open] > summary { margin-bottom: 14px; }
+.anfragen-past > details > summary::-webkit-details-marker { display: none; }
+.anfragen-past > details > summary::after { content: ' ▾'; color: var(--gold); }
+.anfragen-past > details[open] > summary::after { content: ' ▴'; }
+.anfragen-sublist {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+/* Interne Notiz pro Anfrage/Bestellung */
+.anfrage-note { display: block; margin: 12px 0 2px; }
+.anfrage-note-label {
+  display: block;
+  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+  font-weight: 600; color: var(--muted); margin-bottom: 5px;
+}
+.anfrage-note-input {
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 12px;
+  font: inherit; font-size: .92rem; line-height: 1.4;
+  color: var(--bean);
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  resize: vertical;
+}
+.anfrage-note-input:focus { outline: none; border-style: solid; border-color: var(--gold); }
 .anfragen-empty {
   padding: 30px 0;
   color: var(--muted);

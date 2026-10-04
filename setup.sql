@@ -55,8 +55,11 @@ create table if not exists public.reservations (
   persons     text,
   message     text,
   status      text default 'new',
+  note        text,            -- interne Notiz des Inhabers (nur fuer Eingeloggte)
   received_at timestamptz default now() not null
 );
+-- Falls die Tabelle schon existiert (aeltere Installation): Notiz-Spalte nachruesten.
+alter table public.reservations add column if not exists note text;
 
 alter table public.reservations enable row level security;
 
@@ -99,10 +102,13 @@ create table if not exists public.orders (
   pickup_time  text,
   items        jsonb,        -- [{ "name": "...", "qty": 5 }]
   total_count  integer default 0,
-  notes        text,
+  notes        text,         -- Wunsch/Hinweis des Kunden (vom Formular)
   status       text default 'new',
+  note         text,         -- interne Notiz des Inhabers (nur fuer Eingeloggte)
   received_at  timestamptz default now() not null
 );
+-- Falls die Tabelle schon existiert (aeltere Installation): Notiz-Spalte nachruesten.
+alter table public.orders add column if not exists note text;
 
 alter table public.orders enable row level security;
 
