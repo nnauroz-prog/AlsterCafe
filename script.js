@@ -2088,28 +2088,14 @@ function initOrderForm() {
     if (submitBtn) submitBtn.disabled = true;
     const items = getItems();
     const total = items.reduce((s, it) => s + it.qty, 0);
+    const en = alsterLang() === 'en';
     if (total < MIN_ORDER) {
-      setFormStatus(status, `Bitte wählen Sie mindestens ${MIN_ORDER} Brötchen.`, 'error');
+      setFormStatus(status, en ? `Please select at least ${MIN_ORDER} rolls.` : `Bitte wählen Sie mindestens ${MIN_ORDER} Brötchen.`, 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
     if (!form.checkValidity()) {
-      // Das erste ungueltige Feld bestimmen, benennen UND dorthin springen.
-      // Wichtig am Handy: iOS-Safari zeigt oft KEINE native Hinweisblase,
-      // daher sagen wir im Status genau, welches Feld fehlt, und scrollen hin.
-      const bad = form.querySelector(':invalid');
-      let msg = 'Bitte prüfen Sie Ihre Eingaben.';
-      if (bad) {
-        const lbl = (bad.closest('label')?.querySelector('span')?.textContent) || '';
-        const feld = lbl.replace(/\*/g, '').trim() || bad.name || 'Feld';
-        if (bad.type === 'checkbox') msg = 'Bitte unten das Häkchen zur Einverständnis setzen.';
-        else if (bad.validity && bad.validity.valueMissing) msg = `Bitte „${feld}" ausfüllen.`;
-        else if (bad.type === 'email') msg = 'Bitte eine gültige E-Mail-Adresse eingeben (z. B. name@mail.de).';
-        else msg = `Bitte „${feld}" prüfen.`;
-        try { bad.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
-        try { bad.focus({ preventScroll: true }); } catch (e) {}
-      }
-      setFormStatus(status, msg, 'error');
+      setFormStatus(status, invalidFieldMessage(form, en), 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -2126,7 +2112,7 @@ function initOrderForm() {
     };
 
     if (submitBtn) submitBtn.classList.add('is-loading');
-    setFormStatus(status, 'Bestellung wird gesendet …');
+    setFormStatus(status, en ? 'Sending order …' : 'Bestellung wird gesendet …');
 
     let saved = false;
     try { saved = !!(await window.alsterDb?.addOrder(entry)); }
@@ -2135,7 +2121,7 @@ function initOrderForm() {
     if (submitBtn) submitBtn.classList.remove('is-loading');
     if (saved) {
       if (submitBtn) submitBtn.classList.add('is-success');
-      setFormStatus(status, `Vielen Dank! Ihre Bestellung über ${total} belegte Brötchen ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
+      setFormStatus(status, en ? `Thank you! Your order of ${total} filled rolls has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} belegte Brötchen ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
       try { form.reset(); } catch {}
       rows.forEach(row => { row.querySelector('.qty-value').textContent = '0'; row.classList.remove('is-active'); });
       setDefaultDate();
@@ -2151,7 +2137,7 @@ function initOrderForm() {
         `Wünsche:\n${entry.notes || '–'}`
       );
       window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
-      setFormStatus(status, 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
+      setFormStatus(status, en ? 'Please send the email that just opened — we will confirm as soon as possible.' : 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
       render(); // Button-Status wiederherstellen, falls kein Mail-Programm vorhanden
     }
   });
@@ -2175,23 +2161,9 @@ function initReservationForm() {
     // sonst koennte ein Doppel-Tap zwei Reservierungen anlegen.
     if (submitBtn?.disabled) return;
     if (submitBtn) submitBtn.disabled = true;
+    const en = alsterLang() === 'en';
     if (!form.checkValidity()) {
-      // Das erste ungueltige Feld bestimmen, benennen UND dorthin springen.
-      // Wichtig am Handy: iOS-Safari zeigt oft KEINE native Hinweisblase,
-      // daher sagen wir im Status genau, welches Feld fehlt, und scrollen hin.
-      const bad = form.querySelector(':invalid');
-      let msg = 'Bitte prüfen Sie Ihre Eingaben.';
-      if (bad) {
-        const lbl = (bad.closest('label')?.querySelector('span')?.textContent) || '';
-        const feld = lbl.replace(/\*/g, '').trim() || bad.name || 'Feld';
-        if (bad.type === 'checkbox') msg = 'Bitte unten das Häkchen zur Einverständnis setzen.';
-        else if (bad.validity && bad.validity.valueMissing) msg = `Bitte „${feld}" ausfüllen.`;
-        else if (bad.type === 'email') msg = 'Bitte eine gültige E-Mail-Adresse eingeben (z. B. name@mail.de).';
-        else msg = `Bitte „${feld}" prüfen.`;
-        try { bad.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
-        try { bad.focus({ preventScroll: true }); } catch (e) {}
-      }
-      setFormStatus(status, msg, 'error');
+      setFormStatus(status, invalidFieldMessage(form, en), 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -2210,7 +2182,7 @@ function initReservationForm() {
     };
 
     if (submitBtn) submitBtn.classList.add('is-loading');
-    setFormStatus(status, 'Anfrage wird gesendet …');
+    setFormStatus(status, en ? 'Sending request …' : 'Anfrage wird gesendet …');
 
     let saved = false;
     try {
@@ -2223,7 +2195,7 @@ function initReservationForm() {
     }
     if (saved) {
       if (submitBtn) submitBtn.classList.add('is-success');
-      setFormStatus(status, 'Vielen Dank! Ihre Anfrage ist bei uns eingegangen. Wir melden uns telefonisch oder per E-Mail.', 'ok');
+      setFormStatus(status, en ? 'Thank you! Your request has reached us. We will get back to you by phone or email.' : 'Vielen Dank! Ihre Anfrage ist bei uns eingegangen. Wir melden uns telefonisch oder per E-Mail.', 'ok');
       try { form.reset(); } catch {}
     } else {
       // Fallback: Mail-Programm oeffnen
@@ -2238,7 +2210,7 @@ function initReservationForm() {
         '', 'Nachricht:', entry.message || '–'
       ].join('\n'));
       window.location.href = `mailto:info@alstercafe.de?subject=${encodeURIComponent(subject)}&body=${body}`;
-      setFormStatus(status, 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
+      setFormStatus(status, en ? 'Please send the email that just opened — we will confirm as soon as possible.' : 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
     }
   });
 }
@@ -2248,6 +2220,24 @@ function setFormStatus(el, msg, kind = '') {
   el.textContent = msg;
   el.classList.remove('ok', 'error');
   if (kind) el.classList.add(kind);
+}
+
+/* Benennt das erste ungültige Pflichtfeld, springt hin und liefert eine
+   klare, sprachbewusste Meldung. Von beiden Formularen genutzt. Am Handy
+   wichtig, weil iOS-Safari oft keine native Hinweisblase zeigt. */
+function invalidFieldMessage(form, en) {
+  // Nur echte Formularfelder — NICHT <form>/<fieldset>, die :invalid ebenfalls
+  // matchen können (sonst landet man beim Fieldset statt beim leeren Feld).
+  const bad = form.querySelector('input:invalid, select:invalid, textarea:invalid');
+  if (!bad) return en ? 'Please check your entries.' : 'Bitte prüfen Sie Ihre Eingaben.';
+  const lbl = (bad.closest('label')?.querySelector('span')?.textContent) || '';
+  const feld = lbl.replace(/\*/g, '').trim() || bad.name || (en ? 'field' : 'Feld');
+  try { bad.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+  try { bad.focus({ preventScroll: true }); } catch (e) {}
+  if (bad.type === 'checkbox') return en ? 'Please tick the consent box below.' : 'Bitte unten das Häkchen zur Einverständnis setzen.';
+  if (bad.validity && bad.validity.valueMissing) return en ? `Please fill in “${feld}”.` : `Bitte „${feld}" ausfüllen.`;
+  if (bad.type === 'email') return en ? 'Please enter a valid email address (e.g. name@mail.com).' : 'Bitte eine gültige E-Mail-Adresse eingeben (z. B. name@mail.de).';
+  return en ? `Please check “${feld}”.` : `Bitte „${feld}" prüfen.`;
 }
 
 /* ---------- Helpers ---------- */
