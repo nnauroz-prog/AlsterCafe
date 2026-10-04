@@ -84,8 +84,8 @@
     'Familiengeführt': 'Family-run',
     'seit': 'for',
     'Jahren.': 'years.',
-    'Unsere Backstube ist im Haus. Brötchen, Croissants und Franzbrötchen\n          kommen ab halb sieben aus dem Ofen — was um 10 Uhr noch auf dem Tresen\n          liegt, war drei Stunden vorher noch Teig. Mittagstisch wechselt\n          täglich, je nach dem, was der Markt morgens hergegeben hat. Und ja:\n          es gibt auch Simit.':
-      'Our bakery is in-house. Rolls, croissants and Franzbrötchen come out of the oven from half past six — whatever is still on the counter at 10 was dough three hours earlier. The lunch changes daily, depending on what the market gave us that morning. And yes: there’s Simit, too.',
+    'Täglich frisch gebackene Backwaren, ein frisches Frühstück, ein täglich wechselnder, hausgemachter Mittagstisch und leckere Croques — zubereitet mit besten regionalen Zutaten.':
+      'Freshly baked goods every day, a fresh breakfast, a daily-changing homemade lunch and tasty croques — prepared with the best regional ingredients.',
     'Familienbetrieb · Hamburg-Hohenfelde': 'Family business · Hamburg-Hohenfelde',
 
     /* Bewertungen */
