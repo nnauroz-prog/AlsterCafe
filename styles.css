@@ -336,10 +336,10 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
     height: 100dvh;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0;
     background: var(--bean);
-    padding: 120px var(--gutter) calc(80px + env(safe-area-inset-bottom, 0));
+    padding: 132px var(--gutter) calc(48px + env(safe-area-inset-bottom, 0));
     margin: 0;
     border: 0;
     box-shadow: none;
@@ -2188,7 +2188,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   letter-spacing: .04em;
   transition: background var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
-.nav-shop::after { display: none; }
+.nav-shop::after { content: " \2197\FE0E"; display: inline; }
 .nav-shop:hover {
   background: #c79b48;
   transform: translateY(-1px);
@@ -6881,28 +6881,11 @@ html.has-js-scroll { scroll-behavior: auto; }
     background:
       radial-gradient(900px 400px at 80% 20%, rgba(184, 137, 62, 0.16), transparent 60%),
       linear-gradient(160deg, var(--bean) 0%, var(--espresso) 100%);
-    padding: 140px var(--gutter) calc(80px + env(safe-area-inset-bottom, 0));
-    counter-reset: navitem;
-  }
-  .primary-nav::before {
-    content: 'Index';
-    position: absolute;
-    top: 80px;
-    left: var(--gutter);
-    right: var(--gutter);
-    padding-bottom: 18px;
-    border-bottom: 1px solid rgba(212, 179, 128, 0.18);
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-size: .92rem;
-    letter-spacing: 0.02em;
-    color: var(--gold-soft);
-    opacity: 0.7;
+    padding: 132px var(--gutter) calc(48px + env(safe-area-inset-bottom, 0));
   }
   .primary-nav a {
-    counter-increment: navitem;
     position: relative;
-    padding: 14px 0 14px 48px;
+    padding: 14px 0;
     border: 0;
     border-bottom: 1px solid rgba(212, 179, 128, 0.10);
     text-transform: none;
@@ -6916,25 +6899,9 @@ html.has-js-scroll { scroll-behavior: auto; }
     transform: translateY(8px);
     transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out), color 200ms var(--ease-out);
   }
-  .primary-nav a::before {
-    content: counter(navitem, upper-roman);
-    position: absolute;
-    left: 0; top: 50%;
-    transform: translateY(-50%);
-    font-family: 'Inter', sans-serif;
-    font-style: normal;
-    font-size: .66rem;
-    font-weight: 600;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--gold-soft);
-    opacity: 0.55;
-    line-height: 1;
-    width: 36px;
-  }
   .primary-nav a::after { display: none; }
   .primary-nav.open a {
-    opacity: 0.92;
+    opacity: 1;
     transform: translateY(0);
   }
   .primary-nav.open a:nth-child(1) { transition-delay: 100ms; }
@@ -6946,15 +6913,13 @@ html.has-js-scroll { scroll-behavior: auto; }
   .primary-nav.open a:nth-child(7) { transition-delay: 460ms; }
   .primary-nav a:hover,
   .primary-nav a.is-active { color: var(--gold-soft); opacity: 1; }
-  .primary-nav a:hover::before,
-  .primary-nav a.is-active::before { opacity: 1; color: var(--gold); }
 
   /* Sprach-Umschalter (DE/EN) im mobilen Menü sichtbar machen: heller Text
      auf dem dunklen Drawer, großes Tap-Target, linksbündig zu den Einträgen. */
   .primary-nav .lang-toggle {
     display: inline-flex;
     align-items: center;
-    margin: 30px 0 0 48px;
+    margin: 30px 0 0 0;
     min-height: 44px;
     padding: 10px 22px;
     font-size: .9rem;
@@ -6971,37 +6936,48 @@ html.has-js-scroll { scroll-behavior: auto; }
     outline: none;
   }
 
-  /* Webshop-Link als ausgestellte Box */
+  /* Webshop-Link: klar lesbare Pille, heller Text auf dunklem Drawer.
+     !important, um die Desktop-Basis (.nav-shop color/padding/font !important)
+     im Drawer zu ueberschreiben — sonst bliebe der Text dunkel auf dunkel. */
   .primary-nav .nav-shop {
-    margin-top: 24px;
-    padding: 18px 0 18px 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 26px;
+    padding: 12px 22px !important;
     font-family: 'Inter', sans-serif;
-    font-size: clamp(.88rem, 3.4vw, 1.02rem);
+    font-size: clamp(.9rem, 3.4vw, 1.02rem) !important;
     text-transform: uppercase;
-    letter-spacing: 0.22em;
-    font-weight: 500;
+    letter-spacing: 0.18em;
+    font-weight: 600 !important;
     font-style: normal;
-    color: var(--gold-soft);
-    background: transparent;
-    border-radius: 0;
+    color: var(--linen) !important;
+    opacity: 1;
+    background: rgba(212, 179, 128, 0.12);
+    border: 1px solid rgba(212, 179, 128, 0.5);
+    border-radius: 2px;
   }
-  .primary-nav .nav-shop::before { content: 'Ext.'; }
+  .primary-nav .nav-shop::after { display: inline; }
+  .primary-nav .nav-shop:hover,
+  .primary-nav .nav-shop:focus-visible {
+    color: var(--espresso) !important;
+    background: var(--gold-soft);
+    border-color: var(--gold-soft);
+    outline: none;
+  }
 
-  /* Fuss-Linie mit Adresse + Telefon */
+  /* Fuss-Linie mit Adresse + Telefon — im Fluss am Ende, gut lesbar */
   .primary-nav::after {
     content: 'Ifflandstr. 45 · 040 22 69 28 91';
-    position: absolute;
-    bottom: calc(40px + env(safe-area-inset-bottom, 0));
-    left: var(--gutter);
-    right: var(--gutter);
+    width: 100%;
+    margin-top: 36px;
     padding-top: 18px;
     border-top: 1px solid rgba(212, 179, 128, 0.18);
     font-family: 'Inter', sans-serif;
     font-size: .76rem;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(241, 231, 211, 0.5);
-    text-align: center;
+    color: rgba(241, 231, 211, 0.78);
   }
 }
 
