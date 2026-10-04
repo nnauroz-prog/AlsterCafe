@@ -163,7 +163,7 @@ create policy "Authenticated can delete images"
 -- FERTIG. Naechste Schritte:
 -- 1. Inhaber-User anlegen:
 --    Dashboard → Authentication → Users → "Add user" → "Create new user"
---    E-Mail: inhaber@alstercafe.de
+--    E-Mail: info@alstercafe.de   (muss exakt ownerEmail in config.js entsprechen)
 --    Passwort: [sicheres Passwort]
 --    "Auto Confirm User" aktivieren
 --

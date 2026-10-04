@@ -86,6 +86,8 @@ Mit „Zurück zur Übersicht" oben links kommen Sie immer wieder zurück.
 Bei Bestellungen und Reservierungen zeigt eine Pille **„Heute"** oder **„Morgen"** an,
 was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten ist.
 
+**Live-Anzeige oben rechts:** Eine grüne Pille **„● Live verbunden"** bedeutet, dass Ihre Änderungen **sofort auf allen Geräten und der Webseite** erscheinen. Steht dort rot **„○ Nicht live"**, besteht gerade keine Live-Verbindung (z. B. kein Internet oder das Supabase-Projekt ist pausiert) — Ihre Eingaben werden dann erst nach dem Neuladen übernommen. In dem Fall kurz die Verbindung prüfen bzw. das Projekt im Supabase-Dashboard reaktivieren.
+
 ### Wochenplan
 - Hauptgericht und Beilage je Tag eintragen
 - „An diesem Tag geschlossen" zeigt den Tag als geschlossen an
@@ -188,6 +190,9 @@ Die Frühstückskarte (Stand: Maria's echte PDF, 6 Kategorien, 47 Gerichte) ist 
 
 ### Keep-alive gegen Supabase-Pause (`.github/workflows/keepalive.yml`)
 Gratis-Supabase-Projekte pausieren nach ~7 Tagen ohne Aktivität. Der Workflow feuert per `schedule` (cron, alle 3 Tage) + `workflow_dispatch` eine einzelne `curl`-Lese-Anfrage an `…/rest/v1/content?select=id&limit=1` mit dem **öffentlichen** anon/publishable Key (steht schon in `config.js`, kein Secret). 2xx = ok, sonst schlägt der Job sichtbar fehl. **Fällt nur vom Default-Branch `main`** (GitHub-Regel für geplante Workflows) — auf Arbeits-Branches läuft nur `workflow_dispatch`. Graceful Degradation ist abgesichert und getestet: bei nicht erreichbarem Backend rendert die Seite die `menudata.js`-Standardkarte, und die Formulare fallen auf `mailto:` zurück (`script.js` Reservierung/Bestellung, `saved=false` → E-Mail-Zweig). Der Overflow-Audit prüft beide Sprachen.
+
+### Live-Sync-Anzeige im Mitgliederbereich
+`db.js` meldet den Verbindungsstatus des Realtime-Channels nach außen: `subscribeChanges` übergibt den Status (`SUBSCRIBED` / `CHANNEL_ERROR` / `TIMED_OUT` / `CLOSED`, im Demo-Modus `LOCAL`) an `window.alsterDb.onSyncStatus(cb)`. `admin.js` (`updateSyncPill`) spiegelt das in eine Pille `#sync-pill` im Header: grün „Live verbunden", rot „Nicht live", im lokalen Modus ausgeblendet. Rein anzeigend — der Sync-Mechanismus selbst (Supabase Realtime + `hydrate` beim Laden) ist davon unberührt. Die geteilte Datenbasis liegt in der `content`-Tabelle (RLS: öffentlich lesen, nur eingeloggt schreiben, siehe `setup.sql`), Realtime ist dort für `content`/`reservations`/`orders` aktiviert.
 
 ### Layout-Schranke gegen horizontalen Overflow (`npm test`)
 Damit nie wieder ein seitlich überlaufendes Layout (wie einmal der Admin-Header auf dem Handy) unbemerkt live geht, gibt es eine **automatische Schranke**:

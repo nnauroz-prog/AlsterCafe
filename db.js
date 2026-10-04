@@ -401,8 +401,25 @@
   }
 
   /* ---------- Realtime Sync (nur Supabase) ---------- */
+  /* ---------- Live-Sync-Status ----------
+     Erlaubt der Oberflaeche (Mitgliederbereich) anzuzeigen, ob die
+     Live-Verbindung steht. Werte orientieren sich an den Supabase-
+     Channel-Status-Strings plus 'LOCAL' fuer den Demo-Modus. */
+  let lastSyncStatus = useSupabase ? 'CONNECTING' : 'LOCAL';
+  let syncStatusCb = null;
+  function notifySync(status) {
+    lastSyncStatus = status;
+    if (typeof syncStatusCb === 'function') { try { syncStatusCb(status); } catch (e) {} }
+  }
+  function onSyncStatus(cb) {
+    syncStatusCb = cb;
+    // sofort mit aktuellem Stand aufrufen, damit die Anzeige nicht leer bleibt
+    if (typeof cb === 'function') { try { cb(lastSyncStatus); } catch (e) {} }
+  }
+
   function subscribeChanges(cb) {
     if (!useSupabase) {
+      notifySync('LOCAL');
       window.addEventListener('storage', e => {
         if (e.key && e.key.startsWith(PREFIX)) cb(e.key.slice(PREFIX.length));
       });
@@ -423,7 +440,9 @@
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
         cb('orders');
       })
-      .subscribe();
+      // Supabase ruft diesen Callback mit dem Verbindungsstatus auf:
+      // 'SUBSCRIBED' (live), 'CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'.
+      .subscribe(status => notifySync(status));
   }
 
   /* ---------- Init ---------- */
@@ -441,6 +460,7 @@
     remove: dbRemove,
     uploadImage,
     subscribe: subscribeChanges,
+    onSyncStatus,
     auth,
     // Reservierungen
     addReservation,

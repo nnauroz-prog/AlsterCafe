@@ -169,6 +169,7 @@ function cacheDom() {
     logoutBtn:    document.getElementById('logout-btn'),
     welcome:      document.getElementById('welcome-name'),
     userBadge:    document.getElementById('user-badge'),
+    syncPill:     document.getElementById('sync-pill'),
     // Tabs
     tabs:         document.querySelectorAll('.admin-tab'),
     panels:       document.querySelectorAll('.admin-panel'),
@@ -328,6 +329,38 @@ async function showDashboard() {
     if (key === 'reservations') refreshAnfragen();
     if (key === 'orders') refreshOrders();
   });
+  // Sichtbare Anzeige, ob die Live-Verbindung steht (Aenderungen erscheinen
+  // dann sofort auf allen Geraeten). Gibt der Inhaberin Gewissheit.
+  window.alsterDb?.onSyncStatus?.(updateSyncPill);
+}
+
+/* Spiegelt den Live-Verbindungsstatus in die Header-Pille.
+   Statuswerte kommen aus db.js (Supabase-Channel + 'LOCAL'). */
+function updateSyncPill(status) {
+  const el = dom.syncPill;
+  if (!el) return;
+  // Im lokalen Modus (keine Supabase-Verbindung) gibt es kein Geraete-Sync
+  // zu melden — Pille ausblenden statt Verwirrung zu stiften.
+  if (status === 'LOCAL') { el.hidden = true; return; }
+  let cls, label;
+  if (status === 'SUBSCRIBED') {
+    cls = 'is-live';
+    label = 'Live verbunden';
+    el.title = 'Live verbunden — Änderungen erscheinen sofort auf allen Geräten.';
+  } else if (status === 'CONNECTING') {
+    cls = 'is-connecting';
+    label = 'Verbinde …';
+    el.title = 'Verbindung zur Datenbank wird aufgebaut …';
+  } else {
+    cls = 'is-offline';
+    label = 'Nicht live';
+    el.title = 'Keine Live-Verbindung — Änderungen erscheinen erst nach dem Neuladen. Prüfen Sie die Internetverbindung oder ob das Supabase-Projekt aktiv ist.';
+  }
+  el.hidden = false;
+  el.innerHTML = '<span class="sync-dot"></span><span class="sync-text"></span>';
+  el.querySelector('.sync-text').textContent = label;
+  el.classList.remove('is-live', 'is-connecting', 'is-offline');
+  el.classList.add(cls);
 }
 
 /* ---------- Tabs ---------- */

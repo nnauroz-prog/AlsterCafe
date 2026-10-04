@@ -420,6 +420,40 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   .user-badge { display: none; }
 }
 
+/* Live-Sync-Pille: zeigt der Inhaberin, ob Aenderungen gerade live auf
+   alle Geraete synchronisiert werden. */
+.sync-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: .78rem;
+  letter-spacing: .02em;
+  font-family: 'Inter', sans-serif;
+  color: var(--bean);
+  white-space: nowrap;
+}
+.sync-pill .sync-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--line); flex: none;
+}
+.sync-pill.is-live {
+  color: #2f7d3a; border-color: rgba(79, 174, 90, 0.45); background: rgba(79, 174, 90, 0.10);
+}
+.sync-pill.is-live .sync-dot {
+  background: #4FAE5A; box-shadow: 0 0 0 3px rgba(79, 174, 90, 0.18);
+}
+.sync-pill.is-connecting .sync-dot { background: #C9A24B; }
+.sync-pill.is-offline {
+  color: #9A3412; border-color: rgba(194, 65, 12, 0.40); background: rgba(194, 65, 12, 0.08);
+}
+.sync-pill.is-offline .sync-dot { background: #C2410C; }
+/* Auf kleinen Screens nur den farbigen Punkt zeigen (spart Platz, kein Overflow). */
+@media (max-width: 720px) {
+  .sync-pill { padding: 7px; gap: 0; }
+  .sync-pill .sync-text { display: none; }
+}
+
 /* ===== BUTTONS ===== */
 .btn {
   --btn-bg: transparent;
