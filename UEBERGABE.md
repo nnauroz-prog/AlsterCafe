@@ -126,6 +126,19 @@ was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten is
 - **Technische Wartung:** nicht erforderlich. Die Seite ist statisch und läuft ohne Server-Wartung.
 - **Backups:** Supabase macht automatische Tages-Backups. Zusätzlich können Sie im Wochenplan-Tab unter „Export" jederzeit eine JSON-Datei der Woche herunterladen.
 
+### Kosten & Gratis-Tarif (wichtig zu wissen)
+
+- **Supabase kostet für dieses Café dauerhaft 0 €.** Der Gratis-Tarif (500 MB Datenbank, 1 GB Bilder-Speicher, 5 GB Traffic) ist für eine Café-Seite um ein Vielfaches überdimensioniert — die Grenzen werden im Normalbetrieb nie erreicht.
+- **Die einzige Eigenheit:** Supabase **pausiert** ein Gratis-Projekt nach ca. **7 Tagen ohne jeden Zugriff** automatisch. Dann lädt die Seite keine Inhalte mehr und nimmt keine Reservierungen/Bestellungen an, bis das Projekt reaktiviert wird. (Das war vermutlich der Grund, falls die Seite einmal „leer" wirkte.)
+- **Dagegen läuft jetzt eine automatische Absicherung:** Der Workflow `.github/workflows/keepalive.yml` schickt **alle 3 Tage** eine winzige Anfrage an die Datenbank und hält das Projekt so dauerhaft wach — kostenlos, kein zusätzlicher Dienst. (Wird aktiv, sobald er auf dem `main`-Branch liegt, da GitHub Zeitpläne nur von dort startet.)
+- **Falls die Seite doch mal leer wirkt**, zwei schnelle Wege:
+  1. Im Supabase-Dashboard das Projekt öffnen → „Restore"/„Resume" klicken.
+  2. Oder auf GitHub unter **Actions → „Supabase wachhalten" → „Run workflow"** einmal manuell auslösen.
+- **Selbst wenn der Backend kurz weg ist, bricht nichts hart ab:** Die öffentliche Seite zeigt dann die mitgelieferte Standard-Karte statt einer leeren Seite, und die Reservierungs-/Bestellformulare öffnen automatisch eine vorausgefüllte E-Mail an `info@alstercafe.de` — die Anfrage geht also trotzdem nicht verloren.
+- **Kein Lock-in:** Die Daten lassen sich jederzeit aus Supabase exportieren; derselbe (Open-Source-)Stack ließe sich später auch selbst hosten, falls gewünscht.
+
+> Hinweis zur Frage „eigenes System ohne Supabase": Ein echtes, für alle Besucher sichtbares System braucht zwingend einen Server (für geteilte Inhalte, Formular-Eingang, sicheren Login). Ein rein im Browser laufendes System funktioniert nur auf einem einzigen Gerät und ist als öffentliche Seite ungeeignet. Selbst-Hosting wäre teurer als der kostenlose Supabase-Tarif und würde Wartung/Sicherheit/DSGVO auf den Betreiber verlagern — für ein Café ist der aktuelle Aufbau die günstigste und wartungsärmste Lösung.
+
 ---
 
 ## 5. Bei Fragen
@@ -171,6 +184,9 @@ Die Frühstückskarte (Stand: Maria's echte PDF, 6 Kategorien, 47 Gerichte) ist 
 - **PDF-Export** (`admin.js` → `downloadMenuPdf`/`buildMenuPrintHtml`): rein clientseitig, eine Seite pro Kategorie, keine externe Library. Maria wählt im Druckdialog „Als PDF speichern". **Wichtig — Mechanik:** Es wird **kein** `window.open()`-Popup mehr benutzt (das wurde auf iOS Safari lautlos vom Popup-Blocker geschluckt → „passiert nichts"). Stattdessen wird die Druckansicht in ein **verstecktes, gleich-Ursprung-Iframe** (Blob-URL) geladen; ein im Dokument eingebettetes Skript ruft `window.print()` aus dem eigenen Fenster auf. Ein gemeinsames Flag `__alsterPrinted` verhindert doppelte Dialoge, die Blob-URL wird nach `afterprint` freigegeben. Falls je wieder „nichts passiert": prüfen, ob das Iframe `#menu-print-frame` erzeugt wird und die Blob-URL lädt.
 - **Preis-Modell bewusst als freier String** (`"8,90 €"` oder `"2,80 / 3,80 €"`), damit der Editor einfach bleibt (3 Felder: Name/Preis/Beschreibung). Der `tag` (z. B. „vegan") wird im Editor transparent über ein `data-tag`-Attribut erhalten.
 - **Ändern der Default-Karte:** in `menudata.js` editieren. Solange Maria nichts im Admin gespeichert hat, gilt dieser Default überall.
+
+### Keep-alive gegen Supabase-Pause (`.github/workflows/keepalive.yml`)
+Gratis-Supabase-Projekte pausieren nach ~7 Tagen ohne Aktivität. Der Workflow feuert per `schedule` (cron, alle 3 Tage) + `workflow_dispatch` eine einzelne `curl`-Lese-Anfrage an `…/rest/v1/content?select=id&limit=1` mit dem **öffentlichen** anon/publishable Key (steht schon in `config.js`, kein Secret). 2xx = ok, sonst schlägt der Job sichtbar fehl. **Fällt nur vom Default-Branch `main`** (GitHub-Regel für geplante Workflows) — auf Arbeits-Branches läuft nur `workflow_dispatch`. Graceful Degradation ist abgesichert und getestet: bei nicht erreichbarem Backend rendert die Seite die `menudata.js`-Standardkarte, und die Formulare fallen auf `mailto:` zurück (`script.js` Reservierung/Bestellung, `saved=false` → E-Mail-Zweig). Der Overflow-Audit prüft beide Sprachen.
 
 ### Layout-Schranke gegen horizontalen Overflow (`npm test`)
 Damit nie wieder ein seitlich überlaufendes Layout (wie einmal der Admin-Header auf dem Handy) unbemerkt live geht, gibt es eine **automatische Schranke**:
