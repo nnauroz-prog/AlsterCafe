@@ -19,9 +19,12 @@ name: Supabase wachhalten
 
 on:
   schedule:
-    # Minute Stunde Tag Monat Wochentag — alle 3 Tage um 06:17 UTC.
+    # Minute Stunde Tag Monat Wochentag — TÄGLICH um 06:17 UTC.
+    # Täglich (statt alle 3 Tage), damit genug Sicherheitspuffer bleibt:
+    # Supabase pausiert nach ~7 Tagen Inaktivität, und GitHub lässt geplante
+    # Läufe bei hoher Last gelegentlich aus — täglich gibt 7 Versuche statt 2.
     # Krumme Minute, damit der Lauf nicht mit der 00-Minuten-Last kollidiert.
-    - cron: "17 6 */3 * *"
+    - cron: "17 6 * * *"
   workflow_dispatch: {}
 
 # Nur Lesezugriff aufs Repo nötig.
