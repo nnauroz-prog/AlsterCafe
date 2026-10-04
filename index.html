@@ -38,14 +38,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r146" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r147" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r146';
+      var V='2026-05-10-r147';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -440,17 +440,6 @@
     </section>
   </main>
 
-  <!-- Sticky Heute-Bar (erscheint nur wenn ein Tagesgericht eingetragen ist) -->
-  <aside class="sticky-today" id="sticky-today" hidden aria-live="polite">
-    <span class="sticky-today-tag">Heute mittag</span>
-    <span class="sticky-today-dish" id="sticky-today-dish">—</span>
-    <a class="sticky-today-cta" href="tel:+494022692891">
-      <svg class="ico ico-sm"><use href="#i-phone"/></svg>
-      Reservieren
-    </a>
-    <button type="button" class="sticky-today-close" id="sticky-today-close" aria-label="Schließen">×</button>
-  </aside>
-
   <!-- Cookie-Consent -->
   <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookie-Hinweis" hidden>
     <div class="container cookie-inner">
@@ -491,9 +480,9 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r146" defer></script>
-  <script src="db.js?v=2026-05-10-r146" defer></script>
-  <script src="script.js?v=2026-05-10-r146" defer></script>
-  <script src="i18n.js?v=2026-05-10-r146" defer></script>
+  <script src="config.js?v=2026-05-10-r147" defer></script>
+  <script src="db.js?v=2026-05-10-r147" defer></script>
+  <script src="script.js?v=2026-05-10-r147" defer></script>
+  <script src="i18n.js?v=2026-05-10-r147" defer></script>
 </body>
 </html>

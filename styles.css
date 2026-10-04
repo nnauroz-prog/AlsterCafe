@@ -697,75 +697,6 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 
 .landing-cards { background: var(--paper); }
 
-/* STICKY HEUTE-BAR (Startseite) */
-.sticky-today {
-  position: fixed;
-  bottom: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0));
-  left: 50%;
-  transform: translateX(-50%) translateY(0);
-  display: flex; align-items: center; gap: 14px;
-  background: var(--bean);
-  color: var(--paper);
-  padding: 12px 20px 12px 22px;
-  border-radius: 999px;
-  box-shadow: 0 18px 40px -16px rgba(42, 24, 16, 0.55);
-  z-index: 100;
-  max-width: calc(100vw - 32px);
-  font-family: 'Inter', sans-serif;
-  font-size: .9rem;
-  animation: stickySlide var(--dur-base) var(--ease-out);
-}
-@keyframes stickySlide {
-  from { transform: translateX(-50%) translateY(120%); opacity: 0; }
-  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
-}
-.sticky-today-tag {
-  font-size: .68rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--gold-soft);
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.sticky-today-dish {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-size: 1rem;
-  color: var(--paper);
-  max-width: 360px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sticky-today-cta {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--gold);
-  color: var(--bean);
-  padding: 8px 16px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-size: .85rem;
-  font-weight: 600;
-  flex-shrink: 0;
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-.sticky-today-cta:hover { transform: scale(1.04); color: var(--bean); }
-.sticky-today-close {
-  background: transparent; border: 0;
-  color: var(--paper); opacity: 0.5;
-  font-size: 1.3rem; line-height: 1;
-  cursor: pointer; padding: 4px 8px;
-  flex-shrink: 0;
-}
-.sticky-today-close:hover { opacity: 1; }
-@media (max-width: 560px) {
-  .sticky-today { padding: 10px 14px 10px 16px; gap: 10px; }
-  .sticky-today-tag { display: none; }
-  .sticky-today-dish { max-width: 160px; font-size: .92rem; }
-  .sticky-today-cta { padding: 7px 12px; font-size: .78rem; }
-}
-
 /* Counter-Animation Style */
 .counter {
   display: inline-block;
@@ -4308,7 +4239,7 @@ body.is-editing [data-editable]:focus::before {
   .notice-banner, .edit-fab, .nav-toggle,
   .live-status, .hero-cta, .hero-visual, .map-card, .social, .map-placeholder,
   .footer-meta, .col-link, .skip-link, .edition-strip, .app-splash,
-  .hero-ticker, .hero-coord, .hero-est, .sticky-today, .chapter-mark,
+  .hero-ticker, .hero-coord, .hero-est, .chapter-mark,
   .page-hero-watermark, .section-shout, .ornament,
   .reservation-form, .order-form {
     display: none !important;
@@ -4573,17 +4504,6 @@ body { overflow-x: hidden; }
   box-shadow:
     0 0 0 2px var(--bean),
     0 0 0 4px var(--gold-soft);
-}
-
-/* I. Refined Sticky-Today · cleaneres Glass, weicheres Licht */
-.sticky-today {
-  background: rgba(42, 24, 16, 0.92);
-  backdrop-filter: saturate(180%) blur(18px);
-  -webkit-backdrop-filter: saturate(180%) blur(18px);
-  border: 1px solid rgba(212, 179, 128, 0.18);
-  box-shadow:
-    0 24px 50px -22px rgba(42, 24, 16, 0.55),
-    0 1px 0 rgba(255, 252, 244, 0.04) inset;
 }
 
 /* K. Hinweis: .ed-link CSS-Klasse war ungenutzt — entfernt.
@@ -6919,58 +6839,6 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-variation-settings: "opsz" 48;
 }
 
-/* ---------- STICKY-TODAY refined dramatic ----------
-   Bigger drama, eleganter Glas, italic Dish. */
-.sticky-today {
-  padding: 14px 22px 14px 24px;
-  gap: 18px;
-  border-radius: 4px;
-  border: 1px solid rgba(212, 179, 128, 0.22);
-  background: rgba(42, 24, 16, 0.92);
-  box-shadow:
-    0 28px 60px -24px rgba(42, 24, 16, 0.65),
-    inset 0 1px 0 rgba(255, 252, 244, 0.06);
-  max-width: min(720px, calc(100vw - 32px));
-}
-.sticky-today-tag {
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 400;
-  font-size: .82rem;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: var(--gold-soft);
-  flex-shrink: 0;
-  font-variation-settings: "opsz" 48;
-}
-.sticky-today-tag::before {
-  content: '';
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--gold);
-  margin-right: 8px;
-  vertical-align: 1px;
-  box-shadow: 0 0 0 0 rgba(184, 137, 62, 0.4);
-}
-.sticky-today-dish {
-  font-size: 1.05rem;
-  letter-spacing: -0.005em;
-  max-width: 380px;
-}
-.sticky-today-cta {
-  background: var(--gold);
-  color: var(--bean);
-  font-family: 'Inter', sans-serif;
-  font-size: .76rem;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  font-weight: 600;
-  padding: 9px 16px;
-  border-radius: 2px;
-}
-.sticky-today-cta:hover { background: var(--gold-soft); transform: translateY(-1px); color: var(--bean); }
-
 /* ---------- ADMIN-LOGIN als Editorial-Card ----------
    Member-Bereich-Login wirkt jetzt wie eine Press-Karte. */
 .login-card {
@@ -8669,27 +8537,6 @@ html.has-js-scroll { scroll-behavior: auto; }
 .hero-coord-clock-time { transition: color 600ms var(--ease-out); }
 .hero-coord-clock-time.is-tick { color: var(--gold); }
 
-/* ---------- STICKY-TODAY mobile besseres Fitting ---------- */
-@media (max-width: 480px) {
-  .sticky-today {
-    padding: 11px 14px 11px 16px;
-    gap: 10px;
-    max-width: calc(100vw - 24px);
-  }
-  .sticky-today-dish {
-    max-width: 140px;
-    font-size: .92rem;
-  }
-  .sticky-today-cta {
-    padding: 7px 12px;
-    font-size: .68rem;
-    letter-spacing: 0.16em;
-  }
-}
-@media (max-width: 380px) {
-  .sticky-today-dish { max-width: 100px; }
-}
-
 /* ---------- TOPBAR-LIVE auch zwischen 720-880px sichtbar ---------- */
 @media (max-width: 880px) {
   .topbar-live { font-size: .76rem; }
@@ -8951,7 +8798,6 @@ html.has-js-scroll { scroll-behavior: auto; }
   .admin-header,
   .live-status,
   .save-bar,
-  .sticky-today,
   .cookie-banner,
   .hero-coord {
     backdrop-filter: none !important;
@@ -8961,7 +8807,6 @@ html.has-js-scroll { scroll-behavior: auto; }
      nicht durchscheinen laesst. */
   .admin-header { background: rgba(255, 252, 244, 0.96); }
   .live-status { background: rgba(255, 252, 244, 0.92); }
-  .sticky-today { background: rgba(42, 24, 16, 0.98); }
   .hero-coord { background: rgba(255, 252, 244, 0.85); }
 }
 
