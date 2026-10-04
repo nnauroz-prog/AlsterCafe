@@ -1,0 +1,25 @@
+# =================================================================
+# Alstercafé · Netlify-Konfiguration
+# =================================================================
+
+[build]
+  publish = "."
+
+# robots.txt gegen Indexierung des Admin-Bereichs
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/admin.html"
+  status = 200
+
+# 404-Fallback fuer Single-Page-Verhalten
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Path = ["/index.html", "/admin.html", "/impressum.html", "/datenschutz.html"]}
+  force = false

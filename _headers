@@ -1,0 +1,48 @@
+# =================================================================
+# Alstercafé · Security Headers (Netlify)
+# Wird automatisch von Netlify ausgewertet beim Deploy.
+# Quelle: https://docs.netlify.com/routing/headers/
+# =================================================================
+
+/*
+  # Strikte HTTPS-Erzwingung (1 Jahr)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # Verhindert dass die Seite in fremden iFrames geladen wird (Clickjacking-Schutz)
+  X-Frame-Options: SAMEORIGIN
+
+  # Verhindert MIME-Type-Sniffing
+  X-Content-Type-Options: nosniff
+
+  # Privatsphäre: keine Referrer-URL an externe Seiten
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Browser-APIs einschränken die wir nicht brauchen
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(), usb=()
+
+  # Cross-Origin-Policies
+  X-DNS-Prefetch-Control: on
+
+  # Content Security Policy: erlaubt nur unsere bekannten Quellen
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co; frame-src https://www.google.com https://maps.google.com https://www.openstreetmap.org; form-action 'self' mailto:; base-uri 'self'; object-src 'none'
+
+# Statische Assets dürfen langfristig gecacht werden
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML niemals lange cachen — sonst sieht der Bäcker Änderungen nicht sofort
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Mitgliederbereich nicht von Suchmaschinen indizieren
+/admin.html
+  X-Robots-Tag: noindex, nofollow

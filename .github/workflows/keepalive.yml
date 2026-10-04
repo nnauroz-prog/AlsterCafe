@@ -1,0 +1,59 @@
+name: Supabase wachhalten
+
+# Projekte im Supabase-Gratis-Tarif werden nach ~7 Tagen OHNE Aktivität
+# automatisch pausiert. Dann lädt die Seite keine Inhalte mehr und nimmt
+# keine Reservierungen/Bestellungen an, bis jemand das Projekt im Dashboard
+# manuell reaktiviert.
+#
+# Dieser Workflow schickt alle 3 Tage EINE winzige Lese-Anfrage an die
+# Datenbank. Das zählt als Aktivität und setzt den Inaktivitäts-Zähler
+# zurück — das Projekt pausiert also nie mehr unbemerkt. Kostenlos, kein
+# zusätzlicher Dienst nötig (läuft über GitHub Actions wie der Deploy).
+#
+# WICHTIG: Geplante (cron-)Workflows laufen bei GitHub nur vom Default-
+# Branch (main). Dieser Workflow wird also erst aktiv, sobald er auf main
+# liegt. Manuell lässt er sich jederzeit über "Run workflow" starten.
+#
+# supabaseUrl und der anon/publishable Key sind ÖFFENTLICHE Werte (stehen
+# bereits in config.js) — kein Secret, daher hier direkt eingetragen.
+
+on:
+  schedule:
+    # Minute Stunde Tag Monat Wochentag — alle 3 Tage um 06:17 UTC.
+    # Krumme Minute, damit der Lauf nicht mit der 00-Minuten-Last kollidiert.
+    - cron: "17 6 */3 * *"
+  workflow_dispatch: {}
+
+# Nur Lesezugriff aufs Repo nötig.
+permissions:
+  contents: read
+
+concurrency:
+  group: "supabase-keepalive"
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: "https://jsepktfpdlgezzncmbxz.supabase.co"
+      SUPABASE_ANON_KEY: "sb_publishable_a1vXLZgs185839v7G4XRaw_0TLnt7WH"
+    steps:
+      - name: Datenbank anpingen (hält das Projekt aktiv)
+        run: |
+          echo "Pinge Supabase, um das Gratis-Projekt wachzuhalten …"
+          code=$(curl -sS -o /tmp/keepalive.out -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/content?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "HTTP-Status: $code"
+          head -c 200 /tmp/keepalive.out || true
+          echo ""
+          # 2xx = aktiv und erreichbar. Alles andere ist ein Fehler, der
+          # sichtbar werden soll (z. B. Projekt noch pausiert / Key falsch).
+          if [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
+            echo "✅ Supabase ist aktiv — Inaktivitäts-Zähler zurückgesetzt."
+          else
+            echo "❌ Unerwarteter Status $code — bitte das Supabase-Projekt prüfen."
+            exit 1
+          fi
