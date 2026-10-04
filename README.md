@@ -6,10 +6,13 @@ Webseite für das Alstercafé in Hamburg-Hohenfelde (Croquenoah Cafe, Inh. Maria
 
 | Wo | URL |
 |---|---|
-| Aktuell (GitHub Pages) | https://nnauroz-prog.github.io/AlsterCafe/ |
-| Geplant (Custom-Domain) | https://alstercafe.de/ — siehe [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md) |
+| Live (Produktion) | https://alstercafe.de/ |
+| Vercel-Projekt | https://alster-cafe.vercel.app/ |
+| Spiegel (GitHub Pages) | https://nnauroz-prog.github.io/AlsterCafe/ |
 
-Auto-Deploy: jeder Push auf den Feature-Branch wird per GitHub Actions in `gh-pages` gespiegelt und ist nach ~1 Minute live.
+Hosting: Die Produktionsseite läuft auf **Vercel** (Auto-Deploy bei jedem Push auf `main`),
+die Domain `alstercafe.de` liegt bei STRATO — Details in [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md).
+Zusätzlich spiegelt GitHub Actions jeden Push weiterhin nach `gh-pages` (Backup-Spiegel).
 
 ## Struktur (statisch, kein Build-Schritt)
 
@@ -42,7 +45,7 @@ Auto-Deploy: jeder Push auf den Feature-Branch wird per GitHub Actions in `gh-pa
 │
 └── docs/
     ├── UEBERGABE.md                 Schritt-für-Schritt für die Inhaberin
-    ├── CUSTOM-DOMAIN.md             alstercafe.de auf Pages umstellen
+    ├── CUSTOM-DOMAIN.md             alstercafe.de auf Vercel umstellen
     └── MASTERPROMPT.md              Re-Use als Template für andere Cafés
 ```
 

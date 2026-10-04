@@ -15,9 +15,10 @@ Drei Dokumente für drei Zwecke:
 
 ## Live-Adresse (Stand heute)
 ```
-https://nnauroz-prog.github.io/AlsterCafe/
+https://alstercafe.de/
 ```
-Auf der eigenen Domain `alstercafe.de` läuft die Seite, sobald die DNS-Umstellung gemacht ist — Anleitung in [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md).
+Die Seite ist live auf der eigenen Domain `alstercafe.de` (gehostet bei Vercel, Domain bei STRATO).
+Das Vercel-Projekt ist zusätzlich unter `https://alster-cafe.vercel.app/` erreichbar — Details in [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md).
 
 Jede Änderung am Code geht automatisch innerhalb von ~1 Minute auf die Live-Adresse — kein manuelles Hochladen.
 
