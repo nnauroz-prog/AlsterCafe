@@ -30,7 +30,6 @@
     'Reservierung': 'Reservations',
     'Kontakt': 'Contact',
     'Webshop': 'Shop',
-    'Webshop ↗': 'Shop ↗',
     'Freies WLAN': 'Free Wi-Fi',
     'Menü öffnen': 'Open menu',
     'Schließen': 'Close',

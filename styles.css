@@ -7822,7 +7822,7 @@ html.has-js-scroll { scroll-behavior: auto; }
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
 .reservation-form .form-submit::before {
-  content: '↗';
+  content: '\2197\FE0E';
   position: absolute;
   right: 18px; top: 50%;
   transform: translateY(-50%);
