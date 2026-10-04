@@ -7038,6 +7038,28 @@ html.has-js-scroll { scroll-behavior: auto; }
   .primary-nav a:hover::before,
   .primary-nav a.is-active::before { opacity: 1; color: var(--gold); }
 
+  /* Sprach-Umschalter (DE/EN) im mobilen Menü sichtbar machen: heller Text
+     auf dem dunklen Drawer, großes Tap-Target, linksbündig zu den Einträgen. */
+  .primary-nav .lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    margin: 30px 0 0 48px;
+    min-height: 44px;
+    padding: 10px 22px;
+    font-size: .9rem;
+    letter-spacing: .16em;
+    color: var(--linen);
+    background: rgba(212, 179, 128, 0.12);
+    border: 1px solid rgba(212, 179, 128, 0.5);
+  }
+  .primary-nav .lang-toggle:hover,
+  .primary-nav .lang-toggle:focus-visible {
+    color: var(--espresso);
+    background: var(--gold-soft);
+    border-color: var(--gold-soft);
+    outline: none;
+  }
+
   /* Webshop-Link als ausgestellte Box */
   .primary-nav .nav-shop {
     margin-top: 24px;
