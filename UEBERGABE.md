@@ -124,7 +124,10 @@ was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten is
 
 - **Inhalte ändern:** alles im Mitgliederbereich. Keine Programmierkenntnisse nötig.
 - **Technische Wartung:** nicht erforderlich. Die Seite ist statisch und läuft ohne Server-Wartung.
-- **Backups:** Supabase macht automatische Tages-Backups. Zusätzlich können Sie im Wochenplan-Tab unter „Export" jederzeit eine JSON-Datei der Woche herunterladen.
+- **Backups:** Der **Gratis-Tarif macht KEINE automatischen Backups** (das gibt es erst ab dem Pro-Tarif). Für die Datensicherung daher selbst sorgen — im Normalfall genügt das völlig:
+  - **Speisekarte & Wochenplan:** im jeweiligen Admin-Tab unter „Export" eine JSON-Datei herunterladen und aufbewahren.
+  - **Verlustrisiko ist gering:** Menü, Öffnungszeiten und Texte haben ohnehin sichere Standardwerte im Code (`menudata.js` u. a.) und ließen sich im Ernstfall schnell neu eintippen. Reservierungen/Bestellungen sind kurzlebige Anfragen.
+  - Wer es automatisiert mag: ein kostenloser wöchentlicher Export der **nicht-personenbezogenen** Inhalte (Karte, Zeiten, Design) ließe sich per GitHub-Action ins Repo sichern — Reservierungen/Bestellungen aber bewusst NICHT (Kundendaten gehören aus DSGVO-Gründen nicht in ein Code-Repo).
 
 ### Kosten & Gratis-Tarif (wichtig zu wissen)
 
