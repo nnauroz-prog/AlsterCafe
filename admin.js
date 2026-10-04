@@ -73,7 +73,8 @@ async function init() {
 
   // Sicherstellen, dass auch bei Fehlern immer der Login sichtbar ist
   try {
-    if (window.alsterDb) await window.alsterDb.ready();
+    // true = immer frischen Stand holen (Inhaber bearbeitet Inhalte).
+    if (window.alsterDb) await window.alsterDb.ready(true);
     if (await isAuthenticated()) await showDashboard();
     else showLogin();
   } catch (err) {

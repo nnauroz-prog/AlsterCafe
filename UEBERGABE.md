@@ -194,6 +194,13 @@ Gratis-Supabase-Projekte pausieren nach ~7 Tagen ohne Aktivität. Der Workflow f
 ### Live-Sync-Anzeige im Mitgliederbereich
 `db.js` meldet den Verbindungsstatus des Realtime-Channels nach außen: `subscribeChanges` übergibt den Status (`SUBSCRIBED` / `CHANNEL_ERROR` / `TIMED_OUT` / `CLOSED`, im Demo-Modus `LOCAL`) an `window.alsterDb.onSyncStatus(cb)`. `admin.js` (`updateSyncPill`) spiegelt das in eine Pille `#sync-pill` im Header: grün „Live verbunden", rot „Nicht live", im lokalen Modus ausgeblendet. Rein anzeigend — der Sync-Mechanismus selbst (Supabase Realtime + `hydrate` beim Laden) ist davon unberührt. Die geteilte Datenbasis liegt in der `content`-Tabelle (RLS: öffentlich lesen, nur eingeloggt schreiben, siehe `setup.sql`), Realtime ist dort für `content`/`reservations`/`orders` aktiviert.
 
+### Sparsame Supabase-Requests (Caching & Realtime-Scope)
+Bewusste Maßnahmen in `db.js`, um unnötige Backend-Requests zu vermeiden (ohne Aktualitätsverlust):
+- **Hydrate-Kurzzeit-Cache (`HYDRATE_TTL`, 60 s):** `ready()` lädt die `content`-Tabelle nur neu, wenn der letzte Abruf älter als 60 s ist (Zeitstempel in `localStorage['alstercafe.__hydrated_at']`). So erzeugt schnelles Navigieren/Neuladen zwischen Seiten **nicht** bei jedem Seitenaufruf einen Request. Offene Seiten bleiben über Realtime live aktuell. Der Mitgliederbereich ruft `ready(true)` → **immer frisch**.
+- **Realtime-Scope:** Die öffentliche Seite abonniert nur die `content`-Tabelle (`subscribe(cb, ['content'])`); `reservations`/`orders` sind nur für den Admin relevant. `admin.js` ruft `subscribe(cb)` → alle Tabellen.
+- **`auth.getEmail()`** liest aus der lokalen Session (`getSession`), kein `getUser`-Server-Round-Trip.
+- Bereits sauber: keine `select('*')` (immer Spalten benannt), Schreib-Operationen geben keine Zeilen zurück, Rechtstexte laden gar kein Backend, kein Supabase-Polling (`setInterval` im Live-Status rechnet nur lokal).
+
 ### Layout-Schranke gegen horizontalen Overflow (`npm test`)
 Damit nie wieder ein seitlich überlaufendes Layout (wie einmal der Admin-Header auf dem Handy) unbemerkt live geht, gibt es eine **automatische Schranke**:
 

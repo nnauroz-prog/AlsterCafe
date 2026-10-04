@@ -136,6 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
+  // Nur die content-Tabelle beobachten — Reservierungen/Bestellungen sind
+  // nur fuer den Inhaber-Bereich relevant (spart unnoetige Realtime-Events).
   window.alsterDb?.subscribe((key) => {
     switch (key) {
       case 'design':      initDesign(); break;
@@ -145,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'hours':       initHours(); break;
       case 'weekly-menu': initLunchWeek(); break;
     }
-  });
+  }, ['content']);
 });
 
 /* ---------- Inhalts-Overrides (gespeicherte Custom-Texte) ---------- */

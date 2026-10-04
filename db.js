@@ -39,7 +39,8 @@
     },
     async signOut()   { await sb.auth.signOut(); },
     async isAuthed()  { const { data } = await sb.auth.getSession(); return !!data?.session; },
-    async getEmail()  { const { data } = await sb.auth.getUser(); return data?.user?.email || null; },
+    // E-Mail aus der lokalen Session (kein Server-Round-Trip wie getUser).
+    async getEmail()  { const { data } = await sb.auth.getSession(); return data?.session?.user?.email || null; },
     async resetPassword(email) {
       const { error } = await sb.auth.resetPasswordForEmail(email, {
         redirectTo: `${location.origin}/admin.html?reset=1`
@@ -178,11 +179,26 @@
     } catch (e) { console.warn('Cache-Schreibfehler', e); }
   }
 
+  // Kurzzeit-Cache fuer die Inhalte: Beim schnellen Navigieren zwischen
+  // Seiten (jede Seite laedt frisch) wird NICHT bei jedem Aufruf erneut die
+  // ganze content-Tabelle geladen, sondern nur, wenn der letzte Abruf
+  // aelter als HYDRATE_TTL ist. Offene Seiten bleiben ueber die Realtime-
+  // Subscription trotzdem live aktuell; der Inhaber-Bereich laedt per
+  // ready(true) bewusst immer frisch.
+  const HYDRATE_TTL = 60_000; // 60 s
+  const HYDRATE_TS_KEY = PREFIX + '__hydrated_at';
+  function hydrateIsFresh() {
+    try {
+      const ts = parseInt(localStorage.getItem(HYDRATE_TS_KEY) || '0', 10);
+      return ts > 0 && (Date.now() - ts) < HYDRATE_TTL;
+    } catch (e) { return false; }
+  }
   async function hydrateFromSupabase() {
     if (!useSupabase) return;
     const { data, error } = await sb.from('content').select('id,data');
     if (error) { console.warn('Hydratation fehlgeschlagen', error); return; }
     (data || []).forEach(row => writeCache(row.id, row.data));
+    try { localStorage.setItem(HYDRATE_TS_KEY, String(Date.now())); } catch (e) {}
   }
 
   async function dbSet(key, value) {
@@ -417,7 +433,10 @@
     if (typeof cb === 'function') { try { cb(lastSyncStatus); } catch (e) {} }
   }
 
-  function subscribeChanges(cb) {
+  // tables: welche Tabellen live beobachtet werden sollen. Die oeffentliche
+  // Seite braucht nur 'content' (Reservierungen/Bestellungen interessieren
+  // nur den Inhaber-Bereich) — das spart unnoetige Realtime-Ereignisse.
+  function subscribeChanges(cb, tables) {
     if (!useSupabase) {
       notifySync('LOCAL');
       window.addEventListener('storage', e => {
@@ -425,30 +444,43 @@
       });
       return;
     }
-    sb.channel('content-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'content' }, payload => {
+    const watch = tables || ['content', 'reservations', 'orders'];
+    let ch = sb.channel('content-changes');
+    if (watch.includes('content')) {
+      ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: 'content' }, payload => {
         const row = payload.new || payload.old;
         if (row?.id) {
           if (payload.eventType === 'DELETE') writeCache(row.id, null);
           else writeCache(row.id, row.data);
           cb(row.id);
         }
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
-        cb('reservations');
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        cb('orders');
-      })
-      // Supabase ruft diesen Callback mit dem Verbindungsstatus auf:
-      // 'SUBSCRIBED' (live), 'CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'.
-      .subscribe(status => notifySync(status));
+      });
+    }
+    if (watch.includes('reservations')) {
+      ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => cb('reservations'));
+    }
+    if (watch.includes('orders')) {
+      ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => cb('orders'));
+    }
+    // Supabase ruft diesen Callback mit dem Verbindungsstatus auf:
+    // 'SUBSCRIBED' (live), 'CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'.
+    ch.subscribe(status => notifySync(status));
   }
 
   /* ---------- Init ---------- */
   let readyPromise = null;
-  function ready() {
-    if (!readyPromise) readyPromise = hydrateFromSupabase().catch(() => {});
+  function ready(force) {
+    if (force) {
+      // Inhaber-Bereich: immer frischen Stand holen.
+      readyPromise = hydrateFromSupabase().catch(() => {});
+      return readyPromise;
+    }
+    if (!readyPromise) {
+      // Oeffentliche Seite: nur laden, wenn der Cache abgelaufen ist.
+      readyPromise = (useSupabase && !hydrateIsFresh())
+        ? hydrateFromSupabase().catch(() => {})
+        : Promise.resolve();
+    }
     return readyPromise;
   }
 
