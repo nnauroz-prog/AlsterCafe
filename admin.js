@@ -355,7 +355,7 @@ function updateSyncPill(status) {
   } else {
     cls = 'is-offline';
     label = 'Nicht live';
-    el.title = 'Keine Live-Verbindung — Änderungen erscheinen erst nach dem Neuladen. Prüfen Sie die Internetverbindung oder ob das Supabase-Projekt aktiv ist.';
+    el.title = 'Keine Live-Verbindung zum Server — Änderungen erscheinen erst nach dem Neuladen. Bitte Internetverbindung prüfen.';
   }
   el.hidden = false;
   el.innerHTML = '<span class="sync-dot"></span><span class="sync-text"></span>';

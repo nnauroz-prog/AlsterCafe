@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r137" />
-  <script>(function(){var V='2026-05-10-r137';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r138" />
+  <script>(function(){var V='2026-05-10-r138';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -277,7 +277,18 @@
         <!-- TAB: WOCHENPLAN -->
         <div class="admin-panel is-active" id="panel-week" role="tabpanel">
           <h2 class="panel-title">Mittagsmenü</h2>
-          <p class="panel-help">Bei jedem Tag das Gericht und die Beilage eintippen. Kein Mittagstisch an einem Tag? Den Schalter „An diesem Tag geschlossen" umlegen. Zum Schluss unten auf <strong>„Wochenplan speichern"</strong> klicken — fertig.</p>
+          <details class="help-box">
+            <summary>Hilfe: So pflegst du den Mittagstisch</summary>
+            <div class="help-box-body">
+              <ul>
+                <li>Bei jedem Tag <strong>Hauptgericht</strong> und <strong>Beilage</strong> eintippen (z. B. „Hähnchenschenkel mit Gemüse" / „Reis und Salat").</li>
+                <li>Kein Mittagstisch an einem Tag? Den Schalter <strong>„An diesem Tag geschlossen"</strong> einschalten.</li>
+                <li>Unten auf <strong>„Wochenplan speichern"</strong> tippen — fertig.</li>
+                <li>Das Gericht des <strong>heutigen</strong> Tages erscheint sofort auf der <strong>Startseite</strong> und auf der Seite „Mittagstisch".</li>
+                <li>Mit den Pfeilen ← → wechselst du die Woche; <strong>„Vorwoche kopieren"</strong> übernimmt die letzte Woche als Vorlage.</li>
+              </ul>
+            </div>
+          </details>
           <div class="panel-toolbar">
             <div class="week-switch">
               <button type="button" class="week-nav" id="week-prev" aria-label="Vorherige Woche">←</button>
@@ -296,7 +307,7 @@
               <details class="toolbar-more">
                 <summary aria-label="Weitere Aktionen">Mehr</summary>
                 <div class="toolbar-more-menu" role="menu">
-                  <button type="button" id="export-json" title="Als JSON-Datei sichern" role="menuitem">
+                  <button type="button" id="export-json" title="Sicherungsdatei des Wochenplans herunterladen (für den Notfall)" role="menuitem">
                     <svg class="ico ico-sm"><use href="#i-download"/></svg>
                     Sicherungskopie
                   </button>
@@ -327,7 +338,18 @@
         <!-- TAB: SPEISEKARTE -->
         <div class="admin-panel" id="panel-menu" role="tabpanel" hidden>
           <h2 class="panel-title">Speisekarte</h2>
-          <p class="panel-help">Hier pflegen Sie Ihre Frühstückskarte. Preise, Gerichte und Beschreibungen ändern Sie direkt — speichern Sie unten, dann erscheint alles sofort auf der Webseite. Mit <strong>„Als PDF herunterladen"</strong> erstellen Sie sich jederzeit eine frische Karte zum Ausdrucken.</p>
+          <details class="help-box">
+            <summary>Hilfe: So änderst du die Frühstückskarte</summary>
+            <div class="help-box-body">
+              <ul>
+                <li>Das ist die <strong>Frühstücks-/Getränkekarte</strong> (nicht der Mittagstisch — der ist unter „Mittagsmenü").</li>
+                <li>Gerichte, Preise und Beschreibungen direkt in die Felder tippen.</li>
+                <li><strong>„Neue Kategorie hinzufügen"</strong> für einen neuen Abschnitt (z. B. „Heiße Getränke").</li>
+                <li>Unten auf <strong>„Speisekarte speichern"</strong> — erscheint sofort auf der Webseite.</li>
+                <li><strong>„Als PDF herunterladen"</strong> erstellt dir eine fertige Karte zum Ausdrucken.</li>
+              </ul>
+            </div>
+          </details>
 
           <div class="menu-toolbar">
             <a class="btn btn-link" href="speisekarte.html" target="_blank" rel="noopener">
@@ -379,7 +401,16 @@
         <div class="admin-panel" id="panel-hours" role="tabpanel" hidden>
           <div class="panel-card">
             <h3>Öffnungszeiten</h3>
-            <p class="panel-help">Links steht der Tag (z. B. „Mo – Fr"), rechts die Zeit (z. B. „06:30 – 15:00"). Einfach überschreiben. Dann unten auf <strong>„Öffnungszeiten speichern"</strong> klicken.</p>
+            <details class="help-box">
+              <summary>Hilfe: Öffnungszeiten ändern</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li><strong>Links</strong> der Tag (z. B. „Mo – Fr"), <strong>rechts</strong> die Zeit (z. B. „06:30 – 15:00"). Einfach überschreiben.</li>
+                  <li><strong>„+ Zeile hinzufügen"</strong> für einen weiteren Eintrag, das Papierkorb-Symbol entfernt eine Zeile.</li>
+                  <li>Unten auf <strong>„Öffnungszeiten speichern"</strong> — erscheint sofort auf der Webseite (Fuß &amp; Kontaktseite).</li>
+                </ul>
+              </div>
+            </details>
 
             <form id="hours-form">
               <div class="hours-rows" id="hours-rows"></div>
@@ -403,13 +434,23 @@
         <div class="admin-panel" id="panel-design" role="tabpanel" hidden>
           <div class="panel-card wide">
             <h3>Bilder &amp; Farben</h3>
-            <p class="panel-help">Auf „Hochladen" tippen und ein Foto vom Handy oder Computer auswählen. Bilder werden <strong>sofort übernommen</strong> — hier gibt es keinen extra Speichern-Knopf. Ein Bild wieder loswerden? „Entfernen".</p>
+            <details class="help-box">
+              <summary>Hilfe: Bilder hochladen</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li>Auf <strong>„Hochladen"</strong> tippen und ein Foto vom Handy oder Computer auswählen.</li>
+                  <li>Bilder werden <strong>sofort übernommen</strong> — hier gibt es keinen extra Speichern-Knopf.</li>
+                  <li>Ein Bild wieder loswerden? Auf <strong>„Entfernen"</strong> tippen.</li>
+                </ul>
+              </div>
+            </details>
+            <p class="panel-help" style="background:var(--paper);border-left-color:var(--line-soft)"><strong>Welches Bild erscheint wo?</strong><br/>• <strong>Logo</strong> → oben im Kopf &amp; unten im Fuß (auf allen Seiten).<br/>• <strong>Bild „Über uns"</strong> → nur auf der Seite <em>Über uns</em>.<br/>• <strong>Galerie</strong> → als Bilderreihe auf der <em>Startseite</em> (ab 1 Bild).</p>
 
             <!-- Logo -->
             <div class="design-row">
               <div class="design-info">
                 <h4>Logo</h4>
-                <p>Quadratisches Bild — wird oben im Kopfbereich und im Footer der Webseite angezeigt.</p>
+                <p>Quadratisches Bild — erscheint oben im Kopfbereich und unten im Footer, auf <strong>allen Seiten</strong>.</p>
               </div>
               <div class="design-control">
                 <div class="image-slot" data-design-key="logo" data-aspect="1">
@@ -426,32 +467,11 @@
               </div>
             </div>
 
-            <!-- Hero-Bild -->
-            <div class="design-row">
-              <div class="design-info">
-                <h4>Bild ganz oben (Hero)</h4>
-                <p>Das große Bild auf der Startseite. Zum Beispiel eine schöne Außenansicht oder ein appetitlicher Croque.</p>
-              </div>
-              <div class="design-control">
-                <div class="image-slot" data-design-key="heroImage" data-aspect="1">
-                  <div class="image-preview"><span class="image-empty">Standard: animierte Tasse</span></div>
-                  <div class="image-actions">
-                    <label class="btn btn-link upload-btn">
-                      <svg class="ico ico-sm"><use href="#i-upload"/></svg>
-                      Hochladen
-                      <input type="file" accept="image/*" hidden />
-                    </label>
-                    <button type="button" class="btn btn-link danger image-remove" hidden>Auf Standard zurücksetzen</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Über-uns-Bild -->
             <div class="design-row">
               <div class="design-info">
                 <h4>Bild auf „Über uns"</h4>
-                <p>Erscheint in der „Über uns"-Sektion über dem Zitat. Querformat passt am besten — z. B. ein Foto aus der Backstube.</p>
+                <p>Erscheint <strong>nur auf der Seite „Über uns"</strong> (über dem Zitat) — nicht auf der Startseite. Querformat passt am besten, z. B. ein Foto aus der Backstube.</p>
               </div>
               <div class="design-control">
                 <div class="image-slot" data-design-key="aboutImage" data-aspect="1.5">
@@ -472,7 +492,7 @@
             <div class="design-row">
               <div class="design-info">
                 <h4>Galerie</h4>
-                <p>Bis zu 6 Bilder. Sind welche da, erscheint die Galerie automatisch auf der Webseite. Sind keine da, ist die Sektion ausgeblendet.</p>
+                <p>Bis zu 6 Bilder. Ab 1 Bild erscheint die Galerie automatisch auf der <strong>Startseite</strong>. Ohne Bilder ist die Sektion ausgeblendet.</p>
               </div>
               <div class="design-control">
                 <div class="gallery-grid-edit" id="gallery-grid-edit"></div>
@@ -527,7 +547,15 @@
         <div class="admin-panel" id="panel-notice" role="tabpanel" hidden>
           <div class="panel-card">
             <h3>Aktueller Hinweis</h3>
-            <p class="panel-help">Text eintippen (z. B. „Am 1. Mai geschlossen") und auf <strong>„Hinweis speichern"</strong> klicken — der gelbe Banner erscheint oben auf der Webseite. Feld leeren oder „Banner ausblenden", wenn der Hinweis wieder weg soll.</p>
+            <details class="help-box">
+              <summary>Hilfe: Hinweis-Banner</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li>Text eintippen (z. B. „Am 1. Mai geschlossen") und auf <strong>„Hinweis speichern"</strong> — oben auf der Webseite erscheint ein gelber Banner.</li>
+                  <li>Soll der Hinweis wieder weg: Feld leeren oder <strong>„Banner ausblenden"</strong>.</li>
+                </ul>
+              </div>
+            </details>
             <form id="notice-form">
               <label>
                 <span>Hinweistext</span>
@@ -561,6 +589,17 @@
               </div>
               <span class="anfragen-count" id="anfragen-count" hidden></span>
             </div>
+            <details class="help-box">
+              <summary>Hilfe: Anfragen bearbeiten</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li>Hier landen alle Reservierungs-Anfragen vom Formular auf der Webseite — neueste zuerst. Neue erscheinen <strong>automatisch</strong> (du musst nichts neu laden).</li>
+                  <li>Erledigt? Auf <strong>„Als erledigt markieren"</strong> tippen (später „Erneut öffnen").</li>
+                  <li><strong>„Löschen"</strong> entfernt eine Anfrage dauerhaft.</li>
+                  <li>Du bestätigst Reservierungen wie gewohnt telefonisch oder per E-Mail — die Seite verschickt keine automatische Zusage.</li>
+                </ul>
+              </div>
+            </details>
             <ul class="anfragen-list" id="anfragen-list">
               <li class="anfragen-empty">Noch keine Anfragen.</li>
             </ul>
@@ -582,6 +621,17 @@
               </div>
               <span class="anfragen-count" id="orders-count" hidden></span>
             </div>
+            <details class="help-box">
+              <summary>Hilfe: Bestellungen bearbeiten</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li>Hier landen Vorbestellungen für belegte Brötchen vom Brötchen-Service — neueste zuerst, automatisch aktualisiert.</li>
+                  <li>Jede Bestellung zeigt Sorten, Menge, Abholzeit und Kontakt.</li>
+                  <li><strong>„Als erledigt markieren"</strong>, wenn vorbereitet; <strong>„Löschen"</strong> entfernt sie.</li>
+                  <li>Welche Sorten wählbar sind, legst du unten unter <strong>„Bestellbare Brötchen-Sorten"</strong> fest.</li>
+                </ul>
+              </div>
+            </details>
             <ul class="anfragen-list" id="orders-list">
               <li class="orders-empty">Hier erscheinen Brötchen-Bestellungen, sobald die ersten über den Brötchen-Service eingehen.</li>
             </ul>
@@ -589,7 +639,17 @@
 
           <div class="panel-card wide">
             <h3>Bestellbare Brötchen-Sorten</h3>
-            <p class="panel-help">Diese Sorten kann der Kunde auswählen. Pro Zeile: Name (z. B. „Käse") und kurze Beschreibung. „vegetarisch" ankreuzen, wenn fleischlos. Mit „+ Sorte hinzufügen" erweitern. Dann auf <strong>„Sorten speichern"</strong> klicken.</p>
+            <details class="help-box">
+              <summary>Hilfe: Brötchen-Sorten festlegen</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li>Diese Sorten kann der Kunde im Brötchen-Service auswählen.</li>
+                  <li>Pro Zeile: <strong>Name</strong> (z. B. „Käse") und kurze <strong>Beschreibung</strong> (z. B. „Gouda, Salat, Butter").</li>
+                  <li><strong>„vegetarisch"</strong> ankreuzen, wenn fleischlos.</li>
+                  <li><strong>„+ Sorte hinzufügen"</strong> für eine weitere; dann auf <strong>„Sorten speichern"</strong>.</li>
+                </ul>
+              </div>
+            </details>
             <form id="broetchen-form">
               <div class="broetchen-editor" id="broetchen-editor"></div>
               <button type="button" class="btn btn-link" id="broetchen-add">+ Sorte hinzufügen</button>
@@ -629,7 +689,16 @@
 
           <div class="panel-card">
             <h3>Eigenes Passwort ändern</h3>
-            <p class="panel-help">Zweimal das neue Passwort eintippen (zur Sicherheit identisch) und auf <strong>„Passwort speichern"</strong> klicken. Mindestens 12 Zeichen empfohlen — Buchstaben, Zahlen, ein Sonderzeichen. Beim nächsten Anmelden gilt das neue Passwort.</p>
+            <details class="help-box">
+              <summary>Hilfe: Passwort ändern</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li>Zweimal das <strong>neue Passwort</strong> eintippen (beide Felder identisch) und auf <strong>„Passwort speichern"</strong>.</li>
+                  <li>Mindestens 12 Zeichen empfohlen — Buchstaben, Zahlen, ein Sonderzeichen.</li>
+                  <li>Beim nächsten Anmelden gilt das neue Passwort.</li>
+                </ul>
+              </div>
+            </details>
             <form id="password-form" class="account-form">
               <label>
                 <span>Neues Passwort</span>
@@ -667,7 +736,7 @@
                          required placeholder="kollege@alstercafe.de" />
                 </label>
                 <label>
-                  <span>Initial-Passwort</span>
+                  <span>Start-Passwort</span>
                   <input type="text" id="invite-password" minlength="8"
                          required placeholder="Mind. 8 Zeichen" />
                 </label>
@@ -734,9 +803,9 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r137" defer></script>
-  <script src="db.js?v=2026-05-10-r137" defer></script>
-  <script src="menudata.js?v=2026-05-10-r137" defer></script>
-  <script src="admin.js?v=2026-05-10-r137" defer></script>
+  <script src="config.js?v=2026-05-10-r138" defer></script>
+  <script src="db.js?v=2026-05-10-r138" defer></script>
+  <script src="menudata.js?v=2026-05-10-r138" defer></script>
+  <script src="admin.js?v=2026-05-10-r138" defer></script>
 </body>
 </html>
