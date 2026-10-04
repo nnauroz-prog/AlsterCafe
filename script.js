@@ -584,7 +584,9 @@ function initReveal() {
         io.unobserve(e.target);
       }
     });
-  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+    // Positiver unterer rootMargin: Abschnitte blenden ein, BEVOR sie ins
+    // Sichtfeld scrollen — so wirkt nie ein Kasten „leer".
+  }, { rootMargin: '0px 0px 20% 0px', threshold: 0 });
   reveals.forEach(el => io.observe(el));
 }
 
