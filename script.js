@@ -1027,8 +1027,10 @@ function initPremiumPolish() {
     heroToday.textContent = `${wd} · ${hours}`;
   }
 
-  // 4. Custom Cursor · Dot + Ring, magnetisch auf CTAs
-  initCustomCursor(reduceMotion);
+  // 4. Eigener Mauszeiger (Dot + Ring) bewusst DEAKTIVIERT — der normale
+  //    System-Mauszeiger ist am Laptop erwartbar und ruhiger. Die Funktion
+  //    bleibt im Code, wird aber nicht aufgerufen.
+  // initCustomCursor(reduceMotion);
 
   // 5. Edition-Strip auf allen Seiten ausser Admin
   injectEditionStripIfMissing();
