@@ -112,8 +112,8 @@
     'Aus dem Ofen': 'From the oven',
     'Unsere': 'Our',
     'Croques.': 'Croques.',
-    'Croque-Monsieur, Croque-Madame mit Spiegelei, vegetarisch mit Bergkäse und Gemüse. Aus dem Ofen, drei Minuten, fertig. Online vorbestellen geht über Croquenoah.':
-      'Croque-Monsieur, Croque-Madame with fried egg, vegetarian with mountain cheese and vegetables. From the oven, three minutes, done. Pre-order online via Croquenoah.',
+    'Unsere Croques stehen für echte Frische und regionale Qualität: Das Brot beziehen wir direkt von einer Bäckerei aus der Region — frei von Zusatzstoffen und belegt mit den besten Zutaten.':
+      'Our croques stand for real freshness and regional quality: we source our bread directly from a bakery in the region — free from additives and topped with the finest ingredients.',
     'Jetzt bestellen': 'Order now',
     'Werktags ab zwölf': 'Weekdays from noon',
     'Mittagstisch.': 'Lunch.',
