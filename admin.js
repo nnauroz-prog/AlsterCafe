@@ -98,6 +98,9 @@ async function init() {
   }));
   dom.backToOverview?.addEventListener('click', () => showOverview());
 
+  // Übersicht-Zähler: Klick springt in den passenden Bereich
+  dom.summaryStats.forEach(s => s.addEventListener('click', () => switchTab(s.dataset.tab)));
+
   // Wochenplan
   dom.menuForm.addEventListener('submit', onSaveWeek);
   dom.weekPrev.addEventListener('click', () => changeWeek(-7));
@@ -224,6 +227,12 @@ function cacheDom() {
     workspaceView: document.getElementById('workspace-view'),
     overviewCards: document.querySelectorAll('.overview-card[data-tab]'),
     backToOverview: document.getElementById('back-to-overview'),
+    // Übersicht-Zusammenfassung
+    summaryStats:    document.querySelectorAll('.summary-stat[data-tab]'),
+    summaryAnfragen: document.getElementById('summary-anfragen'),
+    summaryOrders:   document.getElementById('summary-orders'),
+    summaryTodayDish: document.getElementById('summary-today-dish'),
+    summaryNextRes:  document.getElementById('summary-next-res'),
     // Anfragen
     anfragenList:  document.getElementById('anfragen-list'),
     anfragenCount: document.getElementById('anfragen-count'),
@@ -317,6 +326,7 @@ async function showDashboard() {
   // Default-Landing: Overview. Tab-Inhalte werden lazy beim Klick aktiv.
   showOverview();
   renderWeek();
+  renderOverviewSummary();
   renderNotice();
   renderMenuEditor();
   renderHoursEditor();
@@ -1358,6 +1368,44 @@ function setStatus(el, msg, kind = '') {
   if (kind) el.classList.add(kind);
 }
 
+/* ---------- Übersicht auf einen Blick ---------- */
+// Fuellt die Zusammenfassungs-Kacheln auf der Startansicht aus dem Cache:
+// offene Reservierungen/Bestellungen, heutiges Mittagsgericht, naechste
+// Reservierung. Wird nach jedem Laden/Realtime-Event aktualisiert.
+function renderOverviewSummary() {
+  const resArr = (() => { const l = window.alsterDb?.get('reservations'); return Array.isArray(l) ? l : []; })();
+  const ordArr = (() => { const l = window.alsterDb?.get('orders'); return Array.isArray(l) ? l : []; })();
+  const newRes = resArr.filter(r => r.status !== 'done').length;
+  const newOrd = ordArr.filter(o => o.status !== 'done').length;
+  if (dom.summaryAnfragen) dom.summaryAnfragen.textContent = String(newRes);
+  if (dom.summaryOrders)   dom.summaryOrders.textContent   = String(newOrd);
+
+  // Heutiges Mittagsgericht aus dem Wochenplan
+  if (dom.summaryTodayDish) {
+    const all = loadAll();
+    const today = new Date();
+    const wk = all[isoDate(mondayOf(today))];
+    const dayKey = DAYS[(today.getDay() + 6) % 7].key;
+    const day = wk && wk.days ? wk.days[dayKey] : null;
+    const dish = (day && day.dish ? day.dish : '').trim();
+    dom.summaryTodayDish.textContent = (day && day.closed)
+      ? 'Heute kein Mittagstisch'
+      : (dish || 'Noch nichts eingetragen');
+  }
+
+  // Naechste kommende, offene Reservierung
+  if (dom.summaryNextRes) {
+    const todayIso = isoDate(new Date());
+    const upcoming = resArr
+      .filter(r => r.date && r.date >= todayIso && r.status !== 'done')
+      .sort((a, b) => ((a.date || '') + (a.time || '')).localeCompare((b.date || '') + (b.time || '')));
+    const n = upcoming[0];
+    dom.summaryNextRes.textContent = n
+      ? `${formatAnfrageDate(n.date, n.time)}${n.name ? ' · ' + n.name : ''}`
+      : 'keine';
+  }
+}
+
 /* ---------- Anfragen (Reservierungen) ---------- */
 
 async function refreshAnfragen() {
@@ -1365,6 +1413,7 @@ async function refreshAnfragen() {
     await window.alsterDb?.listReservations();   // schreibt in Cache
   } catch {}
   renderAnfragen();
+  renderOverviewSummary();
 }
 
 function renderAnfragen() {
@@ -1506,6 +1555,7 @@ function warnWriteFailed() {
 async function refreshOrders() {
   try { await window.alsterDb?.listOrders(); } catch {}
   renderOrders();
+  renderOverviewSummary();
 }
 
 function renderOrders() {
