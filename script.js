@@ -557,7 +557,7 @@ function initNav() {
 
 /* ---------- Reveal-on-Scroll ---------- */
 function initReveal() {
-  const reveals = document.querySelectorAll('.reveal');
+  const reveals = Array.from(document.querySelectorAll('.reveal'));
   if (!reveals.length) return;
 
   // Geschwister bekommen gestaffelte Delays fuer eleganten Reveal
@@ -569,18 +569,22 @@ function initReveal() {
   });
   groups.forEach(siblings => {
     if (siblings.length > 1) {
-      siblings.forEach((el, i) => el.style.setProperty('--reveal-delay', `${Math.min(i * 80, 320)}ms`));
+      siblings.forEach((el, i) => el.style.setProperty('--reveal-delay', `${Math.min(i * 70, 210)}ms`));
     }
   });
 
+  const show = el => el.classList.add('in');
+
+  // Ohne IntersectionObserver: alles sofort zeigen (nie leer).
   if (!('IntersectionObserver' in window)) {
-    reveals.forEach(el => el.classList.add('in'));
+    reveals.forEach(show);
     return;
   }
+
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        e.target.classList.add('in');
+        show(e.target);
         io.unobserve(e.target);
       }
     });
@@ -588,6 +592,37 @@ function initReveal() {
     // Sichtfeld scrollen — so wirkt nie ein Kasten „leer".
   }, { rootMargin: '0px 0px 20% 0px', threshold: 0 });
   reveals.forEach(el => io.observe(el));
+
+  // --- Robustheit, damit NIE ein Abschnitt leer bleibt ---
+  // iOS Safari loest den Observer an der unteren Kante gelegentlich zu spaet
+  // (oder gar nicht) aus. Darum zusaetzlich: alles, was schon im/nahe am
+  // Sichtfeld ist, beim Scrollen direkt zeigen — plus ein Sicherheitsnetz.
+  const revealInView = () => {
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    for (let i = reveals.length - 1; i >= 0; i--) {
+      const el = reveals[i];
+      if (el.classList.contains('in')) { reveals.splice(i, 1); continue; }
+      const r = el.getBoundingClientRect();
+      if (r.top < vh * 1.15 && r.bottom > -vh * 0.15) { show(el); io.unobserve(el); }
+    }
+  };
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; revealInView(); });
+  };
+  revealInView();
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  window.addEventListener('load', revealInView);
+  // Letztes Sicherheitsnetz: nach 2,5 s alles zeigen, was noch haengt —
+  // so bleibt garantiert kein Kasten dauerhaft leer, egal was der Browser macht.
+  setTimeout(() => {
+    document.querySelectorAll('.reveal:not(.in)').forEach(show);
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+  }, 2500);
 }
 
 /* ---------- Cookie-Banner ---------- */
