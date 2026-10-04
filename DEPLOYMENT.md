@@ -65,7 +65,7 @@ Das legt an:
 1. Im Supabase-Dashboard: **Authentication** → **Users**
 2. **Add user** → **Create new user**
 3. Eintragen:
-   - **Email:** `inhaber@alstercafe.de` (oder die echte E-Mail des Bäckers)
+   - **Email:** `info@alstercafe.de` (die echte Login-E-Mail des Cafés)
    - **Password:** ein sicheres Passwort (mind. 12 Zeichen,
      Buchstaben + Zahlen + Sonderzeichen)
    - **Auto Confirm User** ✓ aktivieren
@@ -88,7 +88,7 @@ window.ALSTERCAFE_CONFIG = {
   supabaseUrl:     'https://abcdefgh.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.....',
   storageBucket:   'images',
-  ownerEmail:      'inhaber@alstercafe.de'
+  ownerEmail:      'info@alstercafe.de'
 };
 ```
 
@@ -102,45 +102,42 @@ window.ALSTERCAFE_CONFIG = {
 
 ## Schritt 5 · Webseite hosten *(5 Min.)*
 
-Aktueller Stand: **GitHub Pages** (kostenlos, automatischer Deploy aus dem
-Feature-Branch in den `gh-pages`-Branch via GitHub Action).
+Aktueller Stand: **Vercel** (kostenlos, automatischer Deploy bei jedem Push
+auf `main`). Zusätzlich spiegelt eine GitHub Action weiterhin nach `gh-pages`
+(Backup-Spiegel).
 
-### Variante A · GitHub Pages *(aktive Konfiguration)*
+### Variante A · Vercel *(aktive Produktions-Konfiguration)*
+
+1. Push auf `main` löst automatisch einen Vercel-Deploy aus.
+2. Live-URL: `https://alstercafe.de/` (Projekt: `https://alster-cafe.vercel.app/`).
+3. Custom-Domain einrichten: siehe `CUSTOM-DOMAIN.md`.
+4. Security-Header: Vercel liest `vercel.json` — dort sind HSTS, CSP,
+   X-Frame-Options, Referrer-Policy und Permissions-Policy aktiv
+   (`_headers`/`netlify.toml` werden von Vercel **nicht** gelesen).
+
+### Variante B · GitHub Pages (Backup-Spiegel)
 
 1. Push auf den Feature-Branch (`claude/bakery-website-redesign-vyyXQ` oder
-   `main`) löst automatisch den Workflow aus.
-2. Live-URL: `https://nnauroz-prog.github.io/AlsterCafe/`
-3. Custom-Domain einrichten: siehe `CUSTOM-DOMAIN.md`.
-4. Hinweis: GitHub Pages liest **nicht** `_headers` oder `netlify.toml` —
-   die dort definierten Security-Header (HSTS, CSP, X-Frame-Options,
-   Permissions-Policy) sind dort **nicht aktiv**. Auf der Seite selbst ist
-   `Referrer-Policy` als `<meta>` gesetzt, das funktioniert host-unabhängig.
-
-### Variante B · Netlify (alternativ, kostenlos)
-
-Falls voll funktionierende Security-Header gewünscht sind, ist Netlify
-eine Alternative — die liest `_headers` und `netlify.toml` automatisch.
-
-1. Auf <https://app.netlify.com> mit GitHub anmelden
-2. **Add new site** → **Import an existing project**
-3. **Deploy with GitHub** → Repository `nnauroz-prog/AlsterCafe` wählen
-4. Branch: `main`
-5. **Deploy site** klicken — fertig
+   `main`) spiegelt via GitHub Action nach `gh-pages`.
+2. Spiegel-URL: `https://nnauroz-prog.github.io/AlsterCafe/`
+3. Hinweis: GitHub Pages liest **nicht** `_headers`/`netlify.toml`/`vercel.json` —
+   die Security-Header sind dort **nicht aktiv** (der Spiegel dient nur als
+   Ausfall-Backup; produktiv ist Vercel).
 
 ---
 
 ## Schritt 6 · Eigene Domain anbinden *(5 Min.)*
 
-Siehe ausführliche Anleitung in **`CUSTOM-DOMAIN.md`** (DNS-Records,
-GitHub-Pages-Setting, CNAME-Datei im Source-Branch). Inhalt in Kurz:
+Siehe ausführliche Anleitung in **`CUSTOM-DOMAIN.md`** (DNS-Records bei STRATO,
+Vercel-Domains-Setting). Inhalt in Kurz:
 
-1. **Domain bei z. B. Strato/IONOS registrieren** — kostet 5–15 €/Jahr
-2. **DNS-Records setzen:** vier `A`-Records auf die GitHub-Pages-IPs +
-   ein `CNAME` für `www` → `nnauroz-prog.github.io`
-3. **In GitHub:** Settings → Pages → Custom domain `alstercafe.de` eintragen
-4. **HTTPS aktivieren:** „Enforce HTTPS" anhaken (Let's Encrypt, kostenlos)
-5. **CNAME-Datei** in den Source-Branch übernehmen, sonst überschreibt
-   der Auto-Deploy die Custom-Domain
+1. **Domain** `alstercafe.de` liegt bei **STRATO** (5–15 €/Jahr).
+2. **In Vercel:** Projekt → Settings → Domains → `alstercafe.de` und
+   `www.alstercafe.de` hinzufügen — Vercel zeigt die exakten DNS-Werte.
+3. **In STRATO (DNS):** interne Umleitung entfernen; `A @ → 76.76.21.21`,
+   `CNAME www → cname.vercel-dns.com` (bzw. exakt wie von Vercel angezeigt).
+4. **HTTPS** wird von Vercel automatisch bereitgestellt (Let's Encrypt).
+5. **MX-Records** (E-Mail) NICHT anfassen.
 
 ---
 
