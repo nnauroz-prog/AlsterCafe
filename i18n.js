@@ -60,10 +60,8 @@
     'Mit Espresso von': 'With espresso by',
     'Gerade jetzt': 'Right now',
     'Lage': 'Location',
-    'Backstube': 'Bakery',
-    'ab 05:30 Uhr': 'from 05:30',
     'Heute': 'Today',
-    'Est. 2013 · Hohenfelde': 'Est. 2013 · Hohenfelde',
+    'Est. 2004 · Hohenfelde': 'Est. 2004 · Hohenfelde',
     'scrollen': 'scroll',
     'Schauen Sie einfach vorbei': 'Just drop by',
     'Frische Brötchen, Croques und Kaffee — den ganzen Tag.': 'Fresh rolls, Croques and coffee — all day long.',
@@ -156,8 +154,8 @@
     'Keine Kette, keine Filiale, kein Konzept-Café. Zwei Generationen,\n            eine Backstube, eigene Rezepte. Wenn Sie länger sitzen bleiben — bei\n            uns fühlen wir uns geehrt.':
       'No chain, no branch, no concept café. Two generations, one bakery, our own recipes. If you stay a while — we’re honoured.',
     'Übrigens: Vor uns war an gleicher Adresse der': 'By the way: before us, the same address was home to the',
-    '— ein Getränkemarkt, ebenfalls aus unserer Familie. 2013 wurde aus dem Markt das Café. Der „Alster" im Namen ist geblieben.':
-      '— a beverage store, also run by our family. In 2013 the store became the café. The “Alster” in the name stayed.',
+    '— ein Getränkemarkt, ebenfalls aus unserer Familie. 2004 wurde aus dem Markt das Café. Der „Alster" im Namen ist geblieben.':
+      '— a beverage store, also run by our family. In 2004 the store became the café. The “Alster” in the name stayed.',
     'per Anruf oder Mail zurück.': 'by phone or email.',
     'Was Sie bei uns': 'What you’ll find',
     'finden.': 'here.',

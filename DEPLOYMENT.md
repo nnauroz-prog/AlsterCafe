@@ -28,7 +28,7 @@ abgesicherten Webseite mit echter Cloud-Anmeldung.
 - **Print-optimierte Speisekarte** (Cmd+P liefert druckbare Karte)
 - **404-Seite** im Brand-Stil
 - **JSON-LD Schema.org** auf Index (`CafeOrCoffeeShop` mit Öffnungszeiten +
-  foundingDate 2013) und auf jeder Sub-Page (`BreadcrumbList`)
+  foundingDate 2004) und auf jeder Sub-Page (`BreadcrumbList`)
 
 ---
 

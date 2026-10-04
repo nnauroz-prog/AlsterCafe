@@ -98,7 +98,7 @@ Jeder Bereich hat eine eingebaute „So geht's"-Anleitung.
 - Cream-Hintergrund (`#FFFCF4`), Espresso-Text (`#3D2415`), Gold-Akzent (`#B8893E`)
 - Fraunces-Optical-Sizing für Headlines, Inter für Fließtext
 - Editorial-Wasserzeichen pro Seite (Mittag, Karte, Frisch, Tisch, Hier, Familie)
-- Marquee-Ticker im Hero, Hochzähl-Animation für „über 12 Jahre" (Café seit 2013)
+- Marquee-Ticker im Hero, Hochzähl-Animation für die Jahre seit Gründung (Café seit 2004)
 - Mobile-First, Full-Screen-Menü, magnetische Hover-Effekte (Desktop)
 
 ## Lokales Arbeiten
