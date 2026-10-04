@@ -2188,7 +2188,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   letter-spacing: .04em;
   transition: background var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
-.nav-shop::after { content: " \2197\FE0E"; display: inline; }
+.nav-shop::after { display: none; }
 .nav-shop:hover {
   background: #c79b48;
   transform: translateY(-1px);
@@ -6957,7 +6957,6 @@ html.has-js-scroll { scroll-behavior: auto; }
     border: 1px solid rgba(212, 179, 128, 0.5);
     border-radius: 2px;
   }
-  .primary-nav .nav-shop::after { display: inline; }
   .primary-nav .nav-shop:hover,
   .primary-nav .nav-shop:focus-visible {
     color: var(--espresso) !important;
@@ -7821,28 +7820,10 @@ html.has-js-scroll { scroll-behavior: auto; }
   position: relative;
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
-.reservation-form .form-submit::before {
-  content: '\2197\FE0E';
-  position: absolute;
-  right: 18px; top: 50%;
-  transform: translateY(-50%);
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-size: 1.4rem;
-  color: var(--gold);
-  letter-spacing: 0;
-  text-transform: none;
-  font-variation-settings: "opsz" 48;
-  transition: transform var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
-}
 .reservation-form .form-submit:hover {
   transform: translateY(-2px) rotate(-0.8deg);
   background: var(--espresso);
   box-shadow: 0 22px 50px -18px rgba(42, 24, 16, 0.6);
-}
-.reservation-form .form-submit:hover::before {
-  transform: translateY(-50%) translateX(4px);
-  color: var(--gold-soft);
 }
 .reservation-form .form-submit:active {
   transform: translateY(0) rotate(-1.4deg) scale(.98);
