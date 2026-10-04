@@ -28,17 +28,15 @@ Im Supabase-Dashboard (https://supabase.com) anmelden, Projekt öffnen.
 
 1. **SQL ausführen.** Im Menü links auf „SQL Editor" → „New query" → Inhalt von `setup.sql` einfügen → „Run".
 2. **Inhaber-Konto anlegen.** „Authentication" → „Users" → „Add user" → „Create new user".
-   - E-Mail: Ihre echte Adresse, z. B. `maria@alstercafe.de`
-   - Passwort: mindestens 12 Zeichen, Buchstaben + Zahlen + Sonderzeichen
-   - Häkchen „Auto Confirm User" setzen
+   - E-Mail: `info@alstercafe.de`
+   - Passwort: das gewünschte Login-Passwort (wird von Supabase **verschlüsselt** gespeichert — es steht nirgends im Code). Häkchen „Auto Confirm User" setzen.
+   - **Wichtig:** Das Passwort NIE in `config.js` oder sonst in den Code schreiben — es landet sonst im öffentlichen Repo und jeder könnte sich einloggen. Der Code kennt nur die (öffentliche) E-Mail-Adresse.
 3. **Site-URL setzen.** „Authentication" → „URL Configuration" → „Site URL" auf `https://alstercafe.de` setzen. Sonst gehen Passwort-Reset-Mails verloren.
 
 ### Schritt 2 – Konfiguration anpassen
 In der Datei `config.js`:
 
-- `ownerEmail`: auf Ihre echte E-Mail-Adresse setzen (die, die Sie eben in Supabase angelegt haben)
-
-Alles andere bleibt wie es ist.
+- `ownerEmail`: ist bereits auf `info@alstercafe.de` gesetzt. Nur ändern, falls ein anderes Login-Konto verwendet wird (muss dann exakt der in Supabase angelegten E-Mail entsprechen). Das Passwort gehört NICHT hierher — das lebt ausschließlich in Supabase.
 
 ### Schritt 3 – Hosting
 Die Seite läuft bereits auf **GitHub Pages** (kostenlos, automatisch).

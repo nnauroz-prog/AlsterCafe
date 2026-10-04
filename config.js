@@ -19,6 +19,6 @@ window.ALSTERCAFE_CONFIG = {
   supabaseUrl:     'https://jsepktfpdlgezzncmbxz.supabase.co',
   supabaseAnonKey: 'sb_publishable_a1vXLZgs185839v7G4XRaw_0TLnt7WH',
   storageBucket:   'images',
-  ownerEmail:      'inhaber@alstercafe.de'
+  ownerEmail:      'info@alstercafe.de'
 };
 
