@@ -2553,6 +2553,49 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 .panel-help strong { color: var(--bean); }
 
+/* Aufklappbare Hilfe pro Bereich — goldener „?"-Knopf, Inhalt eingeklappt.
+   Gibt jedem Panel einen „Hilfe"-Knopf, ohne die Oberfläche vollzustellen. */
+.help-box {
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 11px 16px;
+  margin: 0 0 20px;
+}
+.help-box > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Fraunces', serif;
+  font-size: .98rem; font-weight: 500; color: var(--bean);
+  -webkit-tap-highlight-color: transparent;
+}
+.help-box > summary::-webkit-details-marker { display: none; }
+.help-box > summary::before {
+  content: '?';
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; flex-shrink: 0;
+  background: var(--gold); color: var(--paper);
+  border-radius: 50%; font-size: .8rem; font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+.help-box > summary::after {
+  content: '▾'; margin-left: auto; color: var(--muted);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.help-box[open] > summary::after { transform: rotate(180deg); }
+.help-box-body {
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: .92rem; line-height: 1.6; color: var(--muted);
+}
+.help-box-body strong { color: var(--bean); }
+.help-box-body ul { margin: 8px 0 0; padding-left: 18px; }
+.help-box-body li { margin: 5px 0; }
+.help-box-body p { margin: 0 0 8px; }
+.help-box-body p:last-child { margin-bottom: 0; }
+
 /* Workspace – Back-Link */
 .admin-workspace { margin-top: 20px; }
 .back-to-overview {

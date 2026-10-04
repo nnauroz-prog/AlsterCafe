@@ -42,7 +42,7 @@ function validateContent(c) {
 function validateDesign(d) {
   if (!isObject(d)) return {};
   const out = {};
-  ['logo','heroImage','aboutImage','accentColor'].forEach(k => {
+  ['logo','aboutImage','accentColor'].forEach(k => {
     if (isString(d[k])) out[k] = d[k];
   });
   if (isArray(d.gallery)) out.gallery = d.gallery.filter(isString).slice(0, 6);
@@ -415,24 +415,9 @@ function initDesign() {
     document.querySelectorAll('img.brand-logo').forEach(img => { img.src = design.logo; });
   }
 
-  // Hero-Bild
-  const heroMark = document.querySelector('.hero-mark');
-  const heroVisual = document.querySelector('.hero-visual');
-  if (heroVisual) {
-    let heroImg = heroVisual.querySelector('.hero-photo');
-    if (design.heroImage) {
-      if (heroMark) heroMark.style.display = 'none';
-      if (!heroImg) {
-        heroImg = document.createElement('div');
-        heroImg.className = 'hero-photo';
-        heroVisual.appendChild(heroImg);
-      }
-      heroImg.style.backgroundImage = `url("${design.heroImage}")`;
-    } else {
-      if (heroMark) heroMark.style.display = '';
-      if (heroImg) heroImg.remove();
-    }
-  }
+  // (Hinweis: Es gibt bewusst KEIN Hero-Bild mehr — der Startseiten-Hero ist
+  //  ein reines Text-/Cinematic-Layout. Der frühere heroImage-Slot wurde aus
+  //  dem Mitgliederbereich entfernt, weil er nirgends angezeigt wurde.)
 
   // About-Bild
   const aboutAside = document.querySelector('.about-aside');
