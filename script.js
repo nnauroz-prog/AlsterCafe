@@ -1306,7 +1306,7 @@ function enhanceSplashMark() {
       </g>
       <text class="splash-est-arc">
         <textPath href="#splash-arc" startOffset="50%" text-anchor="middle">
-          EST · 2013 · HOHENFELDE · HAMBURG ·
+          EST · 2004 · HOHENFELDE · HAMBURG ·
         </textPath>
       </text>
     </svg>
@@ -1624,7 +1624,7 @@ function injectFooterCredit() {
 
   const credit = document.createElement('p');
   credit.className = 'footer-credit';
-  credit.innerHTML = 'Eine Familien-Backstube — <em>seit 2013 in Hohenfelde.</em>';
+  credit.innerHTML = 'Eine Familien-Backstube — <em>seit 2004 in Hohenfelde.</em>';
   // Nach dem footer-grid einsetzen
   const grid = footer.querySelector('.footer-grid');
   if (grid) {
@@ -1813,10 +1813,10 @@ function initCustomCursor(reduceMotion) {
   mo.observe(document.body, { childList: true, subtree: true });
 }
 
-/* Jahre seit Gründung (2013) automatisch berechnen, damit keine Zahl je
+/* Jahre seit Gründung (2004) automatisch berechnen, damit keine Zahl je
    veraltet. Füllt alle .js-years-Spans und setzt das Ziel des Jahres-
    Zählers ([data-counter-years]) dynamisch. Muss VOR initCounters laufen. */
-const FOUNDED_YEAR = 2013;
+const FOUNDED_YEAR = 2004;
 function initYears() {
   const years = Math.max(1, new Date().getFullYear() - FOUNDED_YEAR);
   document.querySelectorAll('.js-years').forEach(el => { el.textContent = String(years); });
@@ -1830,7 +1830,7 @@ function initCounters() {
   const elements = document.querySelectorAll('.counter[data-counter-to]');
   if (!elements.length) return;
   // Ohne IntersectionObserver oder bei reduzierter Bewegung direkt den
-  // Zielwert zeigen — nie bei "0" hängenbleiben. Der HTML-Fallback (>13<)
+  // Zielwert zeigen — nie bei "0" hängenbleiben. Der HTML-Fallback (>22<)
   // deckt zusätzlich Besucher ganz ohne JS ab.
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
     elements.forEach(el => { el.textContent = el.dataset.counterTo; });
