@@ -2107,9 +2107,10 @@ function initOrderForm() {
       return;
     }
     if (!form.checkValidity()) {
-      const firstInvalid = form.querySelector(':invalid');
-      if (firstInvalid) firstInvalid.focus();
-      setFormStatus(status, 'Bitte füllen Sie alle Pflichtfelder (*) aus.', 'error');
+      // Zeigt die genaue native Meldung am betroffenen Feld (z. B. „Wert muss
+      // 06:30 oder später sein") statt einer irreführenden Pauschalmeldung.
+      form.reportValidity();
+      setFormStatus(status, 'Bitte prüfen Sie das rot markierte Feld (z. B. Uhrzeit innerhalb der Öffnungszeiten).', 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -2176,9 +2177,10 @@ function initReservationForm() {
     if (submitBtn?.disabled) return;
     if (submitBtn) submitBtn.disabled = true;
     if (!form.checkValidity()) {
-      const firstInvalid = form.querySelector(':invalid');
-      if (firstInvalid) firstInvalid.focus();
-      setFormStatus(status, 'Bitte füllen Sie alle Pflichtfelder (*) aus.', 'error');
+      // Zeigt die genaue native Meldung am betroffenen Feld (z. B. „Wert muss
+      // 06:30 oder später sein") statt einer irreführenden Pauschalmeldung.
+      form.reportValidity();
+      setFormStatus(status, 'Bitte prüfen Sie das rot markierte Feld (z. B. Uhrzeit innerhalb der Öffnungszeiten).', 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
