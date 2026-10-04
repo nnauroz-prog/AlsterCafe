@@ -28,6 +28,18 @@
   const SYNCED_KEYS = ['weekly-menu', 'menu', 'hours', 'notice', 'content', 'design', 'broetchen-items'];
   const PREFIX = 'alstercafe.';
 
+  // Letzter Schreibfehler (Insert/Update/Delete gegen Supabase), damit der
+  // Mitgliederbereich dem Inhaber den echten Grund zeigen kann, statt eine
+  // Aenderung stillschweigend zurueckzurollen.
+  let lastWriteError = null;
+  function noteWriteError(error) {
+    lastWriteError = error
+      ? (error.message || error.hint || error.code || String(error))
+      : null;
+    if (error) console.error('Supabase-Schreibfehler', error);
+    return error;
+  }
+
   /* ---------- Auth ---------- */
   const auth = useSupabase ? {
     async signIn(emailOrUser, password) {
@@ -296,7 +308,8 @@
       return true;
     }
     const { error } = await sb.from('reservations').insert(row);
-    if (error) { console.error('Reservierung-Insert fehlgeschlagen', error); return false; }
+    if (error) { noteWriteError(error); return false; }
+    lastWriteError = null;
     return true;
   }
 
@@ -329,7 +342,7 @@
     writeCache('reservations', next);
     if (!useSupabase) return true;
     const { error } = await sb.from('reservations').update({ status }).eq('id', id);
-    return !error;
+    return !noteWriteError(error);
   }
 
   async function deleteReservation(id) {
@@ -338,7 +351,7 @@
     writeCache('reservations', next);
     if (!useSupabase) return true;
     const { error } = await sb.from('reservations').delete().eq('id', id);
-    return !error;
+    return !noteWriteError(error);
   }
 
   /* ---------- Bestellungen (belegte Broetchen, eigene Tabelle, public-insert) ---------- */
@@ -371,7 +384,8 @@
       return true;
     }
     const { error } = await sb.from('orders').insert(row);
-    if (error) { console.error('Bestellung-Insert fehlgeschlagen', error); return false; }
+    if (error) { noteWriteError(error); return false; }
+    lastWriteError = null;
     return true;
   }
 
@@ -404,7 +418,7 @@
     writeCache('orders', next);
     if (!useSupabase) return true;
     const { error } = await sb.from('orders').update({ status }).eq('id', id);
-    return !error;
+    return !noteWriteError(error);
   }
 
   async function deleteOrder(id) {
@@ -413,7 +427,7 @@
     writeCache('orders', next);
     if (!useSupabase) return true;
     const { error } = await sb.from('orders').delete().eq('id', id);
-    return !error;
+    return !noteWriteError(error);
   }
 
   /* ---------- Realtime Sync (nur Supabase) ---------- */
@@ -487,6 +501,7 @@
   window.alsterDb = {
     isProd: useSupabase,
     ready,
+    writeError: () => lastWriteError,
     get: readCache,
     set: dbSet,
     remove: dbRemove,

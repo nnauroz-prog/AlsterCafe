@@ -1468,19 +1468,37 @@ function pickupBadgeHtml(dateStr) {
   return '';
 }
 
-function onMarkAnfrage(id) {
+async function onMarkAnfrage(id) {
   const list = window.alsterDb?.get('reservations') || [];
   const current = (Array.isArray(list) ? list : []).find(r => r.id === id);
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
   // db.js aktualisiert in-memory + localStorage synchron, also vor dem render aufrufen.
-  window.alsterDb?.updateReservationStatus(id, nextStatus).finally(() => refreshAnfragen());
   renderAnfragen();
+  const ok = await window.alsterDb?.updateReservationStatus(id, nextStatus);
+  if (ok === false) warnWriteFailed();
+  await refreshAnfragen();
 }
 
-function onDeleteAnfrage(id) {
+async function onDeleteAnfrage(id) {
   if (!confirm('Diese Anfrage wirklich löschen?')) return;
-  window.alsterDb?.deleteReservation(id).finally(() => refreshAnfragen());
   renderAnfragen();
+  const ok = await window.alsterDb?.deleteReservation(id);
+  if (ok === false) warnWriteFailed();
+  await refreshAnfragen();
+}
+
+// Gemeinsame Fehlermeldung, wenn Supabase eine Aenderung ablehnt (z. B. wenn die
+// Datenbank nur-lesend ist oder die Schreibrechte fehlen). Ohne diesen Hinweis
+// wuerde der Eintrag beim naechsten Laden einfach wieder auftauchen — verwirrend.
+function warnWriteFailed() {
+  const detail = (window.alsterDb?.writeError && window.alsterDb.writeError()) || '';
+  alert(
+    'Änderung konnte nicht gespeichert werden.\n\n' +
+    'Die Datenbank nimmt gerade keine Änderungen an — die Anzeige wird daher ' +
+    'beim Neuladen auf den Server-Stand zurückgesetzt.\n\n' +
+    'Bitte den Datenbank-Status (Supabase) prüfen.' +
+    (detail ? '\n\nTechnischer Hinweis: ' + detail : '')
+  );
 }
 
 /* ---------- Bestellungen (belegte Brötchen) ---------- */
@@ -1567,18 +1585,22 @@ function buildOrderItem(o) {
   `;
 }
 
-function onMarkOrder(id) {
+async function onMarkOrder(id) {
   const list = window.alsterDb?.get('orders') || [];
   const current = (Array.isArray(list) ? list : []).find(o => o.id === id);
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
-  window.alsterDb?.updateOrderStatus(id, nextStatus).finally(() => refreshOrders());
   renderOrders();
+  const ok = await window.alsterDb?.updateOrderStatus(id, nextStatus);
+  if (ok === false) warnWriteFailed();
+  await refreshOrders();
 }
 
-function onDeleteOrder(id) {
+async function onDeleteOrder(id) {
   if (!confirm('Diese Bestellung wirklich löschen?')) return;
-  window.alsterDb?.deleteOrder(id).finally(() => refreshOrders());
   renderOrders();
+  const ok = await window.alsterDb?.deleteOrder(id);
+  if (ok === false) warnWriteFailed();
+  await refreshOrders();
 }
 
 /* ---------- Brötchen-Sorten-Editor ---------- */
