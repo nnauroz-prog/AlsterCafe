@@ -1411,7 +1411,7 @@ function buildAnfrageItem(r) {
       <div class="anfrage-head">
         <div>
           <span class="anfrage-name">${escapeHtml(r.name || 'Ohne Namen')}</span>
-          ${r.persons ? `<span class="anfrage-pers">· ${escapeHtml(r.persons)} ${Number(r.persons) === 1 ? 'Person' : 'Personen'}</span>` : ''}
+          ${r.persons ? `<span class="anfrage-pers">· ${escapeHtml(String(r.persons).trim())}${/^\d+$/.test(String(r.persons).trim()) ? (Number(r.persons) === 1 ? ' Person' : ' Personen') : ''}</span>` : ''}
         </div>
         ${isDone
           ? '<span class="anfrage-tag">Erledigt</span>'
