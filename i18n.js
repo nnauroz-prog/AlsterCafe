@@ -75,7 +75,6 @@
     'Eigene Backstube': 'Our own bakery',
 
     /* Heute-Feature */
-    'Heute mittag': 'At midday today',
     'Heute servieren wir Frühstück & Backwaren — kein Mittagstisch.': 'Today we serve breakfast & baked goods — no lunch.',
     'Die Wochenkarte wird gerade aktualisiert.': 'This week’s menu is being updated.',
 
