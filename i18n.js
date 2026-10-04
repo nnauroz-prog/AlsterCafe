@@ -282,6 +282,7 @@
     'gleichen Tag': 'same day',
     'Reservierung anfragen': 'Request reservation',
     'Anlass / Nachricht': 'Occasion / message',
+    'Personen': 'Guests',
     'Datum': 'Date',
     'Bitte wählen': 'Please choose',
     '1 Person': '1 person', '2 Personen': '2 people', '3 Personen': '3 people',
