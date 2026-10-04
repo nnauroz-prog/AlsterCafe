@@ -2109,10 +2109,22 @@ function initOrderForm() {
       return;
     }
     if (!form.checkValidity()) {
-      // Zeigt die genaue native Meldung am betroffenen Feld (z. B. „Wert muss
-      // 06:30 oder später sein") statt einer irreführenden Pauschalmeldung.
-      form.reportValidity();
-      setFormStatus(status, 'Bitte prüfen Sie das rot markierte Feld (z. B. Uhrzeit innerhalb der Öffnungszeiten).', 'error');
+      // Das erste ungueltige Feld bestimmen, benennen UND dorthin springen.
+      // Wichtig am Handy: iOS-Safari zeigt oft KEINE native Hinweisblase,
+      // daher sagen wir im Status genau, welches Feld fehlt, und scrollen hin.
+      const bad = form.querySelector(':invalid');
+      let msg = 'Bitte prüfen Sie Ihre Eingaben.';
+      if (bad) {
+        const lbl = (bad.closest('label')?.querySelector('span')?.textContent) || '';
+        const feld = lbl.replace(/\*/g, '').trim() || bad.name || 'Feld';
+        if (bad.type === 'checkbox') msg = 'Bitte unten das Häkchen zur Einverständnis setzen.';
+        else if (bad.validity && bad.validity.valueMissing) msg = `Bitte „${feld}" ausfüllen.`;
+        else if (bad.type === 'email') msg = 'Bitte eine gültige E-Mail-Adresse eingeben (z. B. name@mail.de).';
+        else msg = `Bitte „${feld}" prüfen.`;
+        try { bad.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+        try { bad.focus({ preventScroll: true }); } catch (e) {}
+      }
+      setFormStatus(status, msg, 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -2179,10 +2191,22 @@ function initReservationForm() {
     if (submitBtn?.disabled) return;
     if (submitBtn) submitBtn.disabled = true;
     if (!form.checkValidity()) {
-      // Zeigt die genaue native Meldung am betroffenen Feld (z. B. „Wert muss
-      // 06:30 oder später sein") statt einer irreführenden Pauschalmeldung.
-      form.reportValidity();
-      setFormStatus(status, 'Bitte prüfen Sie das rot markierte Feld (z. B. Uhrzeit innerhalb der Öffnungszeiten).', 'error');
+      // Das erste ungueltige Feld bestimmen, benennen UND dorthin springen.
+      // Wichtig am Handy: iOS-Safari zeigt oft KEINE native Hinweisblase,
+      // daher sagen wir im Status genau, welches Feld fehlt, und scrollen hin.
+      const bad = form.querySelector(':invalid');
+      let msg = 'Bitte prüfen Sie Ihre Eingaben.';
+      if (bad) {
+        const lbl = (bad.closest('label')?.querySelector('span')?.textContent) || '';
+        const feld = lbl.replace(/\*/g, '').trim() || bad.name || 'Feld';
+        if (bad.type === 'checkbox') msg = 'Bitte unten das Häkchen zur Einverständnis setzen.';
+        else if (bad.validity && bad.validity.valueMissing) msg = `Bitte „${feld}" ausfüllen.`;
+        else if (bad.type === 'email') msg = 'Bitte eine gültige E-Mail-Adresse eingeben (z. B. name@mail.de).';
+        else msg = `Bitte „${feld}" prüfen.`;
+        try { bad.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+        try { bad.focus({ preventScroll: true }); } catch (e) {}
+      }
+      setFormStatus(status, msg, 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
