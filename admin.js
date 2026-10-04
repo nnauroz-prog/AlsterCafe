@@ -101,6 +101,10 @@ async function init() {
   // Übersicht-Zähler: Klick springt in den passenden Bereich
   dom.summaryStats.forEach(s => s.addEventListener('click', () => switchTab(s.dataset.tab)));
 
+  // Suche in Anfragen / Bestellungen
+  dom.anfragenSearch?.addEventListener('input', () => renderAnfragen());
+  dom.ordersSearch?.addEventListener('input', () => renderOrders());
+
   // Wochenplan
   dom.menuForm.addEventListener('submit', onSaveWeek);
   dom.weekPrev.addEventListener('click', () => changeWeek(-7));
@@ -238,11 +242,13 @@ function cacheDom() {
     anfragenCount: document.getElementById('anfragen-count'),
     anfragenBadge: document.getElementById('overview-anfragen-badge'),
     tabAnfragenBadge: document.getElementById('tab-anfragen-badge'),
+    anfragenSearch: document.getElementById('anfragen-search'),
     // Bestellungen (belegte Brötchen)
     ordersList:    document.getElementById('orders-list'),
     ordersCount:   document.getElementById('orders-count'),
     ordersBadge:   document.getElementById('overview-orders-badge'),
     tabOrdersBadge: document.getElementById('tab-orders-badge'),
+    ordersSearch:  document.getElementById('orders-search'),
     // Brötchen-Sorten-Editor
     broetchenForm:   document.getElementById('broetchen-form'),
     broetchenEditor: document.getElementById('broetchen-editor'),
@@ -1439,9 +1445,57 @@ function renderAnfragen() {
     dom.anfragenList.innerHTML = '<li class="anfragen-empty">Hier erscheinen Reservierungsanfragen, sobald jemand das Formular auf der Webseite ausfüllt.</li>';
     return;
   }
-  dom.anfragenList.innerHTML = items.map(r => buildAnfrageItem(r)).join('');
-  dom.anfragenList.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', () => onMarkAnfrage(b.dataset.mark)));
-  dom.anfragenList.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => onDeleteAnfrage(b.dataset.del)));
+  const hasQuery = !!(dom.anfragenSearch && dom.anfragenSearch.value.trim());
+  const { upcoming, past } = splitByDate(items, dom.anfragenSearch?.value, 'date');
+  let html = upcoming.length
+    ? upcoming.map(r => buildAnfrageItem(r)).join('')
+    : `<li class="anfragen-empty">${hasQuery ? 'Keine Treffer bei den kommenden Anfragen.' : 'Keine kommenden Anfragen.'}</li>`;
+  if (past.length) {
+    html += `<li class="anfragen-past"><details${hasQuery ? ' open' : ''}>
+      <summary>Vergangene (${past.length})</summary>
+      <ul class="anfragen-sublist">${past.map(r => buildAnfrageItem(r)).join('')}</ul>
+    </details></li>`;
+  }
+  dom.anfragenList.innerHTML = html;
+  bindInboxHandlers(dom.anfragenList, {
+    onMark: onMarkAnfrage, onDel: onDeleteAnfrage, onNote: onSaveAnfrageNote
+  });
+}
+
+/* Teilt + filtert Inbox-Einträge: Suche nach Name/Telefon/E-Mail/Datum und
+   Aufteilung in kommende (heute/zukünftig/ohne Datum) vs. vergangene. */
+function splitByDate(items, query, dateKey) {
+  const q = (query || '').trim().toLowerCase();
+  const filtered = q ? items.filter(it =>
+    (it.name  || '').toLowerCase().includes(q) ||
+    (it.phone || '').toLowerCase().includes(q) ||
+    (it.email || '').toLowerCase().includes(q) ||
+    (it[dateKey] || '').toLowerCase().includes(q)
+  ) : items.slice();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const upcoming = [], past = [];
+  filtered.forEach(it => {
+    const ds = it[dateKey];
+    let diff = null;
+    if (ds) { const d = new Date(ds + 'T00:00:00'); if (!isNaN(d)) diff = Math.round((d - today) / 86400000); }
+    if (diff !== null && diff < 0) past.push(it); else upcoming.push(it);
+  });
+  const t = x => (x.time || x.pickupTime || '');
+  upcoming.sort((a, b) => ((a[dateKey] || '9999-99-99') + t(a)).localeCompare((b[dateKey] || '9999-99-99') + t(b)));
+  past.sort((a, b) => ((b[dateKey] || '') + t(b)).localeCompare((a[dateKey] || '') + t(a)));
+  return { upcoming, past };
+}
+
+/* Bindet Mark/Löschen/Notiz-Handler innerhalb eines Listen-Containers. */
+function bindInboxHandlers(container, { onMark, onDel, onNote }) {
+  container.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', () => onMark(b.dataset.mark)));
+  container.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => onDel(b.dataset.del)));
+  container.querySelectorAll('[data-note]').forEach(t => t.addEventListener('change', () => onNote(t.dataset.note, t.value)));
+}
+
+async function onSaveAnfrageNote(id, note) {
+  const ok = await window.alsterDb?.updateReservationNote(id, note);
+  if (ok === false) warnWriteFailed();
 }
 
 function buildAnfrageItem(r) {
@@ -1472,6 +1526,10 @@ function buildAnfrageItem(r) {
         ${r.email ? `<a href="${mailLink}">${escapeHtml(r.email)}</a>` : ''}
       </div>
       ${r.message ? `<p class="anfrage-msg">${escapeHtml(r.message)}</p>` : ''}
+      <label class="anfrage-note">
+        <span class="anfrage-note-label">Notiz (intern)</span>
+        <textarea class="anfrage-note-input" data-note="${escapeAttr(r.id)}" rows="1" placeholder="z. B. angerufen, Tisch am Fenster …">${escapeHtml(r.note || '')}</textarea>
+      </label>
       <div class="anfrage-meta">
         <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
         <div class="anfrage-actions">
@@ -1581,9 +1639,26 @@ function renderOrders() {
     dom.ordersList.innerHTML = '<li class="orders-empty">Hier erscheinen Brötchen-Bestellungen, sobald die ersten über den Brötchen-Service eingehen.</li>';
     return;
   }
-  dom.ordersList.innerHTML = items.map(o => buildOrderItem(o)).join('');
-  dom.ordersList.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', () => onMarkOrder(b.dataset.mark)));
-  dom.ordersList.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => onDeleteOrder(b.dataset.del)));
+  const hasQuery = !!(dom.ordersSearch && dom.ordersSearch.value.trim());
+  const { upcoming, past } = splitByDate(items, dom.ordersSearch?.value, 'pickupDate');
+  let html = upcoming.length
+    ? upcoming.map(o => buildOrderItem(o)).join('')
+    : `<li class="orders-empty">${hasQuery ? 'Keine Treffer bei den kommenden Bestellungen.' : 'Keine kommenden Bestellungen.'}</li>`;
+  if (past.length) {
+    html += `<li class="anfragen-past"><details${hasQuery ? ' open' : ''}>
+      <summary>Vergangene (${past.length})</summary>
+      <ul class="anfragen-sublist">${past.map(o => buildOrderItem(o)).join('')}</ul>
+    </details></li>`;
+  }
+  dom.ordersList.innerHTML = html;
+  bindInboxHandlers(dom.ordersList, {
+    onMark: onMarkOrder, onDel: onDeleteOrder, onNote: onSaveOrderNote
+  });
+}
+
+async function onSaveOrderNote(id, note) {
+  const ok = await window.alsterDb?.updateOrderNote(id, note);
+  if (ok === false) warnWriteFailed();
 }
 
 function buildOrderItem(o) {
@@ -1616,6 +1691,10 @@ function buildOrderItem(o) {
         ${o.email ? `<a href="${mailLink}">${escapeHtml(o.email)}</a>` : ''}
       </div>
       ${o.notes ? `<p class="anfrage-msg">${escapeHtml(o.notes)}</p>` : ''}
+      <label class="anfrage-note">
+        <span class="anfrage-note-label">Notiz (intern)</span>
+        <textarea class="anfrage-note-input" data-note="${escapeAttr(o.id)}" rows="1" placeholder="z. B. vorbereitet, bezahlt …">${escapeHtml(o.note || '')}</textarea>
+      </label>
       <div class="anfrage-meta">
         <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
         <div class="anfrage-actions">
