@@ -472,7 +472,9 @@ function onSaveWeek(e) {
     const side   = (data.get('spillover-sun-side')   || '').toString().trim();
     const closed = data.get('spillover-sun-closed') === 'on';
     const today = new Date();
-    const prevMonday = mondayOf(new Date(today.getTime() - 7 * 86400000));
+    // Woche, die den heutigen Sonntag enthaelt (mondayOf(heute)) — muss mit
+    // dem Lade-Schluessel oben UND der Startseiten-Logik uebereinstimmen.
+    const prevMonday = mondayOf(today);
     const prevKey = isoDate(prevMonday);
     const prevWeek = all[prevKey] || { weekStart: prevKey, days: {} };
     if (dish || side || closed) {
@@ -501,10 +503,13 @@ function renderWeek() {
   dom.dayGrid.innerHTML = '';
 
   // Sonntag-Spillover: heute (laufender Sonntag) als erste Karte rendern
-  // Daten kommen aus der Vorwoche
+  // Daten kommen aus der laufenden Woche (die Woche, die den heutigen
+  // Sonntag enthaelt). WICHTIG: mondayOf(heute) — NICHT heute−7 Tage, sonst
+  // landet man eine Woche zu frueh und die Startseite (liest mondayOf(heute))
+  // findet den Eintrag nicht.
   if (sundaySpillover) {
     const todaySunday = new Date();
-    const prevMonday = mondayOf(new Date(todaySunday.getTime() - 7 * 86400000));
+    const prevMonday = mondayOf(todaySunday);
     const prevWeekData = all[isoDate(prevMonday)] || { days: {} };
     const prevSundayEntry = prevWeekData.days.sun || {};
     dom.dayGrid.appendChild(buildDayCard({
