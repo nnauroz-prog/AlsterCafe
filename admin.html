@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r153" />
-  <script>(function(){var V='2026-05-10-r153';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r154" />
+  <script>(function(){var V='2026-05-10-r154';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -240,6 +240,15 @@
               </span>
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
             </button>
+
+            <button class="overview-card" type="button" data-tab="holidays">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-clock"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Urlaub &amp; Feiertage</span>
+                <span class="overview-card-desc">Schließtage eintragen</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
           </div>
 
           <p class="overview-utility">
@@ -287,6 +296,9 @@
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="hours">
             Öffnungszeiten
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="holidays">
+            Urlaub &amp; Feiertage
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="account">
             <svg class="ico ico-sm"><use href="#i-user"/></svg>
@@ -443,6 +455,41 @@
                   <button type="submit" class="btn btn-primary">
                     <svg class="ico ico-sm"><use href="#i-check"/></svg>
                     Öffnungszeiten speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- TAB: URLAUB & FEIERTAGE -->
+        <div class="admin-panel" id="panel-holidays" role="tabpanel" hidden>
+          <div class="panel-card">
+            <h3>Urlaub &amp; Feiertage</h3>
+            <p class="panel-card-sub">Tage, an denen das Café geschlossen ist.</p>
+            <details class="help-box">
+              <summary>Hilfe: Schließtage eintragen</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li>Tragen Sie je Zeile ein <strong>Datum</strong> ein, an dem geschlossen ist (z. B. Betriebsurlaub oder Feiertag). Rechts optional ein kurzer <strong>Grund</strong> („Betriebsurlaub", „1. Weihnachtstag").</li>
+                  <li><strong>„+ Tag hinzufügen"</strong> für einen weiteren Eintrag, das Papierkorb-Symbol entfernt eine Zeile. Für mehrere Urlaubstage einfach mehrere Zeilen anlegen.</li>
+                  <li>An einem solchen Tag zeigt die Webseite automatisch <strong>„Heute geschlossen"</strong> (Banner + Status) — ganz ohne weiteres Zutun.</li>
+                  <li>Unten auf <strong>„Schließtage speichern"</strong>. Vergangene Tage können Sie bei Gelegenheit löschen.</li>
+                </ul>
+              </div>
+            </details>
+
+            <form id="holidays-form">
+              <div class="hours-rows" id="holidays-rows"></div>
+              <button type="button" class="btn btn-link" id="holidays-add">+ Tag hinzufügen</button>
+
+              <div class="save-bar inline">
+                <p class="save-status" id="holidays-status"></p>
+                <div class="save-actions">
+                  <button type="button" class="btn btn-link danger" id="holidays-clear">Alle entfernen</button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Schließtage speichern
                   </button>
                 </div>
               </div>
@@ -827,9 +874,9 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
-  <script src="config.js?v=2026-05-10-r153" defer></script>
-  <script src="db.js?v=2026-05-10-r153" defer></script>
-  <script src="menudata.js?v=2026-05-10-r153" defer></script>
-  <script src="admin.js?v=2026-05-10-r153" defer></script>
+  <script src="config.js?v=2026-05-10-r154" defer></script>
+  <script src="db.js?v=2026-05-10-r154" defer></script>
+  <script src="menudata.js?v=2026-05-10-r154" defer></script>
+  <script src="admin.js?v=2026-05-10-r154" defer></script>
 </body>
 </html>

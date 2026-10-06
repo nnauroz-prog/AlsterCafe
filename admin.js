@@ -148,6 +148,11 @@ async function init() {
   dom.hoursAdd.addEventListener('click', () => addHourRow());
   dom.hoursReset.addEventListener('click', onResetHours);
 
+  // Urlaub & Feiertage
+  dom.holidaysForm?.addEventListener('submit', onSaveHolidays);
+  dom.holidaysAdd?.addEventListener('click', () => addHolidayRow());
+  dom.holidaysClear?.addEventListener('click', onClearHolidays);
+
   // Brötchen-Sorten
   dom.broetchenForm?.addEventListener('submit', onSaveBroetchen);
   dom.broetchenAdd?.addEventListener('click', () => addBroetchenRow());
@@ -211,6 +216,12 @@ function cacheDom() {
     hoursForm:    document.getElementById('hours-form'),
     hoursRows:    document.getElementById('hours-rows'),
     hoursAdd:     document.getElementById('hours-add'),
+    // Urlaub & Feiertage
+    holidaysForm:   document.getElementById('holidays-form'),
+    holidaysRows:   document.getElementById('holidays-rows'),
+    holidaysAdd:    document.getElementById('holidays-add'),
+    holidaysClear:  document.getElementById('holidays-clear'),
+    holidaysStatus: document.getElementById('holidays-status'),
     hoursStatus:  document.getElementById('hours-status'),
     hoursReset:   document.getElementById('hours-reset'),
     // Account
@@ -336,6 +347,7 @@ async function showDashboard() {
   renderNotice();
   renderMenuEditor();
   renderHoursEditor();
+  renderHolidaysEditor();
   renderDesignEditor();
   renderActivityLog();
   renderBroetchenEditor();
@@ -993,6 +1005,61 @@ function onResetHours() {
   });
 }
 
+/* ---------- Urlaub & Feiertage (Schließtage) ----------
+   Gespeichert als Content-Key 'holidays' = [{date:'YYYY-MM-DD', label}].
+   Die öffentliche Seite zeigt an solchen Tagen automatisch „Heute geschlossen". */
+function renderHolidaysEditor() {
+  if (!dom.holidaysRows) return;
+  const stored = window.alsterDb?.get('holidays');
+  const holidays = Array.isArray(stored) ? stored : [];
+  dom.holidaysRows.innerHTML = '';
+  holidays
+    .slice()
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
+    .forEach(h => addHolidayRow(h.date, h.label));
+  if (dom.holidaysStatus) setStatus(dom.holidaysStatus, 'Bereit zum Bearbeiten.');
+}
+
+function addHolidayRow(date = '', label = '') {
+  if (!dom.holidaysRows) return;
+  const row = document.createElement('div');
+  row.className = 'hours-row holiday-row';
+  row.innerHTML = `
+    <input type="date" class="holiday-date" value="${escapeAttr(date)}" />
+    <input type="text" class="holiday-label" value="${escapeAttr(label)}" placeholder="Grund (optional), z. B. Betriebsurlaub" />
+    <button type="button" class="btn-icon holiday-remove" aria-label="Zeile entfernen">
+      <svg class="ico ico-sm"><use href="#i-x"/></svg>
+    </button>
+  `;
+  row.querySelector('.holiday-remove').addEventListener('click', () => row.remove());
+  dom.holidaysRows.appendChild(row);
+}
+
+function onSaveHolidays(e) {
+  e.preventDefault();
+  const rows = [];
+  dom.holidaysRows.querySelectorAll('.holiday-row').forEach(r => {
+    const date  = r.querySelector('.holiday-date').value.trim();
+    const label = r.querySelector('.holiday-label').value.trim();
+    if (date) rows.push({ date, label });
+  });
+  rows.sort((a, b) => a.date.localeCompare(b.date));
+  window.alsterDb.set('holidays', rows).then(ok => {
+    setStatus(dom.holidaysStatus,
+      ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
+      ok ? 'ok' : 'error');
+    if (ok) logActivity('Schließtage gespeichert');
+  });
+}
+
+function onClearHolidays() {
+  if (!confirm('Alle Schließtage entfernen?')) return;
+  window.alsterDb.remove('holidays').then(() => {
+    renderHolidaysEditor();
+    setStatus(dom.holidaysStatus, 'Alle Schließtage entfernt.', 'ok');
+  });
+}
+
 /* ============================================================
    Design-Studio — Logo, Bilder, Galerie, Akzentfarbe
    ============================================================ */
@@ -1222,6 +1289,7 @@ async function onResetAll() {
     window.alsterDb.remove('notice'),
     window.alsterDb.remove('menu'),
     window.alsterDb.remove('hours'),
+    window.alsterDb.remove('holidays'),
     window.alsterDb.remove('design'),
     window.alsterDb.remove('content')
   ]);
@@ -1229,6 +1297,7 @@ async function onResetAll() {
   renderNotice();
   renderMenuEditor();
   renderHoursEditor();
+  renderHolidaysEditor();
   renderDesignEditor();
   alert('Alle Daten wurden gelöscht.');
 }

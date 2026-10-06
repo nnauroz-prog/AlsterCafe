@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initDesign);
   safeRun(initContent);
   safeRun(initNotice);
+  safeRun(initHolidays);
   safeRun(initMenu);
   safeRun(initHours);
   safeRun(initLunchWeek);
@@ -142,8 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'design':      initDesign(); break;
       case 'content':     initContent(); break;
       case 'notice':      initNotice(); break;
+      case 'holidays':    initHolidays(); updateLiveStatus(); break;
       case 'menu':        initMenu(); break;
-      case 'hours':       initHours(); break;
+      case 'hours':       initHours(); updateLiveStatus(); break;
       case 'weekly-menu': initLunchWeek(); break;
     }
   }, ['content']);
@@ -186,23 +188,53 @@ function hideSplash() {
   }, dwell);
 }
 
+/* ---------- Urlaub / Feiertage (Schließtage) ---------- */
+// Gespeichert als Content-Key 'holidays' = [{date:'YYYY-MM-DD', label}].
+// Oeffentliche Info (Schließtage) — darf in der oeffentlich lesbaren
+// content-Tabelle liegen.
+function getHolidays() {
+  try {
+    const v = JSON.parse(localStorage.getItem('alstercafe.holidays') || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch { return []; }
+}
+function todayIsoLocal() {
+  const t = new Date();
+  return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+}
+function todayHoliday() {
+  const iso = todayIsoLocal();
+  return getHolidays().find(h => h && h.date === iso) || null;
+}
+
 /* ---------- Live-Status-Pille ("Aktuell geöffnet") ---------- */
+let liveStatusTimer = null;
 function initLiveStatus() {
   const el = document.getElementById('live-status');
   if (!el) return;
-  const update = () => {
-    const status = computeLiveStatus();
-    if (!status) { el.hidden = true; return; }
-    el.hidden = false;
-    el.dataset.state = status.state;
-    el.querySelector('.live-status-text').textContent = status.text;
-  };
-  update();
-  // Jede Minute neu rechnen
-  setInterval(update, 60_000);
+  updateLiveStatus();
+  // Jede Minute neu rechnen (nur ein Timer, auch bei erneutem Aufruf)
+  if (liveStatusTimer) clearInterval(liveStatusTimer);
+  liveStatusTimer = setInterval(updateLiveStatus, 60_000);
+}
+function updateLiveStatus() {
+  const el = document.getElementById('live-status');
+  if (!el) return;
+  const status = computeLiveStatus();
+  if (!status) { el.hidden = true; return; }
+  el.hidden = false;
+  el.dataset.state = status.state;
+  el.querySelector('.live-status-text').textContent = status.text;
 }
 
 function computeLiveStatus() {
+  const en = alsterLang() === 'en';
+  // Schließtag (Urlaub/Feiertag) hat Vorrang vor den regulaeren Zeiten
+  const hol = todayHoliday();
+  if (hol) {
+    const suffix = hol.label ? ' · ' + hol.label : '';
+    return { state: 'closed', text: (en ? 'Closed today' : 'Heute geschlossen') + suffix };
+  }
   // Öffnungszeiten parsen — entweder aus dem Admin-Cache oder aus DOM
   const hours = parseHoursFromDom();
   if (!hours.length) return null;
@@ -210,7 +242,6 @@ function computeLiveStatus() {
   const wd = (now.getDay() + 6) % 7; // 0 = Mo, 6 = So
   const today = hours[wd];
   const minutesNow = now.getHours() * 60 + now.getMinutes();
-  const en = alsterLang() === 'en';
   if (today && today.openMin != null && minutesNow >= today.openMin && minutesNow < today.closeMin) {
     const remaining = today.closeMin - minutesNow;
     return {
@@ -762,6 +793,34 @@ function initNotice() {
   }
 }
 
+/* ---------- Urlaub/Feiertag-Banner ----------
+   Zeigt an jedem Schließtag (aus dem Content-Key 'holidays') auf allen
+   Seiten einen klaren „Heute geschlossen"-Hinweis. Nutzt die Notice-Optik. */
+function initHolidays() {
+  if (document.body.classList.contains('admin-body')) return;
+  let banner = document.getElementById('holiday-banner');
+  const hol = todayHoliday();
+  if (!hol) { if (banner) banner.hidden = true; return; }
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.className = 'notice-banner holiday-banner';
+    banner.id = 'holiday-banner';
+    banner.hidden = true;
+    banner.innerHTML = `
+      <div class="container notice-inner">
+        <span class="notice-tag">Geschlossen</span>
+        <p id="holiday-text"></p>
+      </div>`;
+    const topbar = document.querySelector('.topbar');
+    if (topbar && topbar.parentNode) topbar.parentNode.insertBefore(banner, topbar);
+    else document.body.insertBefore(banner, document.body.firstChild);
+  }
+  const en = alsterLang() === 'en';
+  const txt = banner.querySelector('#holiday-text');
+  if (txt) txt.textContent = (en ? 'Closed today' : 'Heute geschlossen') + (hol.label ? ' — ' + hol.label : '');
+  banner.hidden = false;
+}
+
 /* ---------- Speisekarte ----------
    Rendert die Karte aus der geteilten Datenbasis (menudata.js).
    Vorrang: vom Inhaber gespeicherte Daten (Supabase/localStorage),
@@ -1043,9 +1102,14 @@ function initPremiumPolish() {
     const now = new Date();
     const wd = now.toLocaleDateString(dateLocale(), { weekday: 'long' });
     const dayIdx = now.getDay(); // 0=So, 1=Mo, ..., 6=Sa
-    // Mo-Fr: 06:30-15:00, Sa/So: 07:30-15:00
-    const hours = (dayIdx >= 1 && dayIdx <= 5) ? '06:30 – 15:00' : '07:30 – 15:00';
-    heroToday.textContent = `${wd} · ${hours}`;
+    const hol = todayHoliday();
+    if (hol) {
+      heroToday.textContent = `${wd} · ${alsterLang() === 'en' ? 'closed' : 'geschlossen'}`;
+    } else {
+      // Mo-Fr: 06:30-15:00, Sa/So: 07:30-15:00
+      const hours = (dayIdx >= 1 && dayIdx <= 5) ? '06:30 – 15:00' : '07:30 – 15:00';
+      heroToday.textContent = `${wd} · ${hours}`;
+    }
   }
 
   // 4. Eigener Mauszeiger (Dot + Ring) bewusst DEAKTIVIERT — der normale
@@ -1259,8 +1323,22 @@ function injectTopbarLiveStatus() {
   };
 
   const el = document.createElement('span');
-  el.className = 'topbar-live' + (isOpen ? '' : ' is-closed');
   const enTop = alsterLang() === 'en';
+  const holTop = todayHoliday();
+  if (holTop) {
+    el.className = 'topbar-live is-closed';
+    el.innerHTML = enTop ? 'Closed today' : 'Heute geschlossen';
+    const firstSep0 = topbar.querySelector('.topbar-sep');
+    if (firstSep0) {
+      const sepClone0 = firstSep0.cloneNode(true);
+      topbar.insertBefore(el, topbar.firstChild);
+      topbar.insertBefore(sepClone0, el.nextSibling);
+    } else {
+      topbar.insertBefore(el, topbar.firstChild);
+    }
+    return;
+  }
+  el.className = 'topbar-live' + (isOpen ? '' : ' is-closed');
   if (isOpen) {
     el.innerHTML = (enTop ? 'Open until ' : 'Geöffnet bis ') + `<em>${formatHour(close)}</em>`;
   } else if (minutes < open) {
