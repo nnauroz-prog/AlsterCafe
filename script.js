@@ -133,6 +133,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initLunchWeek);
   safeRun(initLandingTeaser);
   safeRun(initLiveStatus);
+  // Brötchen-Sorten jetzt mit dem hydratisierten Stand neu aufbauen (die erste
+  // Darstellung lief vor dem Backend und zeigte ggf. noch die Standard-Liste).
+  safeRun(() => { if (refreshOrderSorts) refreshOrderSorts(); });
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
@@ -147,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'menu':        initMenu(); break;
       case 'hours':       initHours(); updateLiveStatus(); break;
       case 'weekly-menu': initLunchWeek(); break;
+      case 'broetchen-items': if (refreshOrderSorts) refreshOrderSorts(); break;
     }
   }, ['content']);
 });
@@ -209,6 +213,9 @@ function todayHoliday() {
 
 /* ---------- Live-Status-Pille ("Aktuell geöffnet") ---------- */
 let liveStatusTimer = null;
+// Erneut aufrufbare Funktion, die die Brötchen-Sorten aus den Inhaber-Daten
+// aufbaut (nach Backend-Hydration + bei Live-Änderungen). Wird in initOrderForm gesetzt.
+let refreshOrderSorts = null;
 function initLiveStatus() {
   const el = document.getElementById('live-status');
   if (!el) return;
@@ -1994,7 +2001,9 @@ function renderTodayLunch(weekData, today) {
   } else {
     // Heute nicht eingetragen, aber die Woche hat anderswo Eintraege —
     // ehrlich kommunizieren statt "kein Mittagstisch" zu behaupten.
-    if (emptyText) emptyText.innerHTML = 'Die heutige Karte wird gerade aktualisiert. <a href="tel:+494022692891">040 / 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.';
+    if (emptyText) emptyText.innerHTML = (alsterLang() === 'en')
+      ? 'Today’s menu is being updated. <a href="tel:+494022692891">040 / 22 69 28 91</a> — we’ll gladly tell you today’s dish.'
+      : 'Die heutige Karte wird gerade aktualisiert. <a href="tel:+494022692891">040 / 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.';
     todayBox.hidden = true;
     emptyBox.hidden = false;
   }
@@ -2027,14 +2036,15 @@ function renderWeekList(weekData, monday, today) {
     const isToday = isSameDay(date, today);
     const li = document.createElement('li');
     li.className = 'lunch-day' + (isToday ? ' is-today' : '');
+    const en = alsterLang() === 'en';
     let body;
     if (entry?.closed) {
-      body = '<span class="lunch-closed">Kein Mittagstisch</span>';
+      body = `<span class="lunch-closed">${en ? 'No lunch today' : 'Kein Mittagstisch'}</span>`;
     } else if (entry?.dish) {
       body = `<span class="lunch-day-dish">${escapeHtml(entry.dish)}</span>`;
       if (entry.side) body += `<span class="lunch-day-side">${escapeHtml(entry.side)}</span>`;
     } else {
-      body = '<span class="lunch-pending">— folgt in Kürze —</span>';
+      body = `<span class="lunch-pending">${en ? '— coming soon —' : '— folgt in Kürze —'}</span>`;
     }
     li.innerHTML = `
       <div class="lunch-day-head">
@@ -2072,17 +2082,7 @@ function initOrderForm() {
   if (!form) return;
   const MIN_ORDER = 10;
 
-  // Falls der Inhaber eigene Sorten gepflegt hat: Liste daraus neu aufbauen.
-  // Sonst bleibt die statische Standard-Liste im HTML stehen.
   const sortListEl = document.getElementById('broetchen-list');
-  let storedItems = null;
-  try { storedItems = window.alsterDb?.get('broetchen-items'); } catch {}
-  if (sortListEl && Array.isArray(storedItems) && storedItems.length) {
-    const valid = storedItems.filter(it => it && typeof it.name === 'string' && it.name.trim());
-    if (valid.length) sortListEl.innerHTML = valid.map(buildBroetchenRow).join('');
-  }
-
-  const rows = Array.from(document.querySelectorAll('.broetchen-row'));
   const countEl = document.getElementById('order-count');
   const listEl = document.getElementById('order-summary-list');
   const minNote = document.getElementById('order-min-note');
@@ -2100,10 +2100,14 @@ function initOrderForm() {
   };
   setDefaultDate();
 
-  const getItems = () => rows
+  // Zeilen immer frisch abfragen (die Sorten-Liste kann neu aufgebaut werden,
+  // wenn der Inhaber die Sorten ändert) — so bleibt getItems korrekt.
+  const getRows = () => Array.from(document.querySelectorAll('.broetchen-row'));
+
+  const getItems = () => getRows()
     .map(row => ({
-      name: (row.dataset.name || '').replace(/&amp;/g, '&'),
-      qty: parseInt(row.querySelector('.qty-value').textContent, 10) || 0
+      name: row.dataset.name || '',
+      qty: parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0
     }))
     .filter(it => it.qty > 0);
 
@@ -2132,22 +2136,39 @@ function initOrderForm() {
     if (submitBtn) submitBtn.disabled = !ok;
   };
 
-  // Stepper-Buttons
-  rows.forEach(row => {
-    const valueEl = row.querySelector('.qty-value');
-    row.querySelectorAll('.qty-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const step = parseInt(btn.dataset.step, 10) || 0;
-        const next = Math.max(0, Math.min(200, (parseInt(valueEl.textContent, 10) || 0) + step));
-        valueEl.textContent = String(next);
-        row.classList.toggle('is-active', next > 0);
-        // Nach einer erfolgreichen Bestellung den Erfolgs-Zustand zuruecksetzen
-        submitBtn?.classList.remove('is-success');
-        render();
-      });
+  // Mengen-Stepper per Event-Delegation auf der Liste — überlebt ein
+  // Neu-Aufbauen der Sorten-Liste ohne doppelte Handler.
+  if (sortListEl) {
+    sortListEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.qty-btn');
+      if (!btn || !sortListEl.contains(btn)) return;
+      const row = btn.closest('.broetchen-row');
+      const valueEl = row?.querySelector('.qty-value');
+      if (!valueEl) return;
+      const step = parseInt(btn.dataset.step, 10) || 0;
+      const next = Math.max(0, Math.min(200, (parseInt(valueEl.textContent, 10) || 0) + step));
+      valueEl.textContent = String(next);
+      row.classList.toggle('is-active', next > 0);
+      // Nach einer erfolgreichen Bestellung den Erfolgs-Zustand zuruecksetzen
+      submitBtn?.classList.remove('is-success');
+      render();
     });
-  });
-  render();
+  }
+
+  // Sorten-Liste aus den (ggf. vom Inhaber gepflegten) Daten aufbauen.
+  // Erneut aufrufbar: nach der Backend-Hydration und bei Live-Änderungen,
+  // damit neue Besucher sofort die aktuellen Sorten sehen.
+  const applySorts = () => {
+    let items = null;
+    try { items = window.alsterDb?.get('broetchen-items'); } catch {}
+    if (sortListEl && Array.isArray(items)) {
+      const valid = items.filter(it => it && typeof it.name === 'string' && it.name.trim());
+      if (valid.length) sortListEl.innerHTML = valid.map(buildBroetchenRow).join('');
+    }
+    render();
+  };
+  refreshOrderSorts = applySorts;
+  applySorts();
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -2192,7 +2213,7 @@ function initOrderForm() {
       if (submitBtn) submitBtn.classList.add('is-success');
       setFormStatus(status, en ? `Thank you! Your order of ${total} filled rolls has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} belegte Brötchen ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
       try { form.reset(); } catch {}
-      rows.forEach(row => { row.querySelector('.qty-value').textContent = '0'; row.classList.remove('is-active'); });
+      getRows().forEach(row => { const v = row.querySelector('.qty-value'); if (v) v.textContent = '0'; row.classList.remove('is-active'); });
       setDefaultDate();
       render();
     } else {
