@@ -327,6 +327,8 @@
     'Kalte Getränke': 'Cold drinks',
     'Alle Preise in Euro inkl. MwSt. Änderungen vorbehalten. Brot, Brötchen, Croissants und Franzbrötchen kommen frisch aus unserer eigenen Backstube.':
       'All prices in euros incl. VAT. Subject to change. Bread, rolls, croissants and Franzbrötchen come fresh from our own bakery.',
+    'Allergene & Zusatzstoffe: Angaben zu allergenen Zutaten (gemäß LMIV) und kennzeichnungspflichtigen Zusatzstoffen erhalten Sie gern bei uns im Café oder telefonisch unter 040 – 22 69 28 91.':
+      'Allergens & additives: information on allergenic ingredients (per EU food-information law) and declarable additives is available in the café or by phone at 040 – 22 69 28 91.',
     'Preis klein / groß. Alle Kaffeesorten auch koffeinfrei erhältlich.': 'Price small / large. All coffees also available decaffeinated.',
     /* Frühstück-Gerichte */
     'Klassik': 'Classic',
