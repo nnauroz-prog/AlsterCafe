@@ -1560,6 +1560,39 @@ function bindInboxHandlers(container, { onMark, onDel, onNote }) {
   container.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', () => onMark(b.dataset.mark)));
   container.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => onDel(b.dataset.del)));
   container.querySelectorAll('[data-note]').forEach(t => t.addEventListener('change', () => onNote(t.dataset.note, t.value)));
+  container.querySelectorAll('[data-confirm]').forEach(b => b.addEventListener('click', () => onSendConfirmation(b.dataset.confirm, b.dataset.ctype)));
+}
+
+/* Schönes deutsches Datum für die Bestätigungs-Mail. */
+function niceDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  } catch { return iso; }
+}
+
+/* Bestätigungs-E-Mail an den Gast senden (ein Knopf, eine Bestätigung). */
+async function onSendConfirmation(id, ctype) {
+  const key = ctype === 'order' ? 'orders' : 'reservations';
+  const list = window.alsterDb?.get(key) || [];
+  const it = (Array.isArray(list) ? list : []).find(x => x.id === id);
+  if (!it) return;
+  if (!it.email) { alert('Für diese Anfrage ist keine E-Mail-Adresse hinterlegt.'); return; }
+  if (!confirm(`Bestätigungs-E-Mail an ${it.email} senden?`)) return;
+
+  const payload = ctype === 'order'
+    ? { type: 'order', name: it.name, email: it.email, pickupDate: niceDate(it.pickupDate), pickupTime: it.pickupTime, total: it.totalCount, items: it.items }
+    : { type: 'reservation', name: it.name, email: it.email, date: niceDate(it.date), time: it.time, persons: it.persons };
+
+  const res = await window.alsterDb?.sendConfirmation(payload);
+  if (res && res.ok) {
+    alert(`Bestätigung an ${it.email} wurde gesendet. ✅`);
+  } else {
+    alert('Bestätigung konnte nicht gesendet werden.\n\n' + ((res && res.error) || 'Unbekannter Fehler') +
+      '\n\nHinweis: Der E-Mail-Versand muss evtl. erst eingerichtet werden (siehe BENACHRICHTIGUNG.md).');
+  }
 }
 
 async function onSaveAnfrageNote(id, note) {
@@ -1608,6 +1641,10 @@ function buildAnfrageItem(r) {
                 <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
                 Als erledigt markieren
               </button>`}
+          ${r.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm" data-confirm="${escapeAttr(r.id)}" data-ctype="reservation">
+            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
+            Bestätigung senden
+          </button>` : ''}
           <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(r.id)}" aria-label="Anfrage löschen">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
             Löschen
@@ -1773,6 +1810,10 @@ function buildOrderItem(o) {
                 <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
                 Als erledigt markieren
               </button>`}
+          ${o.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm" data-confirm="${escapeAttr(o.id)}" data-ctype="order">
+            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
+            Bestätigung senden
+          </button>` : ''}
           <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(o.id)}" aria-label="Bestellung löschen">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
             Löschen

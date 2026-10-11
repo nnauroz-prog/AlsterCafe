@@ -3126,6 +3126,17 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 .anfrage-btn-mark.is-primary:hover { background: #246130; border-color: #246130; }
 .anfrage-btn-mark.is-primary .ico { color: currentColor; }
+.anfrage-btn-confirm {
+  color: var(--bean);
+  border-color: var(--gold);
+  background: rgba(184, 137, 62, 0.10);
+}
+.anfrage-btn-confirm:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--bean);
+}
+.anfrage-btn-confirm .ico { color: currentColor; }
 .anfrage-btn-del {
   color: #B53A2E;
   border-color: rgba(181, 58, 46, 0.32);

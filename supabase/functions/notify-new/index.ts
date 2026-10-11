@@ -58,7 +58,11 @@ Deno.serve(async (req) => {
     return new Response("ignored", { status: 200 });
   }
 
-  let ownerSubject = "", ownerHtml = "", guestSubject = "", guestHtml = "";
+  // Hinweis: Diese Funktion benachrichtigt NUR den Inhaber über eine neue
+  // Anfrage. Die Bestätigung an den GAST verschickt der Inhaber bewusst manuell
+  // per Knopf im Mitgliederbereich (Edge Function 'send-confirmation'), damit er
+  // vorher die Verfügbarkeit prüfen kann.
+  let ownerSubject = "", ownerHtml = "";
 
   if (table === "reservations") {
     ownerSubject = `Neue Reservierungsanfrage – ${r.name || "ohne Name"}`;
@@ -71,14 +75,6 @@ Deno.serve(async (req) => {
       <strong>E-Mail:</strong> ${esc(r.email)}<br>
       <strong>Nachricht:</strong> ${esc(r.message) || "—"}</p>
       <p>${ADMIN}</p>`;
-    guestSubject = "Ihre Reservierungsanfrage beim Alstercafé";
-    guestHtml = `
-      <p>Guten Tag ${esc(r.name)},</p>
-      <p>vielen Dank für Ihre Reservierungsanfrage für <strong>${esc(r.date)} ${esc(r.time)}</strong>
-      (${esc(r.persons)}). Sie ist bei uns eingegangen.</p>
-      <p>Wir melden uns zur Bestätigung telefonisch oder per E-Mail bei Ihnen. Dies ist eine
-      automatische Eingangsbestätigung — noch keine verbindliche Zusage.</p>
-      <p>${FOOT}</p>`;
   } else {
     const items = Array.isArray(r.items)
       ? r.items.map((it: any) => `${esc(it.qty)}× ${esc(it.name)}`).join("<br>")
@@ -94,21 +90,8 @@ Deno.serve(async (req) => {
       <p><strong>Bestellung:</strong><br>${items}</p>
       <p><strong>Hinweis:</strong> ${esc(r.notes) || "—"}</p>
       <p>${ADMIN}</p>`;
-    guestSubject = "Ihre Brötchen-Bestellung beim Alstercafé";
-    guestHtml = `
-      <p>Guten Tag ${esc(r.name)},</p>
-      <p>vielen Dank für Ihre Vorbestellung über <strong>${esc(r.total_count)} belegte Brötchen</strong>
-      zur Abholung am <strong>${esc(r.pickup_date)} ${esc(r.pickup_time)}</strong>. Sie ist bei uns eingegangen.</p>
-      <p>Wir bestätigen telefonisch oder per E-Mail. Dies ist eine automatische Eingangsbestätigung.</p>
-      <p>${FOOT}</p>`;
   }
 
-  // 1) Inhaber benachrichtigen
   await sendMail(MAIL_TO, ownerSubject, ownerHtml);
-  // 2) Eingangsbestätigung an den Gast (nur wenn E-Mail angegeben)
-  if (r.email && String(r.email).includes("@")) {
-    await sendMail(String(r.email), guestSubject, guestHtml);
-  }
-
   return new Response("ok", { status: 200 });
 });
