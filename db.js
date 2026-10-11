@@ -522,6 +522,33 @@
     return readyPromise;
   }
 
+  /* ---------- Bestätigungs-E-Mail an den Gast (Edge Function) ----------
+     Ruft die Supabase Edge Function 'send-confirmation' mit dem Session-Token
+     des eingeloggten Inhabers auf. Gibt { ok, error } zurück. */
+  async function sendConfirmation(payload) {
+    if (!useSupabase) return { ok: false, error: 'Nur mit aktivem Backend verfügbar (Demo-Modus).' };
+    try {
+      const { data } = await sb.auth.getSession();
+      const token = data?.session?.access_token;
+      if (!token) return { ok: false, error: 'Nicht angemeldet.' };
+      const res = await fetch(`${cfg.supabaseUrl}/functions/v1/send-confirmation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'apikey': cfg.supabaseAnonKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      let body = {};
+      try { body = await res.json(); } catch {}
+      if (!res.ok) return { ok: false, error: body.error || `Fehler ${res.status}` };
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: (e && e.message) ? e.message : String(e) };
+    }
+  }
+
   window.alsterDb = {
     isProd: useSupabase,
     ready,
@@ -544,6 +571,8 @@
     listOrders,
     updateOrderStatus,
     updateOrderNote,
-    deleteOrder
+    deleteOrder,
+    // Bestätigungs-E-Mail an den Gast
+    sendConfirmation
   };
 })();
