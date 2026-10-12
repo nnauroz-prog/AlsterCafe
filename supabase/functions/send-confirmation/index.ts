@@ -14,6 +14,10 @@
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const MAIL_FROM = Deno.env.get("MAIL_FROM") || "Alstercafé <onboarding@resend.dev>";
+// Antworten des Gastes auf die Bestätigungsmail sollen in einer lesbaren
+// Inhaber-Inbox landen (nicht bei der "nur-senden"-Absenderadresse). REPLY_TO
+// setzen, sonst Fallback auf MAIL_TO; fehlt beides, wird kein reply_to gesetzt.
+const REPLY_TO = Deno.env.get("REPLY_TO") || Deno.env.get("MAIL_TO") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
@@ -130,11 +134,13 @@ Deno.serve(async (req) => {
   }
 
   const { subject, html } = renderEmail(body?.type === "order" ? "order" : "reservation", body);
+  const mail: Record<string, unknown> = { from: MAIL_FROM, to: [to], subject, html };
+  if (REPLY_TO) mail.reply_to = REPLY_TO;
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: MAIL_FROM, to: [to], subject, html }),
+      body: JSON.stringify(mail),
     });
     if (!res.ok) {
       const t = await res.text();

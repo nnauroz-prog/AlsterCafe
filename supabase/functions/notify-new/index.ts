@@ -27,13 +27,17 @@ function esc(v: unknown): string {
   return String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
 }
 
-async function sendMail(to: string, subject: string, html: string): Promise<void> {
+async function sendMail(to: string, subject: string, html: string, replyTo?: string): Promise<void> {
   if (!RESEND_API_KEY) { console.error("RESEND_API_KEY fehlt – kein Versand"); return; }
   try {
+    const mail: Record<string, unknown> = { from: MAIL_FROM, to: [to], subject, html };
+    // reply_to = Gast-Adresse: der Inhaber kann in seinem Mailprogramm direkt
+    // auf "Antworten" tippen und schreibt sofort an den Gast.
+    if (replyTo && replyTo.includes("@")) mail.reply_to = replyTo;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: MAIL_FROM, to: [to], subject, html }),
+      body: JSON.stringify(mail),
     });
     if (!res.ok) console.error("Resend-Fehler", res.status, await res.text());
     else console.log("Mail gesendet an", to);
@@ -92,6 +96,6 @@ Deno.serve(async (req) => {
       <p>${ADMIN}</p>`;
   }
 
-  await sendMail(MAIL_TO, ownerSubject, ownerHtml);
+  await sendMail(MAIL_TO, ownerSubject, ownerHtml, typeof r.email === "string" ? r.email : undefined);
   return new Response("ok", { status: 200 });
 });
