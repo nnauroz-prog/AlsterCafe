@@ -1684,14 +1684,15 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-xs);
 }
-.about-aside::before {
+.about-aside blockquote::before {
   content: '\201E';
   display: block;
   font-family: 'Fraunces', serif;
-  font-size: 4rem;
-  line-height: .8;
-  color: var(--gold-soft);
-  margin-bottom: 8px;
+  font-size: 4.5rem;
+  line-height: .5;
+  color: var(--gold);
+  opacity: .7;
+  margin-bottom: 2px;
 }
 .about-aside blockquote {
   margin: 0; padding: 0;
@@ -5710,12 +5711,9 @@ html { background: var(--paper); }
     radial-gradient(800px 200px at 0% 0%, rgba(184, 137, 62, 0.12), transparent 60%),
     var(--cream);
 }
-.about-aside::before {
-  font-size: 6.5rem;
-  line-height: 0.6;
-  color: var(--gold);
-  opacity: 0.7;
-  margin-bottom: -10px;
+.about-aside blockquote::before {
+  font-size: 5.5rem;
+  line-height: 0.5;
 }
 .about-aside blockquote {
   font-size: clamp(1.4rem, 2.4vw, 1.85rem);
