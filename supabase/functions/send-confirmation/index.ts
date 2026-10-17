@@ -2,21 +2,27 @@
 // ---------------------------------------------------------------------------
 // Wird vom Mitgliederbereich per Knopf aufgerufen ("Bestätigung senden") und
 // schickt dem Gast eine professionell gestaltete HTML-Bestätigungsmail (mit
-// Logo & Café-Branding) über Resend.
+// Logo & Café-Branding) über das EIGENE STRATO-Postfach per SMTP.
 //
 // Nur für eingeloggte Inhaber: der Aufruf muss ein gültiges Supabase-User-
 // Token (Authorization: Bearer …) mitbringen; das wird gegen die Auth-API
 // geprüft. Der öffentliche anon-Key allein genügt NICHT.
 //
-// Secrets: RESEND_API_KEY, MAIL_FROM (Stufe 2: reservierung@alstercafe.de).
+// Versand: smtp.strato.de, Port 465 (SSL/TLS), Login = volle Adresse +
+// Postfach-Passwort. From MUSS = SMTP_USER (info@alstercafe.de) sein.
+// Secrets: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM, [REPLY_TO].
 // SUPABASE_URL / SUPABASE_ANON_KEY werden von Supabase automatisch bereitgestellt.
 // ---------------------------------------------------------------------------
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const MAIL_FROM = Deno.env.get("MAIL_FROM") || "Alstercafé <onboarding@resend.dev>";
-// Antworten des Gastes auf die Bestätigungsmail sollen in einer lesbaren
-// Inhaber-Inbox landen (nicht bei der "nur-senden"-Absenderadresse). REPLY_TO
-// setzen, sonst Fallback auf MAIL_TO; fehlt beides, wird kein reply_to gesetzt.
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp.strato.de";
+const SMTP_PORT = Number(Deno.env.get("SMTP_PORT") || "465");
+const SMTP_USER = Deno.env.get("SMTP_USER") || "";
+const SMTP_PASS = Deno.env.get("SMTP_PASS") || "";
+const MAIL_FROM = Deno.env.get("MAIL_FROM") || "Alstercafé <info@alstercafe.de>";
+// Antworten des Gastes auf die Bestätigungsmail sollen beim Inhaber landen.
+// REPLY_TO setzen, sonst Fallback auf MAIL_TO; fehlt beides, wird kein reply_to gesetzt.
 const REPLY_TO = Deno.env.get("REPLY_TO") || Deno.env.get("MAIL_TO") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -122,8 +128,8 @@ Deno.serve(async (req) => {
   if (!(await isOwner(req))) {
     return new Response(JSON.stringify({ error: "nicht angemeldet" }), { status: 401, headers: { ...CORS, "Content-Type": "application/json" } });
   }
-  if (!RESEND_API_KEY) {
-    return new Response(JSON.stringify({ error: "E-Mail-Versand noch nicht eingerichtet (RESEND_API_KEY fehlt)." }), { status: 503, headers: { ...CORS, "Content-Type": "application/json" } });
+  if (!SMTP_USER || !SMTP_PASS) {
+    return new Response(JSON.stringify({ error: "E-Mail-Versand noch nicht eingerichtet (SMTP_USER/SMTP_PASS fehlt)." }), { status: 503, headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
   let body: any;
@@ -134,20 +140,22 @@ Deno.serve(async (req) => {
   }
 
   const { subject, html } = renderEmail(body?.type === "order" ? "order" : "reservation", body);
-  const mail: Record<string, unknown> = { from: MAIL_FROM, to: [to], subject, html };
-  if (REPLY_TO) mail.reply_to = REPLY_TO;
+  const client = new SMTPClient({
+    connection: { hostname: SMTP_HOST, port: SMTP_PORT, tls: true, auth: { username: SMTP_USER, password: SMTP_PASS } },
+  });
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify(mail),
+    await client.send({
+      from: MAIL_FROM,
+      to: [to],
+      replyTo: REPLY_TO || undefined,
+      subject,
+      content: "auto",
+      html,
     });
-    if (!res.ok) {
-      const t = await res.text();
-      return new Response(JSON.stringify({ error: "Versand fehlgeschlagen", detail: t }), { status: 502, headers: { ...CORS, "Content-Type": "application/json" } });
-    }
   } catch (e) {
+    try { await client.close(); } catch (_) { /* ignore */ }
     return new Response(JSON.stringify({ error: "Versand fehlgeschlagen", detail: String(e) }), { status: 502, headers: { ...CORS, "Content-Type": "application/json" } });
   }
+  try { await client.close(); } catch (_) { /* ignore */ }
   return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...CORS, "Content-Type": "application/json" } });
 });
