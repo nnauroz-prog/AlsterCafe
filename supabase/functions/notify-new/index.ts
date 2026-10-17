@@ -1,23 +1,30 @@
 // Supabase Edge Function: notify-new
 // ---------------------------------------------------------------------------
 // Wird per Database-Webhook bei INSERT in `reservations` / `orders` aufgerufen
-// und verschickt:
-//   1. eine Benachrichtigung an den Inhaber (MAIL_TO)
-//   2. eine automatische Eingangsbestätigung an den Gast (record.email), falls
-//      vorhanden und die Absender-Domain in Resend verifiziert ist.
+// und verschickt eine Benachrichtigung an den Inhaber (MAIL_TO).
 //
-// Versand über Resend (https://resend.com). API-Key als Supabase-Secret
-// RESEND_API_KEY. Absender/Empfänger über Secrets steuerbar (siehe unten).
+// Versand über das EIGENE STRATO-Postfach per SMTP (kein Fremddienst):
+//   smtp.strato.de, Port 465 (SSL/TLS), Login = volle Adresse + Postfach-Passwort.
+// Dadurch kommt die Mail von info@alstercafe.de (offiziell, gute Zustellbarkeit
+// über STRATOs eigenes SPF/DKIM) und es ist keine DNS-/Domain-Verifizierung nötig.
+//
+// Secrets (Supabase → Edge Functions → Secrets):
+//   SMTP_HOST (Standard smtp.strato.de), SMTP_PORT (Standard 465),
+//   SMTP_USER = info@alstercafe.de, SMTP_PASS = Postfach-Passwort,
+//   MAIL_FROM = "Alstercafé <info@alstercafe.de>" (From MUSS = SMTP_USER sein),
+//   MAIL_TO = info@alstercafe.de, optional REPLY_TO, optional WEBHOOK_SECRET.
 //
 // Robust: ein fehlgeschlagener Mailversand wird nur geloggt, nie geworfen —
 // die Anfrage selbst liegt bereits sicher in der Datenbank.
 // ---------------------------------------------------------------------------
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-// Stufe 1 (ohne verifizierte Domain): "Alstercafé <onboarding@resend.dev>".
-// Stufe 2 (Domain alstercafe.de in Resend verifiziert): auf
-// "Alstercafé <reservierung@alstercafe.de>" umstellen (nur dieses Secret ändern).
-const MAIL_FROM = Deno.env.get("MAIL_FROM") || "Alstercafé <onboarding@resend.dev>";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp.strato.de";
+const SMTP_PORT = Number(Deno.env.get("SMTP_PORT") || "465");
+const SMTP_USER = Deno.env.get("SMTP_USER") || "";
+const SMTP_PASS = Deno.env.get("SMTP_PASS") || "";
+const MAIL_FROM = Deno.env.get("MAIL_FROM") || "Alstercafé <info@alstercafe.de>";
 const MAIL_TO = Deno.env.get("MAIL_TO") || "info@alstercafe.de";
 // Optionaler Schutz: wenn gesetzt, muss der Webhook den Header
 // "x-webhook-secret" mit genau diesem Wert senden.
@@ -27,26 +34,30 @@ function esc(v: unknown): string {
   return String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
 }
 
-async function sendMail(to: string, subject: string, html: string, replyTo?: string): Promise<void> {
-  if (!RESEND_API_KEY) { console.error("RESEND_API_KEY fehlt – kein Versand"); return; }
+async function sendMail(subject: string, html: string, replyTo?: string): Promise<void> {
+  if (!SMTP_USER || !SMTP_PASS) { console.error("SMTP-Zugang (SMTP_USER/SMTP_PASS) fehlt – kein Versand"); return; }
+  const client = new SMTPClient({
+    connection: { hostname: SMTP_HOST, port: SMTP_PORT, tls: true, auth: { username: SMTP_USER, password: SMTP_PASS } },
+  });
   try {
-    const mail: Record<string, unknown> = { from: MAIL_FROM, to: [to], subject, html };
-    // reply_to = Gast-Adresse: der Inhaber kann in seinem Mailprogramm direkt
-    // auf "Antworten" tippen und schreibt sofort an den Gast.
-    if (replyTo && replyTo.includes("@")) mail.reply_to = replyTo;
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify(mail),
+    await client.send({
+      from: MAIL_FROM,
+      to: MAIL_TO,
+      // reply_to = Gast-Adresse: der Inhaber kann in seinem Mailprogramm direkt
+      // auf "Antworten" tippen und schreibt sofort an den Gast.
+      replyTo: (replyTo && replyTo.includes("@")) ? replyTo : undefined,
+      subject,
+      content: "auto",
+      html,
     });
-    if (!res.ok) console.error("Resend-Fehler", res.status, await res.text());
-    else console.log("Mail gesendet an", to);
+    console.log("Mail gesendet an", MAIL_TO);
   } catch (e) {
-    console.error("Mailversand fehlgeschlagen an", to, e);
+    console.error("Mailversand fehlgeschlagen an", MAIL_TO, e);
+  } finally {
+    try { await client.close(); } catch (_) { /* ignore */ }
   }
 }
 
-const FOOT = "Herzliche Grüße<br>Ihr Alstercafé · Ifflandstraße 45 · 22087 Hamburg · 040 – 22 69 28 91";
 const ADMIN = "Im Mitgliederbereich ansehen: https://alstercafe.de/admin.html";
 
 Deno.serve(async (req) => {
@@ -96,6 +107,6 @@ Deno.serve(async (req) => {
       <p>${ADMIN}</p>`;
   }
 
-  await sendMail(MAIL_TO, ownerSubject, ownerHtml, typeof r.email === "string" ? r.email : undefined);
+  await sendMail(ownerSubject, ownerHtml, typeof r.email === "string" ? r.email : undefined);
   return new Response("ok", { status: 200 });
 });
