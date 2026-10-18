@@ -1816,8 +1816,16 @@ function initPageTransitions(reduceMotion) {
       { opacity: 0.001, transform: 'translateY(6px)' },
       { opacity: 1, transform: 'translateY(0)' }
     ],
-    { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' }
+    // fill 'backwards' statt 'both': ein dauerhaft gesetztes transform auf <html>
+    // macht <html> zum Bezugsrahmen fuer position:fixed — dann oeffnete das
+    // mobile Menue weiter unten auf der Seite ausserhalb des Bildschirms.
+    { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }
   );
+
+  // Zurueck-Taste (Seite aus dem Browser-Cache): Ausblenden wieder aufheben,
+  // sonst bliebe die Seite unsichtbar.
+  let pageLeaveAnim = null;
+  window.addEventListener('pageshow', () => { try { pageLeaveAnim?.cancel(); } catch {} pageLeaveAnim = null; });
 
   // Fade-Out bei internem Link-Klick
   const sameOrigin = (href) => {
@@ -1849,7 +1857,7 @@ function initPageTransitions(reduceMotion) {
     }
 
     e.preventDefault();
-    document.documentElement.animate(
+    pageLeaveAnim = document.documentElement.animate(
       [
         { opacity: 1, transform: 'translateY(0)' },
         { opacity: 0.001, transform: 'translateY(-4px)' }
