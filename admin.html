@@ -10,9 +10,9 @@
   <meta name="theme-color" content="#3D2415" />
   <link rel="icon" type="image/png" href="image.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r163" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r163" />
-  <script>(function(){var V='2026-05-10-r163';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r165" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r165" />
+  <script>(function(){var V='2026-05-10-r165';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -199,6 +199,16 @@
               <span class="overview-card-badge" id="overview-orders-badge" hidden></span>
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
             </button>
+
+            <button class="overview-card" type="button" data-tab="berliner">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-bag"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Berliner-Vorbestellung</span>
+                <span class="overview-card-desc" id="overview-berliner-desc">Aktion an/aus, Zeitraum und Sorten</span>
+              </span>
+              <span class="overview-card-badge is-live" id="overview-berliner-badge" hidden>aktiv</span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
           </div>
 
           <p class="overview-group-label">Selten ändern</p>
@@ -280,6 +290,9 @@
             <svg class="ico ico-sm"><use href="#i-bag"/></svg>
             Bestellungen
             <span class="tab-badge" id="tab-orders-badge" hidden></span>
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="berliner">
+            Berliner
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="menu">
             Speisekarte
@@ -737,6 +750,75 @@
           </div>
         </div>
 
+
+        <!-- TAB: BERLINER-VORBESTELLUNG (Saison-Aktion, z. B. Silvester) -->
+        <div class="admin-panel" id="panel-berliner" role="tabpanel" hidden>
+          <div class="panel-card wide">
+            <h3>Berliner-Vorbestellung</h3>
+            <p class="panel-card-sub">
+              Wenn eingeschaltet, erscheint „Berliner-Bestellservice“ im Menü der Webseite
+              und eine Ankündigung auf der Startseite — aber nur im eingestellten Zeitraum.
+              Eingehende Vorbestellungen landen unter „Bestellungen“ (mit Kennzeichen „Berliner“).
+            </p>
+            <details class="help-box">
+              <summary>Hilfe: So funktioniert die Aktion</summary>
+              <div class="help-box-body">
+                <ul>
+                  <li><strong>Einschalten</strong> → Haken setzen und „Speichern“ klicken.</li>
+                  <li><strong>Bestellbar ab / bis:</strong> Nur in diesem Zeitraum sind Menüpunkt, Startseiten-Hinweis und Formular zu sehen. Leer lassen = sofort bzw. ohne Ende.</li>
+                  <li><strong>Abholung von / bis:</strong> Nur diese Tage kann der Kunde als Abholdatum wählen (z. B. 30.12. bis 31.12.).</li>
+                  <li>Nach Silvester einfach den Haken entfernen — oder „Bestellbar bis“ setzen, dann verschwindet alles automatisch.</li>
+                </ul>
+              </div>
+            </details>
+            <form id="berliner-settings-form" class="berliner-settings">
+              <label class="berliner-toggle">
+                <input type="checkbox" id="berliner-active" />
+                <span>Berliner-Vorbestellung auf der Webseite anzeigen</span>
+              </label>
+              <div class="berliner-dates">
+                <label><span>Bestellbar ab</span><input type="date" id="berliner-order-from" /></label>
+                <label><span>Bestellbar bis</span><input type="date" id="berliner-order-to" /></label>
+                <label><span>Abholung von</span><input type="date" id="berliner-pickup-from" /></label>
+                <label><span>Abholung bis</span><input type="date" id="berliner-pickup-to" /></label>
+              </div>
+              <label class="berliner-field"><span>Überschrift auf der Startseite</span>
+                <input type="text" id="berliner-title" maxlength="80" placeholder="Berliner für Silvester vorbestellen" /></label>
+              <label class="berliner-field"><span>Kurzer Ankündigungstext</span>
+                <textarea id="berliner-text" rows="2" maxlength="300" placeholder="Frisch aus unserer Backstube — jetzt vorbestellen und zur Abholung bereitlegen lassen."></textarea></label>
+              <p class="berliner-live" id="berliner-live"></p>
+              <div class="save-bar inline">
+                <p class="save-status" id="berliner-settings-status"></p>
+                <div class="save-actions">
+                  <a class="btn btn-link" href="berliner.html" target="_blank" rel="noopener">Seite ansehen</a>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel-card wide">
+            <h3>Berliner-Sorten &amp; Preise</h3>
+            <p class="panel-card-sub">Pro Zeile Sorte, kurze Beschreibung (z. B. Füllung) und Preis pro Stück.</p>
+            <form id="berliner-items-form">
+              <div class="broetchen-editor" id="berliner-editor"></div>
+              <button type="button" class="btn btn-link" id="berliner-add">+ Sorte hinzufügen</button>
+              <div class="save-bar inline">
+                <p class="save-status" id="berliner-items-status"></p>
+                <div class="save-actions">
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Sorten speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
         <!-- TAB: ACCOUNT -->
         <div class="admin-panel" id="panel-account" role="tabpanel" hidden>
           <div class="panel-card">
@@ -873,9 +955,9 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r163" defer></script>
-  <script src="db.js?v=2026-05-10-r163" defer></script>
-  <script src="menudata.js?v=2026-05-10-r163" defer></script>
-  <script src="admin.js?v=2026-05-10-r163" defer></script>
+  <script src="config.js?v=2026-05-10-r165" defer></script>
+  <script src="db.js?v=2026-05-10-r165" defer></script>
+  <script src="menudata.js?v=2026-05-10-r165" defer></script>
+  <script src="admin.js?v=2026-05-10-r165" defer></script>
 </body>
 </html>

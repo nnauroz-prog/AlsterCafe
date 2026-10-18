@@ -158,6 +158,11 @@ async function init() {
   dom.broetchenAdd?.addEventListener('click', () => addBroetchenRow());
   dom.broetchenReset?.addEventListener('click', onResetBroetchen);
 
+  // Berliner-Vorbestellung
+  document.getElementById('berliner-settings-form')?.addEventListener('submit', onSaveBerlinerSettings);
+  document.getElementById('berliner-items-form')?.addEventListener('submit', onSaveBerlinerItems);
+  document.getElementById('berliner-add')?.addEventListener('click', () => addBerlinerRow());
+
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
   document.getElementById('reset-content')?.addEventListener('click', onResetContent);
@@ -356,6 +361,7 @@ async function showDashboard() {
   renderDesignEditor();
   renderActivityLog();
   renderBroetchenEditor();
+  renderBerlinerAdmin();
   refreshAnfragen();
   refreshOrders();
   // Live-Update wenn ueber das oeffentliche Formular etwas reinkommt
@@ -1868,7 +1874,9 @@ function buildOrderItem(o) {
   const dateLabel = formatAnfrageDate(o.pickupDate, o.pickupTime);
   const isDone = o.status === 'done';
   const tel = o.phone ? `tel:${o.phone.replace(/\s+/g,'')}` : '';
-  const mailSubject = encodeURIComponent('Ihre Brötchen-Bestellung – Alstercafé');
+  const isBerliner = Array.isArray(o.items) && o.items.some(it => it && it.kind === 'berliner');
+  const unit = isBerliner ? 'Berliner' : 'Brötchen';
+  const mailSubject = encodeURIComponent(`Ihre ${unit}-Bestellung – Alstercafé`);
   const mailBody = encodeURIComponent(`Guten Tag ${o.name || ''},\n\nvielen Dank für Ihre Bestellung. Wir haben sie notiert.\n\nHerzliche Grüße\nAlstercafé`);
   const mailLink = o.email ? `mailto:${escapeAttr(encodeURIComponent(o.email).replace(/%40/g, '@'))}?subject=${mailSubject}&body=${mailBody}` : '';
   const lineItems = Array.isArray(o.items) ? o.items : [];
@@ -1889,7 +1897,8 @@ function buildOrderItem(o) {
       <div class="anfrage-head">
         <div>
           <span class="anfrage-name">${escapeHtml(o.name || 'Ohne Namen')}</span>
-          <span class="anfrage-pers">· ${escapeHtml(String(o.totalCount || 0))} Brötchen</span>
+          <span class="anfrage-pers">· ${escapeHtml(String(o.totalCount || 0))} ${unit}</span>
+          ${isBerliner ? '<span class="anfrage-tag is-berliner">Berliner</span>' : ''}
         </div>
         ${isDone
           ? '<span class="anfrage-tag">Erledigt</span>'
@@ -2032,6 +2041,127 @@ function onResetBroetchen() {
     renderBroetchenEditor();
     setStatus(dom.broetchenStatus, 'Auf Standard zurückgesetzt.', 'ok');
   });
+}
+
+/* ---------- Berliner-Vorbestellung (Saison-Aktion) ---------- */
+const DEFAULT_BERLINER = [
+  { name: 'Klassisch', desc: 'Mit Konfitüre gefüllt, mit Zucker' },
+  { name: 'Vanille',   desc: 'Mit Vanillecreme gefüllt' },
+  { name: 'Schoko',    desc: 'Mit Schokocreme gefüllt' }
+];
+const bEl = id => document.getElementById(id);
+const todayIso = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const fmtIsoDe = iso => {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : '';
+};
+
+function renderBerlinerAdmin() {
+  const st = window.alsterDb?.get('berliner-settings') || {};
+  if (bEl('berliner-active')) bEl('berliner-active').checked = !!st.active;
+  [['berliner-order-from', 'orderFrom'], ['berliner-order-to', 'orderTo'],
+   ['berliner-pickup-from', 'pickupFrom'], ['berliner-pickup-to', 'pickupTo'],
+   ['berliner-title', 'title'], ['berliner-text', 'text']].forEach(([id, k]) => {
+    if (bEl(id)) bEl(id).value = st[k] || '';
+  });
+  updateBerlinerLive(st);
+  const ed = bEl('berliner-editor');
+  if (ed) {
+    let items = window.alsterDb?.get('berliner-items');
+    if (!Array.isArray(items) || !items.length) items = DEFAULT_BERLINER;
+    ed.innerHTML = '';
+    items.forEach(it => addBerlinerRow(it, true));
+  }
+  setStatus(bEl('berliner-settings-status'), '');
+  setStatus(bEl('berliner-items-status'), '');
+}
+
+// Zeigt verständlich, ob die Aktion JETZT auf der Webseite sichtbar ist.
+function updateBerlinerLive(st) {
+  const today = todayIso();
+  let msg, live = false;
+  if (!st.active) msg = 'Aus — auf der Webseite nicht sichtbar.';
+  else if (st.orderFrom && today < st.orderFrom) msg = `Eingeschaltet — erscheint ab ${fmtIsoDe(st.orderFrom)} auf der Webseite.`;
+  else if (st.orderTo && today > st.orderTo) msg = `Bestellzeitraum ist am ${fmtIsoDe(st.orderTo)} abgelaufen — nicht mehr sichtbar.`;
+  else { live = true; msg = `Jetzt sichtbar: Menüpunkt „Berliner-Bestellservice“ und Hinweis auf der Startseite${st.orderTo ? ` (bis ${fmtIsoDe(st.orderTo)})` : ''}.`; }
+  const el = bEl('berliner-live');
+  if (el) { el.textContent = msg; el.classList.toggle('is-live', live); }
+  const badge = bEl('overview-berliner-badge');
+  if (badge) badge.hidden = !live;
+}
+
+function addBerlinerRow(item, skipStatus) {
+  const ed = bEl('berliner-editor');
+  if (!ed) return;
+  const data = item || { name: '', desc: '' };
+  const row = document.createElement('div');
+  row.className = 'broetchen-edit-row';
+  row.innerHTML = `
+    <div class="broetchen-edit-fields">
+      <input type="text" class="broetchen-edit-name" placeholder="Sorte (z. B. Klassisch)" value="${escapeAttr(data.name || '')}" />
+      <input type="text" class="broetchen-edit-desc" placeholder="Beschreibung (z. B. Pflaumenmus)" value="${escapeAttr(data.desc || '')}" />
+      <input type="text" class="broetchen-edit-price" inputmode="decimal" placeholder="Preis €" value="${escapeAttr(data.price || '')}" aria-label="Preis pro Berliner" />
+    </div>
+    <button type="button" class="broetchen-edit-remove" aria-label="Sorte entfernen">
+      <svg class="ico ico-sm"><use href="#i-x"/></svg>
+    </button>
+  `;
+  row.querySelector('.broetchen-edit-remove').addEventListener('click', () => {
+    row.remove();
+    setStatus(bEl('berliner-items-status'), 'Nicht vergessen: „Sorten speichern" klicken.', '');
+  });
+  ed.appendChild(row);
+  if (!skipStatus) setStatus(bEl('berliner-items-status'), 'Nicht vergessen: „Sorten speichern" klicken.', '');
+}
+
+async function onSaveBerlinerSettings(e) {
+  e.preventDefault();
+  const st = {
+    active:     !!bEl('berliner-active')?.checked,
+    orderFrom:  bEl('berliner-order-from')?.value || '',
+    orderTo:    bEl('berliner-order-to')?.value || '',
+    pickupFrom: bEl('berliner-pickup-from')?.value || '',
+    pickupTo:   bEl('berliner-pickup-to')?.value || '',
+    title:      (bEl('berliner-title')?.value || '').trim().slice(0, 80),
+    text:       (bEl('berliner-text')?.value || '').trim().slice(0, 300)
+  };
+  const status = bEl('berliner-settings-status');
+  if (st.orderFrom && st.orderTo && st.orderFrom > st.orderTo) {
+    setStatus(status, '„Bestellbar ab“ liegt nach „Bestellbar bis“.', 'error'); return;
+  }
+  if (st.pickupFrom && st.pickupTo && st.pickupFrom > st.pickupTo) {
+    setStatus(status, '„Abholung von“ liegt nach „Abholung bis“.', 'error'); return;
+  }
+  const ok = await window.alsterDb?.set('berliner-settings', st);
+  updateBerlinerLive(st);
+  if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
+  setStatus(status, st.active ? 'Gespeichert · Aktion eingeschaltet' : 'Gespeichert · Aktion ausgeschaltet', 'ok');
+  if (typeof logActivity === 'function') logActivity(st.active ? 'Berliner-Vorbestellung eingeschaltet' : 'Berliner-Vorbestellung ausgeschaltet');
+}
+
+async function onSaveBerlinerItems(e) {
+  e.preventDefault();
+  const status = bEl('berliner-items-status');
+  const items = Array.from(bEl('berliner-editor')?.querySelectorAll('.broetchen-edit-row') || [])
+    .map(row => {
+      const name = row.querySelector('.broetchen-edit-name').value.trim();
+      const desc = row.querySelector('.broetchen-edit-desc').value.trim();
+      const price = (row.querySelector('.broetchen-edit-price')?.value || '').trim();
+      if (!name) return null;
+      const it = { name, desc };
+      if (price) it.price = price;
+      return it;
+    })
+    .filter(Boolean);
+  if (!items.length) { setStatus(status, 'Bitte mindestens eine Sorte angeben.', 'error'); return; }
+  const ok = await window.alsterDb?.set('berliner-items', items);
+  if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
+  const noPrice = items.filter(it => !it.price).length;
+  setStatus(status, `Gespeichert · ${items.length} Sorten${noPrice ? ` (${noPrice} ohne Preis — bitte Preise ergänzen)` : ''}`, noPrice ? '' : 'ok');
+  if (typeof logActivity === 'function') logActivity('Berliner-Sorten aktualisiert');
 }
 
 function mondayOf(date) {

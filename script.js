@@ -136,7 +136,8 @@ function initBerlinerPromo() {
       link = document.createElement('a');
       link.className = 'nav-berliner';
       link.href = 'berliner.html';
-      link.textContent = 'Berliner-Bestellservice';
+      // Desktop: kurz „Berliner“ (Menüleiste ist sonst zu voll), mobil voller Name
+      link.innerHTML = '<span class="nav-berliner-long">Berliner-Bestellservice</span><span class="nav-berliner-short">Berliner</span>';
       const after = nav.querySelector('a[href="broetchen.html"]');
       after ? after.after(link) : nav.prepend(link);
     }
@@ -1148,6 +1149,81 @@ function initLunchWeek() {
 /* Today-Feature-Block auf der Home-Page:
    - Vor 15:00 (Schliesszeit): heutiges Tagesgericht
    - Ab 15:00 (Cafe geschlossen): Vorschau auf morgen */
+/* Beilage: "mit …" nur voranstellen, wenn der Text nicht schon so anfängt
+   (sonst entstand "mit serviert mit einem Beilagensalat"). */
+function sideText(side, en) {
+  const t = String(side || '').trim();
+  if (!t) return '';
+  if (/^(mit|serviert|dazu|und|inkl|wahlweise|oder|with|served|and|or)\b/i.test(t)) return t;
+  return en ? `with ${t}` : `mit ${t}`;
+}
+
+/* Mittagsmenü der Woche als Fenster (Tipp aufs Tagesgericht auf der Startseite). */
+function openLunchSheet(refDate) {
+  const en = alsterLang() === 'en';
+  const monday = mondayOf(refDate || new Date());
+  const week = loadCurrentWeek(monday);
+  const todayIso = isoLocal(new Date());
+  // Hervorgehoben wird der Tag, den die Startseite gerade zeigt (heute oder ab 15 Uhr morgen)
+  const focusIso = isoLocal(refDate || new Date());
+  const focusLabel = focusIso === todayIso ? (en ? 'Today' : 'Heute') : (en ? 'Tomorrow' : 'Morgen');
+  const labels = dayLabels();
+  const rows = DAY_KEYS.map((key, i) => {
+    const d = new Date(monday); d.setDate(d.getDate() + i);
+    const entry = week?.days?.[key];
+    // Wochenende nur zeigen, wenn dort wirklich etwas eingetragen ist
+    if (i >= 5 && !entry?.dish) return '';
+    const iso = isoLocal(d);
+    const isToday = iso === focusIso;
+    const past = iso < todayIso;
+    let body;
+    if (entry?.closed) body = `<span class="lunch-sheet-closed">${en ? 'No lunch' : 'Kein Mittagstisch'}</span>`;
+    else if (entry?.dish) body = `<span class="lunch-sheet-dish">${escapeHtml(entry.dish)}</span>${entry.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(entry.side, en))}</span>` : ''}`;
+    else body = `<span class="lunch-sheet-pending">${en ? 'Coming soon' : 'Folgt in Kürze'}</span>`;
+    return `
+      <li class="lunch-sheet-day${isToday ? ' is-today' : ''}${past ? ' is-past' : ''}">
+        <div class="lunch-sheet-when">
+          <span class="lunch-sheet-name">${labels[i]}</span>
+          <span class="lunch-sheet-date">${formatDay(d)}</span>
+          ${isToday ? `<span class="lunch-sheet-today">${focusLabel}</span>` : ''}
+        </div>
+        <div class="lunch-sheet-body">${body}</div>
+      </li>`;
+  }).join('');
+  const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
+
+  let dlg = document.getElementById('lunch-sheet');
+  if (!dlg) {
+    dlg = document.createElement('dialog');
+    dlg.id = 'lunch-sheet';
+    dlg.className = 'lunch-sheet';
+    dlg.setAttribute('data-no-i18n', '');
+    document.body.appendChild(dlg);
+    // Tipp auf den abgedunkelten Hintergrund schließt
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('close', () => document.body.classList.remove('sheet-open'));
+  }
+  dlg.setAttribute('aria-label', en ? 'Lunch menu this week' : 'Mittagsmenü dieser Woche');
+  dlg.innerHTML = `
+    <div class="lunch-sheet-card">
+      <button type="button" class="lunch-sheet-close" aria-label="${en ? 'Close' : 'Schließen'}">×</button>
+      <p class="lunch-sheet-kicker">${en ? 'Lunch · from 12:00' : 'Mittagstisch · ab 12:00 Uhr'}</p>
+      <h2 class="lunch-sheet-title">${en ? 'This week' : 'Diese Woche'}</h2>
+      <p class="lunch-sheet-range">${(en ? 'Week ' : 'KW ') + isoWeek(monday)} · ${formatShort(monday)} – ${formatShort(sunday)}</p>
+      <ul class="lunch-sheet-list">${rows}</ul>
+      <div class="lunch-sheet-cta">
+        <a class="btn btn-gold" href="reservierung.html">${en ? 'Book a table' : 'Tisch reservieren'}</a>
+        <a class="btn btn-link" href="tel:+494022692891"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
+      </div>
+      <a class="lunch-sheet-more" href="mittagstisch.html">${en ? 'Go to the lunch page →' : 'Zur Mittagstisch-Seite →'}</a>
+    </div>`;
+  dlg.querySelector('.lunch-sheet-close').addEventListener('click', () => dlg.close());
+  document.body.classList.add('sheet-open');
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else location.href = 'mittagstisch.html';
+  // Heutigen Tag in den sichtbaren Bereich holen
+  dlg.querySelector('.is-today')?.scrollIntoView({ block: 'nearest' });
+}
+
 function initLandingTeaser() {
   const block    = document.getElementById('today-feature');
   const prefixEl = document.getElementById('today-feature-prefix');
@@ -1169,6 +1245,27 @@ function initLandingTeaser() {
   const entry  = weekData?.days?.[dayKey];
 
   const en = alsterLang() === 'en';
+  // Tipp aufs Gericht (oder auf "Ganze Woche ansehen") öffnet das Mittagsmenü
+  if (!dishEl.dataset.sheetWired) {
+    dishEl.dataset.sheetWired = '1';
+    const open = () => openLunchSheet(targetDate);
+    [dishEl, sideEl].forEach(el => {
+      if (!el) return;
+      el.classList.add('is-tappable');
+      el.addEventListener('click', open);
+    });
+    dishEl.setAttribute('role', 'button');
+    dishEl.setAttribute('tabindex', '0');
+    dishEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    const hint = document.createElement('button');
+    hint.type = 'button';
+    hint.className = 'today-feature-week';
+    hint.addEventListener('click', open);
+    (sideEl || dishEl).after(hint);
+  }
+  const hintEl = block.querySelector('.today-feature-week');
+  if (hintEl) hintEl.textContent = en ? 'See the whole week ›' : 'Ganze Woche ansehen ›';
+  dishEl.setAttribute('aria-haspopup', 'dialog');
   if (prefixEl) prefixEl.textContent = showTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
   if (dayEl)    dayEl.textContent    = dayLabels()[dayIdx];
 
@@ -1179,7 +1276,7 @@ function initLandingTeaser() {
       : (en ? 'At midday today' : 'Heute mittag bei uns');
     dishEl.textContent = entry.dish;
     if (sideEl) {
-      sideEl.textContent = entry.side ? (en ? `with ${entry.side}` : `mit ${entry.side}`) : '';
+      sideEl.textContent = entry.side ? sideText(entry.side, en) : '';
       sideEl.hidden = !entry.side;
     }
   } else if (entry?.closed) {
@@ -2255,6 +2352,12 @@ function initOrderForm() {
   if (!form) return;
   // Keine Mindestmenge mehr (Wunsch des Inhabers): ab einem Brötchen bestellbar.
   const MIN_ORDER = 1;
+  // Gleiches Formular für Brötchen-Service und Berliner-Vorbestellung
+  const isBerliner = form.dataset.kind === 'berliner';
+  const itemsKey = isBerliner ? 'berliner-items' : 'broetchen-items';
+  const unitWord = (n, en) => isBerliner
+    ? (en ? (n === 1 ? 'doughnut' : 'doughnuts') : 'Berliner')
+    : (en ? (n === 1 ? 'filled roll' : 'filled rolls') : (n === 1 ? 'belegtes Brötchen' : 'belegte Brötchen'));
 
   const sortListEl = document.getElementById('broetchen-list');
   const countEl = document.getElementById('order-count');
@@ -2288,6 +2391,7 @@ function initOrderForm() {
       };
       const price = parseEuro(row.dataset.price);
       if (price) it.price = price;
+      if (isBerliner) it.kind = 'berliner';
       return it;
     })
     .filter(it => it.qty > 0);
@@ -2311,7 +2415,9 @@ function initOrderForm() {
     const ok = total >= MIN_ORDER;
     if (minNote) {
       minNote.textContent = total === 0
-        ? (alsterLang() === 'en' ? 'Choose your rolls above.' : 'Wählen Sie oben Ihre Brötchen aus.')
+        ? (alsterLang() === 'en'
+            ? (isBerliner ? 'Choose your doughnuts above.' : 'Choose your rolls above.')
+            : (isBerliner ? 'Wählen Sie oben Ihre Berliner aus.' : 'Wählen Sie oben Ihre Brötchen aus.'))
         : '';
       minNote.hidden = total > 0;
       minNote.classList.remove('is-met', 'is-below');
@@ -2343,7 +2449,8 @@ function initOrderForm() {
   // damit neue Besucher sofort die aktuellen Sorten sehen.
   const applySorts = () => {
     let items = null;
-    try { items = window.alsterDb?.get('broetchen-items'); } catch {}
+    try { items = window.alsterDb?.get(itemsKey); } catch {}
+    if (isBerliner && (!Array.isArray(items) || !items.length)) items = DEFAULT_BERLINER;
     if (sortListEl && Array.isArray(items)) {
       const valid = items.filter(it => it && typeof it.name === 'string' && it.name.trim());
       if (valid.length) {
@@ -2382,8 +2489,15 @@ function initOrderForm() {
     const items = getItems();
     const total = items.reduce((s, it) => s + it.qty, 0);
     const en = alsterLang() === 'en';
+    if (isBerliner && !berlinerState().visible) {
+      setFormStatus(status, en ? 'Pre-orders are currently closed.' : 'Die Berliner-Vorbestellung ist gerade nicht geöffnet.', 'error');
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
     if (total < MIN_ORDER) {
-      setFormStatus(status, en ? 'Please select at least one roll.' : 'Bitte wählen Sie mindestens ein Brötchen.', 'error');
+      setFormStatus(status, isBerliner
+        ? (en ? 'Please select at least one doughnut.' : 'Bitte wählen Sie mindestens einen Berliner.')
+        : (en ? 'Please select at least one roll.' : 'Bitte wählen Sie mindestens ein Brötchen.'), 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -2391,6 +2505,17 @@ function initOrderForm() {
       setFormStatus(status, invalidFieldMessage(form, en), 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
+    }
+    if (isBerliner) {
+      const { st } = berlinerState();
+      const d = form.querySelector('input[name="Datum"]')?.value || '';
+      if ((st.pickupFrom && d < st.pickupFrom) || (st.pickupTo && d > st.pickupTo)) {
+        const a = formatDateLong(st.pickupFrom || st.pickupTo, en), b = formatDateLong(st.pickupTo || st.pickupFrom, en);
+        const range = a === b ? a : `${a} – ${b}`;
+        setFormStatus(status, en ? `Pick-up is possible on ${range}.` : `Abholung ist möglich: ${range}.`, 'error');
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
     }
     const slotErr = slotProblem(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
     if (slotErr) {
@@ -2420,17 +2545,18 @@ function initOrderForm() {
     if (submitBtn) submitBtn.classList.remove('is-loading');
     if (saved) {
       if (submitBtn) submitBtn.classList.add('is-success');
-      setFormStatus(status, en ? `Thank you! Your order of ${total} filled ${total === 1 ? 'roll' : 'rolls'} has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} ${total === 1 ? 'belegtes Brötchen' : 'belegte Brötchen'} ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
+      setFormStatus(status, en ? `Thank you! Your order of ${total} ${unitWord(total, true)} has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} ${unitWord(total, false)} ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
       try { form.reset(); } catch {}
       getRows().forEach(row => { const v = row.querySelector('.qty-value'); if (v) v.textContent = '0'; row.classList.remove('is-active'); });
       setDefaultDate();
+      if (isBerliner) initBerlinerPage();
       render();
     } else {
       // Fallback: Mail-Programm
       const lines = items.map(it => `${it.qty}× ${it.name}${it.price ? ` (${formatEuro(it.price * it.qty)})` : ''}`).join('\n');
-      const subject = `Brötchen-Bestellung (${total} Stück) – ${entry.name}`;
+      const subject = `${isBerliner ? 'Berliner-Vorbestellung' : 'Brötchen-Bestellung'} (${total} Stück) – ${entry.name}`;
       const body = encodeURIComponent(
-        `Bestellung:\n${lines}\n\nGesamt: ${total} Brötchen\n` +
+        `Bestellung:\n${lines}\n\nGesamt: ${total} ${isBerliner ? 'Berliner' : 'Brötchen'}\n` +
         `Abholung: ${entry.pickupDate} um ${entry.pickupTime}\n` +
         `Name: ${entry.name}\nTelefon: ${entry.phone}\nE-Mail: ${entry.email}\n\n` +
         `Wünsche:\n${entry.notes || '–'}`

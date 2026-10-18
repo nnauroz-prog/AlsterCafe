@@ -87,12 +87,13 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
     </tr>` : "";
 
   let title = "", intro = "", rows = "";
+  const unit = Array.isArray(d.items) && d.items.some((it: any) => it && it.kind === "berliner") ? "Berliner" : "Brötchen";
   if (type === "order") {
     const { html: items, total, partial } = itemLines(d.items);
     title = "Ihre Bestellung ist bestätigt";
     intro = `vielen Dank für Ihre Vorbestellung. Wir haben sie fest eingeplant und freuen uns auf Sie.`;
     rows = detailRow("Abholung", `${d.pickupDate || ""} ${d.pickupTime ? d.pickupTime + " Uhr" : ""}`.trim())
-      + detailRow("Anzahl", d.total ? `${d.total} Brötchen` : "")
+      + detailRow("Anzahl", d.total ? `${d.total} ${unit}` : "")
       + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "")
       + (total !== null ? detailRow("Summe", eur(total) + (partial ? " (ohne Sorten ohne Preis)" : "")) + detailRow("Bezahlung", "bei Abholung") : "");
   } else {
@@ -115,7 +116,7 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
           </table>`
     : "";
 
-  const subject = type === "order" ? "Bestätigung Ihrer Brötchen-Bestellung – Alstercafé" : "Bestätigung Ihrer Reservierung – Alstercafé";
+  const subject = type === "order" ? `Bestätigung Ihrer ${unit}-Bestellung – Alstercafé` : "Bestätigung Ihrer Reservierung – Alstercafé";
   const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;padding:0;background:${CREAM};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CREAM};padding:28px 12px;">

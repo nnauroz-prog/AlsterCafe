@@ -39,6 +39,11 @@ const MAX_AGE_MS = 3 * 60 * 1000;
 const LOGO = "https://alstercafe.de/image.png";
 const ADMIN = "Im Mitgliederbereich ansehen: https://alstercafe.de/admin.html";
 
+// Berliner-Vorbestellungen landen in derselben Tabelle; erkennbar am Feld kind.
+function isBerlinerOrder(r: any): boolean {
+  return Array.isArray(r?.items) && r.items.some((it: any) => it && it.kind === "berliner");
+}
+
 function esc(v: unknown): string {
   return String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
 }
@@ -111,11 +116,12 @@ function renderReceipt(table: string, r: any): { subject: string; html: string }
   let title = "", intro = "", rows = "", subject = "";
   if (table === "orders") {
     const { html: items, total, partial } = itemLines(r.items);
-    subject = "Wir haben Ihre Brötchen-Bestellung erhalten – Alstercafé";
+    const unit = isBerlinerOrder(r) ? "Berliner" : "Brötchen";
+    subject = `Wir haben Ihre ${unit}-Bestellung erhalten – Alstercafé`;
     title = "Ihre Bestellung ist bei uns eingegangen";
-    intro = "vielen Dank für Ihre Vorbestellung! Wir prüfen sie umgehend und senden Ihnen in Kürze eine verbindliche Bestätigung.";
+    intro = "vielen Dank für Ihre Vorbestellung! Wir prüfen sie umgehend und senden Ihnen in Kürze eine Bestätigung.";
     rows = row("Abholung", `${niceDate(r.pickup_date)} ${r.pickup_time ? r.pickup_time + " Uhr" : ""}`.trim())
-      + row("Anzahl", r.total_count ? `${r.total_count} Brötchen` : "")
+      + row("Anzahl", r.total_count ? `${r.total_count} ${unit}` : "")
       + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "")
       + (total !== null ? row("Summe", eur(total) + (partial ? " (ohne Sorten ohne Preis)" : "")) + row("Bezahlung", "bei Abholung") : "");
   } else {
@@ -216,12 +222,13 @@ Deno.serve(async (req) => {
       <p>${ADMIN}</p>`;
   } else {
     const { html: items, total, partial } = itemLines(r.items);
-    ownerSubject = `Neue Brötchen-Bestellung (${r.total_count || 0}) – ${r.name || "ohne Name"}`;
+    const unit = isBerlinerOrder(r) ? "Berliner" : "Brötchen";
+    ownerSubject = `Neue ${unit}-Bestellung (${r.total_count || 0}) – ${r.name || "ohne Name"}`;
     ownerHtml = `
-      <h2>Neue Brötchen-Bestellung</h2>
+      <h2>Neue ${unit}-Bestellung</h2>
       <p><strong>Name:</strong> ${esc(r.name)}<br>
       <strong>Abholung:</strong> ${esc(niceDate(r.pickup_date))} ${esc(r.pickup_time)}<br>
-      <strong>Anzahl:</strong> ${esc(r.total_count)} Brötchen<br>
+      <strong>Anzahl:</strong> ${esc(r.total_count)} ${unit}<br>
       <strong>Telefon:</strong> ${esc(r.phone)}<br>
       <strong>E-Mail:</strong> ${esc(r.email)}</p>
       <p><strong>Bestellung:</strong><br>${items}</p>
