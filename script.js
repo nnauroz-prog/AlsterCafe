@@ -136,7 +136,8 @@ function initBerlinerPromo() {
       link = document.createElement('a');
       link.className = 'nav-berliner';
       link.href = 'berliner.html';
-      link.textContent = 'Berliner-Bestellservice';
+      // Desktop: kurz „Berliner“ (Menüleiste ist sonst zu voll), mobil voller Name
+      link.innerHTML = '<span class="nav-berliner-long">Berliner-Bestellservice</span><span class="nav-berliner-short">Berliner</span>';
       const after = nav.querySelector('a[href="broetchen.html"]');
       after ? after.after(link) : nav.prepend(link);
     }
@@ -2255,6 +2256,12 @@ function initOrderForm() {
   if (!form) return;
   // Keine Mindestmenge mehr (Wunsch des Inhabers): ab einem Brötchen bestellbar.
   const MIN_ORDER = 1;
+  // Gleiches Formular für Brötchen-Service und Berliner-Vorbestellung
+  const isBerliner = form.dataset.kind === 'berliner';
+  const itemsKey = isBerliner ? 'berliner-items' : 'broetchen-items';
+  const unitWord = (n, en) => isBerliner
+    ? (en ? (n === 1 ? 'doughnut' : 'doughnuts') : 'Berliner')
+    : (en ? (n === 1 ? 'filled roll' : 'filled rolls') : (n === 1 ? 'belegtes Brötchen' : 'belegte Brötchen'));
 
   const sortListEl = document.getElementById('broetchen-list');
   const countEl = document.getElementById('order-count');
@@ -2288,6 +2295,7 @@ function initOrderForm() {
       };
       const price = parseEuro(row.dataset.price);
       if (price) it.price = price;
+      if (isBerliner) it.kind = 'berliner';
       return it;
     })
     .filter(it => it.qty > 0);
@@ -2311,7 +2319,9 @@ function initOrderForm() {
     const ok = total >= MIN_ORDER;
     if (minNote) {
       minNote.textContent = total === 0
-        ? (alsterLang() === 'en' ? 'Choose your rolls above.' : 'Wählen Sie oben Ihre Brötchen aus.')
+        ? (alsterLang() === 'en'
+            ? (isBerliner ? 'Choose your doughnuts above.' : 'Choose your rolls above.')
+            : (isBerliner ? 'Wählen Sie oben Ihre Berliner aus.' : 'Wählen Sie oben Ihre Brötchen aus.'))
         : '';
       minNote.hidden = total > 0;
       minNote.classList.remove('is-met', 'is-below');
@@ -2343,7 +2353,8 @@ function initOrderForm() {
   // damit neue Besucher sofort die aktuellen Sorten sehen.
   const applySorts = () => {
     let items = null;
-    try { items = window.alsterDb?.get('broetchen-items'); } catch {}
+    try { items = window.alsterDb?.get(itemsKey); } catch {}
+    if (isBerliner && (!Array.isArray(items) || !items.length)) items = DEFAULT_BERLINER;
     if (sortListEl && Array.isArray(items)) {
       const valid = items.filter(it => it && typeof it.name === 'string' && it.name.trim());
       if (valid.length) {
@@ -2382,8 +2393,15 @@ function initOrderForm() {
     const items = getItems();
     const total = items.reduce((s, it) => s + it.qty, 0);
     const en = alsterLang() === 'en';
+    if (isBerliner && !berlinerState().visible) {
+      setFormStatus(status, en ? 'Pre-orders are currently closed.' : 'Die Berliner-Vorbestellung ist gerade nicht geöffnet.', 'error');
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
     if (total < MIN_ORDER) {
-      setFormStatus(status, en ? 'Please select at least one roll.' : 'Bitte wählen Sie mindestens ein Brötchen.', 'error');
+      setFormStatus(status, isBerliner
+        ? (en ? 'Please select at least one doughnut.' : 'Bitte wählen Sie mindestens einen Berliner.')
+        : (en ? 'Please select at least one roll.' : 'Bitte wählen Sie mindestens ein Brötchen.'), 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -2391,6 +2409,17 @@ function initOrderForm() {
       setFormStatus(status, invalidFieldMessage(form, en), 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
+    }
+    if (isBerliner) {
+      const { st } = berlinerState();
+      const d = form.querySelector('input[name="Datum"]')?.value || '';
+      if ((st.pickupFrom && d < st.pickupFrom) || (st.pickupTo && d > st.pickupTo)) {
+        const a = formatDateLong(st.pickupFrom || st.pickupTo, en), b = formatDateLong(st.pickupTo || st.pickupFrom, en);
+        const range = a === b ? a : `${a} – ${b}`;
+        setFormStatus(status, en ? `Pick-up is possible on ${range}.` : `Abholung ist möglich: ${range}.`, 'error');
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
     }
     const slotErr = slotProblem(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
     if (slotErr) {
@@ -2420,17 +2449,18 @@ function initOrderForm() {
     if (submitBtn) submitBtn.classList.remove('is-loading');
     if (saved) {
       if (submitBtn) submitBtn.classList.add('is-success');
-      setFormStatus(status, en ? `Thank you! Your order of ${total} filled ${total === 1 ? 'roll' : 'rolls'} has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} ${total === 1 ? 'belegtes Brötchen' : 'belegte Brötchen'} ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
+      setFormStatus(status, en ? `Thank you! Your order of ${total} ${unitWord(total, true)} has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} ${unitWord(total, false)} ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
       try { form.reset(); } catch {}
       getRows().forEach(row => { const v = row.querySelector('.qty-value'); if (v) v.textContent = '0'; row.classList.remove('is-active'); });
       setDefaultDate();
+      if (isBerliner) initBerlinerPage();
       render();
     } else {
       // Fallback: Mail-Programm
       const lines = items.map(it => `${it.qty}× ${it.name}${it.price ? ` (${formatEuro(it.price * it.qty)})` : ''}`).join('\n');
-      const subject = `Brötchen-Bestellung (${total} Stück) – ${entry.name}`;
+      const subject = `${isBerliner ? 'Berliner-Vorbestellung' : 'Brötchen-Bestellung'} (${total} Stück) – ${entry.name}`;
       const body = encodeURIComponent(
-        `Bestellung:\n${lines}\n\nGesamt: ${total} Brötchen\n` +
+        `Bestellung:\n${lines}\n\nGesamt: ${total} ${isBerliner ? 'Berliner' : 'Brötchen'}\n` +
         `Abholung: ${entry.pickupDate} um ${entry.pickupTime}\n` +
         `Name: ${entry.name}\nTelefon: ${entry.phone}\nE-Mail: ${entry.email}\n\n` +
         `Wünsche:\n${entry.notes || '–'}`

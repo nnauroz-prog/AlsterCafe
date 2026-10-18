@@ -9215,3 +9215,81 @@ html.has-js-scroll { scroll-behavior: auto; }
 }
 .lunch-today .btn-gold + .btn-link { margin-left: 18px; margin-top: 8px; }
 @media (max-width: 480px) { .lunch-today .btn-gold + .btn-link { display: inline-flex; margin: 14px 0 0; } }
+
+/* ===============================================
+   BERLINER-VORBESTELLUNG (Saison-Aktion)
+   =============================================== */
+/* Menüpunkt: dezent hervorgehoben (goldener Punkt davor) */
+.primary-nav .nav-berliner { position: relative; }
+.primary-nav .nav-berliner::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold); margin-right: 7px; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* Ankündigung auf der Startseite (direkt unter dem Hero) */
+.berliner-promo {
+  background: var(--espresso, #3D2415);
+  color: var(--linen, #F1E7D3);
+  border-top: 1px solid rgba(212, 179, 128, .35);
+  border-bottom: 1px solid rgba(212, 179, 128, .35);
+  padding: 28px 0;
+}
+.berliner-promo-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+}
+.berliner-promo-kicker {
+  margin: 0 0 6px; font-size: .72rem; font-weight: 700; letter-spacing: .24em;
+  text-transform: uppercase; color: var(--gold-soft, #D4B380);
+}
+.berliner-promo-title {
+  margin: 0; font-family: 'Fraunces', serif; font-weight: 500;
+  font-size: clamp(1.5rem, 3.2vw, 2.1rem); line-height: 1.15; color: inherit;
+}
+.berliner-promo-text { margin: 8px 0 0; max-width: 56ch; opacity: .85; line-height: 1.5; }
+.berliner-promo-until { margin: 8px 0 0; font-size: .85rem; color: var(--gold-soft, #D4B380); }
+.berliner-promo .btn { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .berliner-promo { padding: 22px 0; }
+  .berliner-promo .btn { width: 100%; justify-content: center; }
+}
+
+/* Berliner-Seite */
+.berliner-window {
+  display: inline-block; margin-top: 14px; padding: 8px 14px; border-radius: 12px;
+  background: rgba(212, 179, 128, .16); font-size: .9rem; font-weight: 600;
+}
+.berliner-closed { text-align: center; padding: 64px 0; }
+.berliner-closed-title { font-family: 'Fraunces', serif; font-size: 1.4rem; margin: 0 0 8px; }
+.berliner-closed-text { margin: 0 0 18px; opacity: .8; }
+
+/* Mitgliederbereich */
+.berliner-settings { display: grid; gap: 16px; margin-top: 12px; }
+.berliner-toggle {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px;
+  background: rgba(212, 179, 128, .12); font-weight: 600; cursor: pointer;
+}
+.berliner-toggle input { width: 22px; height: 22px; accent-color: var(--gold, #B8893F); flex-shrink: 0; }
+.berliner-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.berliner-dates label, .berliner-field { display: grid; gap: 6px; font-size: .9rem; min-width: 0; }
+.berliner-dates input, .berliner-field input, .berliner-field textarea { width: 100%; min-width: 0; }
+.berliner-live { margin: 0; padding: 10px 14px; border-radius: 8px; background: rgba(0, 0, 0, .04); font-size: .9rem; }
+.berliner-live.is-live { background: rgba(70, 140, 80, .14); color: #245c2e; font-weight: 600; }
+@media (max-width: 480px) { .berliner-dates { grid-template-columns: 1fr; } }
+.anfrage-tag.is-berliner { background: var(--gold, #B8893F); color: #fff; margin-left: 6px; }
+.overview-card-badge.is-live { background: #3d8a4a; }
+.nav-berliner-short { display: none; }
+@media (min-width: 981px) {
+  .primary-nav .nav-berliner-long { display: none; }
+  .primary-nav .nav-berliner-short { display: inline; }
+  .primary-nav .nav-berliner { white-space: nowrap; }
+}
+/* Schmaler Desktop (981–1279 px): Menüpunkte nie umbrechen lassen */
+@media (min-width: 981px) and (max-width: 1279px) {
+  .site-header .primary-nav { gap: 12px; }
+  .site-header .primary-nav > a { white-space: nowrap; font-size: .84rem; }
+  .site-header .brand { flex-shrink: 0; gap: 10px; }
+  .site-header .brand-name { white-space: nowrap; }
+}
+@media (min-width: 981px) and (max-width: 1079px) {
+  .site-header .brand-name { display: none; }
+}

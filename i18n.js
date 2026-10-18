@@ -320,6 +320,28 @@
     'Mit Klick auf „Karte laden“ wird eine Verbindung zu Google (Google Ireland Ltd.) hergestellt; dabei werden Ihre IP-Adresse und ggf. Cookies verarbeitet, auch in den USA. Ihre Entscheidung speichern wir in Ihrem Browser; widerrufen können Sie sie über „Cookies anpassen“ im Seitenfuß.':
       'Clicking “Load map” connects to Google (Google Ireland Ltd.); your IP address and possibly cookies are processed, including in the USA. We store your choice in your browser; you can withdraw it via “Cookie settings” in the footer.',
     'Karte laden': 'Load map',
+    /* Berliner-Vorbestellung */
+    'Berliner-Bestellservice': 'Doughnut pre-orders',
+    'Berliner vorbestellen': 'Pre-order doughnuts',
+    'Berliner': 'Doughnuts',
+    'für Silvester.': 'for New Year’s Eve.',
+    'Frisch aus unserer Backstube: Bestellen Sie Ihre Berliner vor, wir legen sie zur Abholung für Sie bereit.':
+      'Fresh from our bakery: pre-order your Berliner doughnuts and we’ll have them ready for pick-up.',
+    'Die Berliner-Vorbestellung ist gerade nicht geöffnet.': 'Doughnut pre-orders are currently closed.',
+    'Welche Berliner?': 'Which doughnuts?',
+    'Ihre Vorbestellung': 'Your pre-order',
+    'Wählen Sie oben Ihre Berliner aus.': 'Choose your doughnuts above.',
+    'Unverbindlich vorbestellen': 'Pre-order (non-binding)',
+    'Wünsche': 'Requests',
+    'z. B. einzeln verpackt …': 'e.g. individually wrapped …',
+    'Alle Preise in Euro inkl. MwSt. Keine Vorkasse — Sie zahlen bei Abholung, bar, mit Karte (auch American Express) oder per Apple Pay / Google Pay. Wir bestätigen Ihre Vorbestellung telefonisch oder per E-Mail.':
+      'All prices in euros incl. VAT. No prepayment — you pay on pick-up, in cash, by card (incl. American Express) or with Apple Pay / Google Pay. We confirm your pre-order by phone or email.',
+    'Mit Konfitüre gefüllt, mit Zucker': 'Filled with jam, sugar-dusted',
+    'Mit Vanillecreme gefüllt': 'Filled with vanilla cream',
+    'Mit Schokocreme gefüllt': 'Filled with chocolate cream',
+    'Klassisch': 'Classic',
+    'Vanille': 'Vanilla',
+    'Schoko': 'Chocolate',
     'Karte ist deaktiviert': 'Map is disabled',
     'Stattdessen Google Maps öffnen →': 'Open Google Maps instead →',
     'Route ansehen': 'View directions',
