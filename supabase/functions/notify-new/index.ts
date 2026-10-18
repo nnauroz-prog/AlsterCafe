@@ -91,14 +91,14 @@ function renderReceipt(table: string, r: any): { subject: string; html: string }
     const items = Array.isArray(r.items) ? r.items.map((it: any) => `${esc(it.qty)}× ${esc(it.name)}`).join("<br>") : "";
     subject = "Wir haben Ihre Brötchen-Bestellung erhalten – Alstercafé";
     title = "Ihre Bestellung ist bei uns eingegangen";
-    intro = "vielen Dank für Ihre Vorbestellung. Sie ist gut bei uns angekommen. Wir prüfen sie und schicken Ihnen in Kürze eine verbindliche Bestätigung.";
+    intro = "vielen Dank für Ihre Vorbestellung! Wir prüfen sie umgehend und senden Ihnen in Kürze eine verbindliche Bestätigung.";
     rows = row("Abholung", `${niceDate(r.pickup_date)} ${r.pickup_time ? r.pickup_time + " Uhr" : ""}`.trim())
       + row("Anzahl", r.total_count ? `${r.total_count} Brötchen` : "")
       + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "");
   } else {
     subject = "Wir haben Ihre Reservierungsanfrage erhalten – Alstercafé";
     title = "Ihre Anfrage ist bei uns eingegangen";
-    intro = "vielen Dank für Ihre Reservierungsanfrage. Sie ist gut bei uns angekommen. Wir prüfen, ob der Tisch frei ist, und schicken Ihnen in Kürze eine verbindliche Bestätigung.";
+    intro = "vielen Dank für Ihre Reservierungsanfrage! Wir prüfen umgehend, ob der gewünschte Tisch verfügbar ist, und senden Ihnen in Kürze eine verbindliche Bestätigung.";
     rows = row("Datum", niceDate(r.date))
       + row("Uhrzeit", r.time ? `${r.time} Uhr` : "")
       + row("Personen", r.persons ? String(r.persons) : "");
@@ -116,7 +116,7 @@ function renderReceipt(table: string, r: any): { subject: string; html: string }
         </td></tr>
         <tr><td style="padding:34px 32px 28px;font-family:Arial,Helvetica,sans-serif;color:${INK};">
           <h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:normal;color:${BEAN};">${esc(title)}</h1>
-          <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${INK};">Guten Tag ${esc(r.name) || "zusammen"},</p>
+          <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${INK};">Moin ${esc(r.name) || "zusammen"},</p>
           <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:${INK};">${intro}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER};border:1px solid #ECE3D4;border-radius:10px;padding:16px 18px;margin:0 0 18px;">
             ${rows}
