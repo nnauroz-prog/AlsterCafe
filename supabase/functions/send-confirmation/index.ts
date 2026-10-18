@@ -39,6 +39,22 @@ function esc(v: unknown): string {
 }
 
 // Einfache Text-Fassung der HTML-Mail (für Mailprogramme ohne HTML).
+// Bestellpositionen mit Preis (falls bei der Bestellung gespeichert) + Summe.
+function eur(n: number): string {
+  return n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+}
+function itemLines(items: unknown): { html: string; total: number | null; partial: boolean } {
+  const list = Array.isArray(items) ? items : [];
+  let cents = 0, priced = 0;
+  const html = list.map((it: any) => {
+    const q = parseInt(it?.qty, 10) || 0;
+    const p = typeof it?.price === "number" && it.price > 0 ? it.price : null;
+    if (p) { cents += Math.round(p * 100) * q; priced++; }
+    return `${esc(it?.qty)}× ${esc(it?.name)}${p ? ` · ${eur(p * q)}` : ""}`;
+  }).join("<br>");
+  return { html, total: priced ? cents / 100 : null, partial: priced > 0 && priced < list.length };
+}
+
 function htmlToText(html: string): string {
   return html.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(p|div|tr|h1)>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
@@ -72,12 +88,13 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
 
   let title = "", intro = "", rows = "";
   if (type === "order") {
-    const items = Array.isArray(d.items) ? d.items.map((it: any) => `${esc(it.qty)}× ${esc(it.name)}`).join("<br>") : "";
+    const { html: items, total, partial } = itemLines(d.items);
     title = "Ihre Bestellung ist bestätigt";
     intro = `vielen Dank für Ihre Vorbestellung. Wir haben sie fest eingeplant und freuen uns auf Sie.`;
     rows = detailRow("Abholung", `${d.pickupDate || ""} ${d.pickupTime || ""}`.trim())
       + detailRow("Anzahl", d.total ? `${d.total} Brötchen` : "")
-      + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "");
+      + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "")
+      + (total !== null ? detailRow("Summe", eur(total) + (partial ? " (ohne Sorten ohne Preis)" : "")) + detailRow("Bezahlung", "bei Abholung") : "");
   } else {
     title = "Ihre Reservierung ist bestätigt";
     intro = `vielen Dank für Ihre Reservierung. Ihr Tisch ist reserviert — wir freuen uns auf Ihren Besuch.`;
@@ -85,6 +102,18 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
       + detailRow("Uhrzeit", d.time ? `${d.time} Uhr` : "")
       + detailRow("Personen", d.persons || "");
   }
+
+  // Optionale persönliche Nachricht des Cafés (aus dem Fenster im Mitgliederbereich).
+  // Leer → kein Kasten, die Mail bleibt unverändert.
+  const note = String(d.message ?? "").trim().slice(0, 1000);
+  const noteHtml = note
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">
+            <tr><td style="background:#FFF7E6;border-left:3px solid ${GOLD};border-radius:0 8px 8px 0;padding:14px 16px;">
+              <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${GOLD};font-weight:bold;margin:0 0 6px;">Persönliche Nachricht vom Alstercafé</div>
+              <div style="font-size:15px;line-height:1.6;color:${INK};">${esc(note).replace(/\r?\n/g, "<br>")}</div>
+            </td></tr>
+          </table>`
+    : "";
 
   const subject = type === "order" ? "Bestätigung Ihrer Brötchen-Bestellung – Alstercafé" : "Bestätigung Ihrer Reservierung – Alstercafé";
   const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
@@ -106,6 +135,7 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER};border:1px solid #ECE3D4;border-radius:10px;padding:16px 18px;margin:0 0 22px;">
             ${rows}
           </table>
+          ${noteHtml}
           <p style="margin:0 0 6px;font-size:14px;line-height:1.6;color:${MUTED};">Sollte etwas nicht passen, rufen Sie uns gern kurz an — wir finden eine Lösung.</p>
         </td></tr>
         <!-- Footer -->

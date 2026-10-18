@@ -1414,6 +1414,18 @@ function enhanceReservationCoupon() {
   form.insertBefore(header, form.firstChild);
 }
 
+/* Zahlungsarten fürs Footer (vom Inhaber bestätigt: bar, EC, alle Kreditkarten
+   inkl. AMEX, Apple Pay, Google Pay). Vereinfachte Marken-Badges als inline-SVG. */
+const PAYMENT_BADGES = [
+  { label: 'Barzahlung', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#fff"/><rect x="7" y="8" width="34" height="14" rx="2" fill="#2E7D4F"/><circle cx="24" cy="15" r="4" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="11.5" cy="15" r="1.2" fill="#fff"/><circle cx="36.5" cy="15" r="1.2" fill="#fff"/></svg>' },
+  { label: 'girocard (EC-Karte)', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#fff"/><rect x="4" y="6" width="40" height="18" rx="3" fill="#1D3C8F"/><text x="24" y="18.2" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#fff">girocard</text></svg>' },
+  { label: 'Visa', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#fff"/><text x="24" y="20" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="900" font-style="italic" fill="#1A1F71" letter-spacing=".3">VISA</text></svg>' },
+  { label: 'Mastercard', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#fff"/><circle cx="19.5" cy="15" r="8" fill="#EB001B"/><circle cx="28.5" cy="15" r="8" fill="#F79E1B"/><path d="M24 8.4a8 8 0 0 1 0 13.2a8 8 0 0 1 0-13.2z" fill="#FF5F00"/></svg>' },
+  { label: 'American Express', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#016FD0"/><text x="24" y="18.8" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="900" fill="#fff" letter-spacing=".4">AMEX</text></svg>' },
+  { label: 'Apple Pay', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#000"/><path d="M15.6 10.3c.5-.6.8-1.4.7-2.2-.7 0-1.6.5-2.1 1.1-.5.5-.9 1.4-.8 2.2.8.1 1.6-.4 2.2-1.1zm.7 1.2c-1.2-.1-2.2.7-2.8.7-.6 0-1.4-.6-2.4-.6-1.2 0-2.3.7-3 1.8-1.3 2.2-.3 5.5.9 7.3.6.9 1.3 1.8 2.3 1.8.9 0 1.2-.6 2.3-.6s1.4.6 2.4.6 1.6-.9 2.2-1.8c.7-1 1-2 1-2.1 0 0-1.9-.7-1.9-2.9 0-1.8 1.5-2.7 1.6-2.7-.9-1.3-2.2-1.4-2.6-1.5z" fill="#fff"/><text x="31" y="19.6" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="#fff">Pay</text></svg>' },
+  { label: 'Google Pay', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#fff"/><text x="9" y="19.6" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700"><tspan fill="#4285F4">G</tspan></text><text x="31" y="19.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="600" fill="#5F6368">Pay</text></svg>' }
+];
+
 function enhanceFooterEditorial() {
   const footer = document.querySelector('.site-footer');
   if (!footer) return;
@@ -1468,6 +1480,16 @@ function enhanceFooterEditorial() {
     // Footer-Credit (von injectFooterCredit) bleibt darunter
     footer.querySelector('.container').insertAdjacentElement('afterend', navWrap);
   }
+
+  // Zahlungsarten als kleine Logos (inline-SVG, die CSP lässt keine fremden Bilder zu).
+  const payWrap = document.createElement('div');
+  payWrap.className = 'footer-pay container';
+  payWrap.innerHTML = `
+    <p class="footer-col-label">Wir akzeptieren</p>
+    <ul class="footer-pay-list">${PAYMENT_BADGES.map(b =>
+      `<li class="pay-badge" role="img" aria-label="${b.label}" title="${b.label}">${b.svg}</li>`).join('')}</ul>
+  `;
+  footer.appendChild(payWrap);
 
   // Bottom-Strip: Copyright + Inhaber. Vol/No-Theater entfernt.
   const year = new Date().getFullYear();
@@ -2057,16 +2079,31 @@ function renderWeekList(weekData, monday, today) {
   });
 }
 
+/* Preis-Helfer für den Brötchen-Service.
+   parseEuro: "2,50 €" / "2.5" / 2.5 -> 2.5 (Euro, auf Cent gerundet) oder null.
+   formatEuro: 2.5 -> "2,50 €". */
+function parseEuro(v) {
+  if (typeof v === 'number') return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
+  const m = String(v || '').replace(/\s/g, '').replace(',', '.').match(/\d+(\.\d+)?/);
+  const n = m ? parseFloat(m[0]) : NaN;
+  return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+}
+function formatEuro(n) {
+  return Number(n).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+}
+
 /* Baut eine Brötchen-Sorten-Zeile (für vom Inhaber gepflegte Sorten) */
 function buildBroetchenRow(item) {
   const name = escapeHtml(item.name || '');
   const desc = escapeHtml(item.desc || '');
   const veg  = item.veg ? ' <span class="broetchen-badge">vegetarisch</span>' : '';
+  const price = parseEuro(item.price);
   return `
-    <li class="broetchen-row" data-name="${escapeAttr(item.name || '')}">
+    <li class="broetchen-row" data-name="${escapeAttr(item.name || '')}"${price ? ` data-price="${price}"` : ''}>
       <div class="broetchen-info">
         <span class="broetchen-name">${name}${veg}</span>
         ${desc ? `<span class="broetchen-desc">${desc}</span>` : ''}
+        ${price ? `<span class="broetchen-price">${formatEuro(price)}</span>` : ''}
       </div>
       <div class="qty-stepper">
         <button type="button" class="qty-btn" data-step="-1" aria-label="Weniger ${name}">−</button>
@@ -2080,7 +2117,8 @@ function buildBroetchenRow(item) {
 function initOrderForm() {
   const form = document.getElementById('order-form');
   if (!form) return;
-  const MIN_ORDER = 10;
+  // Keine Mindestmenge mehr (Wunsch des Inhabers): ab einem Brötchen bestellbar.
+  const MIN_ORDER = 1;
 
   const sortListEl = document.getElementById('broetchen-list');
   const countEl = document.getElementById('order-count');
@@ -2104,11 +2142,18 @@ function initOrderForm() {
   // wenn der Inhaber die Sorten ändert) — so bleibt getItems korrekt.
   const getRows = () => Array.from(document.querySelectorAll('.broetchen-row'));
 
+  // Der Preis wird mit der Bestellung gespeichert (Stand zum Bestellzeitpunkt),
+  // damit spätere Preisänderungen alte Bestellungen nicht verändern.
   const getItems = () => getRows()
-    .map(row => ({
-      name: row.dataset.name || '',
-      qty: parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0
-    }))
+    .map(row => {
+      const it = {
+        name: row.dataset.name || '',
+        qty: parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0
+      };
+      const price = parseEuro(row.dataset.price);
+      if (price) it.price = price;
+      return it;
+    })
     .filter(it => it.qty > 0);
 
   const render = () => {
@@ -2116,22 +2161,24 @@ function initOrderForm() {
     const total = items.reduce((s, it) => s + it.qty, 0);
     if (countEl) countEl.textContent = String(total);
     if (listEl) {
+      const priced = items.filter(it => it.price);
+      const sum = priced.reduce((s, it) => s + Math.round(it.price * 100) * it.qty, 0) / 100;
+      const sumLabel = alsterLang() === 'en' ? 'Total' : 'Summe';
+      const sumNote = priced.length < items.length
+        ? `<small class="order-summary-sum-note">${alsterLang() === 'en' ? 'excl. items without price' : 'ohne Sorten ohne Preis'}</small>`
+        : '';
       listEl.innerHTML = items.length
-        ? items.map(it => `<li><span>${escapeHtml(it.name)}</span><span class="order-summary-qty">${it.qty}×</span></li>`).join('')
+        ? items.map(it => `<li><span>${escapeHtml(it.name)}</span><span class="order-summary-amount"><span class="order-summary-qty">${it.qty}×</span>${it.price ? `<span class="order-summary-price">${formatEuro(it.price * it.qty)}</span>` : ''}</span></li>`).join('')
+          + (priced.length ? `<li class="order-summary-total"><span>${sumLabel}${sumNote}</span><span class="order-summary-price">${formatEuro(sum)}</span></li>` : '')
         : '<li class="order-summary-empty">Noch nichts ausgewählt.</li>';
     }
     const ok = total >= MIN_ORDER;
     if (minNote) {
-      if (total === 0) {
-        minNote.textContent = `Mindestbestellung: ${MIN_ORDER} Brötchen.`;
-        minNote.classList.remove('is-met', 'is-below');
-      } else if (ok) {
-        minNote.textContent = 'Mindestbestellung erreicht.';
-        minNote.classList.add('is-met'); minNote.classList.remove('is-below');
-      } else {
-        minNote.textContent = `Noch ${MIN_ORDER - total} bis zur Mindestbestellung.`;
-        minNote.classList.add('is-below'); minNote.classList.remove('is-met');
-      }
+      minNote.textContent = total === 0
+        ? (alsterLang() === 'en' ? 'Choose your rolls above.' : 'Wählen Sie oben Ihre Brötchen aus.')
+        : '';
+      minNote.hidden = total > 0;
+      minNote.classList.remove('is-met', 'is-below');
     }
     if (submitBtn) submitBtn.disabled = !ok;
   };
@@ -2180,7 +2227,7 @@ function initOrderForm() {
     const total = items.reduce((s, it) => s + it.qty, 0);
     const en = alsterLang() === 'en';
     if (total < MIN_ORDER) {
-      setFormStatus(status, en ? `Please select at least ${MIN_ORDER} rolls.` : `Bitte wählen Sie mindestens ${MIN_ORDER} Brötchen.`, 'error');
+      setFormStatus(status, en ? 'Please select at least one roll.' : 'Bitte wählen Sie mindestens ein Brötchen.', 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -2218,7 +2265,7 @@ function initOrderForm() {
       render();
     } else {
       // Fallback: Mail-Programm
-      const lines = items.map(it => `${it.qty}× ${it.name}`).join('\n');
+      const lines = items.map(it => `${it.qty}× ${it.name}${it.price ? ` (${formatEuro(it.price * it.qty)})` : ''}`).join('\n');
       const subject = `Brötchen-Bestellung (${total} Stück) – ${entry.name}`;
       const body = encodeURIComponent(
         `Bestellung:\n${lines}\n\nGesamt: ${total} Brötchen\n` +
