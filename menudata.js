@@ -103,5 +103,5 @@ window.ALSTERCAFE_MENU_DEFAULT = {
       ]
     }
   ],
-  footnote: 'Alle Preise in Euro inkl. MwSt. Änderungen vorbehalten. Brot, Brötchen, Croissants und Franzbrötchen kommen frisch aus unserer eigenen Backstube.'
+  footnote: 'Alle Preise in Euro inkl. MwSt. Änderungen vorbehalten. Brötchen, Croissants und Franzbrötchen kommen frisch aus unserer eigenen Backstube.'
 };

@@ -29,6 +29,12 @@ const REPLY_TO = Deno.env.get("REPLY_TO") || MAIL_TO;
 // Optionaler Schutz: wenn gesetzt, muss der Webhook den Header
 // "x-webhook-secret" mit genau diesem Wert senden.
 const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET") || "";
+// Von Supabase automatisch bereitgestellt. Damit lesen wir den Datensatz
+// selbst aus der Datenbank nach, statt dem mitgeschickten Inhalt zu trauen.
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+// Nur ganz frische Einträge lösen Mails aus (Webhook feuert sofort).
+const MAX_AGE_MS = 3 * 60 * 1000;
 
 const LOGO = "https://alstercafe.de/image.png";
 const ADMIN = "Im Mitgliederbereich ansehen: https://alstercafe.de/admin.html";
@@ -168,8 +174,31 @@ Deno.serve(async (req) => {
   try { payload = await req.json(); } catch { return new Response("bad request", { status: 400 }); }
 
   const table = payload?.table;
-  const r = payload?.record ?? {};
   if (payload?.type !== "INSERT" || (table !== "reservations" && table !== "orders")) {
+    return new Response("ignored", { status: 200 });
+  }
+
+  // Schutz gegen Missbrauch: Die Funktion ist mit dem öffentlichen Schlüssel
+  // aufrufbar. Damit niemand über sie Mails an beliebige Adressen auslöst,
+  // zählt nur ein Datensatz, der wirklich gerade in der Datenbank angelegt wurde.
+  const id = String(payload?.record?.id ?? "");
+  if (!id || !SUPABASE_URL || !SERVICE_KEY) {
+    console.warn("notify-new: ohne id oder Server-Schlüssel – ignoriert");
+    return new Response("ignored", { status: 200 });
+  }
+  let r: any = null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}&select=*`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    const rows = res.ok ? await res.json() : [];
+    r = Array.isArray(rows) ? rows[0] : null;
+  } catch (e) {
+    console.error("notify-new: Datensatz nicht lesbar", e);
+  }
+  const age = r ? Date.now() - new Date(r.received_at).getTime() : Infinity;
+  if (!r || !(age >= -60000 && age <= MAX_AGE_MS)) {
+    console.warn("notify-new: Datensatz fehlt oder ist nicht frisch – keine Mail", id);
     return new Response("ignored", { status: 200 });
   }
 
