@@ -6329,11 +6329,15 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-variation-settings: "opsz" 96;
   transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
-.broetchen-row:hover {
-  background: linear-gradient(90deg, rgba(184, 137, 62, 0.05), transparent 80%);
-  padding-left: 64px;
+/* Nur bei echter Maus: auf dem Handy bleibt :hover nach dem Antippen "kleben"
+   und die Zeile würde nach rechts rutschen. */
+@media (hover: hover) and (pointer: fine) {
+  .broetchen-row:hover {
+    background: linear-gradient(90deg, rgba(184, 137, 62, 0.05), transparent 80%);
+    padding-left: 64px;
+  }
+  .broetchen-row:hover::before { opacity: 1; transform: translateX(-2px); }
 }
-.broetchen-row:hover::before { opacity: 1; transform: translateX(-2px); }
 .broetchen-row.is-active::before { opacity: 1; color: var(--gold); }
 .broetchen-name {
   font-family: 'Fraunces', serif;
@@ -9132,4 +9136,61 @@ html.has-js-scroll { scroll-behavior: auto; }
   background: rgba(184, 137, 62, 0.08);
   font-size: .92rem;
   color: var(--muted);
+}
+
+
+/* ===============================================
+   FEINSCHLIFF aus der Seiten-Analyse (Handy, Barrierefreiheit, Ruhe)
+   Steht bewusst am Ende, damit diese Regeln die älteren gewinnen.
+   =============================================== */
+
+/* Anker-Sprünge landen nicht mehr unter dem festen Kopfbereich */
+[id] { scroll-margin-top: 96px; }
+
+/* Fokus-Ring bleibt auch im Windows-Kontrastmodus sichtbar */
+:focus-visible { outline: 2px solid transparent; outline-offset: 2px; }
+
+/* Kapitel-Navigation rechts: nur klickbar, wenn sie auch sichtbar ist */
+.chapter-rail:not(.is-visible) .chapter-rail-item { pointer-events: none; }
+
+/* Kleine Schrift auf dunklem Grund besser lesbar (Kontrast) */
+.lunch-day-date { color: rgba(241, 231, 211, 0.68); }
+.lunch-closed { color: rgba(241, 231, 211, 0.62); }
+.footer-credit { color: rgba(241, 231, 211, 0.64); }
+.footer-bottom-strip { color: rgba(241, 231, 211, 0.66); }
+.order-summary-fineprint { color: rgba(241, 231, 211, 0.66); }
+.order-summary-empty { color: rgba(241, 231, 211, 0.62) !important; }
+
+@media (max-width: 760px) {
+  /* Großes Kapitel-Zeichen auf dem Mittagstisch: auf dem Handy klein, sonst
+     liegt es über dem Inhalt. Und überall auf dem Handy dezenter. */
+  .lunch .chapter-mark { font-size: 1.8rem; }
+  .chapter.is-mark-in .chapter-mark,
+  .chapter-dark .chapter-mark,
+  .chapter.is-mark-in.chapter-dark .chapter-mark { opacity: 0.3; }
+  /* Kopfleiste ohne teuren Weichzeichner (ruckelt auf älteren Handys) */
+  .site-header {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(255, 252, 244, 0.96);
+  }
+}
+
+@media (max-width: 640px) {
+  /* Startseite: Handy-Regeln gelten auch für das "Cinematic"-Hero */
+  .hero-cinematic .hero-est { opacity: 0.025; right: -8vw; }
+  .hero-cinematic .hero-cta { gap: 14px; }
+  .hero-cinematic .hero-partner { margin-top: 22px; }
+  /* Mengen-Knöpfe groß genug zum Antippen */
+  .qty-btn { width: 44px; height: 44px; }
+}
+
+/* Weniger Bewegung, wenn im System so eingestellt */
+@media (prefers-reduced-motion: reduce) {
+  .live-status[data-state="open"] .live-status-dot,
+  .edit-dot,
+  .hero-partner,
+  .hero-mark,
+  .live-status,
+  .cookie-banner { animation: none !important; }
 }

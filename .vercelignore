@@ -1,0 +1,9 @@
+# Interne Dateien nicht öffentlich ausliefern (Anleitungen, Datenbank-Setup,
+# Server-Funktionen, Tests, Konfiguration anderer Hoster).
+*.md
+setup.sql
+supabase/
+tests/
+netlify.toml
+_headers
+node_modules/
