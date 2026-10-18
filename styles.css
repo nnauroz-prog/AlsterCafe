@@ -9363,3 +9363,5 @@ body.sheet-open { overflow: hidden; }
 }
 @keyframes lunch-sheet-up { from { transform: translateY(100%); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .lunch-sheet[open] { animation: none; } }
+.berliner-switch { justify-self: start; min-height: 48px; padding-inline: 22px; }
+.berliner-switch.is-on { background: #8a2f2f; border-color: #8a2f2f; }

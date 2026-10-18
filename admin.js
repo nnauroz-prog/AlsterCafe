@@ -160,6 +160,7 @@ async function init() {
 
   // Berliner-Vorbestellung
   document.getElementById('berliner-settings-form')?.addEventListener('submit', onSaveBerlinerSettings);
+  document.getElementById('berliner-switch')?.addEventListener('click', onToggleBerliner);
   document.getElementById('berliner-items-form')?.addEventListener('submit', onSaveBerlinerItems);
   document.getElementById('berliner-add')?.addEventListener('click', () => addBerlinerRow());
 
@@ -2062,6 +2063,7 @@ const fmtIsoDe = iso => {
 function renderBerlinerAdmin() {
   const st = window.alsterDb?.get('berliner-settings') || {};
   if (bEl('berliner-active')) bEl('berliner-active').checked = !!st.active;
+  updateBerlinerSwitch(!!st.active);
   [['berliner-order-from', 'orderFrom'], ['berliner-order-to', 'orderTo'],
    ['berliner-pickup-from', 'pickupFrom'], ['berliner-pickup-to', 'pickupTo'],
    ['berliner-title', 'title'], ['berliner-text', 'text']].forEach(([id, k]) => {
@@ -2083,7 +2085,7 @@ function renderBerlinerAdmin() {
 function updateBerlinerLive(st) {
   const today = todayIso();
   let msg, live = false;
-  if (!st.active) msg = 'Aus — auf der Webseite nicht sichtbar.';
+  if (!st.active) msg = 'Aus — nur hier im Mitgliederbereich, auf der Webseite nicht sichtbar.';
   else if (st.orderFrom && today < st.orderFrom) msg = `Eingeschaltet — erscheint ab ${fmtIsoDe(st.orderFrom)} auf der Webseite.`;
   else if (st.orderTo && today > st.orderTo) msg = `Bestellzeitraum ist am ${fmtIsoDe(st.orderTo)} abgelaufen — nicht mehr sichtbar.`;
   else { live = true; msg = `Jetzt sichtbar: Menüpunkt „Berliner-Bestellservice“ und Hinweis auf der Startseite${st.orderTo ? ` (bis ${fmtIsoDe(st.orderTo)})` : ''}.`; }
@@ -2117,8 +2119,28 @@ function addBerlinerRow(item, skipStatus) {
   if (!skipStatus) setStatus(bEl('berliner-items-status'), 'Nicht vergessen: „Sorten speichern" klicken.', '');
 }
 
+function updateBerlinerSwitch(active) {
+  const btn = bEl('berliner-switch');
+  if (!btn) return;
+  btn.textContent = active ? 'Auf der Webseite deaktivieren' : 'Auf der Webseite aktivieren';
+  btn.classList.toggle('is-on', active);
+  btn.setAttribute('aria-pressed', String(active));
+}
+
+// Ein Knopfdruck: an/aus umschalten und sofort speichern (inkl. eingetragener Daten).
+async function onToggleBerliner() {
+  const box = bEl('berliner-active');
+  if (!box) return;
+  const next = !box.checked;
+  if (next && !confirm('Berliner-Vorbestellung jetzt auf der Webseite aktivieren?\n\nDann erscheinen der Menüpunkt und der Hinweis auf der Startseite (im eingestellten Zeitraum).')) return;
+  box.checked = next;
+  const ok = await onSaveBerlinerSettings();
+  if (ok === false) { box.checked = !next; }
+  updateBerlinerSwitch(box.checked);
+}
+
 async function onSaveBerlinerSettings(e) {
-  e.preventDefault();
+  e?.preventDefault();
   const st = {
     active:     !!bEl('berliner-active')?.checked,
     orderFrom:  bEl('berliner-order-from')?.value || '',
@@ -2130,16 +2152,17 @@ async function onSaveBerlinerSettings(e) {
   };
   const status = bEl('berliner-settings-status');
   if (st.orderFrom && st.orderTo && st.orderFrom > st.orderTo) {
-    setStatus(status, '„Bestellbar ab“ liegt nach „Bestellbar bis“.', 'error'); return;
+    setStatus(status, '„Bestellbar ab“ liegt nach „Bestellbar bis“.', 'error'); return false;
   }
   if (st.pickupFrom && st.pickupTo && st.pickupFrom > st.pickupTo) {
-    setStatus(status, '„Abholung von“ liegt nach „Abholung bis“.', 'error'); return;
+    setStatus(status, '„Abholung von“ liegt nach „Abholung bis“.', 'error'); return false;
   }
   const ok = await window.alsterDb?.set('berliner-settings', st);
+  if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
   updateBerlinerLive(st);
-  if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
-  setStatus(status, st.active ? 'Gespeichert · Aktion eingeschaltet' : 'Gespeichert · Aktion ausgeschaltet', 'ok');
+  setStatus(status, st.active ? 'Gespeichert · auf der Webseite aktiv' : 'Gespeichert · nur im Mitgliederbereich (nicht auf der Webseite)', 'ok');
   if (typeof logActivity === 'function') logActivity(st.active ? 'Berliner-Vorbestellung eingeschaltet' : 'Berliner-Vorbestellung ausgeschaltet');
+  return true;
 }
 
 async function onSaveBerlinerItems(e) {

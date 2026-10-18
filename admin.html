@@ -10,9 +10,9 @@
   <meta name="theme-color" content="#3D2415" />
   <link rel="icon" type="image/png" href="image.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r165" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r165" />
-  <script>(function(){var V='2026-05-10-r165';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r166" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r166" />
+  <script>(function(){var V='2026-05-10-r166';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -764,18 +764,20 @@
               <summary>Hilfe: So funktioniert die Aktion</summary>
               <div class="help-box-body">
                 <ul>
-                  <li><strong>Einschalten</strong> → Haken setzen und „Speichern“ klicken.</li>
+                  <li>Zuerst Zeitraum und Sorten eintragen. Die Aktion bleibt so lange <strong>nur hier im Mitgliederbereich</strong>.</li>
+                  <li><strong>„Auf der Webseite aktivieren“</strong> drücken → ab sofort sichtbar (Menüpunkt + Hinweis auf der Startseite). Derselbe Knopf schaltet wieder ab.</li>
                   <li><strong>Bestellbar ab / bis:</strong> Nur in diesem Zeitraum sind Menüpunkt, Startseiten-Hinweis und Formular zu sehen. Leer lassen = sofort bzw. ohne Ende.</li>
                   <li><strong>Abholung von / bis:</strong> Nur diese Tage kann der Kunde als Abholdatum wählen (z. B. 30.12. bis 31.12.).</li>
-                  <li>Nach Silvester einfach den Haken entfernen — oder „Bestellbar bis“ setzen, dann verschwindet alles automatisch.</li>
+                  <li>Nach Silvester „Auf der Webseite deaktivieren“ drücken — oder „Bestellbar bis“ setzen, dann verschwindet alles automatisch.</li>
                 </ul>
               </div>
             </details>
             <form id="berliner-settings-form" class="berliner-settings">
-              <label class="berliner-toggle">
-                <input type="checkbox" id="berliner-active" />
-                <span>Berliner-Vorbestellung auf der Webseite anzeigen</span>
-              </label>
+              <!-- Ein Knopfdruck schaltet die Aktion auf der Webseite an/aus (speichert sofort) -->
+              <input type="checkbox" id="berliner-active" hidden />
+              <button type="button" class="btn btn-primary berliner-switch" id="berliner-switch">
+                Auf der Webseite aktivieren
+              </button>
               <div class="berliner-dates">
                 <label><span>Bestellbar ab</span><input type="date" id="berliner-order-from" /></label>
                 <label><span>Bestellbar bis</span><input type="date" id="berliner-order-to" /></label>
@@ -955,9 +957,9 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r165" defer></script>
-  <script src="db.js?v=2026-05-10-r165" defer></script>
-  <script src="menudata.js?v=2026-05-10-r165" defer></script>
-  <script src="admin.js?v=2026-05-10-r165" defer></script>
+  <script src="config.js?v=2026-05-10-r166" defer></script>
+  <script src="db.js?v=2026-05-10-r166" defer></script>
+  <script src="menudata.js?v=2026-05-10-r166" defer></script>
+  <script src="admin.js?v=2026-05-10-r166" defer></script>
 </body>
 </html>
