@@ -9,7 +9,7 @@
 // geprüft. Der öffentliche anon-Key allein genügt NICHT.
 //
 // Versand: smtp.strato.de, Port 465 (SSL/TLS), Login = volle Adresse +
-// Postfach-Passwort. From MUSS = SMTP_USER (info@alstercafe.de) sein.
+// Postfach-Passwort. From MUSS = SMTP_USER (z. B. reservierung@alstercafe.de) sein.
 // Secrets: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM, [REPLY_TO].
 // SUPABASE_URL / SUPABASE_ANON_KEY werden von Supabase automatisch bereitgestellt.
 // ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const LOGO = "https://alstercafe.de/image.png";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
