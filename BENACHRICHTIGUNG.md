@@ -1,6 +1,6 @@
 # Benachrichtigung & Bestätigungs-E-Mails
 
-Zwei Dinge, beide über das **eigene STRATO-Postfach `info@alstercafe.de`** (kein Fremddienst):
+Zwei Dinge, beide über dein **eigenes STRATO-Mailpaket** (kein Fremddienst):
 
 1. **Automatische Benachrichtigung an dich** bei jeder neuen Reservierung/Bestellung.
    → Edge Function `notify-new` + Database-Webhooks.
@@ -10,19 +10,22 @@ Zwei Dinge, beide über das **eigene STRATO-Postfach `info@alstercafe.de`** (kei
 
 Der Code liegt im Projekt unter `supabase/functions/notify-new/` und
 `supabase/functions/send-confirmation/`. Versendet wird direkt über den STRATO-Postausgang
-(`smtp.strato.de`, Port 465, SSL/TLS) — die Mail kommt **von info@alstercafe.de**.
+(`smtp.strato.de`, Port 465, SSL/TLS) — die Mail kommt **von reservierung@alstercafe.de**.
 
 **Vorteile dieses Wegs:** kein neues Konto/Fremddienst, **keine DNS-Einträge**, deutscher
-Datenschutz (STRATO), kostenlos im Mail-Paket. Nötig ist nur das **Postfach-Passwort** von
-info@alstercafe.de, das verschlüsselt als Supabase-Secret liegt (nicht im Code).
+Datenschutz (STRATO), kostenlos im Mail-Paket.
+
+**Eingerichtet ist ein eigenes Versand-Postfach `reservierung@alstercafe.de`.** Darüber gehen
+die Mails raus. So bleibt das Passwort von info@ unangetastet (Geräte, die info@ nutzen, laufen
+weiter). Benachrichtigungen und Gast-Antworten landen trotzdem bei **info@alstercafe.de**. Das
+Passwort von reservierung@ liegt verschlüsselt als Supabase-Secret (nicht im Code).
 
 ---
 
 ## Einrichtung — Schritt für Schritt (im Supabase-Dashboard)
 
-**1. Postfach-Passwort bereithalten.** Du brauchst das Passwort von `info@alstercafe.de`.
-Falls unbekannt: STRATO → *E-Mails verwalten* → `info@alstercafe.de` → *Postfach bearbeiten* →
-neues Passwort setzen und notieren.
+**1. Versand-Postfach anlegen** (erledigt). STRATO → *E-Mails verwalten* → neues Postfach
+`reservierung@alstercafe.de` (Domain **.de**!) mit eigenem Passwort, Passwort notieren.
 
 **2. Beide Edge Functions anlegen** (Supabase → Edge Functions → *Create function*), Code jeweils
 aus dem Projekt einfügen → *Deploy*:
@@ -32,9 +35,9 @@ aus dem Projekt einfügen → *Deploy*:
 **3. Secrets hinterlegen** (Supabase → Edge Functions → *Secrets* / *Manage secrets*):
 - `SMTP_HOST` = `smtp.strato.de`
 - `SMTP_PORT` = `465`
-- `SMTP_USER` = `info@alstercafe.de`
-- `SMTP_PASS` = **das Postfach-Passwort** von info@
-- `MAIL_FROM` = `Alstercafé <info@alstercafe.de>`  ← Absender MUSS info@ sein (STRATO-Vorgabe)
+- `SMTP_USER` = `reservierung@alstercafe.de`
+- `SMTP_PASS` = **das Passwort** von reservierung@
+- `MAIL_FROM` = `Alstercafé <reservierung@alstercafe.de>`  ← Absender MUSS = SMTP_USER sein (STRATO-Vorgabe)
 - `MAIL_TO`   = `info@alstercafe.de`  ← wohin die Benachrichtigung geht
 - `REPLY_TO`  = `info@alstercafe.de`  (optional; wohin Antworten gehen)
 
@@ -43,7 +46,7 @@ aus dem Projekt einfügen → *Deploy*:
 - Tabelle `orders`, Event **Insert**, Ziel **Edge Function `notify-new`**.
 
 **Ergebnis:** Du bekommst bei jeder neuen Anfrage eine E-Mail an info@alstercafe.de (Absender
-info@, „Antworten" geht direkt an den Gast), und der **„Bestätigung senden"-Knopf** verschickt
+reservierung@, „Antworten" geht direkt an den Gast), und der **„Bestätigung senden"-Knopf** verschickt
 die schöne Bestätigungs-E-Mail an den Gast.
 
 > Solange `SMTP_USER`/`SMTP_PASS` nicht gesetzt sind, zeigt der Knopf eine klare Meldung
@@ -58,7 +61,7 @@ Hat der Gast keine E-Mail angegeben, wird der Knopf nicht angezeigt.
 
 ## Wenn etwas nicht ankommt
 - Supabase → Edge Functions → Logs der jeweiligen Funktion (Fehlertext? z. B. falsches Passwort).
-- Passt `SMTP_USER` = volle Adresse und `MAIL_FROM` = dieselbe info@-Adresse? (STRATO verlangt das.)
+- Passt `SMTP_USER` = volle Adresse und `MAIL_FROM` = dieselbe Adresse? (STRATO verlangt das.)
 - Ist das info@-Postfach evtl. voll? Dann vorher ausmisten (sonst blockiert STRATO den Versand).
 - Die Anfrage steht unabhängig vom Mailversand **immer** im Mitgliederbereich.
 

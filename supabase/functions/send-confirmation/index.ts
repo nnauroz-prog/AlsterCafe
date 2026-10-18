@@ -8,13 +8,13 @@
 // Token (Authorization: Bearer …) mitbringen; das wird gegen die Auth-API
 // geprüft. Der öffentliche anon-Key allein genügt NICHT.
 //
-// Versand: smtp.strato.de, Port 465 (SSL/TLS), Login = volle Adresse +
-// Postfach-Passwort. From MUSS = SMTP_USER (info@alstercafe.de) sein.
+// Versand per Nodemailer: smtp.strato.de, Port 465 (SSL/TLS), Login = volle Adresse +
+// Postfach-Passwort. From MUSS = SMTP_USER (z. B. reservierung@alstercafe.de) sein.
 // Secrets: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM, [REPLY_TO].
 // SUPABASE_URL / SUPABASE_ANON_KEY werden von Supabase automatisch bereitgestellt.
 // ---------------------------------------------------------------------------
 
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp.strato.de";
 const SMTP_PORT = Number(Deno.env.get("SMTP_PORT") || "465");
@@ -30,12 +30,19 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const LOGO = "https://alstercafe.de/image.png";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 function esc(v: unknown): string {
   return String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
+}
+
+// Einfache Text-Fassung der HTML-Mail (für Mailprogramme ohne HTML).
+function htmlToText(html: string): string {
+  return html.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|tr|h1)>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
+    .replace(/[ \t]+/g, " ").replace(/\n\s*\n\s*\n+/g, "\n\n").trim();
 }
 
 // Prüft, ob der Aufrufer ein echter eingeloggter Nutzer ist (nicht nur anon).
@@ -122,6 +129,15 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
 }
 
 Deno.serve(async (req) => {
+  try {
+    return await handle(req);
+  } catch (e) {
+    console.error("Unerwarteter Fehler", e);
+    return new Response(JSON.stringify({ error: "Unerwarteter Fehler: " + ((e && (e as any).message) || String(e)) }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+  }
+});
+
+async function handle(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return new Response("method not allowed", { status: 405, headers: CORS });
 
@@ -140,22 +156,24 @@ Deno.serve(async (req) => {
   }
 
   const { subject, html } = renderEmail(body?.type === "order" ? "order" : "reservation", body);
-  const client = new SMTPClient({
-    connection: { hostname: SMTP_HOST, port: SMTP_PORT, tls: true, auth: { username: SMTP_USER, password: SMTP_PASS } },
-  });
   try {
-    await client.send({
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+    await transporter.sendMail({
       from: MAIL_FROM,
-      to: [to],
+      to,
       replyTo: REPLY_TO || undefined,
       subject,
-      content: "auto",
       html,
+      text: htmlToText(html),
     });
   } catch (e) {
-    try { await client.close(); } catch (_) { /* ignore */ }
-    return new Response(JSON.stringify({ error: "Versand fehlgeschlagen", detail: String(e) }), { status: 502, headers: { ...CORS, "Content-Type": "application/json" } });
+    console.error("Versand fehlgeschlagen", e);
+    return new Response(JSON.stringify({ error: "Versand fehlgeschlagen: " + ((e && (e as any).message) || String(e)) }), { status: 502, headers: { ...CORS, "Content-Type": "application/json" } });
   }
-  try { await client.close(); } catch (_) { /* ignore */ }
   return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...CORS, "Content-Type": "application/json" } });
-});
+}

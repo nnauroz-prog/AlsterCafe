@@ -3,22 +3,22 @@
 // Wird per Database-Webhook bei INSERT in `reservations` / `orders` aufgerufen
 // und verschickt eine Benachrichtigung an den Inhaber (MAIL_TO).
 //
-// Versand über das EIGENE STRATO-Postfach per SMTP (kein Fremddienst):
+// Versand über das EIGENE STRATO-Postfach per SMTP mit Nodemailer (kein Fremddienst):
 //   smtp.strato.de, Port 465 (SSL/TLS), Login = volle Adresse + Postfach-Passwort.
 // Dadurch kommt die Mail von info@alstercafe.de (offiziell, gute Zustellbarkeit
 // über STRATOs eigenes SPF/DKIM) und es ist keine DNS-/Domain-Verifizierung nötig.
 //
 // Secrets (Supabase → Edge Functions → Secrets):
 //   SMTP_HOST (Standard smtp.strato.de), SMTP_PORT (Standard 465),
-//   SMTP_USER = info@alstercafe.de, SMTP_PASS = Postfach-Passwort,
-//   MAIL_FROM = "Alstercafé <info@alstercafe.de>" (From MUSS = SMTP_USER sein),
+//   SMTP_USER = reservierung@alstercafe.de, SMTP_PASS = Postfach-Passwort,
+//   MAIL_FROM = "Alstercafé <reservierung@alstercafe.de>" (From MUSS = SMTP_USER sein),
 //   MAIL_TO = info@alstercafe.de, optional REPLY_TO, optional WEBHOOK_SECRET.
 //
 // Robust: ein fehlgeschlagener Mailversand wird nur geloggt, nie geworfen —
 // die Anfrage selbst liegt bereits sicher in der Datenbank.
 // ---------------------------------------------------------------------------
 
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp.strato.de";
 const SMTP_PORT = Number(Deno.env.get("SMTP_PORT") || "465");
@@ -36,25 +36,26 @@ function esc(v: unknown): string {
 
 async function sendMail(subject: string, html: string, replyTo?: string): Promise<void> {
   if (!SMTP_USER || !SMTP_PASS) { console.error("SMTP-Zugang (SMTP_USER/SMTP_PASS) fehlt – kein Versand"); return; }
-  const client = new SMTPClient({
-    connection: { hostname: SMTP_HOST, port: SMTP_PORT, tls: true, auth: { username: SMTP_USER, password: SMTP_PASS } },
-  });
   try {
-    await client.send({
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+    await transporter.sendMail({
       from: MAIL_FROM,
       to: MAIL_TO,
       // reply_to = Gast-Adresse: der Inhaber kann in seinem Mailprogramm direkt
       // auf "Antworten" tippen und schreibt sofort an den Gast.
       replyTo: (replyTo && replyTo.includes("@")) ? replyTo : undefined,
       subject,
-      content: "auto",
       html,
+      text: html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|h2)>/gi, "\n").replace(/<[^>]+>/g, "").trim(),
     });
     console.log("Mail gesendet an", MAIL_TO);
   } catch (e) {
     console.error("Mailversand fehlgeschlagen an", MAIL_TO, e);
-  } finally {
-    try { await client.close(); } catch (_) { /* ignore */ }
   }
 }
 
