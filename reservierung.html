@@ -44,9 +44,9 @@
   <div class="topbar">
     <div class="container topbar-inner">
       <a href="tel:+494022692891" class="topbar-link"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
-      <span class="topbar-sep">·</span>
+      <span class="topbar-sep" aria-hidden="true">·</span>
       <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener" class="topbar-link"><svg class="ico ico-sm"><use href="#i-pin"/></svg> Ifflandstr. 45, 22087 Hamburg</a>
-      <span class="topbar-sep">·</span>
+      <span class="topbar-sep" aria-hidden="true">·</span>
       <span class="topbar-link"><svg class="ico ico-sm"><use href="#i-wifi"/></svg> Freies WLAN</span>
     </div>
   </div>
@@ -93,7 +93,7 @@
           <a class="btn btn-link light" href="tel:+494022692891"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
           <ul class="reservation-info">
             <li><strong>So läuft's:</strong> Sie senden die Anfrage, wir melden uns am selben Tag per Anruf oder Mail zurück mit Bestätigung. Eine Online-Sofortbestätigung gibt es nicht — das ist Absicht.</li>
-            <li>Reservierungen werktags zu unseren Öffnungszeiten.</li>
+            <li>Reservierungen täglich zu unseren Öffnungszeiten.</li>
             <li>Festtagstorten und besondere Wünsche gern auf Vorbestellung.</li>
             <li>Ihre Daten werden ausschließlich zur Bearbeitung der Anfrage genutzt.</li>
           </ul>
@@ -111,9 +111,9 @@
             <label><span>Personen <em>*</em></span>
               <select name="Personen" required>
                 <option value="">Bitte wählen</option>
-                <option>1 Person</option><option>2 Personen</option><option>3 Personen</option><option>4 Personen</option>
-                <option>5 Personen</option><option>6 Personen</option><option>7 Personen</option><option>8 Personen</option>
-                <option>mehr als 8 Personen</option>
+                <option value="1 Person">1 Person</option><option value="2 Personen">2 Personen</option><option value="3 Personen">3 Personen</option><option value="4 Personen">4 Personen</option>
+                <option value="5 Personen">5 Personen</option><option value="6 Personen">6 Personen</option><option value="7 Personen">7 Personen</option><option value="8 Personen">8 Personen</option>
+                <option value="mehr als 8 Personen">mehr als 8 Personen</option>
               </select>
             </label>
           </div>
@@ -129,7 +129,7 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="footer-brand"><img src="image.png" alt="" class="brand-logo small" width="56" height="56" loading="lazy" decoding="async" /><p><strong>Alstercafé</strong><br/>Ifflandstr. 45 · 22087 Hamburg</p></div>
-      <nav class="footer-nav"><a href="mittagstisch.html">Mittagstisch</a><a href="speisekarte.html">Speisekarte</a><a href="broetchen.html">Brötchen-Service</a><a href="ueber-uns.html">Über uns</a><a href="reservierung.html">Reservierung</a><a href="kontakt.html">Kontakt</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="admin.html">Mitgliederbereich</a><a href="#" id="cookie-reset">Cookies anpassen</a></nav>
+      <nav class="footer-nav" aria-label="Footer"><a href="mittagstisch.html">Mittagstisch</a><a href="speisekarte.html">Speisekarte</a><a href="broetchen.html">Brötchen-Service</a><a href="ueber-uns.html">Über uns</a><a href="reservierung.html">Reservierung</a><a href="kontakt.html">Kontakt</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="admin.html">Mitgliederbereich</a><a href="#" id="cookie-reset">Cookies anpassen</a></nav>
       <p class="footer-meta">© <span id="year"></span> Alstercafé</p>
     </div>
   </footer>

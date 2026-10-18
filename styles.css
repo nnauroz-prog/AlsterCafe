@@ -9125,3 +9125,11 @@ html.has-js-scroll { scroll-behavior: auto; }
 .confirm-dialog-msg:focus { outline: none; border-color: var(--gold); }
 .confirm-dialog-hint { margin: 0; font-size: .8rem; color: var(--muted); }
 .confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.legal-lang-note {
+  margin: 4px 0 18px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--gold);
+  background: rgba(184, 137, 62, 0.08);
+  font-size: .92rem;
+  color: var(--muted);
+}

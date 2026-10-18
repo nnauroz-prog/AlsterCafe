@@ -322,7 +322,12 @@ function onPwToggle() {
 
 async function onLogout() {
   await window.alsterDb.auth.signOut();
+  // Gast-Daten (Namen, Telefon, E-Mail) nicht im Browser liegen lassen.
+  try {
+    ['reservations', 'orders'].forEach(k => localStorage.removeItem('alstercafe.' + k));
+  } catch (e) {}
   showLogin();
+  location.reload();
 }
 
 function showLogin() {
@@ -354,10 +359,13 @@ async function showDashboard() {
   refreshAnfragen();
   refreshOrders();
   // Live-Update wenn ueber das oeffentliche Formular etwas reinkommt
-  window.alsterDb?.subscribe?.((key) => {
-    if (key === 'reservations') refreshAnfragen();
-    if (key === 'orders') refreshOrders();
-  });
+  if (!window.__alsterInboxSubscribed) {
+    window.__alsterInboxSubscribed = true;
+    window.alsterDb?.subscribe?.((key) => {
+      if (key === 'reservations') refreshAnfragen();
+      if (key === 'orders') refreshOrders();
+    });
+  }
   // Sichtbare Anzeige, ob die Live-Verbindung steht (Aenderungen erscheinen
   // dann sofort auf allen Geraeten). Gibt der Inhaberin Gewissheit.
   window.alsterDb?.onSyncStatus?.(updateSyncPill);
@@ -439,16 +447,17 @@ function changeWeek(deltaDays) {
   renderWeek();
 }
 
-function onResetWeek() {
+async function onResetWeek() {
   if (!confirm('Möchten Sie alle Eingaben für diese Woche entfernen?')) return;
   const all = loadAll();
   delete all[isoDate(currentMonday)];
-  saveAll(all);
+  const ok = await saveAll(all);
   renderWeek();
-  setStatus(dom.saveStatus, 'Woche zurückgesetzt.', 'ok');
+  reportWeekSave(ok, 'Woche zurückgesetzt.');
+  if (ok) logActivity('Woche zurückgesetzt');
 }
 
-function onCopyFromPrevious() {
+async function onCopyFromPrevious() {
   const prevMonday = new Date(currentMonday);
   prevMonday.setDate(prevMonday.getDate() - 7);
   const all = loadAll();
@@ -463,9 +472,9 @@ function onCopyFromPrevious() {
     updatedAt: new Date().toISOString(),
     days: JSON.parse(JSON.stringify(prev.days))
   };
-  saveAll(all);
+  const ok = await saveAll(all);
   renderWeek();
-  setStatus(dom.saveStatus, 'Vorwoche kopiert. Bitte ggf. anpassen und speichern.', 'ok');
+  reportWeekSave(ok, 'Vorwoche kopiert. Bitte ggf. anpassen und speichern.');
 }
 
 function onExportJson() {
@@ -481,7 +490,7 @@ function onExportJson() {
   URL.revokeObjectURL(url);
 }
 
-function onSaveWeek(e) {
+async function onSaveWeek(e) {
   e.preventDefault();
   const all = loadAll();
 
@@ -513,10 +522,10 @@ function onSaveWeek(e) {
     }
   }
 
-  saveAll(all);
+  const ok = await saveAll(all);
   renderWeek();
-  setStatus(dom.saveStatus, `Gespeichert · ${formatTime(new Date())}`, 'ok');
-  if (typeof logActivity === 'function') logActivity('Wochenplan gespeichert');
+  reportWeekSave(ok, `Gespeichert · ${formatTime(new Date())}`);
+  if (ok) logActivity('Wochenplan gespeichert');
 }
 
 function renderWeek() {
@@ -650,16 +659,18 @@ function renderNotice() {
   setStatus(dom.noticeStatus, text ? 'Banner ist aktiv.' : 'Kein Banner aktiv.');
 }
 
-function onSaveNotice(e) {
+async function onSaveNotice(e) {
   e.preventDefault();
   const text = (dom.noticeInput.value || '').trim();
-  saveNotice(text);
+  const ok = await saveNotice(text);
+  if (!ok) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
   setStatus(dom.noticeStatus, text ? 'Hinweis gespeichert. Banner ist sichtbar.' : 'Banner ausgeblendet.', 'ok');
 }
 
-function onClearNotice() {
+async function onClearNotice() {
   dom.noticeInput.value = '';
-  saveNotice('');
+  const ok = await saveNotice('');
+  if (!ok) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
   setStatus(dom.noticeStatus, 'Banner ausgeblendet.', 'ok');
 }
 
@@ -1307,11 +1318,20 @@ async function onResetAll() {
 function loadAll() {
   return window.alsterDb?.get('weekly-menu') || {};
 }
-function saveAll(obj) {
-  window.alsterDb?.set('weekly-menu', obj).catch(e =>
-    setStatus(dom.saveStatus, 'Speichern fehlgeschlagen: ' + e.message, 'error')
-  );
-  logActivity('Wochenplan gespeichert');
+// Liefert true/false (dbSet wirft nicht, sondern meldet Fehler per false).
+async function saveAll(obj) {
+  try {
+    const ok = await window.alsterDb?.set('weekly-menu', obj);
+    return ok !== false;
+  } catch (e) {
+    console.error('Speichern fehlgeschlagen', e);
+    return false;
+  }
+}
+function reportWeekSave(ok, okText) {
+  if (ok) { setStatus(dom.saveStatus, okText, 'ok'); return; }
+  setStatus(dom.saveStatus, 'Speichern fehlgeschlagen. Bitte erneut versuchen.', 'error');
+  warnWriteFailed();
 }
 
 /* ---------- Aktivitätslog ---------- */
@@ -1347,14 +1367,14 @@ function renderActivityLog() {
 function loadNotice() {
   return window.alsterDb?.get('notice') || '';
 }
-function saveNotice(text) {
-  if (text) {
-    window.alsterDb?.set('notice', text);
-    logActivity('Hinweis-Banner aktualisiert');
-  } else {
-    window.alsterDb?.remove('notice');
-    logActivity('Hinweis-Banner ausgeblendet');
-  }
+async function saveNotice(text) {
+  let ok;
+  try {
+    ok = text ? await window.alsterDb?.set('notice', text) : await window.alsterDb?.remove('notice');
+  } catch (e) { ok = false; }
+  if (ok === false) return false;
+  logActivity(text ? 'Hinweis-Banner aktualisiert' : 'Hinweis-Banner ausgeblendet');
+  return true;
 }
 
 /* ---------- Konto: Passwort & Mitarbeiter ---------- */
@@ -1491,7 +1511,22 @@ async function refreshAnfragen() {
   renderOverviewSummary();
 }
 
+/* Während der Inhaber in einem Notizfeld tippt, nicht neu rendern (sonst geht der
+   noch nicht gespeicherte Text verloren). Neu gerendert wird nach dem Verlassen. */
+function deferRenderWhileTyping(listId, fn) {
+  const a = document.activeElement;
+  if (a && a.matches && a.matches('[data-note]') && a.closest('#' + listId)) {
+    if (!a.dataset.renderPending) {
+      a.dataset.renderPending = '1';
+      a.addEventListener('blur', () => setTimeout(fn, 0), { once: true });
+    }
+    return true;
+  }
+  return false;
+}
+
 function renderAnfragen() {
+  if (deferRenderWhileTyping('anfragen-list', renderAnfragen)) return;
   const list = window.alsterDb?.get('reservations') || [];
   const items = Array.isArray(list) ? list : [];
   const newCount = items.filter(r => r.status !== 'done').length;
@@ -1580,6 +1615,12 @@ const PERSONAL_MESSAGE_MAX = 1000;
 function askPersonalMessage(email) {
   return new Promise(resolve => {
     const dlg = document.createElement('dialog');
+    if (typeof dlg.showModal !== 'function') {
+      // Sehr alte Browser ohne <dialog>: einfache Abfrage als Ersatz.
+      const v = prompt(`Bestätigung an ${email} senden.\n\nPersönliche Nachricht (optional, leer lassen für ohne):`, '');
+      resolve(v === null ? null : v.trim().slice(0, PERSONAL_MESSAGE_MAX));
+      return;
+    }
     dlg.className = 'confirm-dialog';
     dlg.innerHTML = `
       <form method="dialog" class="confirm-dialog-form">
@@ -1613,7 +1654,9 @@ function askPersonalMessage(email) {
   });
 }
 
+const confirmSending = new Set();
 async function onSendConfirmation(id, ctype) {
+  if (confirmSending.has(id)) return; // läuft schon, kein Doppelversand
   const key = ctype === 'order' ? 'orders' : 'reservations';
   const list = window.alsterDb?.get(key) || [];
   const it = (Array.isArray(list) ? list : []).find(x => x.id === id);
@@ -1627,7 +1670,16 @@ async function onSendConfirmation(id, ctype) {
     : { type: 'reservation', name: it.name, email: it.email, date: niceDate(it.date), time: it.time, persons: it.persons };
   if (message) payload.message = message;
 
-  const res = await window.alsterDb?.sendConfirmation(payload);
+  confirmSending.add(id);
+  const btns = Array.from(document.querySelectorAll(`[data-confirm="${CSS.escape(id)}"]`));
+  const labels = btns.map(b => b.innerHTML);
+  btns.forEach(b => { b.disabled = true; b.textContent = 'Wird gesendet …'; });
+  let res;
+  try { res = await window.alsterDb?.sendConfirmation(payload); }
+  finally {
+    confirmSending.delete(id);
+    btns.forEach((b, i) => { b.disabled = false; b.innerHTML = labels[i]; });
+  }
   if (res && res.ok) {
     alert(`Bestätigung an ${it.email} wurde gesendet. ✅`);
   } else {
@@ -1649,7 +1701,7 @@ function buildAnfrageItem(r) {
   const mailSubject = encodeURIComponent(`Ihre Reservierungsanfrage – Alstercafé`);
   const mailBody = encodeURIComponent(`Guten Tag ${r.name || ''},\n\nvielen Dank für Ihre Anfrage. \n\nHerzliche Grüße\nAlstercafé`);
   const mailLink = r.email
-    ? `mailto:${escapeAttr(r.email)}?subject=${mailSubject}&body=${mailBody}`
+    ? `mailto:${escapeAttr(encodeURIComponent(r.email).replace(/%40/g, '@'))}?subject=${mailSubject}&body=${mailBody}`
     : '';
 
   return `
@@ -1726,17 +1778,19 @@ async function onMarkAnfrage(id) {
   const list = window.alsterDb?.get('reservations') || [];
   const current = (Array.isArray(list) ? list : []).find(r => r.id === id);
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
-  // db.js aktualisiert in-memory + localStorage synchron, also vor dem render aufrufen.
+  // db.js aktualisiert den Cache synchron beim Aufruf → erst aufrufen, dann sofort rendern.
+  const pending = window.alsterDb?.updateReservationStatus(id, nextStatus);
   renderAnfragen();
-  const ok = await window.alsterDb?.updateReservationStatus(id, nextStatus);
+  const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshAnfragen();
 }
 
 async function onDeleteAnfrage(id) {
   if (!confirm('Diese Anfrage wirklich löschen?')) return;
+  const pending = window.alsterDb?.deleteReservation(id);
   renderAnfragen();
-  const ok = await window.alsterDb?.deleteReservation(id);
+  const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshAnfragen();
 }
@@ -1764,6 +1818,7 @@ async function refreshOrders() {
 }
 
 function renderOrders() {
+  if (deferRenderWhileTyping('orders-list', renderOrders)) return;
   const list = window.alsterDb?.get('orders') || [];
   const items = Array.isArray(list) ? list : [];
   const newCount = items.filter(o => o.status !== 'done').length;
@@ -1815,7 +1870,7 @@ function buildOrderItem(o) {
   const tel = o.phone ? `tel:${o.phone.replace(/\s+/g,'')}` : '';
   const mailSubject = encodeURIComponent('Ihre Brötchen-Bestellung – Alstercafé');
   const mailBody = encodeURIComponent(`Guten Tag ${o.name || ''},\n\nvielen Dank für Ihre Bestellung. Wir haben sie notiert.\n\nHerzliche Grüße\nAlstercafé`);
-  const mailLink = o.email ? `mailto:${escapeAttr(o.email)}?subject=${mailSubject}&body=${mailBody}` : '';
+  const mailLink = o.email ? `mailto:${escapeAttr(encodeURIComponent(o.email).replace(/%40/g, '@'))}?subject=${mailSubject}&body=${mailBody}` : '';
   const lineItems = Array.isArray(o.items) ? o.items : [];
   const fmtEuro = n => Number(n).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
   const priced = lineItems.filter(it => typeof it.price === 'number' && it.price > 0);
@@ -1878,16 +1933,18 @@ async function onMarkOrder(id) {
   const list = window.alsterDb?.get('orders') || [];
   const current = (Array.isArray(list) ? list : []).find(o => o.id === id);
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
+  const pending = window.alsterDb?.updateOrderStatus(id, nextStatus);
   renderOrders();
-  const ok = await window.alsterDb?.updateOrderStatus(id, nextStatus);
+  const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshOrders();
 }
 
 async function onDeleteOrder(id) {
   if (!confirm('Diese Bestellung wirklich löschen?')) return;
+  const pending = window.alsterDb?.deleteOrder(id);
   renderOrders();
-  const ok = await window.alsterDb?.deleteOrder(id);
+  const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshOrders();
 }

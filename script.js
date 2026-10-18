@@ -93,6 +93,20 @@ const DEFAULT_BROETCHEN = [
   { name: 'Bunt gemischt',       desc: 'Wir stellen eine ausgewogene Auswahl zusammen' }
 ];
 
+// Rechtstexte (Impressum, Datenschutz) gibt es nur auf Deutsch: auf der
+// englischen Seite einen kurzen Hinweis oben einblenden.
+function noteGermanOnlyLegal() {
+  if (alsterLang() !== 'en') return;
+  const art = document.querySelector('.legal-article');
+  if (!art || art.querySelector('.legal-lang-note')) return;
+  const p = document.createElement('p');
+  p.className = 'legal-lang-note';
+  p.setAttribute('data-no-i18n', '');
+  p.textContent = 'This legal text is only available in German.';
+  const h1 = art.querySelector('h1');
+  (h1 || art.firstChild) && art.insertBefore(p, h1 ? h1.nextSibling : art.firstChild);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -105,6 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   //    Splash hängen, selbst wenn das Backend langsam oder offline ist.
   safeRun(initYears);
   safeRun(initNav);
+  safeRun(noteGermanOnlyLegal);
   safeRun(initStickyHeader);
   safeRun(initReveal);
   safeRun(initCounters);
@@ -217,96 +232,139 @@ let liveStatusTimer = null;
 // aufbaut (nach Backend-Hydration + bei Live-Änderungen). Wird in initOrderForm gesetzt.
 let refreshOrderSorts = null;
 function initLiveStatus() {
-  const el = document.getElementById('live-status');
-  if (!el) return;
   updateLiveStatus();
   // Jede Minute neu rechnen (nur ein Timer, auch bei erneutem Aufruf)
   if (liveStatusTimer) clearInterval(liveStatusTimer);
   liveStatusTimer = setInterval(updateLiveStatus, 60_000);
 }
+// Aktualisiert ALLE Stellen, die "geöffnet/geschlossen" zeigen, aus einer Quelle.
 function updateLiveStatus() {
-  const el = document.getElementById('live-status');
-  if (!el) return;
   const status = computeLiveStatus();
-  if (!status) { el.hidden = true; return; }
-  el.hidden = false;
-  el.dataset.state = status.state;
-  el.querySelector('.live-status-text').textContent = status.text;
+  const el = document.getElementById('live-status');
+  if (el) {
+    if (!status) { el.hidden = true; }
+    else {
+      el.hidden = false;
+      el.dataset.state = status.state;
+      el.querySelector('.live-status-text').textContent = status.text;
+    }
+  }
+  try { updateTopbarLive(status); } catch (e) {}
+  try { updateHeroToday(); } catch (e) {}
+  const clock = document.querySelector('.hero-coord-clock');
+  if (clock && status) clock.classList.toggle('is-closed', status.state !== 'open');
+}
+
+/* Öffnungszeiten als Array[7] (0 = Mo … 6 = So) mit {openMin, closeMin} bzw. null.
+   Quelle sind die im Mitgliederbereich gepflegten Zeiten (Key 'hours'), sonst die
+   Standardzeiten — nicht der angezeigte Text, der auf der englischen Seite übersetzt ist. */
+const WEEKDAY_KEYS = ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'];
+const WEEKDAY_ALIASES = { tu: 1, we: 2, th: 3, su: 6, mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
+function weekdayIndex(word) {
+  const w = String(word || '').toLowerCase().replace(/[^a-zäöü]/g, '');
+  if (!w) return -1;
+  const de = WEEKDAY_KEYS.indexOf(w.slice(0, 2));   // mo di mi do fr sa so (auch Langform)
+  if (de >= 0) return de;
+  return WEEKDAY_ALIASES[w.slice(0, 3)] ?? WEEKDAY_ALIASES[w.slice(0, 2)] ?? -1;  // englisch
+}
+// "Mo – Fr", "Mo-Fr", "Sa & So", "Sa, So", "Samstag", "täglich", "Mo bis Sa" …
+function parseDayLabel(label) {
+  const l = String(label || '').toLowerCase().trim();
+  if (/t[äa]glich|jeden tag|every day|daily/.test(l)) return [0, 1, 2, 3, 4, 5, 6];
+  const out = new Set();
+  l.split(/,|&|\+|\bund\b|\band\b|\//).forEach(part => {
+    const range = part.split(/\s*(?:[‐-―−\-]|\bbis\b|\bto\b)\s*/).map(x => x.trim()).filter(Boolean);
+    if (range.length >= 2) {
+      const a = weekdayIndex(range[0]), b = weekdayIndex(range[range.length - 1]);
+      if (a < 0 || b < 0) return;
+      for (let d = a; ; d = (d + 1) % 7) { out.add(d); if (d === b) break; }
+    } else if (range.length === 1) {
+      const d = weekdayIndex(range[0]);
+      if (d >= 0) out.add(d);
+    }
+  });
+  return [...out];
+}
+function getWeekHours() {
+  let rows = null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_HOURS) || 'null');
+    if (Array.isArray(parsed) && parsed.length) rows = parsed;
+  } catch {}
+  if (!rows) rows = DEFAULT_HOURS;
+  const out = new Array(7).fill(null);
+  rows.forEach(r => {
+    // Akzeptiert alle gängigen Trenner (Bindestrich, Gedankenstrich, Minus, "bis").
+    const m = String(r && r.time || '').match(/(\d{1,2})[:.](\d{2})\s*(?:[‐-―−\-]|bis)\s*(\d{1,2})[:.](\d{2})/i);
+    if (!m) return; // z. B. "geschlossen" → Tag bleibt zu
+    const openMin = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    const closeMin = parseInt(m[3], 10) * 60 + parseInt(m[4], 10);
+    parseDayLabel(r.label).forEach(d => { out[d] = { openMin, closeMin }; });
+  });
+  return out;
+}
+// Kompatibilität: frühere Aufrufer
+function parseHoursFromDom() { return getWeekHours(); }
+
+function isoLocal(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function holidayOn(d) {
+  const iso = isoLocal(d);
+  return getHolidays().find(h => h && h.date === iso) || null;
+}
+// Öffnungszeit für ein Datum (berücksichtigt Schließtage) → {openMin, closeMin} oder null.
+function openingFor(d) {
+  if (holidayOn(d)) return null;
+  return getWeekHours()[(d.getDay() + 6) % 7] || null;
 }
 
 function computeLiveStatus() {
   const en = alsterLang() === 'en';
-  // Schließtag (Urlaub/Feiertag) hat Vorrang vor den regulaeren Zeiten
+  // Schließtag (Urlaub/Feiertag) hat Vorrang vor den regulären Zeiten
   const hol = todayHoliday();
   if (hol) {
     const suffix = hol.label ? ' · ' + hol.label : '';
-    return { state: 'closed', text: (en ? 'Closed today' : 'Heute geschlossen') + suffix };
+    const st = { state: 'closed', text: (en ? 'Closed today' : 'Heute geschlossen') + suffix, holiday: true };
+    const next = nextOpening(new Date(), en);
+    if (next) st.next = next;
+    return st;
   }
-  // Öffnungszeiten parsen — entweder aus dem Admin-Cache oder aus DOM
-  const hours = parseHoursFromDom();
-  if (!hours.length) return null;
+  const hours = getWeekHours();
+  if (!hours.some(Boolean)) return null;
   const now = new Date();
-  const wd = (now.getDay() + 6) % 7; // 0 = Mo, 6 = So
-  const today = hours[wd];
+  const today = hours[(now.getDay() + 6) % 7];
   const minutesNow = now.getHours() * 60 + now.getMinutes();
-  if (today && today.openMin != null && minutesNow >= today.openMin && minutesNow < today.closeMin) {
+  if (today && minutesNow >= today.openMin && minutesNow < today.closeMin) {
     const remaining = today.closeMin - minutesNow;
     return {
-      state: 'open',
+      state: 'open', closeMin: today.closeMin,
       text: remaining <= 60
         ? (en ? `Open now · closes in ${remaining} min` : `Aktuell geöffnet · schließt in ${remaining} Min.`)
         : (en ? `Open now · until ${formatMin(today.closeMin)}` : `Aktuell geöffnet · bis ${formatMin(today.closeMin)}`)
     };
   }
-  // Geschlossen — nächsten Öffnungszeitpunkt finden
-  for (let offset = 0; offset < 7; offset++) {
-    const idx = (wd + offset) % 7;
-    const day = hours[idx];
-    if (!day || day.openMin == null) continue;
-    if (offset === 0 && minutesNow < day.openMin) {
-      return {
-        state: 'closed',
-        text: en ? `Closed · opens today at ${formatMin(day.openMin)}` : `Geschlossen · öffnet heute um ${formatMin(day.openMin)}`
-      };
-    }
-    if (offset > 0) {
-      const dayName = offset === 1 ? (en ? 'tomorrow' : 'morgen')
-                    : (en ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx] : ['Mo','Di','Mi','Do','Fr','Sa','So'][idx]);
-      return {
-        state: 'closed',
-        text: en ? `Closed · opens ${dayName} at ${formatMin(day.openMin)}` : `Geschlossen · öffnet ${dayName} um ${formatMin(day.openMin)}`
-      };
-    }
-  }
-  return { state: 'closed', text: en ? 'Currently closed' : 'Aktuell geschlossen' };
+  const next = nextOpening(now, en);
+  if (!next) return { state: 'closed', text: en ? 'Currently closed' : 'Aktuell geschlossen' };
+  return { state: 'closed', next, text: (en ? 'Closed · opens ' : 'Geschlossen · öffnet ') + next.text };
 }
 
-function parseHoursFromDom() {
-  // Erstellt Array[7] mit {openMin, closeMin} aus der hours-list
-  const items = document.querySelectorAll('#hours-list li');
-  const out = new Array(7).fill(null);
-  const dayMap = {
-    'mo': [0], 'di': [1], 'mi': [2], 'do': [3], 'fr': [4], 'sa': [5], 'so': [6],
-    'mo – fr': [0,1,2,3,4], 'mo–fr': [0,1,2,3,4], 'mo - fr': [0,1,2,3,4],
-    'montag': [0], 'dienstag': [1], 'mittwoch': [2], 'donnerstag': [3],
-    'freitag': [4], 'samstag': [5], 'sonntag': [6]
-  };
-  items.forEach(li => {
-    const spans = li.querySelectorAll('span');
-    if (spans.length < 2) return;
-    const label = spans[0].textContent.trim().toLowerCase();
-    const time = spans[1].textContent.trim();
-    // Akzeptiert alle gaengigen Trenner: ASCII-Hyphen, En-Dash, Em-Dash,
-    // Minus-Zeichen, sowie das deutsche "bis" — gegen iPhone-Autocorrect-
-    // Variationen unempfindlich.
-    const match = time.match(/(\d{1,2}):(\d{2})\s*(?:[‐-―−\-]|bis)\s*(\d{1,2}):(\d{2})/i);
-    if (!match) return;
-    const openMin = parseInt(match[1]) * 60 + parseInt(match[2]);
-    const closeMin = parseInt(match[3]) * 60 + parseInt(match[4]);
-    const days = dayMap[label] || [];
-    days.forEach(d => out[d] = { openMin, closeMin });
-  });
-  return out;
+// Nächster Öffnungszeitpunkt ab "from" (überspringt Schließtage). → {offset, openMin, text}
+function nextOpening(from, en) {
+  const minutesNow = from.getHours() * 60 + from.getMinutes();
+  for (let offset = 0; offset < 21; offset++) {
+    const d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + offset);
+    const day = openingFor(d);
+    if (!day) continue;
+    if (offset === 0 && minutesNow >= day.openMin) continue;
+    const idx = (d.getDay() + 6) % 7;
+    const when = offset === 0 ? (en ? 'today' : 'heute')
+               : offset === 1 ? (en ? 'tomorrow' : 'morgen')
+               : offset < 7 ? (en ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx] : ['Mo','Di','Mi','Do','Fr','Sa','So'][idx])
+               : d.toLocaleDateString(en ? 'en-GB' : 'de-DE', { day: 'numeric', month: 'short' });
+    return { offset, openMin: day.openMin, when, text: en ? `${when} at ${formatMin(day.openMin)}` : `${when} um ${formatMin(day.openMin)}` };
+  }
+  return null;
 }
 
 function formatMin(min) {
@@ -582,7 +640,7 @@ function initNav() {
     nav.classList.toggle('open', open);
     document.body.classList.toggle('menu-open', open);
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Menü schließen' : 'Menü öffnen');
+    toggle.setAttribute('aria-label', alsterLang() === 'en' ? (open ? 'Close menu' : 'Open menu') : (open ? 'Menü schließen' : 'Menü öffnen'));
   };
   toggle.addEventListener('click', () => setOpen(!nav.classList.contains('open')));
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setOpen(false)));
@@ -928,6 +986,7 @@ function renderKarteHtml(data) {
 /* ---------- Öffnungszeiten ----------
    HTML enthaelt Standard-Werte. JS ueberschreibt nur bei Custom-Daten. */
 function initHours() {
+  renderFooterHours();
   const root = document.getElementById('hours-list');
   if (!root) return;
   let hours = null;
@@ -1104,20 +1163,7 @@ function initPremiumPolish() {
   }
   // Vol/No-Element wurde entfernt — editoriales Magazintheater ohne
   // realen Bezug zur Baeckerei. Datum + Standort sind genug.
-  const heroToday = document.getElementById('hero-coord-today');
-  if (heroToday) {
-    const now = new Date();
-    const wd = now.toLocaleDateString(dateLocale(), { weekday: 'long' });
-    const dayIdx = now.getDay(); // 0=So, 1=Mo, ..., 6=Sa
-    const hol = todayHoliday();
-    if (hol) {
-      heroToday.textContent = `${wd} · ${alsterLang() === 'en' ? 'closed' : 'geschlossen'}`;
-    } else {
-      // Mo-Fr: 06:30-15:00, Sa/So: 07:30-15:00
-      const hours = (dayIdx >= 1 && dayIdx <= 5) ? '06:30 – 15:00' : '07:30 – 15:00';
-      heroToday.textContent = `${wd} · ${hours}`;
-    }
-  }
+  updateHeroToday();
 
   // 4. Eigener Mauszeiger (Dot + Ring) bewusst DEAKTIVIERT — der normale
   //    System-Mauszeiger ist am Laptop erwartbar und ruhiger. Die Funktion
@@ -1249,6 +1295,17 @@ function initMenuTOC() {
   }
 }
 
+function updateHeroToday() {
+  const heroToday = document.getElementById('hero-coord-today');
+  if (!heroToday) return;
+  const now = new Date();
+  const wd = now.toLocaleDateString(dateLocale(), { weekday: 'long' });
+  const day = openingFor(now);
+  heroToday.textContent = day
+    ? `${wd} · ${formatMin(day.openMin)} – ${formatMin(day.closeMin)}`
+    : `${wd} · ${alsterLang() === 'en' ? 'closed' : 'geschlossen'}`;
+}
+
 function initHeroCoordClock() {
   const aside = document.querySelector('.hero-coord');
   if (!aside) return;
@@ -1279,13 +1336,9 @@ function initHeroCoordClock() {
       lastText = next;
     }
 
-    // Closed-Status
-    const dayIdx = now.getDay();
-    const minutes = now.getHours() * 60 + now.getMinutes();
-    const open = (dayIdx >= 1 && dayIdx <= 5) ? 390 : 450;
-    const close = 900;
-    const isOpen = minutes >= open && minutes < close;
-    clock.classList.toggle('is-closed', !isOpen);
+    // Geöffnet/geschlossen aus der zentralen Öffnungszeiten-Logik
+    const st = computeLiveStatus();
+    clock.classList.toggle('is-closed', !st || st.state !== 'open');
   };
   update();
   setInterval(update, 30 * 1000);
@@ -1313,58 +1366,33 @@ function injectTopbarLiveStatus() {
   const topbar = document.querySelector('.topbar-inner');
   if (!topbar) return;
   if (topbar.querySelector('.topbar-live')) return;
-
-  // Live-Status berechnen (parallel zur grossen Hero-Pille)
-  const now = new Date();
-  const dayIdx = now.getDay(); // 0=So, 1=Mo, ..., 6=Sa
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  // Mo-Fr: 06:30-15:00 = 390-900, Sa/So: 07:30-15:00 = 450-900
-  const open = (dayIdx >= 1 && dayIdx <= 5) ? 390 : 450;
-  const close = 900;
-  const isOpen = minutes >= open && minutes < close;
-
-  const formatHour = (mins) => {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  };
-
   const el = document.createElement('span');
-  const enTop = alsterLang() === 'en';
-  const holTop = todayHoliday();
-  if (holTop) {
-    el.className = 'topbar-live is-closed';
-    el.innerHTML = enTop ? 'Closed today' : 'Heute geschlossen';
-    const firstSep0 = topbar.querySelector('.topbar-sep');
-    if (firstSep0) {
-      const sepClone0 = firstSep0.cloneNode(true);
-      topbar.insertBefore(el, topbar.firstChild);
-      topbar.insertBefore(sepClone0, el.nextSibling);
-    } else {
-      topbar.insertBefore(el, topbar.firstChild);
-    }
-    return;
-  }
-  el.className = 'topbar-live' + (isOpen ? '' : ' is-closed');
-  if (isOpen) {
-    el.innerHTML = (enTop ? 'Open until ' : 'Geöffnet bis ') + `<em>${formatHour(close)}</em>`;
-  } else if (minutes < open) {
-    el.innerHTML = (enTop ? 'Today from ' : 'Heute ab ') + `<em>${formatHour(open)}</em>`;
-  } else {
-    // Nach 15:00 — morgen früh
-    const tomorrow = (dayIdx + 1) % 7;
-    const tomorrowOpen = (tomorrow >= 1 && tomorrow <= 5) ? 390 : 450;
-    el.innerHTML = (enTop ? 'Tomorrow from ' : 'Morgen ab ') + `<em>${formatHour(tomorrowOpen)}</em>`;
-  }
-
+  el.className = 'topbar-live';
   // Vor dem ersten Separator einsetzen (am Anfang der Inner-Row)
   const firstSep = topbar.querySelector('.topbar-sep');
-  if (firstSep) {
-    const sepClone = firstSep.cloneNode(true);
-    topbar.insertBefore(el, topbar.firstChild);
-    topbar.insertBefore(sepClone, el.nextSibling);
+  topbar.insertBefore(el, topbar.firstChild);
+  if (firstSep) topbar.insertBefore(firstSep.cloneNode(true), el.nextSibling);
+  updateTopbarLive(computeLiveStatus());
+}
+function updateTopbarLive(status) {
+  const el = document.querySelector('.topbar-live');
+  if (!el) return;
+  const en = alsterLang() === 'en';
+  if (!status) { el.hidden = true; return; }
+  el.hidden = false;
+  el.classList.toggle('is-closed', status.state !== 'open');
+  if (status.state === 'open') {
+    el.innerHTML = (en ? 'Open until ' : 'Geöffnet bis ') + `<em>${formatMin(status.closeMin)}</em>`;
+  } else if (status.holiday) {
+    el.textContent = en ? 'Closed today' : 'Heute geschlossen';
+  } else if (status.next) {
+    const n = status.next;
+    const lead = n.offset === 0 ? (en ? 'Today from ' : 'Heute ab ')
+               : n.offset === 1 ? (en ? 'Tomorrow from ' : 'Morgen ab ')
+               : (en ? `${n.when} from ` : `${n.when} ab `);
+    el.innerHTML = lead + `<em>${formatMin(n.openMin)}</em>`;
   } else {
-    topbar.insertBefore(el, topbar.firstChild);
+    el.textContent = en ? 'Closed' : 'Geschlossen';
   }
 }
 
@@ -1408,8 +1436,8 @@ function enhanceReservationCoupon() {
   const now = new Date();
   const fmt = now.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
   header.innerHTML = `
-    <p class="reservation-form-coupon-eyebrow">Ausgegeben am <em>${fmt}</em></p>
-    <span class="reservation-form-coupon-stamp">№ Reservierung</span>
+    <p class="reservation-form-coupon-eyebrow">${alsterLang() === 'en' ? 'Issued on' : 'Ausgegeben am'} <em>${fmt}</em></p>
+    <span class="reservation-form-coupon-stamp">${alsterLang() === 'en' ? '№ Reservation' : '№ Reservierung'}</span>
   `;
   form.insertBefore(header, form.firstChild);
 }
@@ -1425,6 +1453,19 @@ const PAYMENT_BADGES = [
   { label: 'Apple Pay', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#000"/><path d="M15.6 10.3c.5-.6.8-1.4.7-2.2-.7 0-1.6.5-2.1 1.1-.5.5-.9 1.4-.8 2.2.8.1 1.6-.4 2.2-1.1zm.7 1.2c-1.2-.1-2.2.7-2.8.7-.6 0-1.4-.6-2.4-.6-1.2 0-2.3.7-3 1.8-1.3 2.2-.3 5.5.9 7.3.6.9 1.3 1.8 2.3 1.8.9 0 1.2-.6 2.3-.6s1.4.6 2.4.6 1.6-.9 2.2-1.8c.7-1 1-2 1-2.1 0 0-1.9-.7-1.9-2.9 0-1.8 1.5-2.7 1.6-2.7-.9-1.3-2.2-1.4-2.6-1.5z" fill="#fff"/><text x="31" y="19.6" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="#fff">Pay</text></svg>' },
   { label: 'Google Pay', svg: '<svg viewBox="0 0 48 30" aria-hidden="true"><rect width="48" height="30" rx="4" fill="#fff"/><text x="9" y="19.6" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700"><tspan fill="#4285F4">G</tspan></text><text x="31" y="19.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="600" fill="#5F6368">Pay</text></svg>' }
 ];
+
+// Öffnungszeiten im Footer aus den gepflegten Zeiten (sonst Standard).
+function renderFooterHours(root) {
+  const box = (root || document).querySelector('.footer-hours-lines');
+  if (!box) return;
+  let rows = null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_HOURS) || 'null');
+    if (Array.isArray(parsed) && parsed.length) rows = parsed;
+  } catch {}
+  box.innerHTML = (rows || DEFAULT_HOURS).map(h =>
+    `<div class="footer-line"><span>${escapeHtml(h.label || '')}</span><span class="time">${escapeHtml(h.time || '')}</span></div>`).join('');
+}
 
 function enhanceFooterEditorial() {
   const footer = document.querySelector('.site-footer');
@@ -1456,12 +1497,9 @@ function enhanceFooterEditorial() {
 
   const hoursCol = document.createElement('div');
   hoursCol.className = 'footer-col footer-col-hours';
-  hoursCol.innerHTML = `
-    <p class="footer-col-label">Geöffnet</p>
-    <div class="footer-line"><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></div>
-    <div class="footer-line"><span>Samstag</span><span class="time">07:30 – 15:00</span></div>
-    <div class="footer-line"><span>Sonntag</span><span class="time">07:30 – 15:00</span></div>
-  `;
+  hoursCol.innerHTML = `<p class="footer-col-label">Geöffnet</p><div class="footer-hours-lines"></div>`;
+
+  renderFooterHours(hoursCol);
 
   // Neue Reihenfolge: brand | adresse | hours
   grid.innerHTML = '';
@@ -1730,7 +1768,9 @@ function injectFooterCredit() {
 
   const credit = document.createElement('p');
   credit.className = 'footer-credit';
-  credit.innerHTML = 'Eine Familien-Backstube — <em>seit 2004 in Hohenfelde.</em>';
+  credit.innerHTML = alsterLang() === 'en'
+    ? 'A family bakery — <em>in Hohenfelde since 2004.</em>'
+    : 'Eine Familien-Backstube — <em>seit 2004 in Hohenfelde.</em>';
   // Nach dem footer-grid einsetzen
   const grid = footer.querySelector('.footer-grid');
   if (grid) {
@@ -2106,9 +2146,9 @@ function buildBroetchenRow(item) {
         ${price ? `<span class="broetchen-price">${formatEuro(price)}</span>` : ''}
       </div>
       <div class="qty-stepper">
-        <button type="button" class="qty-btn" data-step="-1" aria-label="Weniger ${name}">−</button>
+        <button type="button" class="qty-btn" data-step="-1" aria-label="${alsterLang() === 'en' ? 'Fewer' : 'Weniger'} ${name}">−</button>
         <span class="qty-value" aria-live="polite">0</span>
-        <button type="button" class="qty-btn" data-step="1" aria-label="Mehr ${name}">+</button>
+        <button type="button" class="qty-btn" data-step="1" aria-label="${alsterLang() === 'en' ? 'More' : 'Mehr'} ${name}">+</button>
       </div>
     </li>`;
 }
@@ -2133,7 +2173,7 @@ function initOrderForm() {
     if (!dateInput) return;
     const today = new Date();
     const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-    dateInput.min = isoDate(today);
+    keepDateMinFresh(dateInput);
     dateInput.value = isoDate(tomorrow);
   };
   setDefaultDate();
@@ -2210,7 +2250,27 @@ function initOrderForm() {
     try { items = window.alsterDb?.get('broetchen-items'); } catch {}
     if (sortListEl && Array.isArray(items)) {
       const valid = items.filter(it => it && typeof it.name === 'string' && it.name.trim());
-      if (valid.length) sortListEl.innerHTML = valid.map(buildBroetchenRow).join('');
+      if (valid.length) {
+        const html = valid.map(buildBroetchenRow).join('');
+        if (sortListEl.dataset.sortsHtml !== html) {
+          // Bereits gewählte Mengen beim Neuaufbau erhalten (z. B. wenn die Daten
+          // vom Server erst nach dem ersten Antippen eintreffen).
+          const keep = {};
+          getRows().forEach(row => {
+            const q = parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0;
+            if (q > 0) keep[row.dataset.name] = q;
+          });
+          sortListEl.innerHTML = html;
+          sortListEl.dataset.sortsHtml = html;
+          getRows().forEach(row => {
+            const q = keep[row.dataset.name];
+            if (!q) return;
+            const v = row.querySelector('.qty-value');
+            if (v) v.textContent = String(q);
+            row.classList.add('is-active');
+          });
+        }
+      }
     }
     render();
   };
@@ -2236,6 +2296,12 @@ function initOrderForm() {
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
+    const slotErr = slotProblem(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
+    if (slotErr) {
+      setFormStatus(status, slotErr, 'error');
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
     const data = new FormData(form);
     const entry = {
       name:       (data.get('Name')     || '').toString().trim(),
@@ -2258,7 +2324,7 @@ function initOrderForm() {
     if (submitBtn) submitBtn.classList.remove('is-loading');
     if (saved) {
       if (submitBtn) submitBtn.classList.add('is-success');
-      setFormStatus(status, en ? `Thank you! Your order of ${total} filled rolls has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} belegte Brötchen ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
+      setFormStatus(status, en ? `Thank you! Your order of ${total} filled ${total === 1 ? 'roll' : 'rolls'} has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} ${total === 1 ? 'belegtes Brötchen' : 'belegte Brötchen'} ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
       try { form.reset(); } catch {}
       getRows().forEach(row => { const v = row.querySelector('.qty-value'); if (v) v.textContent = '0'; row.classList.remove('is-active'); });
       setDefaultDate();
@@ -2281,6 +2347,46 @@ function initOrderForm() {
 }
 
 /* ---------- Reservierungs-Formular ---------- */
+/* Prüft Datum + Uhrzeit gegen Öffnungszeiten, Schließtage und "jetzt".
+   Liefert eine verständliche Fehlermeldung (DE/EN) oder null, wenn alles passt. */
+function slotProblem(dateStr, timeStr, en) {
+  const dm = String(dateStr || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const tm = String(timeStr || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!dm || !tm) return null; // Pflichtfeld-Prüfung übernimmt der Browser
+  const d = new Date(+dm[1], +dm[2] - 1, +dm[3]);
+  const minutes = parseInt(tm[1], 10) * 60 + parseInt(tm[2], 10);
+  const now = new Date();
+  const dateLabel = d.toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (isoLocal(d) < isoLocal(now) || (isoLocal(d) === isoLocal(now) && minutes <= now.getHours() * 60 + now.getMinutes())) {
+    return en ? 'This time is already in the past. Please choose a later time.'
+              : 'Diese Uhrzeit liegt schon in der Vergangenheit. Bitte wählen Sie eine spätere Zeit.';
+  }
+  const hol = holidayOn(d);
+  if (hol) {
+    const why = hol.label ? ` (${hol.label})` : '';
+    return en ? `We are closed on ${dateLabel}${why}. Please choose another day.`
+              : `Am ${dateLabel} haben wir geschlossen${why}. Bitte wählen Sie einen anderen Tag.`;
+  }
+  const day = openingFor(d);
+  if (!day) {
+    return en ? `We are closed on ${dateLabel}. Please choose another day.`
+              : `Am ${dateLabel} haben wir geschlossen. Bitte wählen Sie einen anderen Tag.`;
+  }
+  if (minutes < day.openMin || minutes >= day.closeMin) {
+    const range = `${formatMin(day.openMin)} – ${formatMin(day.closeMin)}`;
+    return en ? `On ${dateLabel} we are open ${range}. Please choose a time within our opening hours.`
+              : `Am ${dateLabel} haben wir von ${formatMin(day.openMin)} bis ${formatMin(day.closeMin)} Uhr geöffnet. Bitte wählen Sie eine Uhrzeit in diesem Zeitraum.`;
+  }
+  return null;
+}
+// Hält "frühestens heute" aktuell (Seite kann über Mitternacht offen sein).
+function keepDateMinFresh(input) {
+  if (!input) return;
+  const refresh = () => { input.min = isoDate(new Date()); };
+  refresh();
+  input.addEventListener('focus', refresh);
+}
+
 function initReservationForm() {
   const form = document.getElementById('reservation-form');
   if (!form) return;
@@ -2288,7 +2394,7 @@ function initReservationForm() {
   const dateInput = form.querySelector('input[name="Datum"]');
   if (dateInput) {
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-    dateInput.min = isoDate(new Date());
+    keepDateMinFresh(dateInput);
     if (!dateInput.value) dateInput.value = isoDate(tomorrow);
   }
   const submitBtn = form.querySelector('.form-submit');
@@ -2301,6 +2407,12 @@ function initReservationForm() {
     const en = alsterLang() === 'en';
     if (!form.checkValidity()) {
       setFormStatus(status, invalidFieldMessage(form, en), 'error');
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
+    const slotErr = slotProblem(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
+    if (slotErr) {
+      setFormStatus(status, slotErr, 'error');
       if (submitBtn) submitBtn.disabled = false;
       return;
     }

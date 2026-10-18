@@ -210,6 +210,10 @@
     const { data, error } = await sb.from('content').select('id,data');
     if (error) { console.warn('Hydratation fehlgeschlagen', error); return; }
     (data || []).forEach(row => writeCache(row.id, row.data));
+    // Vom Inhaber gelöschte Einträge (Hinweis, Urlaub, Sorten …) auch aus dem
+    // Browser-Cache entfernen, sonst sehen wiederkehrende Besucher sie weiter.
+    const present = new Set((data || []).map(row => row.id));
+    SYNCED_KEYS.forEach(k => { if (!present.has(k)) writeCache(k, null); });
     try { localStorage.setItem(HYDRATE_TS_KEY, String(Date.now())); } catch (e) {}
   }
 

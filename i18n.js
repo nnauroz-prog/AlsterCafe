@@ -40,6 +40,25 @@
     'Besuch': 'Visit',
     'Geöffnet': 'Open',
     'Wir akzeptieren': 'We accept',
+    'Barzahlung': 'Cash',
+    'girocard (EC-Karte)': 'girocard (debit card)',
+    'Mo – Fr': 'Mon – Fri',
+    'Samstag': 'Saturday',
+    'Sonntag': 'Sunday',
+    'Datenschutz': 'Privacy',
+    'Impressum': 'Legal notice',
+    'Datenschutzerklärung': 'privacy policy',
+    'Galerie': 'Gallery',
+    'Eindrücke aus': 'Impressions from',
+    'unserem Café': 'our café',
+    'Hinweis': 'Notice',
+    'Geschlossen': 'Closed',
+    'Hohenfelde seit': 'Hohenfelde for',
+    'Jahren': 'years',
+    'Heute ·': 'Today ·',
+    'Tisch reservieren · ab 12:00': 'Book a table · from 12:00',
+    'Wochenkarte': 'Weekly menu',
+    'Karte Ifflandstraße 45 Hamburg': 'Map Ifflandstraße 45 Hamburg',
     'Geöffnet bis': 'Open until',
     'Öffnungszeiten': 'Opening hours',
     'Adresse': 'Address',
@@ -178,8 +197,8 @@
     'Croques sind unsere Spezialität — herzhafte Sandwiches aus dem Ofen, gratiniert mit Käse. Klassisch als Croque-Monsieur (Schinken & Käse), Croque-Madame (mit Spiegelei) oder vegetarisch. Auch online über unseren':
       'Croques are our speciality — savoury sandwiches from the oven, gratinated with cheese. Classic as Croque-Monsieur (ham & cheese), Croque-Madame (with fried egg) or vegetarian. Also online via our',
     'Bieten Sie vegetarische und vegane Optionen?': 'Do you offer vegetarian and vegan options?',
-    'Ja — vegetarisches Frühstück, vegetarische Croques und beim Mittagstisch in der Regel eine fleischlose Alternative.':
-      'Yes — vegetarian breakfast, vegetarian Croques and usually a meat-free option at lunch.',
+    'Ja — vegetarisches Frühstück, den veganen Avocado-Traum, vegetarische Croques und beim Mittagstisch in der Regel eine fleischlose Alternative.':
+      'Yes — vegetarian breakfast, the vegan Avocado Dream, vegetarian Croques and usually a meat-free option at lunch.',
     'Wann gibt es den Mittagstisch?': 'When is lunch served?',
     'Werktags ab 12:00. Der Mittagstisch wechselt täglich — die aktuelle Karte sehen Sie auf der':
       'Weekdays from 12:00. The lunch changes daily — see the current menu on the',
@@ -187,8 +206,8 @@
     'Sehr gern. Festtagstorten und größere Mengen Brötchen, Croissants oder Franzbrötchen einfach ein bis zwei Tage im Voraus telefonisch bestellen.':
       'Gladly. Order celebration cakes and larger quantities of rolls, croissants or Franzbrötchen by phone one or two days in advance.',
     'Kann ich mit Karte zahlen?': 'Can I pay by card?',
-    'Ja. Bei uns zahlen Sie bar, mit EC-Karte oder mit allen gängigen Kreditkarten, auch American Express.':
-      'Yes. You can pay in cash, by debit card or with all major credit cards, including American Express.',
+    'Ja. Bei uns zahlen Sie bar, mit EC-Karte, mit allen gängigen Kreditkarten (auch American Express) oder kontaktlos mit Apple Pay und Google Pay.':
+      'Yes. You can pay in cash, by debit card, with all major credit cards (including American Express) or contactless with Apple Pay and Google Pay.',
     'Sind Hunde willkommen?': 'Are dogs welcome?',
     'Gut erzogene Vierbeiner sind im Außenbereich gerne gesehen.': 'Well-behaved four-legged friends are welcome in the outdoor area.',
     'Mittagstisch-Seite': 'lunch page',
@@ -238,8 +257,8 @@
     'Noch nichts ausgewählt.': 'Nothing selected yet.',
     'Wählen Sie oben Ihre Brötchen aus.': 'Choose your rolls above.',
     'Bestellung anfragen': 'Request order',
-    'Keine Vorkasse — Sie zahlen bei Abholung, bar oder mit Karte\n              (auch American Express). Wir bestätigen Ihre Anfrage telefonisch\n              oder per E-Mail.':
-      'No prepayment — you pay at pickup, in cash or by card (American Express too). We confirm your request by phone or email.',
+    'Keine Vorkasse — Sie zahlen bei Abholung, bar, mit Karte\n              (auch American Express) oder per Apple Pay / Google Pay. Wir\n              bestätigen Ihre Anfrage telefonisch oder per E-Mail.':
+      'No prepayment — you pay at pickup, in cash, by card (American Express too) or with Apple Pay / Google Pay. We confirm your request by phone or email.',
     'Vorbestellen': 'Pre-order',
     'Für Büro & Feier': 'For office & parties',
     'Käse, Schinken, Lachs, vegetarisch oder bunt gemischt — frisch belegt zur Abholung. Am besten einen Tag vorher bestellen.':
@@ -269,7 +288,7 @@
     'So läuft\'s:': 'How it works:',
     'Sie senden die Anfrage, wir melden uns am selben Tag per Anruf oder Mail zurück mit Bestätigung. Eine Online-Sofortbestätigung gibt es nicht — das ist Absicht.':
       'You send the request, we get back to you the same day by phone or email with confirmation. There’s no instant online confirmation — that’s intentional.',
-    'Reservierungen werktags zu unseren Öffnungszeiten.': 'Reservations on weekdays during our opening hours.',
+    'Reservierungen täglich zu unseren Öffnungszeiten.': 'Reservations every day during our opening hours.',
     'Festtagstorten und besondere Wünsche gern auf Vorbestellung.': 'Celebration cakes and special requests gladly by pre-order.',
     'Ihre Daten werden ausschließlich zur Bearbeitung der Anfrage genutzt.': 'Your data is used solely to process your request.',
     'Gut zu wissen': 'Good to know',
