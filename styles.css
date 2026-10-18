@@ -9194,3 +9194,24 @@ html.has-js-scroll { scroll-behavior: auto; }
   .live-status,
   .cookie-banner { animation: none !important; }
 }
+
+/* Datenschutz-Hinweis an den Formularen (ersetzt die frühere Pflicht-Checkbox) */
+.form-privacy {
+  font-size: .82rem;
+  line-height: 1.5;
+  opacity: .8;
+  margin: 4px 0 14px;
+}
+.form-privacy a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* „Gut zu wissen": Grid zerlegte jedes <em> in eine eigene Zelle → Fließtext mit Punkt davor */
+.reservation-tips-list li { display: block; position: relative; padding-left: 20px; }
+.reservation-tips-list li::before { position: absolute; left: 0; top: 14px; margin-top: 0; }
+
+/* Bewertungskarten mobil: Plattformname nicht buchstabenweise umbrechen */
+@media (max-width: 880px) {
+  .reviews-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .reviews-card-platform { flex: none; overflow-wrap: normal; }
+}
+.lunch-today .btn-gold + .btn-link { margin-left: 18px; margin-top: 8px; }
+@media (max-width: 480px) { .lunch-today .btn-gold + .btn-link { display: inline-flex; margin: 14px 0 0; } }

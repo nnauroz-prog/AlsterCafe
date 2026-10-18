@@ -102,8 +102,8 @@
     'Familiengeführt': 'Family-run',
     'seit': 'for',
     'Jahren.': 'years.',
-    'Täglich frisch gebackene Backwaren, ein frisches Frühstück, ein täglich wechselnder, hausgemachter Mittagstisch und leckere Croques — zubereitet mit besten regionalen Zutaten.':
-      'Freshly baked goods every day, a fresh breakfast, a daily-changing homemade lunch and tasty croques — prepared with the best regional ingredients.',
+    'Täglich frisch gebackene Backwaren, ein frisches Frühstück, ein täglich wechselnder, hausgemachter Mittagstisch und leckere Croques — zubereitet mit sorgfältig ausgewählten Zutaten, viele davon aus der Region.':
+      'Freshly baked goods every day, a fresh breakfast, a daily-changing homemade lunch and tasty croques — prepared with carefully chosen ingredients, many of them from the region.',
     'Familienbetrieb · Hamburg-Hohenfelde': 'Family business · Hamburg-Hohenfelde',
 
     /* Bewertungen */
@@ -130,8 +130,8 @@
     'Aus dem Ofen': 'From the oven',
     'Unsere': 'Our',
     'Croques.': 'Croques.',
-    'Unsere Croques stehen für echte Frische und regionale Qualität: Das Brot beziehen wir direkt von einer Bäckerei aus der Region — frei von Zusatzstoffen und belegt mit den besten Zutaten.':
-      'Our croques stand for real freshness and regional quality: we source our bread directly from a bakery in the region — free from additives and topped with the finest ingredients.',
+    'Unsere Croques stehen für echte Frische: Das Brot dafür kommt von einer Bäckerei aus der Region, belegt und überbacken wird bei uns.':
+      'Our croques stand for real freshness: the bread comes from a bakery in the region, and we top and bake them here.',
     'Jetzt bestellen': 'Order now',
     'Werktags ab zwölf': 'Weekdays from noon',
     'Mittagstisch.': 'Lunch.',
@@ -253,6 +253,8 @@
     'Uhrzeit': 'Time',
     'Wünsche / Unverträglichkeiten': 'Requests / intolerances',
     'Ich bin mit der Bearbeitung meiner Anfrage einverstanden.': 'I agree to my request being processed.',
+    'Wir verarbeiten Ihre Angaben nur zur Bearbeitung Ihrer Anfrage. Freiwillige Hinweise zu Allergien oder Unverträglichkeiten nutzen wir ausschließlich dafür; mit dem Absenden willigen Sie insoweit ein (Art. 9 Abs. 2 lit. a DSGVO), widerrufbar jederzeit per E-Mail. Mehr in unserer':
+      'We only use your details to handle your request. Any voluntary notes on allergies or intolerances are used solely for that purpose; by submitting you consent to this (Art. 9(2)(a) GDPR), revocable at any time by e-mail. More in our',
     'Ihre Bestellung': 'Your order',
     'Noch nichts ausgewählt.': 'Nothing selected yet.',
     'Wählen Sie oben Ihre Brötchen aus.': 'Choose your rolls above.',
@@ -307,7 +309,7 @@
     '1 Person': '1 person', '2 Personen': '2 people', '3 Personen': '3 people',
     '4 Personen': '4 people', '5 Personen': '5 people', '6 Personen': '6 people',
     '7 Personen': '7 people', '8 Personen': '8 people', 'mehr als 8 Personen': 'more than 8 people',
-    'Geburtstag, Allergien, Wunschtisch …': 'Birthday, allergies, preferred table …',
+    'Geburtstag, Kinderstuhl, Wunschtisch …': 'Birthday, high chair, preferred table …',
 
     /* ---------------- Kontakt ---------------- */
     'Mitten in': 'In the heart of',
@@ -315,6 +317,8 @@
     'Ifflandstraße 45, drei Minuten von der Außenalster.': 'Ifflandstraße 45, three minutes from the Außenalster.',
     'Anrufen · 040 – 22 69 28 91': 'Call · 040 – 22 69 28 91',
     'Aus Datenschutzgründen wird die Karte erst nach Ihrer Zustimmung geladen.': 'For privacy reasons the map loads only after your consent.',
+    'Mit Klick auf „Karte laden“ wird eine Verbindung zu Google (Google Ireland Ltd.) hergestellt; dabei werden Ihre IP-Adresse und ggf. Cookies verarbeitet, auch in den USA. Ihre Entscheidung speichern wir in Ihrem Browser; widerrufen können Sie sie über „Cookies anpassen“ im Seitenfuß.':
+      'Clicking “Load map” connects to Google (Google Ireland Ltd.); your IP address and possibly cookies are processed, including in the USA. We store your choice in your browser; you can withdraw it via “Cookie settings” in the footer.',
     'Karte laden': 'Load map',
     'Karte ist deaktiviert': 'Map is disabled',
     'Stattdessen Google Maps öffnen →': 'Open Google Maps instead →',
@@ -348,10 +352,10 @@
     'Extras': 'Extras',
     'Heiße Getränke': 'Hot drinks',
     'Kalte Getränke': 'Cold drinks',
-    'Alle Preise in Euro inkl. MwSt. Änderungen vorbehalten. Brot, Brötchen, Croissants und Franzbrötchen kommen frisch aus unserer eigenen Backstube.':
-      'All prices in euros incl. VAT. Subject to change. Bread, rolls, croissants and Franzbrötchen come fresh from our own bakery.',
-    'Allergene & Zusatzstoffe: Angaben zu allergenen Zutaten (gemäß LMIV) und kennzeichnungspflichtigen Zusatzstoffen erhalten Sie gern bei uns im Café oder telefonisch unter 040 – 22 69 28 91.':
-      'Allergens & additives: information on allergenic ingredients (per EU food-information law) and declarable additives is available in the café or by phone at 040 – 22 69 28 91.',
+    'Alle Preise in Euro inkl. MwSt. Änderungen vorbehalten. Brötchen, Croissants und Franzbrötchen kommen frisch aus unserer eigenen Backstube.':
+      'All prices in euros incl. VAT. Subject to change. Rolls, croissants and Franzbrötchen come fresh from our own bakery.',
+    'Allergene & Zusatzstoffe: Informationen zu allergenen Zutaten (gemäß LMIV) und kennzeichnungspflichtigen Zusatzstoffen erhalten Sie bei uns im Café – sprechen Sie unser Team gern an.':
+      'Allergens & additives: information on allergenic ingredients (per EU food-information law) and declarable additives is available in the café – just ask our team.',
     'Preis klein / groß. Alle Kaffeesorten auch koffeinfrei erhältlich.': 'Price small / large. All coffees also available decaffeinated.',
     /* Frühstück-Gerichte */
     'Klassik': 'Classic',

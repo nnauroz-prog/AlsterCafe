@@ -1356,7 +1356,6 @@ function injectReservationTips() {
     <ul class="reservation-tips-list">
       <li data-mark="·">Sonntag- und Samstagvormittag ist <em>am stärksten</em> nachgefragt.</li>
       <li data-mark="·">Größere Gruppen (ab 6 Pers.) bitte einen Tag <em>vorher</em>.</li>
-      <li data-mark="·">Wir melden uns am <em>gleichen Tag</em> per Anruf oder Mail zurück.</li>
     </ul>
   `;
   intro.appendChild(tips);
@@ -2064,8 +2063,8 @@ function renderTodayLunch(weekData, today) {
     // Heute nicht eingetragen, aber die Woche hat anderswo Eintraege —
     // ehrlich kommunizieren statt "kein Mittagstisch" zu behaupten.
     if (emptyText) emptyText.innerHTML = (alsterLang() === 'en')
-      ? 'Today’s menu is being updated. <a href="tel:+494022692891">040 / 22 69 28 91</a> — we’ll gladly tell you today’s dish.'
-      : 'Die heutige Karte wird gerade aktualisiert. <a href="tel:+494022692891">040 / 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.';
+      ? 'Today’s menu is being updated. <a href="tel:+494022692891">040 – 22 69 28 91</a> — we’ll gladly tell you today’s dish.'
+      : 'Die heutige Karte wird gerade aktualisiert. <a href="tel:+494022692891">040 – 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.';
     todayBox.hidden = true;
     emptyBox.hidden = false;
   }
@@ -2085,7 +2084,7 @@ function renderWeekList(weekData, monday, today) {
     li.className = 'lunch-week-empty-card';
     li.innerHTML = `
       <p class="lunch-week-empty-title">Die Wochenkarte wird gerade aktualisiert.</p>
-      <p class="lunch-week-empty-text">Anrufen lohnt sich — wir verraten Ihnen das Tagesgericht gern direkt: <a href="tel:+494022692891">040 / 22 69 28 91</a>.</p>
+      <p class="lunch-week-empty-text">Anrufen lohnt sich — wir verraten Ihnen das Tagesgericht gern direkt: <a href="tel:+494022692891">040 – 22 69 28 91</a>.</p>
     `;
     list.appendChild(li);
     return;
