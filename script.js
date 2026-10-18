@@ -1149,6 +1149,39 @@ function initLunchWeek() {
 /* Today-Feature-Block auf der Home-Page:
    - Vor 15:00 (Schliesszeit): heutiges Tagesgericht
    - Ab 15:00 (Cafe geschlossen): Vorschau auf morgen */
+/* Zwei Gerichte pro Tag ("entweder … oder …"): liefert die eingetragenen
+   Gerichte als Liste [{ dish, side }] — leere werden ausgelassen. */
+function dayDishes(entry) {
+  if (!entry || entry.closed) return [];
+  return [{ dish: entry.dish, side: entry.side }, { dish: entry.dish2, side: entry.side2 }]
+    .map(d => ({ dish: String(d.dish || '').trim(), side: String(d.side || '').trim() }))
+    .filter(d => d.dish);
+}
+// HTML-Trenner "oder" zwischen zwei Gerichten
+function orDividerHtml(en, cls = 'dish-or') {
+  return `<span class="${cls}" aria-hidden="false"><span>${en ? 'or' : 'oder'}</span></span>`;
+}
+// Zweites Gericht unter einem großen Tagesgericht (Startseite / Mittagstisch-Seite)
+function renderAltDish(afterEl, entry, en, withMit) {
+  if (!afterEl) return;
+  const host = afterEl.parentElement;
+  let alt = host.querySelector(':scope > .dish-alt');
+  const list = dayDishes(entry);
+  if (list.length < 2) { alt?.remove(); return; }
+  if (!alt) {
+    alt = document.createElement('div');
+    alt.className = 'dish-alt';
+    alt.setAttribute('data-no-i18n', '');
+    afterEl.after(alt);
+  }
+  const d = list[1];
+  const side = d.side ? (withMit ? sideText(d.side, en) : d.side) : '';
+  // Gleiche Gestaltung wie das erste Gericht (beide Optionen auf Augenhöhe)
+  const dishCls = (host.querySelector('[id$="-dish"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b/g, '').trim();
+  const sideCls = (host.querySelector('[id$="-side"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b/g, '').trim();
+  alt.innerHTML = `${orDividerHtml(en)}<p class="dish-alt-name ${dishCls}">${escapeHtml(d.dish)}</p>${side ? `<p class="dish-alt-side ${sideCls}">${escapeHtml(side)}</p>` : ''}`;
+}
+
 /* Beilage: "mit …" nur voranstellen, wenn der Text nicht schon so anfängt
    (sonst entstand "mit serviert mit einem Beilagensalat"). */
 function sideText(side, en) {
@@ -1172,13 +1205,15 @@ function openLunchSheet(refDate) {
     const d = new Date(monday); d.setDate(d.getDate() + i);
     const entry = week?.days?.[key];
     // Wochenende nur zeigen, wenn dort wirklich etwas eingetragen ist
-    if (i >= 5 && !entry?.dish) return '';
+    if (i >= 5 && !dayDishes(entry).length) return '';
     const iso = isoLocal(d);
     const isToday = iso === focusIso;
     const past = iso < todayIso;
     let body;
     if (entry?.closed) body = `<span class="lunch-sheet-closed">${en ? 'No lunch' : 'Kein Mittagstisch'}</span>`;
-    else if (entry?.dish) body = `<span class="lunch-sheet-dish">${escapeHtml(entry.dish)}</span>${entry.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(entry.side, en))}</span>` : ''}`;
+    else if (dayDishes(entry).length) body = dayDishes(entry).map(d =>
+      `<span class="lunch-sheet-dish">${escapeHtml(d.dish)}</span>${d.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(d.side, en))}</span>` : ''}`
+    ).join(orDividerHtml(en, 'lunch-sheet-or'));
     else body = `<span class="lunch-sheet-pending">${en ? 'Coming soon' : 'Folgt in Kürze'}</span>`;
     return `
       <li class="lunch-sheet-day${isToday ? ' is-today' : ''}${past ? ' is-past' : ''}">
@@ -1269,7 +1304,7 @@ function initLandingTeaser() {
   if (prefixEl) prefixEl.textContent = showTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
   if (dayEl)    dayEl.textContent    = dayLabels()[dayIdx];
 
-  if (entry?.dish && !entry.closed) {
+  if (dayDishes(entry).length) {
     block.dataset.state = 'open';
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Tomorrow at midday' : 'Morgen mittag bei uns')
@@ -1279,8 +1314,16 @@ function initLandingTeaser() {
       sideEl.textContent = entry.side ? sideText(entry.side, en) : '';
       sideEl.hidden = !entry.side;
     }
+    // Hauptgericht leer, nur 2. Gericht eingetragen → das 2. als Hauptgericht zeigen
+    if (!String(entry.dish || '').trim()) {
+      const only = dayDishes(entry)[0];
+      dishEl.textContent = only.dish;
+      if (sideEl) { sideEl.textContent = only.side ? sideText(only.side, en) : ''; sideEl.hidden = !only.side; }
+    }
+    renderAltDish(sideEl || dishEl, entry, en, true);
   } else if (entry?.closed) {
     block.dataset.state = 'closed';
+    renderAltDish(sideEl || dishEl, null, en);
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Closed tomorrow' : 'Morgen geschlossen')
       : (en ? 'Closed today' : 'Wir machen heute Pause');
@@ -1290,6 +1333,7 @@ function initLandingTeaser() {
     if (sideEl) sideEl.hidden = true;
   } else {
     block.dataset.state = 'empty';
+    renderAltDish(sideEl || dishEl, null, en);
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Menu coming soon' : 'Karte folgt in Kürze')
       : (en ? 'Just drop by' : 'Schauen Sie einfach vorbei');
@@ -2231,16 +2275,18 @@ function renderTodayLunch(weekData, today) {
   // Wenn die GANZE Woche leer ist: kein Today-Empty-State zeigen,
   // sonst kommt die Info zweimal (heute + Wochenkarte beide leer).
   const days = weekData?.days || {};
-  const wholeWeekEmpty = !DAY_KEYS.some(k => days[k]?.dish || days[k]?.closed);
+  const wholeWeekEmpty = !DAY_KEYS.some(k => dayDishes(days[k]).length || days[k]?.closed);
 
-  if (entry?.dish && !entry.closed) {
+  if (dayDishes(entry).length) {
     const dishEl = document.getElementById('today-dish');
     const sideEl = document.getElementById('today-side');
-    if (dishEl) dishEl.textContent = entry.dish;
+    const first = dayDishes(entry)[0];
+    if (dishEl) dishEl.textContent = first.dish;
     if (sideEl) {
-      sideEl.textContent = entry.side || '';
-      sideEl.hidden = !entry.side;
+      sideEl.textContent = first.side || '';
+      sideEl.hidden = !first.side;
     }
+    renderAltDish(sideEl || dishEl, entry, alsterLang() === 'en', false);
     todayBox.hidden = false;
     emptyBox.hidden = true;
   } else if (entry?.closed) {
@@ -2271,7 +2317,7 @@ function renderWeekList(weekData, monday, today) {
 
   // Wenn die gesamte Woche leer ist: konsolidierte Info statt 7x "folgt in Kürze"
   const days = weekData?.days || {};
-  const hasAnyEntry = DAY_KEYS.some(k => days[k]?.dish || days[k]?.closed);
+  const hasAnyEntry = DAY_KEYS.some(k => dayDishes(days[k]).length || days[k]?.closed);
   if (!hasAnyEntry) {
     list.classList.add('lunch-week-empty');
     const li = document.createElement('li');
@@ -2295,9 +2341,10 @@ function renderWeekList(weekData, monday, today) {
     let body;
     if (entry?.closed) {
       body = `<span class="lunch-closed">${en ? 'No lunch today' : 'Kein Mittagstisch'}</span>`;
-    } else if (entry?.dish) {
-      body = `<span class="lunch-day-dish">${escapeHtml(entry.dish)}</span>`;
-      if (entry.side) body += `<span class="lunch-day-side">${escapeHtml(entry.side)}</span>`;
+    } else if (dayDishes(entry).length) {
+      body = dayDishes(entry).map(d =>
+        `<span class="lunch-day-dish">${escapeHtml(d.dish)}</span>` + (d.side ? `<span class="lunch-day-side">${escapeHtml(d.side)}</span>` : '')
+      ).join(orDividerHtml(en, 'lunch-day-or'));
     } else {
       body = `<span class="lunch-pending">${en ? '— coming soon —' : '— folgt in Kürze —'}</span>`;
     }
