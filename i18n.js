@@ -185,6 +185,9 @@
     'Kann ich Backwaren bestellen?': 'Can I order baked goods?',
     'Sehr gern. Festtagstorten und größere Mengen Brötchen, Croissants oder Franzbrötchen einfach ein bis zwei Tage im Voraus telefonisch bestellen.':
       'Gladly. Order celebration cakes and larger quantities of rolls, croissants or Franzbrötchen by phone one or two days in advance.',
+    'Kann ich mit Karte zahlen?': 'Can I pay by card?',
+    'Ja. Bei uns zahlen Sie bar, mit EC-Karte oder mit allen gängigen Kreditkarten, auch American Express.':
+      'Yes. You can pay in cash, by debit card or with all major credit cards, including American Express.',
     'Sind Hunde willkommen?': 'Are dogs welcome?',
     'Gut erzogene Vierbeiner sind im Außenbereich gerne gesehen.': 'Well-behaved four-legged friends are welcome in the outdoor area.',
     'Mittagstisch-Seite': 'lunch page',
@@ -234,8 +237,8 @@
     'Noch nichts ausgewählt.': 'Nothing selected yet.',
     'Mindestbestellung: 10 Brötchen.': 'Minimum order: 10 rolls.',
     'Bestellung anfragen': 'Request order',
-    'Keine Vorkasse — Sie zahlen bei Abholung. Wir bestätigen Ihre\n              Anfrage telefonisch oder per E-Mail.':
-      'No prepayment — you pay at pickup. We confirm your request by phone or email.',
+    'Keine Vorkasse — Sie zahlen bei Abholung, bar oder mit Karte\n              (auch American Express). Wir bestätigen Ihre Anfrage telefonisch\n              oder per E-Mail.':
+      'No prepayment — you pay at pickup, in cash or by card (American Express too). We confirm your request by phone or email.',
     'Vorbestellen': 'Pre-order',
     'Für Büro & Feier': 'For office & parties',
     'Käse, Schinken, Lachs, vegetarisch oder bunt gemischt — frisch belegt zur Abholung. Ab 10 Stück, am besten einen Tag vorher.':
