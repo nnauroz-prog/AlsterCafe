@@ -1775,9 +1775,18 @@ function buildOrderItem(o) {
   const mailSubject = encodeURIComponent('Ihre Brötchen-Bestellung – Alstercafé');
   const mailBody = encodeURIComponent(`Guten Tag ${o.name || ''},\n\nvielen Dank für Ihre Bestellung. Wir haben sie notiert.\n\nHerzliche Grüße\nAlstercafé`);
   const mailLink = o.email ? `mailto:${escapeAttr(o.email)}?subject=${mailSubject}&body=${mailBody}` : '';
-  const itemsList = (Array.isArray(o.items) ? o.items : [])
-    .map(it => `<li><span class="order-line-qty">${escapeHtml(String(it.qty))}×</span> ${escapeHtml(it.name)}</li>`)
-    .join('');
+  const lineItems = Array.isArray(o.items) ? o.items : [];
+  const fmtEuro = n => Number(n).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+  const priced = lineItems.filter(it => typeof it.price === 'number' && it.price > 0);
+  const sumCents = priced.reduce((s, it) => s + Math.round(it.price * 100) * (parseInt(it.qty, 10) || 0), 0);
+  const itemsList = lineItems
+    .map(it => {
+      const p = (typeof it.price === 'number' && it.price > 0)
+        ? ` <span class="order-line-price">${fmtEuro(it.price * (parseInt(it.qty, 10) || 0))}</span>` : '';
+      return `<li><span class="order-line-qty">${escapeHtml(String(it.qty))}×</span> ${escapeHtml(it.name)}${p}</li>`;
+    })
+    .join('')
+    + (priced.length ? `<li class="order-line-total">Summe${priced.length < lineItems.length ? ' (ohne Sorten ohne Preis)' : ''} <span class="order-line-price">${fmtEuro(sumCents / 100)}</span></li>` : '');
 
   return `
     <li class="anfrage-item order-item ${isDone ? 'is-done' : ''}">
@@ -1872,6 +1881,7 @@ function addBroetchenRow(item, skipStatus) {
     <div class="broetchen-edit-fields">
       <input type="text" class="broetchen-edit-name" placeholder="Sorte (z. B. Käse)" value="${escapeAttr(data.name || '')}" />
       <input type="text" class="broetchen-edit-desc" placeholder="Beschreibung (z. B. Gouda, Salat, Butter)" value="${escapeAttr(data.desc || '')}" />
+      <input type="text" class="broetchen-edit-price" inputmode="decimal" placeholder="Preis €" value="${escapeAttr(data.price || '')}" aria-label="Preis pro Brötchen" />
       <label class="broetchen-edit-veg"><input type="checkbox" ${data.veg ? 'checked' : ''} /> vegetarisch</label>
     </div>
     <button type="button" class="broetchen-edit-remove" aria-label="Sorte entfernen">
@@ -1893,7 +1903,12 @@ function readBroetchenForm() {
     const name = row.querySelector('.broetchen-edit-name').value.trim();
     const desc = row.querySelector('.broetchen-edit-desc').value.trim();
     const veg  = row.querySelector('.broetchen-edit-veg input').checked;
-    if (name) out.push(veg ? { name, desc, veg: true } : { name, desc });
+    const price = (row.querySelector('.broetchen-edit-price')?.value || '').trim();
+    if (!name) return;
+    const it = { name, desc };
+    if (price) it.price = price;
+    if (veg) it.veg = true;
+    out.push(it);
   });
   return out;
 }

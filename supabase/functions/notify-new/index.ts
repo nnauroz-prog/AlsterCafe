@@ -48,6 +48,22 @@ function niceDate(v: unknown): string {
   } catch { return s; }
 }
 
+// Bestellpositionen mit Preis (falls bei der Bestellung gespeichert) + Summe.
+function eur(n: number): string {
+  return n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+}
+function itemLines(items: unknown): { html: string; total: number | null; partial: boolean } {
+  const list = Array.isArray(items) ? items : [];
+  let cents = 0, priced = 0;
+  const html = list.map((it: any) => {
+    const q = parseInt(it?.qty, 10) || 0;
+    const p = typeof it?.price === "number" && it.price > 0 ? it.price : null;
+    if (p) { cents += Math.round(p * 100) * q; priced++; }
+    return `${esc(it?.qty)}× ${esc(it?.name)}${p ? ` · ${eur(p * q)}` : ""}`;
+  }).join("<br>");
+  return { html, total: priced ? cents / 100 : null, partial: priced > 0 && priced < list.length };
+}
+
 function htmlToText(html: string): string {
   return html.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(p|div|tr|h1|h2)>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ")
@@ -88,13 +104,14 @@ function renderReceipt(table: string, r: any): { subject: string; html: string }
 
   let title = "", intro = "", rows = "", subject = "";
   if (table === "orders") {
-    const items = Array.isArray(r.items) ? r.items.map((it: any) => `${esc(it.qty)}× ${esc(it.name)}`).join("<br>") : "";
+    const { html: items, total, partial } = itemLines(r.items);
     subject = "Wir haben Ihre Brötchen-Bestellung erhalten – Alstercafé";
     title = "Ihre Bestellung ist bei uns eingegangen";
     intro = "vielen Dank für Ihre Vorbestellung! Wir prüfen sie umgehend und senden Ihnen in Kürze eine verbindliche Bestätigung.";
     rows = row("Abholung", `${niceDate(r.pickup_date)} ${r.pickup_time ? r.pickup_time + " Uhr" : ""}`.trim())
       + row("Anzahl", r.total_count ? `${r.total_count} Brötchen` : "")
-      + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "");
+      + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "")
+      + (total !== null ? row("Summe", eur(total) + (partial ? " (ohne Sorten ohne Preis)" : "")) + row("Bezahlung", "bei Abholung") : "");
   } else {
     subject = "Wir haben Ihre Reservierungsanfrage erhalten – Alstercafé";
     title = "Ihre Anfrage ist bei uns eingegangen";
@@ -169,9 +186,7 @@ Deno.serve(async (req) => {
       <strong>Nachricht:</strong> ${esc(r.message) || "—"}</p>
       <p>${ADMIN}</p>`;
   } else {
-    const items = Array.isArray(r.items)
-      ? r.items.map((it: any) => `${esc(it.qty)}× ${esc(it.name)}`).join("<br>")
-      : "";
+    const { html: items, total, partial } = itemLines(r.items);
     ownerSubject = `Neue Brötchen-Bestellung (${r.total_count || 0}) – ${r.name || "ohne Name"}`;
     ownerHtml = `
       <h2>Neue Brötchen-Bestellung</h2>
@@ -181,6 +196,7 @@ Deno.serve(async (req) => {
       <strong>Telefon:</strong> ${esc(r.phone)}<br>
       <strong>E-Mail:</strong> ${esc(r.email)}</p>
       <p><strong>Bestellung:</strong><br>${items}</p>
+      ${total !== null ? `<p><strong>Summe:</strong> ${eur(total)}${partial ? " (ohne Sorten ohne Preis)" : ""}</p>` : ""}
       <p><strong>Hinweis:</strong> ${esc(r.notes) || "—"}</p>
       <p>${ADMIN}</p>`;
   }

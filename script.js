@@ -2057,16 +2057,31 @@ function renderWeekList(weekData, monday, today) {
   });
 }
 
+/* Preis-Helfer für den Brötchen-Service.
+   parseEuro: "2,50 €" / "2.5" / 2.5 -> 2.5 (Euro, auf Cent gerundet) oder null.
+   formatEuro: 2.5 -> "2,50 €". */
+function parseEuro(v) {
+  if (typeof v === 'number') return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
+  const m = String(v || '').replace(/\s/g, '').replace(',', '.').match(/\d+(\.\d+)?/);
+  const n = m ? parseFloat(m[0]) : NaN;
+  return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+}
+function formatEuro(n) {
+  return Number(n).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+}
+
 /* Baut eine Brötchen-Sorten-Zeile (für vom Inhaber gepflegte Sorten) */
 function buildBroetchenRow(item) {
   const name = escapeHtml(item.name || '');
   const desc = escapeHtml(item.desc || '');
   const veg  = item.veg ? ' <span class="broetchen-badge">vegetarisch</span>' : '';
+  const price = parseEuro(item.price);
   return `
-    <li class="broetchen-row" data-name="${escapeAttr(item.name || '')}">
+    <li class="broetchen-row" data-name="${escapeAttr(item.name || '')}"${price ? ` data-price="${price}"` : ''}>
       <div class="broetchen-info">
         <span class="broetchen-name">${name}${veg}</span>
         ${desc ? `<span class="broetchen-desc">${desc}</span>` : ''}
+        ${price ? `<span class="broetchen-price">${formatEuro(price)}</span>` : ''}
       </div>
       <div class="qty-stepper">
         <button type="button" class="qty-btn" data-step="-1" aria-label="Weniger ${name}">−</button>
@@ -2104,11 +2119,18 @@ function initOrderForm() {
   // wenn der Inhaber die Sorten ändert) — so bleibt getItems korrekt.
   const getRows = () => Array.from(document.querySelectorAll('.broetchen-row'));
 
+  // Der Preis wird mit der Bestellung gespeichert (Stand zum Bestellzeitpunkt),
+  // damit spätere Preisänderungen alte Bestellungen nicht verändern.
   const getItems = () => getRows()
-    .map(row => ({
-      name: row.dataset.name || '',
-      qty: parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0
-    }))
+    .map(row => {
+      const it = {
+        name: row.dataset.name || '',
+        qty: parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0
+      };
+      const price = parseEuro(row.dataset.price);
+      if (price) it.price = price;
+      return it;
+    })
     .filter(it => it.qty > 0);
 
   const render = () => {
@@ -2116,8 +2138,15 @@ function initOrderForm() {
     const total = items.reduce((s, it) => s + it.qty, 0);
     if (countEl) countEl.textContent = String(total);
     if (listEl) {
+      const priced = items.filter(it => it.price);
+      const sum = priced.reduce((s, it) => s + Math.round(it.price * 100) * it.qty, 0) / 100;
+      const sumLabel = alsterLang() === 'en' ? 'Total' : 'Summe';
+      const sumNote = priced.length < items.length
+        ? `<small class="order-summary-sum-note">${alsterLang() === 'en' ? 'excl. items without price' : 'ohne Sorten ohne Preis'}</small>`
+        : '';
       listEl.innerHTML = items.length
-        ? items.map(it => `<li><span>${escapeHtml(it.name)}</span><span class="order-summary-qty">${it.qty}×</span></li>`).join('')
+        ? items.map(it => `<li><span>${escapeHtml(it.name)}</span><span class="order-summary-amount"><span class="order-summary-qty">${it.qty}×</span>${it.price ? `<span class="order-summary-price">${formatEuro(it.price * it.qty)}</span>` : ''}</span></li>`).join('')
+          + (priced.length ? `<li class="order-summary-total"><span>${sumLabel}${sumNote}</span><span class="order-summary-price">${formatEuro(sum)}</span></li>` : '')
         : '<li class="order-summary-empty">Noch nichts ausgewählt.</li>';
     }
     const ok = total >= MIN_ORDER;
@@ -2218,7 +2247,7 @@ function initOrderForm() {
       render();
     } else {
       // Fallback: Mail-Programm
-      const lines = items.map(it => `${it.qty}× ${it.name}`).join('\n');
+      const lines = items.map(it => `${it.qty}× ${it.name}${it.price ? ` (${formatEuro(it.price * it.qty)})` : ''}`).join('\n');
       const subject = `Brötchen-Bestellung (${total} Stück) – ${entry.name}`;
       const body = encodeURIComponent(
         `Bestellung:\n${lines}\n\nGesamt: ${total} Brötchen\n` +

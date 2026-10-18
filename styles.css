@@ -755,7 +755,6 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
   transition: padding-left var(--dur-base) var(--ease-out);
 }
 .broetchen-row:first-child { border-top: 1px solid var(--line-soft); }
-.broetchen-row.is-active { padding-left: 10px; }
 .broetchen-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .broetchen-name {
   font-family: 'Fraunces', serif;
@@ -3383,7 +3382,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 .broetchen-edit-fields {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1.5fr auto;
+  grid-template-columns: 1fr 1.5fr 110px auto;
   gap: 10px;
   align-items: center;
 }
@@ -7781,7 +7780,6 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-size: .92rem;
   letter-spacing: .04em;
 }
-.order-summary-qty::before { content: '× '; opacity: 0.5; }
 .order-summary-empty {
   color: rgba(241, 231, 211, 0.4) !important;
   font-style: italic;
@@ -9008,3 +9006,62 @@ html.has-js-scroll { scroll-behavior: auto; }
    =============================================== */
 *, *::before, *::after { font-style: normal !important; }
 
+
+/* ---------- BRÖTCHEN-SERVICE · Preise ----------
+   Preis pro Sorte (vom Inhaber gepflegt) und Summe in der Bestell-Übersicht. */
+.broetchen-price {
+  font-family: 'Inter', sans-serif;
+  font-size: .86rem;
+  font-weight: 600;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.order-summary-amount {
+  display: inline-flex; align-items: baseline; gap: 12px;
+  white-space: nowrap;
+}
+.order-summary-price {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-size: .92rem;
+  color: var(--linen);
+}
+.order-summary-list li.order-summary-total {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(212, 179, 128, 0.28);
+  border-bottom: 0;
+  font-style: normal;
+  font-weight: 600;
+}
+.order-summary-total .order-summary-price {
+  color: var(--gold-soft);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Mitgliederbereich: Preise in der Bestellübersicht */
+.order-line-price {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+.order-line-list li.order-line-total {
+  grid-column: 1 / -1;
+  font-weight: 700;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.order-line-total .order-line-price { color: var(--bean); }
+.order-summary-sum-note {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: .72rem;
+  letter-spacing: .02em;
+  color: rgba(241, 231, 211, 0.55);
+  margin-top: 2px;
+}
