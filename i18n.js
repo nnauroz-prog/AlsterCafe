@@ -39,6 +39,7 @@
     'Index': 'Index',
     'Besuch': 'Visit',
     'Geöffnet': 'Open',
+    'Wir akzeptieren': 'We accept',
     'Geöffnet bis': 'Open until',
     'Öffnungszeiten': 'Opening hours',
     'Adresse': 'Address',
@@ -206,8 +207,8 @@
     /* ---------------- Brötchen-Service ---------------- */
     'für die Runde.': 'for the group.',
     'Belegte Brötchen': 'Filled rolls',
-    'Fürs Büro, die Familienfeier oder den langen Arbeitstag: Sagen Sie uns,\n          wie viele und womit — wir belegen frisch und stellen alles zur Abholung\n          bereit. Ab 10 Stück, am besten einen Tag vorher.':
-      'For the office, the family gathering or the long workday: tell us how many and with what — we fill them fresh and have everything ready for pickup. From 10 pieces, ideally a day ahead.',
+    'Fürs Büro, die Familienfeier oder den langen Arbeitstag: Sagen Sie uns,\n          wie viele und womit — wir belegen frisch und stellen alles zur Abholung\n          bereit. Am besten einen Tag vorher bestellen.':
+      'For the office, the family gathering or the long workday: tell us how many and with what — we fill them fresh and have everything ready for pickup. Ideally order a day ahead.',
     'Was darf\'s sein?': 'What would you like?',
     'Tippen Sie die gewünschte Anzahl je Sorte. Sonderwünsche kommen ins Notizfeld.':
       'Enter the quantity per variety. Special requests go in the notes field.',
@@ -235,14 +236,14 @@
     'Ich bin mit der Bearbeitung meiner Anfrage einverstanden.': 'I agree to my request being processed.',
     'Ihre Bestellung': 'Your order',
     'Noch nichts ausgewählt.': 'Nothing selected yet.',
-    'Mindestbestellung: 10 Brötchen.': 'Minimum order: 10 rolls.',
+    'Wählen Sie oben Ihre Brötchen aus.': 'Choose your rolls above.',
     'Bestellung anfragen': 'Request order',
     'Keine Vorkasse — Sie zahlen bei Abholung, bar oder mit Karte\n              (auch American Express). Wir bestätigen Ihre Anfrage telefonisch\n              oder per E-Mail.':
       'No prepayment — you pay at pickup, in cash or by card (American Express too). We confirm your request by phone or email.',
     'Vorbestellen': 'Pre-order',
     'Für Büro & Feier': 'For office & parties',
-    'Käse, Schinken, Lachs, vegetarisch oder bunt gemischt — frisch belegt zur Abholung. Ab 10 Stück, am besten einen Tag vorher.':
-      'Cheese, ham, salmon, vegetarian or mixed — freshly filled for pickup. From 10 pieces, ideally a day ahead.',
+    'Käse, Schinken, Lachs, vegetarisch oder bunt gemischt — frisch belegt zur Abholung. Am besten einen Tag vorher bestellen.':
+      'Cheese, ham, salmon, vegetarian or mixed — freshly filled for pickup. Ideally order a day ahead.',
     'Belegte Brötchen vorbestellen': 'Pre-order filled rolls',
     'Zum Brötchen-Service': 'To the sandwich service',
     'Mehr Käse': 'More cheese', 'Weniger Käse': 'Less cheese',

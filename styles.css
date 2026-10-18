@@ -9065,3 +9065,63 @@ html.has-js-scroll { scroll-behavior: auto; }
   color: rgba(241, 231, 211, 0.55);
   margin-top: 2px;
 }
+
+/* ---------- FOOTER · Zahlungsarten ----------
+   Kleine Marken-Badges (inline-SVG aus script.js, PAYMENT_BADGES). */
+.footer-pay {
+  position: relative;
+  z-index: 2;
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap;
+  padding: 22px 0 26px;
+}
+.footer-pay .footer-col-label { margin: 0; }
+.footer-pay-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.pay-badge { display: block; line-height: 0; }
+.pay-badge svg {
+  width: 44px; height: 28px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(241, 231, 211, 0.18);
+}
+@media (max-width: 980px) {
+  .footer-pay { justify-content: center; text-align: center; flex-direction: column; gap: 12px; }
+  .footer-pay-list { justify-content: center; }
+}
+
+/* ---------- MITGLIEDERBEREICH · Fenster „Bestätigung senden" ----------
+   Optionale persönliche Nachricht an den Gast (admin.js askPersonalMessage). */
+.confirm-dialog {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0;
+  background: var(--cream);
+  color: var(--bean);
+  box-shadow: 0 24px 60px rgba(31, 20, 12, 0.28);
+}
+.confirm-dialog::backdrop { background: rgba(31, 20, 12, 0.45); }
+.confirm-dialog-form { padding: 24px 22px 20px; display: flex; flex-direction: column; gap: 10px; margin: 0; }
+.confirm-dialog-title { margin: 0; font-family: 'Fraunces', serif; font-size: 1.35rem; font-weight: 500; }
+.confirm-dialog-to { margin: 0 0 6px; font-size: .92rem; color: var(--muted); overflow-wrap: anywhere; }
+.confirm-dialog-to strong { color: var(--bean); }
+.confirm-dialog-label { font-size: .9rem; font-weight: 600; }
+.confirm-dialog-label span { font-weight: 400; color: var(--muted); }
+.confirm-dialog-msg {
+  width: 100%;
+  box-sizing: border-box;
+  font: 400 1rem/1.5 'Inter', sans-serif;
+  color: var(--bean);
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 96px;
+}
+.confirm-dialog-msg:focus { outline: none; border-color: var(--gold); }
+.confirm-dialog-hint { margin: 0; font-size: .8rem; color: var(--muted); }
+.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 8px; }

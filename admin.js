@@ -1574,17 +1574,58 @@ function niceDate(iso) {
 }
 
 /* Bestätigungs-E-Mail an den Gast senden (ein Knopf, eine Bestätigung). */
+/* Fenster vor dem Versand der Bestätigung: optionale persönliche Nachricht an den
+   Gast. Liefert den (getrimmten) Text, "" für ohne Nachricht, oder null bei Abbruch. */
+const PERSONAL_MESSAGE_MAX = 1000;
+function askPersonalMessage(email) {
+  return new Promise(resolve => {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'confirm-dialog';
+    dlg.innerHTML = `
+      <form method="dialog" class="confirm-dialog-form">
+        <h3 class="confirm-dialog-title">Bestätigung senden</h3>
+        <p class="confirm-dialog-to">An: <strong>${escapeHtml(email)}</strong></p>
+        <label class="confirm-dialog-label" for="confirm-dialog-msg">Persönliche Nachricht an den Gast <span>(optional)</span></label>
+        <textarea id="confirm-dialog-msg" class="confirm-dialog-msg" rows="4" maxlength="${PERSONAL_MESSAGE_MAX}"
+          placeholder="z. B. Wir haben Ihnen einen Tisch am Fenster reserviert."></textarea>
+        <p class="confirm-dialog-hint">Bleibt das Feld leer, geht die Bestätigung ganz normal raus.</p>
+        <div class="confirm-dialog-actions">
+          <button type="button" class="btn btn-link" data-act="cancel">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" data-act="send">
+            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
+            Jetzt senden
+          </button>
+        </div>
+      </form>`;
+    document.body.appendChild(dlg);
+    const ta = dlg.querySelector('textarea');
+    let result = null;
+    const close = (val) => { result = val; dlg.close(); };
+    dlg.querySelector('[data-act="cancel"]').addEventListener('click', () => close(null));
+    dlg.querySelector('form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      close(ta.value.trim().slice(0, PERSONAL_MESSAGE_MAX));
+    });
+    dlg.addEventListener('cancel', () => { result = null; }); // Esc
+    dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
+    dlg.showModal();
+    ta.focus();
+  });
+}
+
 async function onSendConfirmation(id, ctype) {
   const key = ctype === 'order' ? 'orders' : 'reservations';
   const list = window.alsterDb?.get(key) || [];
   const it = (Array.isArray(list) ? list : []).find(x => x.id === id);
   if (!it) return;
   if (!it.email) { alert('Für diese Anfrage ist keine E-Mail-Adresse hinterlegt.'); return; }
-  if (!confirm(`Bestätigungs-E-Mail an ${it.email} senden?`)) return;
+  const message = await askPersonalMessage(it.email);
+  if (message === null) return; // abgebrochen
 
   const payload = ctype === 'order'
     ? { type: 'order', name: it.name, email: it.email, pickupDate: niceDate(it.pickupDate), pickupTime: it.pickupTime, total: it.totalCount, items: it.items }
     : { type: 'reservation', name: it.name, email: it.email, date: niceDate(it.date), time: it.time, persons: it.persons };
+  if (message) payload.message = message;
 
   const res = await window.alsterDb?.sendConfirmation(payload);
   if (res && res.ok) {
