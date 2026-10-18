@@ -91,7 +91,7 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
     const { html: items, total, partial } = itemLines(d.items);
     title = "Ihre Bestellung ist bestätigt";
     intro = `vielen Dank für Ihre Vorbestellung. Wir haben sie fest eingeplant und freuen uns auf Sie.`;
-    rows = detailRow("Abholung", `${d.pickupDate || ""} ${d.pickupTime || ""}`.trim())
+    rows = detailRow("Abholung", `${d.pickupDate || ""} ${d.pickupTime ? d.pickupTime + " Uhr" : ""}`.trim())
       + detailRow("Anzahl", d.total ? `${d.total} Brötchen` : "")
       + (items ? `<tr><td style="padding:8px 0 4px;color:${MUTED};font-size:13px;vertical-align:top;">Bestellung</td><td style="padding:8px 0 4px;color:${INK};font-size:15px;line-height:1.6;">${items}</td></tr>` : "")
       + (total !== null ? detailRow("Summe", eur(total) + (partial ? " (ohne Sorten ohne Preis)" : "")) + detailRow("Bezahlung", "bei Abholung") : "");
