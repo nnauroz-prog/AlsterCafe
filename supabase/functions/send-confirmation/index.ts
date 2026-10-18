@@ -101,7 +101,7 @@ function renderEmail(type: string, d: any): { subject: string; html: string } {
         <!-- Body -->
         <tr><td style="padding:34px 32px 28px;font-family:Arial,Helvetica,sans-serif;color:${INK};">
           <h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:normal;color:${BEAN};">${esc(title)}</h1>
-          <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${INK};">Guten Tag ${esc(d.name) || "zusammen"},</p>
+          <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${INK};">Moin ${esc(d.name) || "zusammen"},</p>
           <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:${INK};">${intro}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER};border:1px solid #ECE3D4;border-radius:10px;padding:16px 18px;margin:0 0 22px;">
             ${rows}
