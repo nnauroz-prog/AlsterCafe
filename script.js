@@ -93,6 +93,122 @@ const DEFAULT_BROETCHEN = [
   { name: 'Bunt gemischt',       desc: 'Wir stellen eine ausgewogene Auswahl zusammen' }
 ];
 
+/* Berliner-Vorbestellung (z. B. Silvester). Der Inhaber schaltet sie im
+   Mitgliederbereich an/aus und legt fest, von wann bis wann bestellt werden
+   kann (Key: berliner-settings) und welche Sorten es gibt (Key: berliner-items). */
+const DEFAULT_BERLINER = [
+  { name: 'Klassisch',  desc: 'Mit Konfitüre gefüllt, mit Zucker' },
+  { name: 'Vanille',    desc: 'Mit Vanillecreme gefüllt' },
+  { name: 'Schoko',     desc: 'Mit Schokocreme gefüllt' }
+];
+function berlinerSettings() {
+  let s = null;
+  try { s = window.alsterDb?.get('berliner-settings'); } catch {}
+  return (s && typeof s === 'object') ? s : {};
+}
+// Sichtbar = eingeschaltet UND heute innerhalb des Bestellzeitraums
+// (leere Grenzen = offen). Datumsvergleich als ISO-Text (YYYY-MM-DD).
+function berlinerState() {
+  const st = berlinerSettings();
+  const today = isoLocal(new Date());
+  if (!st.active) return { visible: false, reason: 'off', st };
+  if (st.orderFrom && today < st.orderFrom) return { visible: false, reason: 'soon', st };
+  if (st.orderTo && today > st.orderTo) return { visible: false, reason: 'over', st };
+  return { visible: true, st };
+}
+function formatDateLong(iso, en) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+/* Menüpunkt + Ankündigung auf der Startseite — nur solange die Aktion läuft. */
+function initBerlinerPromo() {
+  const { visible, st } = berlinerState();
+  const en = alsterLang() === 'en';
+  const onPage = /berliner\.html$/.test(location.pathname);
+
+  // Menüpunkt (Kopfzeile, auch mobil) direkt hinter dem Brötchen-Service
+  document.querySelectorAll('.primary-nav').forEach(nav => {
+    let link = nav.querySelector('.nav-berliner');
+    if (!visible) { link?.remove(); return; }
+    if (!link) {
+      link = document.createElement('a');
+      link.className = 'nav-berliner';
+      link.href = 'berliner.html';
+      link.textContent = 'Berliner-Bestellservice';
+      const after = nav.querySelector('a[href="broetchen.html"]');
+      after ? after.after(link) : nav.prepend(link);
+    }
+    link.classList.toggle('is-active', onPage);
+  });
+
+  // Ankündigung auf der Startseite (unter dem Hero)
+  const hero = document.querySelector('.hero-landing');
+  let promo = document.getElementById('berliner-promo');
+  if (!visible || !hero) { promo?.remove(); return; }
+  const title = (st.title || '').trim() || 'Berliner für Silvester vorbestellen';
+  const text = (st.text || '').trim() || 'Frisch aus unserer Backstube — jetzt vorbestellen und zur Abholung bereitlegen lassen.';
+  const until = st.orderTo ? (en ? `Orders until ${formatDateLong(st.orderTo, true)}` : `Bestellbar bis ${formatDateLong(st.orderTo)}`) : '';
+  const html = `
+    <div class="container berliner-promo-inner">
+      <div>
+        <p class="berliner-promo-kicker">${en ? 'Pre-order now' : 'Jetzt vorbestellen'}</p>
+        <h2 class="berliner-promo-title">${escapeHtml(title)}</h2>
+        <p class="berliner-promo-text">${escapeHtml(text)}</p>
+        ${until ? `<p class="berliner-promo-until">${escapeHtml(until)}</p>` : ''}
+      </div>
+      <a class="btn btn-gold" href="berliner.html">${en ? 'Pre-order doughnuts' : 'Berliner vorbestellen'} <svg class="ico ico-sm"><use href="#i-arrow"/></svg></a>
+    </div>`;
+  if (!promo) {
+    promo = document.createElement('section');
+    promo.id = 'berliner-promo';
+    promo.className = 'berliner-promo';
+    promo.setAttribute('data-no-i18n', '');
+    hero.after(promo);
+  }
+  if (promo.dataset.html !== html) { promo.innerHTML = html; promo.dataset.html = html; }
+}
+
+/* Berliner-Seite: geschlossen/offen umschalten, Texte und Zeitraum anzeigen. */
+function initBerlinerPage() {
+  const form = document.getElementById('order-form');
+  if (!form || form.dataset.kind !== 'berliner') return;
+  const { visible, reason, st } = berlinerState();
+  const en = alsterLang() === 'en';
+  const orderSec = document.getElementById('berliner-order');
+  const closed = document.getElementById('berliner-closed');
+  const closedText = document.getElementById('berliner-closed-text');
+  const win = document.getElementById('berliner-window');
+  if (orderSec) orderSec.hidden = !visible;
+  if (closed) closed.hidden = visible;
+  if (closedText) {
+    closedText.textContent = reason === 'soon' && st.orderFrom
+      ? (en ? `Pre-orders open on ${formatDateLong(st.orderFrom, true)}.` : `Vorbestellungen sind ab ${formatDateLong(st.orderFrom)} möglich.`)
+      : (en ? 'Check back soon or give us a call.' : 'Schauen Sie bald wieder vorbei oder rufen Sie uns an.');
+  }
+  const lead = document.getElementById('berliner-lead');
+  if (lead && (st.text || '').trim()) lead.textContent = st.text.trim();
+  if (win) {
+    const parts = [];
+    if (visible && st.orderTo) parts.push(en ? `Orders until ${formatDateLong(st.orderTo, true)}` : `Bestellbar bis ${formatDateLong(st.orderTo)}`);
+    if (st.pickupFrom || st.pickupTo) {
+      const a = formatDateLong(st.pickupFrom || st.pickupTo, en), b = formatDateLong(st.pickupTo || st.pickupFrom, en);
+      parts.push(a === b ? (en ? `Pick-up on ${a}` : `Abholung am ${a}`) : (en ? `Pick-up ${a} – ${b}` : `Abholung ${a} bis ${b}`));
+    }
+    win.textContent = parts.join(' · ');
+    win.hidden = !parts.length;
+  }
+  const date = form.querySelector('input[name="Datum"]');
+  if (date) {
+    const today = isoLocal(new Date());
+    const min = st.pickupFrom && st.pickupFrom > today ? st.pickupFrom : today;
+    date.min = min;
+    if (st.pickupTo) date.max = st.pickupTo; else date.removeAttribute('max');
+    if (!date.value || date.value < min || (st.pickupTo && date.value > st.pickupTo)) date.value = min;
+  }
+}
+
 // Rechtstexte (Impressum, Datenschutz) gibt es nur auf Deutsch: auf der
 // englischen Seite einen kurzen Hinweis oben einblenden.
 function noteGermanOnlyLegal() {
@@ -151,6 +267,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Brötchen-Sorten jetzt mit dem hydratisierten Stand neu aufbauen (die erste
   // Darstellung lief vor dem Backend und zeigte ggf. noch die Standard-Liste).
   safeRun(() => { if (refreshOrderSorts) refreshOrderSorts(); });
+  safeRun(initBerlinerPromo);
+  safeRun(initBerlinerPage);
+  // Bestellzeitraum kann um Mitternacht beginnen/enden
+  setInterval(() => { safeRun(initBerlinerPromo); safeRun(initBerlinerPage); }, 5 * 60 * 1000);
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
@@ -165,7 +285,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'menu':        initMenu(); break;
       case 'hours':       initHours(); updateLiveStatus(); break;
       case 'weekly-menu': initLunchWeek(); break;
-      case 'broetchen-items': if (refreshOrderSorts) refreshOrderSorts(); break;
+      case 'broetchen-items':
+      case 'berliner-items': if (refreshOrderSorts) refreshOrderSorts(); break;
+      case 'berliner-settings': initBerlinerPromo(); initBerlinerPage(); break;
     }
   }, ['content']);
 });
@@ -1822,48 +1944,15 @@ function initPageTransitions(reduceMotion) {
     { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }
   );
 
-  // Zurueck-Taste (Seite aus dem Browser-Cache): Ausblenden wieder aufheben,
-  // sonst bliebe die Seite unsichtbar.
-  let pageLeaveAnim = null;
-  window.addEventListener('pageshow', () => { try { pageLeaveAnim?.cancel(); } catch {} pageLeaveAnim = null; });
-
-  // Fade-Out bei internem Link-Klick
-  const sameOrigin = (href) => {
-    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return false;
-    try { return new URL(href, location.href).origin === location.origin; } catch { return false; }
-  };
-
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href]');
-    if (!a) return;
-    if (a.target === '_blank') return;
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (e.button !== 0) return;
-    const href = a.getAttribute('href');
-    if (!sameOrigin(href)) return;
-    if (a.hasAttribute('download')) return;
-
-    // Edge-Cases auf gleicher Seite skippen
-    const url = new URL(href, location.href);
-    if (url.pathname === location.pathname) {
-      // Hash-Link → Browser/Smooth-Scroll uebernimmt
-      if (url.hash) return;
-      // Exact same URL inkl. Query → einfach Top-Scroll, kein Reload
-      if (url.search === location.search) {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-    }
-
-    e.preventDefault();
-    pageLeaveAnim = document.documentElement.animate(
-      [
-        { opacity: 1, transform: 'translateY(0)' },
-        { opacity: 0.001, transform: 'translateY(-4px)' }
-      ],
-      { duration: 240, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' }
-    ).onfinish = () => { location.href = href; };
+  // Bewusst KEIN Ausblenden mehr beim Link-Klick: das Abfangen jedes Klicks
+  // liess Seiten auf dem Handy haengen, und nach "Zurueck" (Browser-Cache)
+  // blieb die Seite unsichtbar. Links oeffnen jetzt ganz normal und sofort.
+  // Falls eine Seite doch einmal ausgeblendet aus dem Cache kommt: zuruecksetzen.
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    try { document.documentElement.getAnimations().forEach(an => an.cancel()); } catch {}
+    document.documentElement.style.opacity = '';
+    document.body?.classList.remove('menu-open');
   });
 }
 
