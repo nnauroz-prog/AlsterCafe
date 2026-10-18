@@ -514,6 +514,8 @@ async function onSaveWeek(e) {
     const data = new FormData(dom.menuForm);
     const dish   = (data.get('spillover-sun-dish')   || '').toString().trim();
     const side   = (data.get('spillover-sun-side')   || '').toString().trim();
+    const dish2  = (data.get('spillover-sun-dish2')  || '').toString().trim();
+    const side2  = (data.get('spillover-sun-side2')  || '').toString().trim();
     const closed = data.get('spillover-sun-closed') === 'on';
     const today = new Date();
     // Woche, die den heutigen Sonntag enthaelt (mondayOf(heute)) — muss mit
@@ -521,9 +523,10 @@ async function onSaveWeek(e) {
     const prevMonday = mondayOf(today);
     const prevKey = isoDate(prevMonday);
     const prevWeek = all[prevKey] || { weekStart: prevKey, days: {} };
-    if (dish || side || closed) {
+    if (dish || side || dish2 || side2 || closed) {
       prevWeek.days = prevWeek.days || {};
       prevWeek.days.sun = { dish, side, closed };
+      if (dish2 || side2) { prevWeek.days.sun.dish2 = dish2; prevWeek.days.sun.side2 = side2; }
       prevWeek.updatedAt = new Date().toISOString();
       all[prevKey] = prevWeek;
     }
@@ -637,6 +640,17 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
       <span class="day-field-label">Beilage</span>
       <input type="text" name="${fieldPrefix}-side" placeholder="z. B. Reis und Salat" value="${escapeAttr(saved.side || '')}" />
     </label>
+    <details class="day-alt"${saved.dish2 || saved.side2 ? ' open' : ''}>
+      <summary><span class="day-alt-or">oder</span> Zweites Gericht zur Wahl (optional)</summary>
+      <label class="day-field">
+        <span class="day-field-label">2. Gericht</span>
+        <textarea name="${fieldPrefix}-dish2" rows="2" placeholder="z. B. Gemüse-Curry (vegetarisch)">${escapeHtml(saved.dish2 || '')}</textarea>
+      </label>
+      <label class="day-field">
+        <span class="day-field-label">Beilage zum 2. Gericht</span>
+        <input type="text" name="${fieldPrefix}-side2" placeholder="z. B. Basmatireis" value="${escapeAttr(saved.side2 || '')}" />
+      </label>
+    </details>
     <label class="day-toggle">
       <input type="checkbox" name="${fieldPrefix}-closed" ${saved.closed ? 'checked' : ''} />
       <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
@@ -652,8 +666,14 @@ function readFormToWeek() {
   DAYS.forEach(day => {
     const dish = (data.get(`${day.key}-dish`) || '').toString().trim();
     const side = (data.get(`${day.key}-side`) || '').toString().trim();
+    const dish2 = (data.get(`${day.key}-dish2`) || '').toString().trim();
+    const side2 = (data.get(`${day.key}-side2`) || '').toString().trim();
     const closed = data.get(`${day.key}-closed`) === 'on';
-    if (dish || side || closed) week[day.key] = { dish, side, closed };
+    if (dish || side || dish2 || side2 || closed) {
+      week[day.key] = { dish, side, closed };
+      // Zweites Gericht nur speichern, wenn eingetragen (ältere Einträge bleiben gleich)
+      if (dish2 || side2) { week[day.key].dish2 = dish2; week[day.key].side2 = side2; }
+    }
   });
   return week;
 }
@@ -1489,7 +1509,7 @@ function renderOverviewSummary() {
     const wk = all[isoDate(mondayOf(today))];
     const dayKey = DAYS[(today.getDay() + 6) % 7].key;
     const day = wk && wk.days ? wk.days[dayKey] : null;
-    const dish = (day && day.dish ? day.dish : '').trim();
+    const dish = [day?.dish, day?.dish2].map(d => (d || '').trim()).filter(Boolean).join('  ·  oder  ·  ');
     dom.summaryTodayDish.textContent = (day && day.closed)
       ? 'Heute kein Mittagstisch'
       : (dish || 'Noch nichts eingetragen');
