@@ -128,6 +128,10 @@ try {
     // Externe Requests (Fonts, Supabase) abklemmen — wir testen Layout, nicht Netzwerk.
     await page.route('**/*', (r) => {
       const u = r.request().url();
+      // supabase-js liegt lokal (vendor/) — trotzdem blocken, damit die Seite wie
+      // ohne Backend sofort im Demo-Modus initialisiert (sonst warten Banner & Co.
+      // auf die abgeklemmte Datenbank und fehlen in der Messung).
+      if (u.includes('/vendor/supabase-js')) return r.abort();
       return (u.includes('localhost') || u.startsWith('data:')) ? r.continue() : r.abort();
     });
 

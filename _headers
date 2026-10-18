@@ -24,7 +24,7 @@
   X-DNS-Prefetch-Control: on
 
   # Content Security Policy: erlaubt nur unsere bekannten Quellen
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co; frame-src https://www.google.com https://maps.google.com https://www.openstreetmap.org; form-action 'self' mailto:; base-uri 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co; frame-src https://www.google.com https://maps.google.com https://www.openstreetmap.org; form-action 'self' mailto:; base-uri 'self'; object-src 'none'
 
 # Statische Assets dürfen langfristig gecacht werden
 /*.css
