@@ -9781,3 +9781,8 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
 .legal-article p, .legal-article li { line-height: 1.7; }
 .legal-article .legal-toc a { border-bottom: 1px solid transparent; text-decoration: none; }
 .legal-article .legal-toc a:hover, .legal-article .legal-toc a:focus-visible { border-bottom-color: var(--gold, #B8893F); }
+
+/* ---------- Ruhiger Seitenaufbau ----------
+   Die KW-Zeile auf der Mittagstisch-Seite wird erst per Script gefüllt; vorher war sie
+   leer (0 px) und schob beim Füllen alles darunter nach unten (CLS ~0,15). */
+.lunch-meta:empty::before { content: "\00a0"; }
