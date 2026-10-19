@@ -9817,3 +9817,16 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
   box-shadow: 0 10px 24px -12px rgba(184, 137, 63, .6);
 }
 .order-summary-card .order-submit:not(:disabled):not(.is-success):not(.is-loading):hover { background: var(--gold-soft, #D4B380); }
+
+/* ---------- Barrierefreiheit ---------- */
+/* Deko-Schriftzüge: Text kommt aus data-text (siehe decorativeShouts in script.js) */
+.section-shout[data-text]::before, .page-hero-watermark[data-text]::before { content: attr(data-text); }
+/* „Start“ in der Brotkrumen-Navigation nicht nur per Farbe erkennbar */
+.page-breadcrumb a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgba(92, 60, 32, .45); }
+/* Kontrast ≥ 4,5:1 (WCAG AA) bei kleinen goldenen/grauen Texten auf hellem Grund */
+.container > .eyebrow > .num { color: #806a54; opacity: 1; }
+@media (min-width: 981px) { .primary-nav a.is-active { color: var(--gold-text, #8A6420); } }
+.page-hero-editorial .lunch-meta { color: var(--gold-text, #8A6420); }
+/* Mitgliederbereich: Fußzeilen-Link „Zur Webseite“ war Braun auf Fast-Schwarz */
+.admin-footer a, .admin-body footer a { color: var(--gold-soft, #D4B380); }
+.admin-footer a, .admin-body footer a { text-decoration: underline; text-underline-offset: 3px; }

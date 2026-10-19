@@ -324,6 +324,8 @@
     'Erfahrungen unserer Gäste': 'What our guests say',
     'Sterne & Rezensionen': 'Stars & reviews',
     'Fotos aus dem Café': 'Photos from the café',
+    'Kurzinfo': 'Quick info',
+    'Rechtliches': 'Legal',
     /* Berliner-Vorbestellung */
     'Berliner-Bestellservice': 'Doughnut pre-orders',
     'Berliner vorbestellen': 'Pre-order doughnuts',
