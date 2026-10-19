@@ -2162,6 +2162,21 @@ function askPersonalMessage(email) {
   });
 }
 
+/* Verlauf an der Karte: wann bestätigt (Mail) und wann erledigt */
+function formatStamp(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const day = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  return `${day} · ${time} Uhr`;
+}
+function historyHtml(x) {
+  const rows = [];
+  if (x.confirmedAt) rows.push(`<span class="anfrage-hist is-confirmed"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Bestätigung gesendet · ${escapeHtml(formatStamp(x.confirmedAt))}</span>`);
+  if (x.status === 'done' && x.doneAt) rows.push(`<span class="anfrage-hist is-done"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Erledigt · ${escapeHtml(formatStamp(x.doneAt))}</span>`);
+  return rows.join('');
+}
+
 const confirmSending = new Set();
 async function onSendConfirmation(id, ctype) {
   if (confirmSending.has(id)) return; // läuft schon, kein Doppelversand
@@ -2189,6 +2204,8 @@ async function onSendConfirmation(id, ctype) {
     btns.forEach((b, i) => { b.disabled = false; b.innerHTML = labels[i]; });
   }
   if (res && res.ok) {
+    await window.alsterDb?.markConfirmed?.(key, id);
+    if (ctype === 'order') renderOrders(); else renderAnfragen();
     alert(`Bestätigung an ${it.email} wurde gesendet. ✅`);
   } else {
     alert('Bestätigung konnte nicht gesendet werden.\n\n' + ((res && res.error) || 'Unbekannter Fehler') +
@@ -2234,7 +2251,7 @@ function buildAnfrageItem(r) {
         <textarea class="anfrage-note-input" data-note="${escapeAttr(r.id)}" rows="1" placeholder="z. B. angerufen, Tisch am Fenster …">${escapeHtml(r.note || '')}</textarea>
       </label>
       <div class="anfrage-meta">
-        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
+        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(r)}</span>
         <div class="anfrage-actions">
           ${isDone
             ? `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${escapeAttr(r.id)}">Erneut öffnen</button>`
@@ -2244,7 +2261,7 @@ function buildAnfrageItem(r) {
               </button>`}
           ${r.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm" data-confirm="${escapeAttr(r.id)}" data-ctype="reservation">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
-            Bestätigung senden
+            ${r.confirmedAt ? 'Bestätigung erneut senden' : 'Bestätigung senden'}
           </button>` : ''}
           <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(r.id)}" aria-label="Anfrage löschen">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
@@ -2419,7 +2436,7 @@ function buildOrderItem(o) {
         <textarea class="anfrage-note-input" data-note="${escapeAttr(o.id)}" rows="1" placeholder="z. B. vorbereitet, bezahlt …">${escapeHtml(o.note || '')}</textarea>
       </label>
       <div class="anfrage-meta">
-        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
+        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(o)}</span>
         <div class="anfrage-actions">
           ${isDone
             ? `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${escapeAttr(o.id)}">Erneut öffnen</button>`
@@ -2429,7 +2446,7 @@ function buildOrderItem(o) {
               </button>`}
           ${o.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm" data-confirm="${escapeAttr(o.id)}" data-ctype="order">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
-            Bestätigung senden
+            ${o.confirmedAt ? 'Bestätigung erneut senden' : 'Bestätigung senden'}
           </button>` : ''}
           <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(o.id)}" aria-label="Bestellung löschen">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>

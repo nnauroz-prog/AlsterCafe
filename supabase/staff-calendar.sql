@@ -15,6 +15,12 @@
 
 create extension if not exists pgcrypto with schema extensions;
 
+-- Zeitpunkte im Mitgliederbereich: wann bestätigt (Mail) / wann erledigt
+alter table public.reservations add column if not exists confirmed_at timestamptz;
+alter table public.reservations add column if not exists done_at timestamptz;
+alter table public.orders add column if not exists confirmed_at timestamptz;
+alter table public.orders add column if not exists done_at timestamptz;
+
 create table if not exists public.staff_access (
   id         int primary key default 1 check (id = 1),
   code_hash  text,

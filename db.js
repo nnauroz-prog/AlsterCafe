@@ -335,20 +335,43 @@
       date: r.date, time: r.time, persons: r.persons,
       message: r.message, status: r.status || 'new',
       note: r.note || '',
-      receivedAt: r.received_at
+      receivedAt: r.received_at,
+      confirmedAt: r.confirmed_at || null,
+      doneAt: r.done_at || null
     }));
     writeCache('reservations', items);
     return items;
+  }
+
+  // Update mit optionalen Zeitstempel-Spalten (done_at, confirmed_at). Fehlen
+  // die Spalten in einer älteren Datenbank, wird ohne sie erneut gespeichert —
+  // so funktioniert „Erledigt“ auch, bevor das SQL nachgerüstet ist.
+  async function updateWithOptional(table, id, base, extra) {
+    let { error } = await sb.from(table).update({ ...base, ...extra }).eq('id', id);
+    if (error && /done_at|confirmed_at|column|schema cache/i.test(error.message || '') && Object.keys(base).length) {
+      ({ error } = await sb.from(table).update(base).eq('id', id));
+    }
+    return error;
+  }
+  async function markConfirmed(table, id) {
+    const at = new Date().toISOString();
+    const cur = readCache(table) || [];
+    writeCache(table, (Array.isArray(cur) ? cur : []).map(x => x.id === id ? { ...x, confirmedAt: at } : x));
+    if (!useSupabase) return true;
+    const { error } = await sb.from(table).update({ confirmed_at: at }).eq('id', id);
+    if (error) console.warn('Bestätigungs-Zeitpunkt nicht gespeichert (Spalte confirmed_at fehlt?)', error);
+    return !error;
   }
 
   async function updateReservationStatus(id, status) {
     // Cache sofort aktualisieren — in-memory + localStorage —
     // sonst sieht renderAnfragen() den alten Zustand bis zum naechsten Refresh.
     const cur = readCache('reservations') || [];
-    const next = (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, status } : r);
+    const doneAt = status === 'done' ? new Date().toISOString() : null;
+    const next = (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, status, doneAt } : r);
     writeCache('reservations', next);
     if (!useSupabase) return true;
-    const { error } = await sb.from('reservations').update({ status }).eq('id', id);
+    const error = await updateWithOptional('reservations', id, { status }, { done_at: doneAt });
     return !noteWriteError(error);
   }
 
@@ -425,7 +448,9 @@
       totalCount: o.total_count || 0,
       notes: o.notes, status: o.status || 'new',
       note: o.note || '',
-      receivedAt: o.received_at
+      receivedAt: o.received_at,
+      confirmedAt: o.confirmed_at || null,
+      doneAt: o.done_at || null
     }));
     writeCache('orders', items);
     return items;
@@ -433,10 +458,11 @@
 
   async function updateOrderStatus(id, status) {
     const cur = readCache('orders') || [];
-    const next = (Array.isArray(cur) ? cur : []).map(o => o.id === id ? { ...o, status } : o);
+    const doneAt = status === 'done' ? new Date().toISOString() : null;
+    const next = (Array.isArray(cur) ? cur : []).map(o => o.id === id ? { ...o, status, doneAt } : o);
     writeCache('orders', next);
     if (!useSupabase) return true;
-    const { error } = await sb.from('orders').update({ status }).eq('id', id);
+    const error = await updateWithOptional('orders', id, { status }, { done_at: doneAt });
     return !noteWriteError(error);
   }
 
@@ -622,6 +648,7 @@
     deleteOrder,
     // Bestätigungs-E-Mail an den Gast
     sendConfirmation,
+    markConfirmed,
     // Mitarbeiter-Kalender
     staffAgenda,
     setStaffCode,
