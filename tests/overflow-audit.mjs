@@ -86,6 +86,9 @@ const MEASURE = () => {
 // Blendet den eingeloggten Admin-Arbeitsbereich ein und aktiviert ein Panel.
 function revealAdminPanel(panel) {
   const a = document.getElementById('admin-actions'); if (a) a.hidden = false;
+  // Kopfleiste wie im echten Betrieb: mit Live-Status und E-Mail-Badge
+  try { if (typeof updateSyncPill === 'function') updateSyncPill('SUBSCRIBED'); } catch (e) {}
+  const ub = document.getElementById('user-badge'); if (ub && !ub.textContent) ub.textContent = 'info@alstercafe.de';
   document.querySelectorAll('#login-view, .admin-login').forEach((el) => { el.hidden = true; });
   const ov = document.getElementById('overview-view'); if (ov) ov.hidden = true;
   const ws = document.getElementById('workspace-view'); if (ws) ws.hidden = false;

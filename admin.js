@@ -252,7 +252,7 @@ function cacheDom() {
     overviewCards: document.querySelectorAll('.overview-card[data-tab]'),
     backToOverview: document.getElementById('back-to-overview'),
     // Übersicht-Zusammenfassung
-    summaryStats:    document.querySelectorAll('.summary-stat[data-tab]'),
+    summaryStats:    document.querySelectorAll('.summary-stat[data-tab], .summary-today[data-tab]'),
     summaryAnfragen: document.getElementById('summary-anfragen'),
     summaryOrders:   document.getElementById('summary-orders'),
     summaryTodayDish: document.getElementById('summary-today-dish'),
@@ -491,6 +491,7 @@ async function onSaveStaffCode(e) {
 /* ---------- Tabs ---------- */
 
 function showOverview() {
+  dom.dashboard?.classList.remove('is-working');
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
@@ -498,6 +499,7 @@ function showOverview() {
 
 function switchTab(name) {
   const apply = () => {
+    dom.dashboard?.classList.add('is-working');
     if (dom.overviewView) dom.overviewView.hidden = true;
     if (dom.workspaceView) dom.workspaceView.hidden = false;
     dom.tabs.forEach(t => {
@@ -1660,7 +1662,7 @@ function flashDesignStatus(msg, kind = 'ok') {
 async function onResetContent() {
   if (!confirm('Alle bearbeiteten Webseiten-Texte zurücksetzen? Wochenplan, Speisekarte und Design bleiben erhalten.')) return;
   await window.alsterDb.remove('content');
-  alert('Texte wurden auf den Original-Zustand zurückgesetzt.');
+  showToast('Texte wurden auf den Original-Zustand zurückgesetzt.');
 }
 
 async function onResetAll() {
@@ -1859,6 +1861,17 @@ function renderOverviewSummary() {
     dom.summaryTodayDish.textContent = (day && day.closed)
       ? 'Heute kein Mittagstisch'
       : (dish || 'Noch nichts eingetragen');
+  }
+
+  // Heute: Tische und Abholungen (Kurzfassung des Kalenders)
+  const todayText = document.getElementById('summary-today-text');
+  if (todayText) {
+    const t = isoDate(new Date());
+    const nRes = resArr.filter(r => r.date === t).length;
+    const nOrd = ordArr.filter(o => o.pickupDate === t).length;
+    todayText.textContent = (nRes || nOrd)
+      ? `Heute: ${nRes} ${nRes === 1 ? 'Tisch' : 'Tische'} · ${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}`
+      : 'Heute: keine Reservierungen oder Abholungen';
   }
 
   // Naechste kommende, offene Reservierung
@@ -2072,7 +2085,7 @@ async function onSendConfirmation(id, ctype) {
   if (res && res.ok) {
     await window.alsterDb?.markConfirmed?.(key, id);
     if (ctype === 'order') renderOrders(); else renderAnfragen();
-    alert(`Bestätigung an ${it.email} wurde gesendet. ✅`);
+    showToast(`✓ Bestätigung an ${it.email} gesendet`);
   } else {
     alert('Bestätigung konnte nicht gesendet werden.\n\n' + ((res && res.error) || 'Unbekannter Fehler') +
       '\n\nHinweis: Der E-Mail-Versand muss evtl. erst eingerichtet werden (siehe BENACHRICHTIGUNG.md).');
@@ -2184,6 +2197,23 @@ async function onDeleteAnfrage(id) {
   const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshAnfragen();
+}
+
+/* Dezente Erfolgsmeldung unten (statt Pop-up). Fehler bleiben als deutliches Fenster. */
+function showToast(msg) {
+  let el = document.getElementById('admin-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'admin-toast';
+    el.className = 'admin-toast';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add('is-shown');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('is-shown'), 3800);
 }
 
 // Gemeinsame Fehlermeldung, wenn Supabase eine Aenderung ablehnt (z. B. wenn die
