@@ -1898,12 +1898,24 @@ function enhanceFooterEditorial() {
   `;
   footer.appendChild(payWrap);
 
-  // Bottom-Strip: Copyright + Inhaber. Vol/No-Theater entfernt.
+  // Bottom-Strip: Copyright + Inhaber, dazu dezent die Pflicht-/Service-Links
+  // (Impressum, Datenschutz, Cookies, Mitgliederbereich) — der „Index“ zeigt
+  // dann nur noch die sechs Seiten des Cafés.
   const year = new Date().getFullYear();
   const strip = document.createElement('div');
   strip.className = 'footer-bottom-strip container';
-  strip.innerHTML = `<span>© ${year} <em>Alstercafé</em> · Croquenoah Cafe</span>`;
+  strip.innerHTML = `<span>© ${year} <em>Alstercafé</em> · Croquenoah Cafe</span><nav class="footer-legal" aria-label="${alsterLang() === 'en' ? 'Legal' : 'Rechtliches'}"></nav>`;
   footer.appendChild(strip);
+  const legal = strip.querySelector('.footer-legal');
+  const navEl = footer.querySelector('.footer-nav-wrap .footer-nav');
+  ['impressum.html', 'datenschutz.html', '#cookie-reset', 'admin.html'].forEach(sel => {
+    const a = sel.startsWith('#') ? navEl?.querySelector(sel) : navEl?.querySelector(`a[href="${sel}"]`);
+    if (a) legal.appendChild(a);
+  });
+
+  // Marken-Block: statt der Adresse (steht direkt daneben unter „Besuch“) kurz, was wir sind
+  const brandP = brand?.querySelector('p');
+  if (brandP) brandP.innerHTML = '<strong>Alstercafé</strong><br/>Bäckerei · Café · Mittagstisch';
 }
 
 function initH2LineReveal() {
