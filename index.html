@@ -14,7 +14,7 @@
        holt es on-demand, fetchpriority=low am img-Tag. -->
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r174" />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r175" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -30,18 +30,19 @@
     .app-splash{position:fixed;inset:0;z-index:9999;background:#FFFCF4;display:flex;align-items:center;justify-content:center;pointer-events:none}
     .app-splash-logo{width:64px;height:64px;border-radius:50%;display:block}
     .app-splash.is-leaving{opacity:0;transition:opacity .5s ease}
+    .app-splash-mark{width:180px;height:180px;position:relative;display:flex;align-items:center;justify-content:center}.app-splash-mark svg{width:180px;height:180px;display:block}
     .topbar{background:#2A1810;color:#F1E7D3;font-size:.85rem;padding:9px 0}
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r174" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r175" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r174';
+      var V='2026-05-10-r175';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -115,7 +116,22 @@
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
   <div class="app-splash" id="app-splash" aria-hidden="true">
-    <img src="image.png" alt="" class="app-splash-logo" width="64" height="64" decoding="async" fetchpriority="high" />
+    <!-- Siegel direkt im HTML (vorher per Script ausgetauscht → sichtbarer Sprung beim Laden) -->
+    <div class="app-splash-mark">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <path id="splash-arc" d="M 100,100 m -78,0 a 78,78 0 1,1 156,0 a 78,78 0 1,1 -156,0" fill="none"/>
+        </defs>
+        <circle class="splash-ring" cx="100" cy="100" r="96"/>
+        <circle class="splash-ring-inner" cx="100" cy="100" r="86"/>
+        <g class="splash-mono">
+          <text x="100" y="120" text-anchor="middle" font-family="'Fraunces', serif" font-size="78" font-weight="400">A</text>
+        </g>
+        <text class="splash-est-arc">
+          <textPath href="#splash-arc" startOffset="50%" text-anchor="middle">EST · 2004 · HOHENFELDE · HAMBURG ·</textPath>
+        </text>
+      </svg>
+    </div>
   </div>
   <script>/* Lade-Bildschirm nur beim ersten Aufruf pro Besuch zeigen */
     try{if(sessionStorage.getItem("alstercafe.splash-seen")){var s=document.getElementById("app-splash");if(s)s.remove()}else{sessionStorage.setItem("alstercafe.splash-seen","1")}}catch(e){}</script>
@@ -172,7 +188,7 @@
   <header class="site-header" id="top">
     <div class="container nav-container">
       <a class="brand" href="index.html" aria-label="Alstercafé Startseite">
-        <img src="image.png" alt="" class="brand-logo" width="46" height="46" decoding="async" fetchpriority="low" />
+        <img src="image-192.webp" alt="" class="brand-logo" width="46" height="46" decoding="async" fetchpriority="low" />
         <span class="brand-name">Alstercafé</span>
       </a>
       <button class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="primary-nav">
@@ -246,7 +262,7 @@
             <span class="hero-coord-value" id="hero-coord-today">—</span>
           </div>
           <div class="hero-coord-mark">
-            <img src="image.png" alt="" class="hero-coord-logo" width="42" height="42" decoding="async" fetchpriority="low" />
+            <img src="image-192.webp" alt="" class="hero-coord-logo" width="42" height="42" decoding="async" fetchpriority="low" />
             <span class="hero-coord-stamp">Est. 2004 · Hohenfelde</span>
           </div>
         </aside>
@@ -462,7 +478,7 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <img src="image.png" alt="" class="brand-logo small" width="56" height="56" loading="lazy" decoding="async" />
+        <img src="image-192.webp" alt="" class="brand-logo small" width="56" height="56" loading="lazy" decoding="async" />
         <p>
           <strong>Alstercafé</strong><br/>
           Ifflandstr. 45 · 22087 Hamburg
@@ -485,9 +501,9 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r174" defer></script>
-  <script src="db.js?v=2026-05-10-r174" defer></script>
-  <script src="script.js?v=2026-05-10-r174" defer></script>
-  <script src="i18n.js?v=2026-05-10-r174" defer></script>
+  <script src="config.js?v=2026-05-10-r175" defer></script>
+  <script src="db.js?v=2026-05-10-r175" defer></script>
+  <script src="script.js?v=2026-05-10-r175" defer></script>
+  <script src="i18n.js?v=2026-05-10-r175" defer></script>
 </body>
 </html>

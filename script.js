@@ -2215,17 +2215,9 @@ function initPageTransitions(reduceMotion) {
   if (reduceMotion) return;
   if (!('animate' in HTMLElement.prototype)) return;
 
-  // Fade-In beim Laden
-  document.documentElement.animate(
-    [
-      { opacity: 0.001, transform: 'translateY(6px)' },
-      { opacity: 1, transform: 'translateY(0)' }
-    ],
-    // fill 'backwards' statt 'both': ein dauerhaft gesetztes transform auf <html>
-    // macht <html> zum Bezugsrahmen fuer position:fixed — dann oeffnete das
-    // mobile Menue weiter unten auf der Seite ausserhalb des Bildschirms.
-    { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }
-  );
+  // Bewusst KEIN Einblenden der ganzen Seite mehr: <html> von fast unsichtbar
+  // auf sichtbar zu animieren verzögerte den ersten sichtbaren Inhalt und zählte
+  // für Google als Layout-Verschiebung (CLS ~0,13 auf der Startseite).
 
   // Bewusst KEIN Ausblenden mehr beim Link-Klick: das Abfangen jedes Klicks
   // liess Seiten auf dem Handy haengen, und nach "Zurueck" (Browser-Cache)
