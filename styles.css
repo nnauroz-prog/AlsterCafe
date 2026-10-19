@@ -9717,3 +9717,67 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
   .anfrage-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; }
   .anfrage-actions > * { width: auto; }
 }
+
+/* ---------- Facelift: Bewertungs-Karten ---------- */
+.reviews-card { border-radius: 14px; gap: 18px; }
+.reviews-card-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(184, 137, 63, .12); color: var(--gold-text, #8A6420);
+  border: 1px solid rgba(184, 137, 63, .35);
+  transition: background .25s ease, color .25s ease, transform .25s ease;
+}
+.reviews-card-icon .ico { width: 24px; height: 24px; }
+.reviews-card-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.reviews-card-text .reviews-card-platform { margin-bottom: 0; }
+.reviews-card-note { font: 400 .92rem/1.4 'Inter', sans-serif; color: var(--muted, #7A6152); }
+@media (hover: hover) and (pointer: fine) {
+  .reviews-card:hover .reviews-card-icon { background: var(--gold, #B8893F); color: #fff; transform: scale(1.05); }
+}
+@media (max-width: 880px) {
+  .reviews-card {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center;
+    column-gap: 16px; row-gap: 10px;
+  }
+  .reviews-card-icon { width: 46px; height: 46px; grid-row: span 2; }
+  .reviews-card-action { grid-column: 2; }
+}
+.landing-reviews .quotes-eyebrow { justify-content: flex-start; text-align: left; }
+
+/* ---------- Facelift: Kopfbereiche der Unterseiten am Computer straffer ----------
+   Vorher begann der Inhalt erst bei ~760 px (fast ein ganzer Bildschirm Kopf). */
+@media (min-width: 981px) {
+  main > .page-hero-editorial { padding-top: clamp(64px, 6vw, 96px); padding-bottom: clamp(36px, 4vw, 56px); }
+}
+
+/* ---------- Facelift: Rechtsseiten ---------- */
+.legal-toc {
+  margin: 8px 0 40px; border: 1px solid var(--line, rgba(61, 36, 21, .16)); border-radius: 14px;
+  background: var(--cream, #FBF7EE); padding: 0 20px;
+}
+.legal-toc > summary {
+  cursor: pointer; list-style: none; padding: 16px 0; min-height: 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font: 600 .95rem/1.3 'Inter', sans-serif; color: var(--bean, #3D2415);
+}
+.legal-toc > summary::-webkit-details-marker { display: none; }
+.legal-toc > summary::after { content: "+"; font-size: 1.3rem; color: var(--gold, #B8893F); }
+.legal-toc[open] > summary::after { content: "–"; }
+.legal-toc-count { margin-left: auto; font-weight: 400; font-size: .82rem; color: var(--muted, #7A6152); }
+.legal-toc ol { margin: 0 0 18px; padding: 0 0 0 22px; columns: 2; column-gap: 32px; }
+.legal-toc li { break-inside: avoid; padding: 4px 0; font-size: .9rem; }
+.legal-toc a { color: var(--bean, #3D2415); text-decoration: none; border-bottom: 1px solid transparent; }
+.legal-toc a:hover { border-bottom-color: var(--gold, #B8893F); }
+.legal-toc li::marker { color: var(--gold-text, #8A6420); font-size: .8rem; }
+@media (max-width: 720px) { .legal-toc ol { columns: 1; } }
+.legal-article section { scroll-margin-top: 90px; }
+/* Aufzählungen mit goldenen Punkten wie auf den übrigen Seiten */
+.legal-article section ul { list-style: none; padding-left: 0; }
+.legal-article section ul > li { position: relative; padding-left: 20px; margin-bottom: 8px; }
+.legal-article section ul > li::before {
+  content: ""; position: absolute; left: 3px; top: .65em; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold, #B8893F);
+}
+.legal-article p, .legal-article li { line-height: 1.7; }
+.legal-article .legal-toc a { border-bottom: 1px solid transparent; text-decoration: none; }
+.legal-article .legal-toc a:hover, .legal-article .legal-toc a:focus-visible { border-bottom-color: var(--gold, #B8893F); }
