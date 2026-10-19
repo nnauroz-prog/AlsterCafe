@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
+Disallow: /kalender.html
+Disallow: /kalender
 # Dev-/Handover-Dokumentation nicht indexieren
 Disallow: /README.md
 Disallow: /UEBERGABE.md

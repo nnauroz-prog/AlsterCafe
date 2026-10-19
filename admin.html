@@ -11,9 +11,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r187" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r187" />
-  <script>(function(){var V='2026-05-10-r187';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r189" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r189" />
+  <script>(function(){var V='2026-05-10-r189';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -120,6 +120,10 @@
         <p class="login-help">
           Passwort vergessen? Bitte wenden Sie sich an Ihren Administrator.
         </p>
+
+        <p class="staff-login">
+          <a href="kalender.html" target="_blank" rel="noopener">Mitarbeiter? Zum Kalender mit Code →</a>
+        </p>
         <p class="login-stamp" aria-hidden="true">Ifflandstr. 45 · <em>Hohenfelde</em></p>
       </div>
     </section>
@@ -198,6 +202,15 @@
                 <span class="overview-card-desc">Vorbestellungen für belegte Brötchen</span>
               </span>
               <span class="overview-card-badge" id="overview-orders-badge" hidden></span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="kalender">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-clock"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Kalender</span>
+                <span class="overview-card-desc">Reservierungen und Abholungen nach Tagen · Mitarbeiter-Code</span>
+              </span>
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
             </button>
 
@@ -291,6 +304,9 @@
             <svg class="ico ico-sm"><use href="#i-bag"/></svg>
             Bestellungen
             <span class="tab-badge" id="tab-orders-badge" hidden></span>
+          </button>
+          <button class="admin-tab" role="tab" aria-selected="false" data-tab="kalender">
+            Kalender
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="berliner">
             Berliner
@@ -673,6 +689,56 @@
         </div>
 
         <!-- TAB: ANFRAGEN -->
+        <div class="admin-panel" id="panel-kalender" role="tabpanel" hidden>
+          <h2 class="panel-title">Kalender</h2>
+          <details class="help-box">
+            <summary>Hilfe: Kalender und Mitarbeiter-Zugang</summary>
+            <div class="help-box-body">
+              <ul>
+                <li>Hier stehen alle <strong>Reservierungen</strong> und <strong>Abholungen</strong> (Brötchen, Berliner) nach Tagen sortiert.</li>
+                <li>Mitarbeiter sehen denselben Kalender mit einem <strong>Code</strong> – aber <strong>ohne Telefon, E-Mail und Notizen</strong>, und sie können nichts ändern.</li>
+                <li>So kommen Mitarbeiter rein: <strong>alstercafe.de/kalender.html</strong> öffnen (am besten als Lesezeichen oder auf dem Home-Bildschirm speichern) → 6-stelligen Code eingeben.</li>
+                <li>Hört jemand auf, einfach unten einen <strong>neuen Code</strong> festlegen. Der alte gilt dann sofort nicht mehr.</li>
+              </ul>
+            </div>
+          </details>
+          <div class="cal-toolbar">
+            <div class="week-switch">
+              <button type="button" class="week-nav" id="cal-prev" aria-label="Vorherige Woche">←</button>
+              <div class="week-label">
+                <span class="week-kw" id="cal-kw">KW –</span>
+                <span class="week-range" id="cal-range">–</span>
+              </div>
+              <button type="button" class="week-nav" id="cal-next" aria-label="Nächste Woche">→</button>
+              <button type="button" class="btn btn-link" id="cal-today">Heute</button>
+            </div>
+          </div>
+          <div class="cal-days" id="owner-cal"></div>
+
+          <section class="week-share staff-access" aria-labelledby="staff-access-title">
+            <h3 class="week-share-title" id="staff-access-title">Mitarbeiter-Zugang</h3>
+            <p class="week-share-text" id="staff-access-state">Status wird geladen …</p>
+            <form id="staff-code-form" class="staff-code-form" autocomplete="off" novalidate>
+              <label class="day-field">
+                <span class="day-field-label">Neuer Code (6 Ziffern)</span>
+                <input type="text" id="staff-code-new" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="z. B. 482915" />
+              </label>
+              <div class="week-share-actions">
+                <button type="submit" class="btn btn-primary">
+                  <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                  Code speichern
+                </button>
+                <a class="btn btn-link" href="kalender.html" target="_blank" rel="noopener">
+                  <svg class="ico ico-sm"><use href="#i-eye"/></svg>
+                  Mitarbeiter-Kalender öffnen
+                </a>
+                <button type="button" class="btn btn-link" id="staff-code-off">Zugang ausschalten</button>
+              </div>
+            </form>
+            <p class="save-status" id="staff-code-status" aria-live="polite"></p>
+          </section>
+        </div>
+
         <div class="admin-panel" id="panel-anfragen" role="tabpanel" hidden>
           <div class="panel-card wide">
             <div class="anfragen-head">
@@ -975,9 +1041,10 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r187" defer></script>
-  <script src="db.js?v=2026-05-10-r187" defer></script>
-  <script src="menudata.js?v=2026-05-10-r187" defer></script>
-  <script src="admin.js?v=2026-05-10-r187" defer></script>
+  <script src="config.js?v=2026-05-10-r189" defer></script>
+  <script src="db.js?v=2026-05-10-r189" defer></script>
+  <script src="menudata.js?v=2026-05-10-r189" defer></script>
+  <script src="calendar.js?v=2026-05-10-r189" defer></script>
+  <script src="admin.js?v=2026-05-10-r189" defer></script>
 </body>
 </html>

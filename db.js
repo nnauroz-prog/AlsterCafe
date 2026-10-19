@@ -335,20 +335,43 @@
       date: r.date, time: r.time, persons: r.persons,
       message: r.message, status: r.status || 'new',
       note: r.note || '',
-      receivedAt: r.received_at
+      receivedAt: r.received_at,
+      confirmedAt: r.confirmed_at || null,
+      doneAt: r.done_at || null
     }));
     writeCache('reservations', items);
     return items;
+  }
+
+  // Update mit optionalen Zeitstempel-Spalten (done_at, confirmed_at). Fehlen
+  // die Spalten in einer älteren Datenbank, wird ohne sie erneut gespeichert —
+  // so funktioniert „Erledigt“ auch, bevor das SQL nachgerüstet ist.
+  async function updateWithOptional(table, id, base, extra) {
+    let { error } = await sb.from(table).update({ ...base, ...extra }).eq('id', id);
+    if (error && /done_at|confirmed_at|column|schema cache/i.test(error.message || '') && Object.keys(base).length) {
+      ({ error } = await sb.from(table).update(base).eq('id', id));
+    }
+    return error;
+  }
+  async function markConfirmed(table, id) {
+    const at = new Date().toISOString();
+    const cur = readCache(table) || [];
+    writeCache(table, (Array.isArray(cur) ? cur : []).map(x => x.id === id ? { ...x, confirmedAt: at } : x));
+    if (!useSupabase) return true;
+    const { error } = await sb.from(table).update({ confirmed_at: at }).eq('id', id);
+    if (error) console.warn('Bestätigungs-Zeitpunkt nicht gespeichert (Spalte confirmed_at fehlt?)', error);
+    return !error;
   }
 
   async function updateReservationStatus(id, status) {
     // Cache sofort aktualisieren — in-memory + localStorage —
     // sonst sieht renderAnfragen() den alten Zustand bis zum naechsten Refresh.
     const cur = readCache('reservations') || [];
-    const next = (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, status } : r);
+    const doneAt = status === 'done' ? new Date().toISOString() : null;
+    const next = (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, status, doneAt } : r);
     writeCache('reservations', next);
     if (!useSupabase) return true;
-    const { error } = await sb.from('reservations').update({ status }).eq('id', id);
+    const error = await updateWithOptional('reservations', id, { status }, { done_at: doneAt });
     return !noteWriteError(error);
   }
 
@@ -425,7 +448,9 @@
       totalCount: o.total_count || 0,
       notes: o.notes, status: o.status || 'new',
       note: o.note || '',
-      receivedAt: o.received_at
+      receivedAt: o.received_at,
+      confirmedAt: o.confirmed_at || null,
+      doneAt: o.done_at || null
     }));
     writeCache('orders', items);
     return items;
@@ -433,10 +458,11 @@
 
   async function updateOrderStatus(id, status) {
     const cur = readCache('orders') || [];
-    const next = (Array.isArray(cur) ? cur : []).map(o => o.id === id ? { ...o, status } : o);
+    const doneAt = status === 'done' ? new Date().toISOString() : null;
+    const next = (Array.isArray(cur) ? cur : []).map(o => o.id === id ? { ...o, status, doneAt } : o);
     writeCache('orders', next);
     if (!useSupabase) return true;
-    const { error } = await sb.from('orders').update({ status }).eq('id', id);
+    const error = await updateWithOptional('orders', id, { status }, { done_at: doneAt });
     return !noteWriteError(error);
   }
 
@@ -553,6 +579,50 @@
     }
   }
 
+  /* ---------- Mitarbeiter-Kalender (Zugang mit Code) ----------
+     Der Code wird in der Datenbank geprüft (supabase/staff-calendar.sql);
+     zurück kommen nur Datum, Uhrzeit, Name, Personen bzw. Bestellung —
+     keine Kontaktdaten. Demo-Modus: Code 123456 zeigt die lokalen Testdaten. */
+  const DEMO_STAFF_KEY = PREFIX + 'staff-code-demo';
+  const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  async function staffAgenda(code, from, days) {
+    const start = new Date(from); start.setHours(0, 0, 0, 0);
+    if (!useSupabase) {
+      let demoCode = '123456';
+      try { demoCode = localStorage.getItem(DEMO_STAFF_KEY) || demoCode; } catch {}
+      if (demoCode === 'off' || String(code) !== demoCode) return { error: 'invalid' };
+      const end = new Date(start); end.setDate(end.getDate() + (days || 7));
+      const a = isoDay(start), b = isoDay(end);
+      const res = (readCache('reservations') || []).filter(r => r.date >= a && r.date < b)
+        .map(r => ({ date: r.date, time: r.time, name: r.name, persons: r.persons, status: r.status }));
+      const ord = (readCache('orders') || []).filter(o => o.pickupDate >= a && o.pickupDate < b)
+        .map(o => ({ pickupDate: o.pickupDate, pickupTime: o.pickupTime, name: o.name, items: o.items, totalCount: o.totalCount, status: o.status }));
+      return { reservations: res, orders: ord };
+    }
+    const { data, error } = await sb.rpc('staff_agenda', { p_code: String(code), p_from: isoDay(start), p_days: days || 7 });
+    if (error) {
+      // Funktion fehlt = SQL noch nicht eingerichtet
+      if (/staff_agenda|function|schema cache/i.test(error.message || '')) return { error: 'setup' };
+      return { error: 'network' };
+    }
+    return data || { error: 'network' };
+  }
+  async function setStaffCode(code) {
+    if (!useSupabase) {
+      try { localStorage.setItem(DEMO_STAFF_KEY, code || 'off'); } catch {}
+      return { ok: true, active: !!code };
+    }
+    const { data, error } = await sb.rpc('set_staff_code', { p_code: code || '' });
+    if (error) return { ok: false, error: /set_staff_code|schema cache/i.test(error.message || '') ? 'setup' : (error.message || 'Fehler') };
+    return { ok: true, active: !!data };
+  }
+  async function isStaffCodeSet() {
+    if (!useSupabase) { try { return localStorage.getItem(DEMO_STAFF_KEY) !== 'off'; } catch { return true; } }
+    const { data, error } = await sb.rpc('staff_code_set');
+    if (error) return null; // unbekannt / SQL fehlt
+    return !!data;
+  }
+
   window.alsterDb = {
     isProd: useSupabase,
     ready,
@@ -577,6 +647,11 @@
     updateOrderNote,
     deleteOrder,
     // Bestätigungs-E-Mail an den Gast
-    sendConfirmation
+    sendConfirmation,
+    markConfirmed,
+    // Mitarbeiter-Kalender
+    staffAgenda,
+    setStaffCode,
+    isStaffCodeSet
   };
 })();

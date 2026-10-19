@@ -85,6 +85,7 @@ async function init() {
 
   // Login
   dom.loginForm.addEventListener('submit', onLogin);
+  initCalendar();
   dom.pwToggle.addEventListener('click', onPwToggle);
   dom.logoutBtn.addEventListener('click', onLogout);
 
@@ -370,6 +371,8 @@ async function showDashboard() {
   renderActivityLog();
   renderBroetchenEditor();
   renderBerlinerAdmin();
+  renderOwnerCalendar();
+  renderStaffAccessState();
   refreshAnfragen();
   refreshOrders();
   // Live-Update wenn ueber das oeffentliche Formular etwas reinkommt
@@ -412,6 +415,77 @@ function updateSyncPill(status) {
   el.querySelector('.sync-text').textContent = label;
   el.classList.remove('is-live', 'is-connecting', 'is-offline');
   el.classList.add(cls);
+}
+
+/* ---------- Kalender (Inhaber) + Mitarbeiter-Code ----------
+   Darstellung kommt aus calendar.js (gemeinsam mit kalender.html, dem
+   Mitarbeiter-Kalender mit 6-stelligem Code, ohne Kontaktdaten). */
+let calMonday = mondayOf(new Date());
+
+function initCalendar() {
+  const on = (id, ev, fn) => document.getElementById(id)?.addEventListener(ev, fn);
+  const shift = (d) => { calMonday = new Date(calMonday); calMonday.setDate(calMonday.getDate() + d); calMonday = mondayOf(calMonday); renderOwnerCalendar(); };
+  on('cal-prev', 'click', () => shift(-7));
+  on('cal-next', 'click', () => shift(7));
+  on('cal-today', 'click', () => { calMonday = mondayOf(new Date()); renderOwnerCalendar(); });
+  on('staff-code-form', 'submit', onSaveStaffCode);
+  on('staff-code-off', 'click', async () => {
+    if (!confirm('Mitarbeiter-Zugang ausschalten? Der bisherige Code gilt dann nicht mehr.')) return;
+    const res = await window.alsterDb?.setStaffCode('');
+    const el = document.getElementById('staff-code-status');
+    if (res?.ok) setStatus(el, 'Mitarbeiter-Zugang ist ausgeschaltet.', 'ok');
+    else setStatus(el, staffSetupText(res?.error), 'error');
+    renderStaffAccessState();
+  });
+}
+
+function staffSetupText(err) {
+  return err === 'setup'
+    ? 'Der Mitarbeiter-Zugang ist in der Datenbank noch nicht eingerichtet (SQL-Schritt fehlt).'
+    : 'Speichern fehlgeschlagen' + (err ? `: ${err}` : '.');
+}
+
+function renderOwnerCalendar() {
+  const el = document.getElementById('owner-cal');
+  if (!el || !window.AlsterCalendar) return;
+  const lbl = window.AlsterCalendar.weekLabel(calMonday);
+  const kw = document.getElementById('cal-kw'); if (kw) kw.textContent = lbl.kw;
+  const range = document.getElementById('cal-range'); if (range) range.textContent = lbl.range;
+  const res = window.alsterDb?.get('reservations') || [];
+  const ord = window.alsterDb?.get('orders') || [];
+  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [] }, calMonday);
+}
+
+async function renderStaffAccessState() {
+  const el = document.getElementById('staff-access-state');
+  if (!el) return;
+  const active = await window.alsterDb?.isStaffCodeSet();
+  if (active === null || active === undefined) {
+    el.textContent = 'Noch nicht eingerichtet: Bitte einmal den SQL-Schritt „Mitarbeiter-Kalender“ in Supabase ausführen. Danach hier einen Code festlegen.';
+  } else if (active) {
+    el.innerHTML = 'Der Zugang ist <strong>aktiv</strong>. Mitarbeiter öffnen <strong>alstercafe.de/kalender.html</strong> und geben den 6-stelligen Code ein. Sie sehen Namen, Uhrzeiten und Bestellungen – keine Telefonnummern oder E-Mails.';
+  } else {
+    el.textContent = 'Der Zugang ist ausgeschaltet. Legen Sie einen 6-stelligen Code fest, um ihn einzuschalten.';
+  }
+}
+
+async function onSaveStaffCode(e) {
+  e.preventDefault();
+  const input = document.getElementById('staff-code-new');
+  const status = document.getElementById('staff-code-status');
+  const code = (input.value || '').trim();
+  if (!/^\d{6}$/.test(code)) { setStatus(status, 'Bitte genau 6 Ziffern eingeben (nur Zahlen).', 'error'); return; }
+  if (/^(\d)\1+$/.test(code) || '01234567890'.includes(code) || '98765432109'.includes(code)) {
+    setStatus(status, 'Bitte keinen zu einfachen Code wie 111111 oder 123456 wählen.', 'error'); return;
+  }
+  const res = await window.alsterDb?.setStaffCode(code);
+  if (res?.ok) {
+    input.value = '';
+    setStatus(status, `Gespeichert. Der neue Code ist ${code} – bitte den Mitarbeitern persönlich sagen. Der alte Code gilt nicht mehr.`, 'ok');
+  } else {
+    setStatus(status, staffSetupText(res?.error), 'error');
+  }
+  renderStaffAccessState();
 }
 
 /* ---------- Tabs ---------- */
@@ -1808,6 +1882,7 @@ async function refreshAnfragen() {
   } catch {}
   renderAnfragen();
   renderOverviewSummary();
+  renderOwnerCalendar();
 }
 
 /* Während der Inhaber in einem Notizfeld tippt, nicht neu rendern (sonst geht der
@@ -1953,6 +2028,21 @@ function askPersonalMessage(email) {
   });
 }
 
+/* Verlauf an der Karte: wann bestätigt (Mail) und wann erledigt */
+function formatStamp(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const day = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  return `${day} · ${time} Uhr`;
+}
+function historyHtml(x) {
+  const rows = [];
+  if (x.confirmedAt) rows.push(`<span class="anfrage-hist is-confirmed"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Bestätigung gesendet · ${escapeHtml(formatStamp(x.confirmedAt))}</span>`);
+  if (x.status === 'done' && x.doneAt) rows.push(`<span class="anfrage-hist is-done"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Erledigt · ${escapeHtml(formatStamp(x.doneAt))}</span>`);
+  return rows.join('');
+}
+
 const confirmSending = new Set();
 async function onSendConfirmation(id, ctype) {
   if (confirmSending.has(id)) return; // läuft schon, kein Doppelversand
@@ -1980,6 +2070,8 @@ async function onSendConfirmation(id, ctype) {
     btns.forEach((b, i) => { b.disabled = false; b.innerHTML = labels[i]; });
   }
   if (res && res.ok) {
+    await window.alsterDb?.markConfirmed?.(key, id);
+    if (ctype === 'order') renderOrders(); else renderAnfragen();
     alert(`Bestätigung an ${it.email} wurde gesendet. ✅`);
   } else {
     alert('Bestätigung konnte nicht gesendet werden.\n\n' + ((res && res.error) || 'Unbekannter Fehler') +
@@ -2025,7 +2117,7 @@ function buildAnfrageItem(r) {
         <textarea class="anfrage-note-input" data-note="${escapeAttr(r.id)}" rows="1" placeholder="z. B. angerufen, Tisch am Fenster …">${escapeHtml(r.note || '')}</textarea>
       </label>
       <div class="anfrage-meta">
-        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
+        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(r)}</span>
         <div class="anfrage-actions">
           ${isDone
             ? `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${escapeAttr(r.id)}">Erneut öffnen</button>`
@@ -2035,7 +2127,7 @@ function buildAnfrageItem(r) {
               </button>`}
           ${r.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm" data-confirm="${escapeAttr(r.id)}" data-ctype="reservation">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
-            Bestätigung senden
+            ${r.confirmedAt ? 'Bestätigung erneut senden' : 'Bestätigung senden'}
           </button>` : ''}
           <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(r.id)}" aria-label="Anfrage löschen">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
@@ -2114,6 +2206,7 @@ async function refreshOrders() {
   try { await window.alsterDb?.listOrders(); } catch {}
   renderOrders();
   renderOverviewSummary();
+  renderOwnerCalendar();
 }
 
 function renderOrders() {
@@ -2209,7 +2302,7 @@ function buildOrderItem(o) {
         <textarea class="anfrage-note-input" data-note="${escapeAttr(o.id)}" rows="1" placeholder="z. B. vorbereitet, bezahlt …">${escapeHtml(o.note || '')}</textarea>
       </label>
       <div class="anfrage-meta">
-        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}</span>
+        <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(o)}</span>
         <div class="anfrage-actions">
           ${isDone
             ? `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${escapeAttr(o.id)}">Erneut öffnen</button>`
@@ -2219,7 +2312,7 @@ function buildOrderItem(o) {
               </button>`}
           ${o.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm" data-confirm="${escapeAttr(o.id)}" data-ctype="order">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
-            Bestätigung senden
+            ${o.confirmedAt ? 'Bestätigung erneut senden' : 'Bestätigung senden'}
           </button>` : ''}
           <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${escapeAttr(o.id)}" aria-label="Bestellung löschen">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
