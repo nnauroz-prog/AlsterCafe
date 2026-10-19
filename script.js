@@ -1203,19 +1203,40 @@ function initKarteJump() {
     e.preventDefault();
     document.getElementById(a.dataset.target)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }));
-  // Aktuelle Kategorie hervorheben und den Knopf in Sicht schieben
-  karteJumpObserver?.disconnect();
-  if (!('IntersectionObserver' in window)) return;
-  karteJumpObserver = new IntersectionObserver((entries) => {
-    const vis = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-    if (!vis) return;
-    nav.querySelectorAll('a').forEach(a => {
-      const on = a.dataset.target === vis.target.id;
+  // Aktuelle Kategorie hervorheben: die letzte, deren Anfang die Lesehöhe
+  // (unter der klebenden Leiste) schon erreicht hat. Bewusst per Scroll-
+  // Position statt IntersectionObserver — kurze Kategorien (Extras, Getränke)
+  // liegen dicht beieinander, dort sprang die Hervorhebung sonst hin und her.
+  if (karteJumpObserver) window.removeEventListener('scroll', karteJumpObserver);
+  const links = Array.from(nav.querySelectorAll('a'));
+  let current = '';
+  let raf = 0;
+  const update = () => {
+    raf = 0;
+    const line = nav.getBoundingClientRect().bottom + Math.min(140, window.innerHeight * 0.18);
+    // Am Computer stehen zwei Kategorien nebeneinander → ganze Zeile markieren
+    const tops = blocks.map(b => Math.round(b.getBoundingClientRect().top));
+    const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+    const passed = tops.filter(t => t <= line);
+    const rowTop = atEnd ? Math.max(...tops) : (passed.length ? Math.max(...passed) : tops[0]);
+    const ids = blocks.filter((b, i) => Math.abs(tops[i] - rowTop) < 6).map(b => b.id);
+    const key = ids.join(' ');
+    if (key === current) return;
+    current = key;
+    links.forEach(a => {
+      const on = ids.includes(a.dataset.target);
       a.classList.toggle('is-active', on);
-      if (on) a.scrollIntoView({ block: 'nearest', inline: 'center' });
+      if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+      // Nur die Leiste seitlich verschieben — nie die Seite selbst
+      if (on && a.dataset.target === ids[0] && nav.scrollWidth > nav.clientWidth) {
+        const left = a.offsetLeft - (nav.clientWidth - a.offsetWidth) / 2;
+        nav.scrollTo({ left: Math.max(0, left), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      }
     });
-  }, { rootMargin: '-35% 0px -55% 0px' });
-  blocks.forEach(b => karteJumpObserver.observe(b));
+  };
+  karteJumpObserver = () => { if (!raf) raf = requestAnimationFrame(update); };
+  window.addEventListener('scroll', karteJumpObserver, { passive: true });
+  update();
 }
 
 /* Google-Daten (JSON-LD) der Startseite mit den im Mitgliederbereich

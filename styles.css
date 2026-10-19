@@ -9567,7 +9567,7 @@ input, select, textarea { caret-color: var(--gold, #B8893F); accent-color: var(-
   position: sticky; top: 62px; z-index: 40;
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
   margin: 0 calc(-1 * var(--gutter, 20px)) 22px; padding: 10px var(--gutter, 20px);
-  background: rgba(255, 252, 244, .96);
+  background: var(--paper, #FFFCF4);
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
           mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
 }
@@ -9586,7 +9586,7 @@ input, select, textarea { caret-color: var(--gold, #B8893F); accent-color: var(-
     top: 61px; justify-content: center; flex-wrap: wrap; overflow: visible;
     -webkit-mask-image: none; mask-image: none; margin-left: 0; margin-right: 0;
     /* deckend über die volle Breite, ohne horizontalen Überlauf */
-    box-shadow: 0 0 0 100vmax rgba(255, 252, 244, .96); clip-path: inset(0 -100vmax);
+    box-shadow: 0 0 0 100vmax var(--paper, #FFFCF4); clip-path: inset(0 -100vmax);
   }
 }
 
