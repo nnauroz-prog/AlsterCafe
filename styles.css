@@ -7351,11 +7351,11 @@ html.has-js-scroll { scroll-behavior: auto; }
   margin: 0 0 30px;
   font-variation-settings: "opsz" 48;
 }
-#login-form label {
+#login-form label, #staff-form label {
   display: block;
   margin-bottom: 18px;
 }
-#login-form label > span {
+#login-form label > span, #staff-form label > span {
   display: block;
   margin-bottom: 8px;
   font-family: 'Fraunces', serif;
@@ -7365,7 +7365,7 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-variation-settings: "opsz" 48;
 }
 #login-form input,
-.login-card #login-form input {
+.login-card #login-form input, .login-card #staff-form input {
   width: 100%;
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -7380,7 +7380,7 @@ html.has-js-scroll { scroll-behavior: auto; }
   font-variation-settings: "opsz" 48;
 }
 #login-form input:focus,
-.login-card #login-form input:focus {
+.login-card #login-form input:focus, .login-card #staff-form input:focus {
   outline: none;
   border-bottom-color: var(--gold);
 }
@@ -10024,3 +10024,53 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
   border-radius: 10px; background: var(--espresso);
 }
 .week-image-dialog .confirm-dialog-actions { flex-wrap: wrap; }
+
+/* ===== Kalender (Inhaber) + Mitarbeiter-Zugang mit Code ===== */
+.staff-login { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; text-align: left; }
+.staff-login > summary {
+  cursor: pointer; list-style: none; text-align: center;
+  font-size: .9rem; font-weight: 600; color: var(--gold-text, #8A6420);
+  min-height: 44px; display: flex; align-items: center; justify-content: center;
+}
+.staff-login > summary::-webkit-details-marker { display: none; }
+.staff-form { margin-top: 10px; }
+.cal-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px 18px; flex-wrap: wrap; margin: 6px 0 18px; }
+.cal-days { display: grid; gap: 12px; align-items: start; }
+.cal-day {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px 16px;
+}
+.cal-day.is-today { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.cal-day.is-past { background: var(--cream); }
+.cal-day.is-empty { padding-top: 10px; padding-bottom: 10px; }
+.cal-day-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+.cal-day-name { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.12rem; color: var(--bean); }
+.cal-day-date { font-size: .88rem; color: #6b5a4a; }
+.cal-day-sum { margin-left: auto; font-size: .84rem; color: #6b5a4a; }
+.cal-day-head .day-pill { background: #8A6420; color: #fff; }
+
+.cal-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.cal-item {
+  display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; align-items: start;
+  padding: 10px 12px; border-radius: 10px; background: var(--cream);
+  border-left: 3px solid var(--bean);
+}
+.cal-item.is-order { border-left-color: var(--gold); }
+.cal-item.is-berliner { border-left-color: #a3322b; }
+.cal-item.is-done { background: transparent; border-left-color: var(--line); }
+.cal-item.is-done .cal-time, .cal-item.is-done .cal-main { color: #6b5a4a; }
+.cal-time { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--bean); }
+.cal-main { color: var(--ink, #2A1810); line-height: 1.45; overflow-wrap: anywhere; }
+.cal-type {
+  display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: #6b5a4a; margin-right: 2px;
+}
+.cal-detail { display: block; font-size: .86rem; color: #6b5a4a; margin-top: 2px; }
+.cal-pill { font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--bean); white-space: nowrap; }
+.cal-empty-week { margin: 0 0 4px; color: var(--muted); }
+.staff-access { margin-top: 24px; }
+.staff-code-form .day-field { max-width: 320px; margin-bottom: 14px; }
+.staff-view .cal-days { margin-bottom: 40px; }
+@media (min-width: 981px) {
+  .cal-days { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

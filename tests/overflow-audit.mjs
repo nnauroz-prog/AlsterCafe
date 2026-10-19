@@ -34,7 +34,7 @@ const PAGES = [
   'impressum.html', 'datenschutz.html', '404.html', 'berliner.html',
 ];
 
-const ADMIN_PANELS = ['week', 'anfragen', 'bestellungen', 'berliner', 'menu', 'design', 'notice', 'hours', 'account'];
+const ADMIN_PANELS = ['week', 'kalender', 'anfragen', 'bestellungen', 'berliner', 'menu', 'design', 'notice', 'hours', 'account'];
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',

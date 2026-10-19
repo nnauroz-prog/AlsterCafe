@@ -553,6 +553,50 @@
     }
   }
 
+  /* ---------- Mitarbeiter-Kalender (Zugang mit Code) ----------
+     Der Code wird in der Datenbank geprüft (supabase/staff-calendar.sql);
+     zurück kommen nur Datum, Uhrzeit, Name, Personen bzw. Bestellung —
+     keine Kontaktdaten. Demo-Modus: Code 123456 zeigt die lokalen Testdaten. */
+  const DEMO_STAFF_KEY = PREFIX + 'staff-code-demo';
+  const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  async function staffAgenda(code, from, days) {
+    const start = new Date(from); start.setHours(0, 0, 0, 0);
+    if (!useSupabase) {
+      let demoCode = '123456';
+      try { demoCode = localStorage.getItem(DEMO_STAFF_KEY) || demoCode; } catch {}
+      if (demoCode === 'off' || String(code) !== demoCode) return { error: 'invalid' };
+      const end = new Date(start); end.setDate(end.getDate() + (days || 7));
+      const a = isoDay(start), b = isoDay(end);
+      const res = (readCache('reservations') || []).filter(r => r.date >= a && r.date < b)
+        .map(r => ({ date: r.date, time: r.time, name: r.name, persons: r.persons, status: r.status }));
+      const ord = (readCache('orders') || []).filter(o => o.pickupDate >= a && o.pickupDate < b)
+        .map(o => ({ pickupDate: o.pickupDate, pickupTime: o.pickupTime, name: o.name, items: o.items, totalCount: o.totalCount, status: o.status }));
+      return { reservations: res, orders: ord };
+    }
+    const { data, error } = await sb.rpc('staff_agenda', { p_code: String(code), p_from: isoDay(start), p_days: days || 7 });
+    if (error) {
+      // Funktion fehlt = SQL noch nicht eingerichtet
+      if (/staff_agenda|function|schema cache/i.test(error.message || '')) return { error: 'setup' };
+      return { error: 'network' };
+    }
+    return data || { error: 'network' };
+  }
+  async function setStaffCode(code) {
+    if (!useSupabase) {
+      try { localStorage.setItem(DEMO_STAFF_KEY, code || 'off'); } catch {}
+      return { ok: true, active: !!code };
+    }
+    const { data, error } = await sb.rpc('set_staff_code', { p_code: code || '' });
+    if (error) return { ok: false, error: /set_staff_code|schema cache/i.test(error.message || '') ? 'setup' : (error.message || 'Fehler') };
+    return { ok: true, active: !!data };
+  }
+  async function isStaffCodeSet() {
+    if (!useSupabase) { try { return localStorage.getItem(DEMO_STAFF_KEY) !== 'off'; } catch { return true; } }
+    const { data, error } = await sb.rpc('staff_code_set');
+    if (error) return null; // unbekannt / SQL fehlt
+    return !!data;
+  }
+
   window.alsterDb = {
     isProd: useSupabase,
     ready,
@@ -577,6 +621,10 @@
     updateOrderNote,
     deleteOrder,
     // Bestätigungs-E-Mail an den Gast
-    sendConfirmation
+    sendConfirmation,
+    // Mitarbeiter-Kalender
+    staffAgenda,
+    setStaffCode,
+    isStaffCodeSet
   };
 })();

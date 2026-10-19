@@ -179,3 +179,6 @@ create policy "Authenticated can delete images"
 --
 -- 3. config.js auf den Web-Server hochladen, fertig.
 -- ================================================================
+
+-- 6. Mitarbeiter-Kalender (Zugang mit Code, ohne Kontaktdaten):
+--    siehe supabase/staff-calendar.sql — einmal im SQL Editor ausführen.
