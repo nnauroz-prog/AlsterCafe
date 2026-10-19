@@ -9999,3 +9999,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
   .gallery-item:nth-child(4):nth-last-child(2),
   .gallery-item:nth-child(5):last-child { grid-column: span 3; }
 }
+
+/* Mittagstisch teilen */
+.lunch-share { cursor: pointer; font: inherit; }
+.lunch-share[hidden] { display: none !important; }
+.lunch-today .lunch-share { display: inline-flex; align-items: center; gap: 8px; margin: 8px 0 0 18px; }
+@media (max-width: 480px) { .lunch-today .lunch-share { margin: 6px 0 0; } }
