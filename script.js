@@ -236,6 +236,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   //    Splash hängen, selbst wenn das Backend langsam oder offline ist.
   safeRun(initYears);
   safeRun(initNav);
+  safeRun(initNavExtra);
+  safeRun(initKarteJump);
+  safeRun(initToTop);
   safeRun(noteGermanOnlyLegal);
   safeRun(initStickyHeader);
   safeRun(initReveal);
@@ -270,6 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(() => { if (refreshOrderSorts) refreshOrderSorts(); });
   safeRun(initBerlinerPromo);
   safeRun(initBerlinerPage);
+  safeRun(initNavExtra);
   // Bestellzeitraum kann um Mitternacht beginnen/enden
   setInterval(() => { safeRun(initBerlinerPromo); safeRun(initBerlinerPage); }, 5 * 60 * 1000);
 
@@ -284,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'notice':      initNotice(); break;
       case 'holidays':    initHolidays(); updateLiveStatus(); break;
       case 'menu':        initMenu(); break;
-      case 'hours':       initHours(); updateLiveStatus(); break;
+      case 'hours':       initHours(); updateLiveStatus(); initNavExtra(); break;
       case 'weekly-menu': initLunchWeek(); break;
       case 'broetchen-items':
       case 'berliner-items': if (refreshOrderSorts) refreshOrderSorts(); break;
@@ -1038,6 +1042,93 @@ function initMenu() {
   if (!data || !Array.isArray(data.sections) || !data.sections.length) return;
   mount.innerHTML = renderKarteHtml(data);
   injectMenuSchema(data);
+  initKarteJump();
+}
+
+/* Speisekarte: Sprung-Knöpfe zu den Kategorien (mobil oben „klebend“,
+   die aktuelle Kategorie wird hervorgehoben). Neu aufbauen, wenn sich die
+   Karte ändert. */
+let karteJumpObserver = null;
+function initKarteJump() {
+  const mount = document.getElementById('karte-mount');
+  if (!mount) return;
+  const blocks = Array.from(mount.querySelectorAll('.karte-block'));
+  let nav = document.getElementById('karte-jump');
+  if (blocks.length < 3) { nav?.remove(); return; }
+  if (!nav) {
+    nav = document.createElement('nav');
+    nav.id = 'karte-jump';
+    nav.className = 'karte-jump';
+    mount.before(nav);
+  }
+  nav.setAttribute('aria-label', alsterLang() === 'en' ? 'Menu sections' : 'Kategorien der Speisekarte');
+  nav.innerHTML = blocks.map((b, i) => {
+    if (!b.id) b.id = 'karte-' + (i + 1);
+    const label = b.querySelector('h2')?.textContent.trim() || '';
+    return `<a href="#${b.id}" class="karte-jump-link" data-target="${b.id}">${escapeHtml(label)}</a>`;
+  }).join('');
+  nav.querySelectorAll('a').forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById(a.dataset.target)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }));
+  // Aktuelle Kategorie hervorheben und den Knopf in Sicht schieben
+  karteJumpObserver?.disconnect();
+  if (!('IntersectionObserver' in window)) return;
+  karteJumpObserver = new IntersectionObserver((entries) => {
+    const vis = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+    if (!vis) return;
+    nav.querySelectorAll('a').forEach(a => {
+      const on = a.dataset.target === vis.target.id;
+      a.classList.toggle('is-active', on);
+      if (on) a.scrollIntoView({ block: 'nearest', inline: 'center' });
+    });
+  }, { rootMargin: '-35% 0px -55% 0px' });
+  blocks.forEach(b => karteJumpObserver.observe(b));
+}
+
+/* Mobiles Menü: unten Öffnungszeit heute, Telefon und Adresse */
+function initNavExtra() {
+  const nav = document.getElementById('primary-nav');
+  if (!nav) return;
+  const en = alsterLang() === 'en';
+  let box = nav.querySelector('.nav-extra');
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'nav-extra';
+    box.setAttribute('data-no-i18n', '');
+    nav.appendChild(box);
+  }
+  const st = computeLiveStatus();
+  const day = openingFor(new Date());
+  const hoursText = day
+    ? (en ? `Today ${formatMin(day.openMin)} – ${formatMin(day.closeMin)}` : `Heute ${formatMin(day.openMin)} – ${formatMin(day.closeMin)} Uhr`)
+    : (en ? 'Closed today' : 'Heute geschlossen');
+  box.innerHTML = `
+    <p class="nav-extra-status${st?.state === 'open' ? ' is-open' : ''}">${escapeHtml(st?.text || hoursText)}</p>
+    <p class="nav-extra-hours">${escapeHtml(hoursText)}</p>
+    <a class="nav-extra-call" href="tel:+494022692891"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
+    <a class="nav-extra-addr" href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener">Ifflandstraße 45 · 22087 Hamburg</a>`;
+}
+
+/* „Nach oben“-Knopf auf langen Seiten (nur mobil sichtbar, per CSS) */
+function initToTop() {
+  if (document.body.classList.contains('admin-body') || document.getElementById('to-top')) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'to-top';
+  btn.className = 'to-top';
+  btn.setAttribute('aria-label', alsterLang() === 'en' ? 'Back to top' : 'Nach oben');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
+  document.body.appendChild(btn);
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const long = document.documentElement.scrollHeight > window.innerHeight * 2.5;
+    btn.classList.toggle('is-visible', long && window.scrollY > window.innerHeight * 1.2);
+  };
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  update();
 }
 
 /* Schema.org/Menu fuer Google Rich Results — aus denselben Daten.
