@@ -9830,3 +9830,27 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
 /* Mitgliederbereich: Fußzeilen-Link „Zur Webseite“ war Braun auf Fast-Schwarz */
 .admin-footer a, .admin-body footer a { color: var(--gold-soft, #D4B380); }
 .admin-footer a, .admin-body footer a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Tippflächen am Handy ≥ 44 px (Apple/Google-Empfehlung) ----------
+   Unsichtbarer Innenabstand + gleich großer negativer Außenabstand: die
+   Tippfläche wächst, das Layout bleibt optisch unverändert. */
+@media (max-width: 980px) {
+  .site-footer .footer-col a,
+  .site-footer .footer-legal a,
+  .contact-col a, .col-link, .map-ph-link,
+  .hero-coord-dish {
+    display: inline-block; padding-block: 12px; margin-block: -12px;
+  }
+  .site-footer .footer-legal { row-gap: 14px; }
+  .site-footer .footer-nav-wrap .footer-nav a { min-height: 44px; display: flex; align-items: center; }
+  .karte-jump-link { min-height: 44px; display: inline-flex; align-items: center; }
+  .today-feature-week { min-height: 44px; }
+  .legal-toc li { padding: 0; }
+  .legal-toc a { display: inline-block; padding: 11px 0; }
+  .legal-article .legal-links a { display: inline-block; padding-block: 10px; }
+}
+@media (max-width: 980px) {
+  /* Obere Leiste: Tippfläche per unsichtbarer Fläche vergrößern, Leiste bleibt flach */
+  .topbar a.topbar-link { position: relative; }
+  .topbar a.topbar-link::after { content: ""; position: absolute; inset: -12px -6px; }
+}
