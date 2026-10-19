@@ -9655,3 +9655,65 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
 /* Handy: Platz für den „Nach oben“-Knopf, damit er keine Links verdeckt */
 @media (max-width: 980px) { .site-footer .footer-bottom-strip { padding-bottom: 84px; } }
 @media (max-width: 420px) { .site-footer .footer-pay-list { gap: 5px; } .site-footer .pay-badge { transform: scale(.94); } }
+
+/* ===============================================
+   FACELIFT · Mitgliederbereich
+   (gleiche Funktionen, gleiche Farben — übersichtlicher am Handy)
+   =============================================== */
+/* Begrüßung „Moin!“ mit Datum */
+.admin-welcome h1 .welcome-date {
+  display: block; margin-top: 6px;
+  font: 600 .78rem/1.3 'Inter', sans-serif; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold-text, #8A6420);
+}
+
+/* Fix: Kacheln ragten am Handy rechts aus dem Rahmen (Rasterspalte breiter als Platz) */
+.overview-grid { grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); }
+.overview-card { min-width: 0; }
+.overview-card-body { min-width: 0; }
+
+/* Kacheln + Kennzahlen: Facelift-Sprache wie auf der Webseite */
+.overview-card, .summary-stat {
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(42, 24, 16, .04), 0 10px 26px -20px rgba(42, 24, 16, .3);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.overview-card:active, button.summary-stat:active { transform: scale(.985); }
+@media (hover: hover) and (pointer: fine) {
+  .overview-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(42, 24, 16, .05), 0 16px 32px -20px rgba(42, 24, 16, .38); }
+}
+/* Offene Anfragen/Bestellungen > 0: goldene Hervorhebung */
+.summary-stat-count.has-open { border-color: var(--gold, #B8893F); background: linear-gradient(180deg, rgba(184, 137, 63, .10), transparent 70%); }
+.summary-stat-count.has-open .summary-stat-num { color: var(--gold-text, #8A6420); }
+
+/* Handy: keine doppelten Rahmen mit viel Innenabstand → mehr Platz für Inhalt */
+@media (max-width: 640px) {
+  .admin-overview { padding: 18px 14px; }
+  .panel-card { padding: 22px 16px; }
+  .anfrage-item { padding: 16px 14px; }
+  .admin-welcome h1 { font-size: 1.9rem; }
+}
+
+/* Postfach: Aktionsknöpfe als ordentliche, gut tippbare Reihe */
+.anfrage-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.anfrage-actions > * { justify-content: center; min-height: 44px; width: 100%; }
+.anfrage-tag.is-new { box-shadow: 0 0 0 3px rgba(184, 137, 63, .18); }
+
+/* Wochenplan: heutiger Tag klar erkennbar, Felder angenehm hoch */
+.day-card.is-today { border-color: var(--gold, #B8893F); box-shadow: 0 0 0 3px rgba(184, 137, 63, .14), 0 12px 28px -20px rgba(42, 24, 16, .35); }
+@media (max-width: 980px) {
+  .day-card input[type="text"], .day-card textarea { min-height: 46px; }
+}
+@media (max-width: 640px) {
+  /* Postfach: Eingangszeit oben, darunter die Knöpfe in voller Breite */
+  .anfrage-meta { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+  .anfrage-actions { width: 100%; grid-template-columns: 1fr; }
+  /* Speichern-Leisten: Knöpfe umbrechen statt abgeschnitten zu werden */
+  .save-bar.inline { padding: 14px; }
+  .save-actions { flex-wrap: wrap; width: 100%; }
+  .save-actions .btn { flex: 1 1 100%; justify-content: center; letter-spacing: .14em; }
+}
+@media (min-width: 641px) {
+  .anfrage-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+  .anfrage-actions > * { width: auto; }
+}
