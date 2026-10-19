@@ -1533,6 +1533,19 @@ function initDesignEditor() {
 
 function renderDesignEditor() {
   const design = loadDesign();
+  const vis = document.getElementById('gallery-visible');
+  if (vis) {
+    vis.checked = design.galleryVisible === true;
+    if (!vis.dataset.bound) {
+      vis.dataset.bound = '1';
+      vis.addEventListener('change', () => {
+        const d = loadDesign();
+        d.galleryVisible = vis.checked;
+        saveDesign(d);
+        flashDesignStatus(vis.checked ? 'Fotos werden auf der Startseite gezeigt.' : 'Fotos sind auf der Startseite ausgeblendet.');
+      });
+    }
+  }
   document.querySelectorAll('.image-slot').forEach(slot => {
     const key = slot.dataset.designKey;
     renderImageSlot(slot, design[key] || null);

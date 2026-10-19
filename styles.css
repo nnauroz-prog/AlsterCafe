@@ -10235,3 +10235,12 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
   .sync-pill { padding: 0; width: 44px; height: 44px; justify-content: center; border-radius: 50%; }
   .sync-pill .sync-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
+/* Bilder: Schalter „Fotos auf der Startseite zeigen“ als klare Zeile */
+.design-control .gallery-visible-toggle {
+  display: flex; align-items: center; gap: 12px; min-height: 48px;
+  margin: 0 0 16px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
+  cursor: pointer;
+}
+.design-control .gallery-visible-toggle .day-toggle-text {
+  font: 600 .95rem 'Inter', sans-serif; letter-spacing: 0; text-transform: none; color: var(--bean); margin: 0;
+}

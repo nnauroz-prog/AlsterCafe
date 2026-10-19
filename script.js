@@ -697,13 +697,15 @@ function initDesign() {
     }
   }
 
-  // Galerie
-  renderHomeGallery(design.gallery);
+  // Galerie: nur, wenn der Inhaber sie im Mitgliederbereich eingeschaltet hat
+  renderHomeGallery(design.galleryVisible === true ? design.gallery : null, design.galleryVisible === true);
 }
 
-function renderHomeGallery(images) {
+function renderHomeGallery(images, enabled = true) {
   const gallery = Array.isArray(images) ? images.filter(Boolean) : [];
   let section = document.getElementById('galerie');
+  // Ausgeschaltet: auch kein Platzhalter für den Inhaber
+  if (!enabled) { if (section) section.hidden = true; return; }
 
   // Owner-Hinweis (nur im Bearbeitungs-Modus): leere Galerie zeigt sichtbaren
   // CTA zum Hochladen. Fuer normale Besucher bleibt die Sektion versteckt.
