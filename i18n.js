@@ -172,7 +172,7 @@
     'Keine Kette, keine Filiale, kein Konzept-Café. Zwei Generationen,\n            eine Backstube, eigene Rezepte. Wenn Sie länger sitzen bleiben — bei\n            uns fühlen wir uns geehrt.':
       'No chain, no branch, no concept café. Two generations, one bakery, our own recipes. If you stay a while — we’re honoured.',
     'Übrigens: Vor uns war an gleicher Adresse der': 'By the way: before us, the same address was home to the',
-    '— ein Getränkemarkt, ebenfalls aus unserer Familie. 2004 wurde aus dem Markt das Café. Der „Alster" im Namen ist geblieben.':
+    '— ein Getränkemarkt, ebenfalls aus unserer Familie. 2004 wurde aus dem Markt das Café. Der „Alster“ im Namen ist geblieben.':
       '— a beverage store, also run by our family. In 2004 the store became the café. The “Alster” in the name stayed.',
     'per Anruf oder Mail zurück.': 'by phone or email.',
     'Was Sie bei uns': 'What you’ll find',
@@ -361,7 +361,7 @@
 
     /* ---------------- Cookie-Banner ---------------- */
     'Wir respektieren Ihre Privatsphäre.': 'We respect your privacy.',
-    'Wir verwenden nur technisch notwendige Speicherfunktionen. „Alle akzeptieren" lädt zusätzlich die Google-Karte auf der Kontaktseite — die setzt eigene Cookies. Mehr in der':
+    'Wir verwenden nur technisch notwendige Speicherfunktionen. „Alle akzeptieren“ lädt zusätzlich die Google-Karte auf der Kontaktseite — die setzt eigene Cookies. Mehr in der':
       'We only use technically necessary storage. “Accept all” additionally loads the Google map on the contact page — which sets its own cookies. More in the',
     'Alle akzeptieren': 'Accept all',
     'Nur notwendige': 'Necessary only',

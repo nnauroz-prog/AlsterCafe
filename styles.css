@@ -9786,3 +9786,5 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
    Die KW-Zeile auf der Mittagstisch-Seite wird erst per Script gefüllt; vorher war sie
    leer (0 px) und schob beim Füllen alles darunter nach unten (CLS ~0,15). */
 .lunch-meta:empty::before { content: "\00a0"; }
+/* Über uns: das goldene „ saß auf dem ersten Buchstaben des Zitats */
+.about-aside blockquote::before { line-height: 1; height: .42em; margin-bottom: 18px; transform: translateY(-.48em); }
