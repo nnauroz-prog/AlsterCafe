@@ -1298,6 +1298,22 @@ function initLandingTeaser() {
     hint.addEventListener('click', open);
     (sideEl || dishEl).after(hint);
   }
+  // Info-Karte im Hero: Zeile „Mittag“ mit dem Tagesgericht (öffnet das Wochen-Fenster)
+  const heroLunch = document.getElementById('hero-coord-lunch');
+  if (heroLunch) {
+    const lbl = document.getElementById('hero-coord-lunch-label');
+    if (lbl) lbl.textContent = showTomorrow ? (en ? 'Tomorrow' : 'Morgen mittag') : (en ? 'Lunch' : 'Mittag');
+    const list = dayDishes(entry);
+    // Bei zwei Gerichten beide kurz anzeigen (sonst schnitt die Karte mitten im Text ab)
+    const short = (t, n) => t.length > n ? t.slice(0, n).replace(/\s+\S*$/, '') + ' …' : t;
+    heroLunch.textContent = list.length
+      ? (list.length > 1 ? list.map(d => short(d.dish, 24)).join(en ? ' or ' : ' oder ') : list[0].dish)
+      : entry?.closed ? (en ? 'No lunch' : 'Kein Mittagstisch') : (en ? 'Menu coming soon' : 'Karte folgt');
+    if (!heroLunch.dataset.wired) {
+      heroLunch.dataset.wired = '1';
+      heroLunch.addEventListener('click', () => openLunchSheet(targetDate));
+    }
+  }
   const hintEl = block.querySelector('.today-feature-week');
   if (hintEl) hintEl.textContent = en ? 'See the whole week ›' : 'Ganze Woche ansehen ›';
   dishEl.setAttribute('aria-haspopup', 'dialog');
