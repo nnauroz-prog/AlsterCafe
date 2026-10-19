@@ -72,8 +72,8 @@
     'Schön, dass': 'So glad',
     'Sie da sind.': 'you’re here.',
     'Kommen Sie vorbei.': 'Come on by.',
-    'Croque-Monsieur aus dem Ofen, Franzbrötchen vor sieben, mittags\n            etwas Warmes. Ifflandstraße 45, gleich um die Ecke von der\n            Außenalster.':
-      'Croque-Monsieur from the oven, Franzbrötchen before seven, something warm at midday. Ifflandstraße 45, just around the corner from the Außenalster.',
+    'Morgens um halb sieben duften die ersten Franzbrötchen aus unserer Backstube, mittags steht etwas Warmes auf dem Tisch, und der Croque kommt knusprig aus dem Ofen. Ifflandstraße 45 – gleich um die Ecke von der Außenalster.':
+      'At half past six the first Franzbrötchen come warm out of our bakery, at midday there’s something hot on the table, and the croque comes crisp from the oven. Ifflandstraße 45 – just around the corner from the Außenalster.',
     'Online bestellen': 'Order online',
     'Tisch reservieren': 'Book a table',
     'Mit Espresso von': 'With espresso by',
@@ -102,8 +102,8 @@
     'Familiengeführt': 'Family-run',
     'seit': 'for',
     'Jahren.': 'years.',
-    'Täglich frisch gebackene Backwaren, ein frisches Frühstück, ein täglich wechselnder, hausgemachter Mittagstisch und leckere Croques — zubereitet mit sorgfältig ausgewählten Zutaten, viele davon aus der Region.':
-      'Freshly baked goods every day, a fresh breakfast, a daily-changing homemade lunch and tasty croques — prepared with carefully chosen ingredients, many of them from the region.',
+    'Unsere Backstube läuft ab vier Uhr morgens – wer früh kommt, bekommt Brötchen und Franzbrötchen noch warm. Dazu Frühstück, wie man es sich wünscht, jeden Werktag ein anderer Mittagstisch und Croques frisch aus dem Ofen.':
+      'Our bakery starts at four in the morning – come early and the rolls and Franzbrötchen are still warm. Add a breakfast just the way you like it, a different lunch every weekday and croques fresh from the oven.',
     'Familienbetrieb · Hamburg-Hohenfelde': 'Family business · Hamburg-Hohenfelde',
 
     /* Bewertungen */
@@ -130,18 +130,18 @@
     'Aus dem Ofen': 'From the oven',
     'Unsere': 'Our',
     'Croques.': 'Croques.',
-    'Unsere Croques stehen für echte Frische: Das Brot dafür kommt von einer Bäckerei aus der Region, belegt und überbacken wird bei uns.':
-      'Our croques stand for real freshness: the bread comes from a bakery in the region, and we top and bake them here.',
+    'Knusprig überbacken, innen schön saftig: Unsere Croques belegen und backen wir frisch bei uns – das Brot kommt von einer Bäckerei aus der Region.':
+      'Crisp on top, nice and juicy inside: we fill and bake our croques fresh in-house – the bread comes from a bakery in the region.',
     'Jetzt bestellen': 'Order now',
     'Werktags ab zwölf': 'Weekdays from noon',
     'Mittagstisch.': 'Lunch.',
-    'Jeden Tag ein anderes Gericht. Beilage und Salat dazu. Was es heute gibt, steht auf der Karte.':
-      'A different dish every day. Side and salad included. What’s on today is on the board.',
+    'Jeden Werktag ein anderes Gericht – mit Beilage und Salat, wie zu Hause. Was heute auf dem Teller landet, steht auf der Karte.':
+      'A different dish every weekday – with a side and salad, just like at home. What’s on the plate today is on the menu.',
     'Heute auf der Karte': 'On today’s menu',
     'Den ganzen Tag': 'All day long',
     'Speisekarte.': 'Menu.',
-    'Frühstück von klassisch bis orientalisch, alles rund ums Ei, frischer Kaffee von Mocambo. Die ganze Karte mit Preisen.':
-      'Breakfast from classic to oriental, everything egg, fresh coffee by Mocambo. The full menu with prices.',
+    'Frühstück von klassisch bis orientalisch, Eier in allen Varianten und Kaffee von Mocambo – in Ruhe genießen, so lange Sie mögen.':
+      'Breakfast from classic to oriental, eggs every way and coffee from Mocambo – enjoy it at your own pace, for as long as you like.',
     'Karte entdecken': 'Explore the menu',
     'Platz sichern': 'Reserve a spot',
     'Reservieren.': 'Reserve.',
@@ -150,8 +150,8 @@
 
     /* Visit-Strip */
     'So finden Sie uns': 'How to find us',
-    'Eckhaus, drei Tische vor der Tür, gleich um die Ecke von der Alsterschwimmhalle.':
-      'Corner house, three tables out front, just around the corner from the Alsterschwimmhalle.',
+    'Eckhaus mit drei Tischen vor der Tür – wenn die Sonne scheint, unser Lieblingsplatz. Gleich um die Ecke von der Alsterschwimmhalle.':
+      'A corner house with three tables outside – our favourite spot when the sun is out. Just around the corner from the Alsterschwimmhalle.',
     'Route ansehen →': 'View directions →',
 
     /* Footer */
@@ -182,7 +182,7 @@
       'Filled, gratinated with cheese, three minutes under the salamander. The classic with ham, the Madame with fried egg, plus a vegetarian version with mountain cheese and vegetables. Pre-order for pickup or local delivery via the',
     'Croques online bestellen': 'Order Croques online',
     'Familiäre Atmosphäre': 'Family atmosphere',
-    'Hausgemacht': 'Homemade',
+    'Frisch aus dem Ofen': 'Fresh from the oven',
     'Die Tische vor der Tür kriegen Sonne, wenn welche da ist. An den anderen Tagen ist':
       'The tables out front catch the sun, when there is any. On the other days it’s',
     'drinnen schöner': 'nicer inside',
@@ -216,8 +216,8 @@
     /* ---------------- Mittagstisch ---------------- */
     'Ab 12:00': 'From 12:00',
     'der Woche.': 'of the week.',
-    'Werktags ab zwölf. Jeden Tag ein anderes Gericht, Beilage und Salat\n          dazu. Was es heute gibt, steht unten. Wer\'s vorher wissen will: kurz\n          anrufen.':
-      'Weekdays from noon. A different dish every day, with side and salad. What’s on today is below. Want to know in advance? A quick call.',
+    'Werktags ab zwölf steht etwas Warmes auf dem Tisch: jeden Tag ein anderes Gericht, mit Beilage und Salat. Was es heute gibt, steht unten – wer\'s vorher wissen will, ruft einfach kurz an.':
+      'Weekdays from noon there’s something hot on the table: a different dish every day, with a side and salad. Today’s is below – if you want to know in advance, just give us a quick call.',
     'Anrufen lohnt sich — wir verraten Ihnen das Tagesgericht gern direkt:':
       'A call is worth it — we’ll gladly tell you the dish of the day:',
     'Beilage und Salat sind immer dabei. Wer das Tagesgericht vorher wissen will:':
@@ -226,8 +226,8 @@
     /* ---------------- Brötchen-Service ---------------- */
     'für die Runde.': 'for the group.',
     'Belegte Brötchen': 'Filled rolls',
-    'Fürs Büro, die Familienfeier oder den langen Arbeitstag: Sagen Sie uns,\n          wie viele und womit — wir belegen frisch und stellen alles zur Abholung\n          bereit. Am besten einen Tag vorher bestellen.':
-      'For the office, the family gathering or the long workday: tell us how many and with what — we fill them fresh and have everything ready for pickup. Ideally order a day ahead.',
+    'Fürs Büro, die Familienfeier oder den langen Arbeitstag: Sagen Sie uns, wie viele und womit – wir belegen frisch mit Brötchen aus unserer Backstube und legen alles zur Abholung bereit. Am besten einen Tag vorher bestellen.':
+      'For the office, the family gathering or the long workday: tell us how many and with what – we fill them fresh with rolls from our own bakery and have everything ready for pickup. Ideally order a day ahead.',
     'Was darf\'s sein?': 'What would you like?',
     'Tippen Sie die gewünschte Anzahl je Sorte. Sonderwünsche kommen ins Notizfeld.':
       'Enter the quantity per variety. Special requests go in the notes field.',
