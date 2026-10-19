@@ -29,6 +29,8 @@
     'Über uns': 'About',
     'Reservierung': 'Reservations',
     'Kontakt': 'Contact',
+    'Vielleicht gesucht:': 'Perhaps you were looking for:',
+    'Vielleicht gesucht': 'Perhaps you were looking for',
     'Webshop': 'Shop',
     'Freies WLAN': 'Free Wi-Fi',
     'Menü öffnen': 'Open menu',
