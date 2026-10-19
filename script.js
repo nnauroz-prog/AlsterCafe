@@ -297,6 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initBerlinerPromo);
   safeRun(initBerlinerPage);
   safeRun(initNavExtra);
+  safeRun(syncBusinessSchema);
   // Bestellzeitraum kann um Mitternacht beginnen/enden
   setInterval(() => { safeRun(initBerlinerPromo); safeRun(initBerlinerPage); }, 5 * 60 * 1000);
 
@@ -311,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'notice':      initNotice(); break;
       case 'holidays':    initHolidays(); updateLiveStatus(); break;
       case 'menu':        initMenu(); break;
-      case 'hours':       initHours(); updateLiveStatus(); initNavExtra(); break;
+      case 'hours':       initHours(); updateLiveStatus(); initNavExtra(); syncBusinessSchema(); break;
       case 'weekly-menu': initLunchWeek(); break;
       case 'broetchen-items':
       case 'berliner-items': if (refreshOrderSorts) refreshOrderSorts(); break;
@@ -1107,6 +1108,26 @@ function initKarteJump() {
     });
   }, { rootMargin: '-35% 0px -55% 0px' });
   blocks.forEach(b => karteJumpObserver.observe(b));
+}
+
+/* Google-Daten (JSON-LD) der Startseite mit den im Mitgliederbereich
+   gepflegten Öffnungszeiten abgleichen — sonst stünden dort veraltete Zeiten. */
+function syncBusinessSchema() {
+  const el = document.getElementById('ld-business');
+  if (!el) return;
+  let data; try { data = JSON.parse(el.textContent); } catch { return; }
+  const hours = getWeekHours();
+  if (!Array.isArray(hours) || !hours.some(Boolean)) return;
+  const names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const groups = [];
+  hours.forEach((h, i) => {
+    if (!h) return;
+    const opens = formatMin(h.openMin), closes = formatMin(h.closeMin);
+    const g = groups.find(x => x.opens === opens && x.closes === closes);
+    g ? g.dayOfWeek.push(names[i]) : groups.push({ '@type': 'OpeningHoursSpecification', dayOfWeek: [names[i]], opens, closes });
+  });
+  data.openingHoursSpecification = groups;
+  el.textContent = JSON.stringify(data, null, 2);
 }
 
 /* Mobiles Menü: unten Öffnungszeit heute, Telefon und Adresse */
