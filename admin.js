@@ -351,6 +351,11 @@ async function showDashboard() {
   if (dom.userBadge)    dom.userBadge.textContent = email;
   if (dom.accountEmail) dom.accountEmail.textContent = email;
   await renderUserList();
+  // Begrüßung: „Moin!“ + heutiges Datum (statt nur „Mitgliederbereich“)
+  if (dom.welcome) {
+    const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+    dom.welcome.innerHTML = `Moin! <span class="welcome-date">${escapeHtml(today)}</span>`;
+  }
   // Default-Landing: Overview. Tab-Inhalte werden lazy beim Klick aktiv.
   showOverview();
   renderWeek();
@@ -1501,6 +1506,9 @@ function renderOverviewSummary() {
   const newOrd = ordArr.filter(o => o.status !== 'done').length;
   if (dom.summaryAnfragen) dom.summaryAnfragen.textContent = String(newRes);
   if (dom.summaryOrders)   dom.summaryOrders.textContent   = String(newOrd);
+  // Offene Einträge golden hervorheben (Facelift)
+  dom.summaryAnfragen?.closest('.summary-stat')?.classList.toggle('has-open', newRes > 0);
+  dom.summaryOrders?.closest('.summary-stat')?.classList.toggle('has-open', newOrd > 0);
 
   // Heutiges Mittagsgericht aus dem Wochenplan
   if (dom.summaryTodayDish) {
