@@ -746,7 +746,7 @@ function renderHomeGallery(images) {
     ph.innerHTML = `
       <span class="gallery-empty-icon" aria-hidden="true">+</span>
       <span class="gallery-empty-title">Hier fehlen noch Fotos</span>
-      <span class="gallery-empty-desc">Bis zu 6 Bilder hochladen — Eckcafé, Croques, Brötchen, Innenraum. Im Mitgliederbereich unter „Bilder hochladen".</span>
+      <span class="gallery-empty-desc">Bis zu 6 Bilder hochladen — Eckcafé, Croques, Brötchen, Innenraum. Im Mitgliederbereich unter „Bilder hochladen“.</span>
       <span class="gallery-empty-link">Zum Mitgliederbereich →</span>
     `;
     grid.appendChild(ph);
@@ -835,7 +835,7 @@ function initReveal() {
       }
     });
     // Positiver unterer rootMargin: Abschnitte blenden ein, BEVOR sie ins
-    // Sichtfeld scrollen — so wirkt nie ein Kasten „leer".
+    // Sichtfeld scrollen — so wirkt nie ein Kasten „leer“.
   }, { rootMargin: '0px 0px 20% 0px', threshold: 0 });
   reveals.forEach(el => io.observe(el));
 
@@ -888,7 +888,7 @@ function initCookieBanner() {
       <div class="container cookie-inner">
         <div class="cookie-text">
           <strong>Wir respektieren Ihre Privatsphäre.</strong>
-          Wir verwenden nur technisch notwendige Speicherfunktionen. „Alle akzeptieren" lädt zusätzlich die Google-Karte auf der Kontaktseite — die setzt eigene Cookies. Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
+          Wir verwenden nur technisch notwendige Speicherfunktionen. „Alle akzeptieren“ lädt zusätzlich die Google-Karte auf der Kontaktseite — die setzt eigene Cookies. Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>.
         </div>
         <div class="cookie-actions">
           <button type="button" class="btn btn-link cookie-decline" id="cookie-decline">Nur notwendige</button>
@@ -1011,7 +1011,7 @@ function initNotice() {
 
 /* ---------- Urlaub/Feiertag-Banner ----------
    Zeigt an jedem Schließtag (aus dem Content-Key 'holidays') auf allen
-   Seiten einen klaren „Heute geschlossen"-Hinweis. Nutzt die Notice-Optik. */
+   Seiten einen klaren „Heute geschlossen“-Hinweis. Nutzt die Notice-Optik. */
 function initHolidays() {
   if (document.body.classList.contains('admin-body')) return;
   let banner = document.getElementById('holiday-banner');
@@ -2908,9 +2908,9 @@ function invalidFieldMessage(form, en) {
   try { bad.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
   try { bad.focus({ preventScroll: true }); } catch (e) {}
   if (bad.type === 'checkbox') return en ? 'Please tick the consent box below.' : 'Bitte unten das Häkchen zur Einverständnis setzen.';
-  if (bad.validity && bad.validity.valueMissing) return en ? `Please fill in “${feld}”.` : `Bitte „${feld}" ausfüllen.`;
+  if (bad.validity && bad.validity.valueMissing) return en ? `Please fill in “${feld}”.` : `Bitte „${feld}“ ausfüllen.`;
   if (bad.type === 'email') return en ? 'Please enter a valid email address (e.g. name@mail.com).' : 'Bitte eine gültige E-Mail-Adresse eingeben (z. B. name@mail.de).';
-  return en ? `Please check “${feld}”.` : `Bitte „${feld}" prüfen.`;
+  return en ? `Please check “${feld}”.` : `Bitte „${feld}“ prüfen.`;
 }
 
 /* ---------- Helpers ---------- */

@@ -924,7 +924,7 @@ function downloadMenuPdf() {
       setTimeout(cleanup, 60000); // Spätestens nach 1 min Blob freigeben.
     });
 
-    setStatus(dom.menuStatus, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern".', 'ok');
+    setStatus(dom.menuStatus, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern“.', 'ok');
   } catch (e) {
     setStatus(dom.menuStatus, 'PDF konnte nicht erzeugt werden. Bitte erneut versuchen.', 'error');
   }
@@ -1050,7 +1050,7 @@ function onResetHours() {
 
 /* ---------- Urlaub & Feiertage (Schließtage) ----------
    Gespeichert als Content-Key 'holidays' = [{date:'YYYY-MM-DD', label}].
-   Die öffentliche Seite zeigt an solchen Tagen automatisch „Heute geschlossen". */
+   Die öffentliche Seite zeigt an solchen Tagen automatisch „Heute geschlossen“. */
 function renderHolidaysEditor() {
   if (!dom.holidaysRows) return;
   const stored = window.alsterDb?.get('holidays');
@@ -2026,10 +2026,10 @@ function addBroetchenRow(item, skipStatus) {
   `;
   row.querySelector('.broetchen-edit-remove').addEventListener('click', () => {
     row.remove();
-    setStatus(dom.broetchenStatus, 'Nicht vergessen: „Sorten speichern" klicken.', '');
+    setStatus(dom.broetchenStatus, 'Nicht vergessen: „Sorten speichern“ klicken.', '');
   });
   dom.broetchenEditor.appendChild(row);
-  if (!skipStatus) setStatus(dom.broetchenStatus, 'Nicht vergessen: „Sorten speichern" klicken.', '');
+  if (!skipStatus) setStatus(dom.broetchenStatus, 'Nicht vergessen: „Sorten speichern“ klicken.', '');
 }
 
 function readBroetchenForm() {
@@ -2141,10 +2141,10 @@ function addBerlinerRow(item, skipStatus) {
   `;
   row.querySelector('.broetchen-edit-remove').addEventListener('click', () => {
     row.remove();
-    setStatus(bEl('berliner-items-status'), 'Nicht vergessen: „Sorten speichern" klicken.', '');
+    setStatus(bEl('berliner-items-status'), 'Nicht vergessen: „Sorten speichern“ klicken.', '');
   });
   ed.appendChild(row);
-  if (!skipStatus) setStatus(bEl('berliner-items-status'), 'Nicht vergessen: „Sorten speichern" klicken.', '');
+  if (!skipStatus) setStatus(bEl('berliner-items-status'), 'Nicht vergessen: „Sorten speichern“ klicken.', '');
 }
 
 function updateBerlinerSwitch(active) {
