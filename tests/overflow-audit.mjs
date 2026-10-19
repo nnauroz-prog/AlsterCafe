@@ -31,7 +31,7 @@ const WIDTHS = [320, 360, 375, 390, 414, 430, 480, 540, 600, 768, 834, 1024, 128
 const PAGES = [
   'index.html', 'speisekarte.html', 'broetchen.html', 'mittagstisch.html',
   'reservierung.html', 'kontakt.html', 'ueber-uns.html',
-  'impressum.html', 'datenschutz.html', '404.html', 'berliner.html',
+  'impressum.html', 'datenschutz.html', '404.html', 'berliner.html', 'kalender.html',
 ];
 
 const ADMIN_PANELS = ['week', 'kalender', 'anfragen', 'bestellungen', 'berliner', 'menu', 'design', 'notice', 'hours', 'account'];

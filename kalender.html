@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="light" />
+  <title>Mitarbeiter-Kalender · Alstercafé</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#3D2415" />
+  <meta name="apple-mobile-web-app-title" content="Kalender" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r189" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r189" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+    img{max-width:100%;display:block}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body class="admin-body staff-page">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M10 12h11M18 9l3 3-3 3"/></g></symbol>
+    </defs>
+  </svg>
+
+  <header class="admin-header">
+    <div class="container nav-container">
+      <span class="brand brand-static">
+        <img src="image-192.webp" alt="" class="brand-logo" width="46" height="46" decoding="async" />
+        <span class="brand-name">Alstercafé</span>
+        <span class="admin-pill">Kalender</span>
+      </span>
+      <div class="admin-actions" id="staff-actions" hidden>
+        <button class="btn btn-link" id="staff-logout" type="button">
+          <svg class="ico ico-sm"><use href="#i-out"/></svg>
+          Abmelden
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- Code-Eingabe -->
+    <section class="admin-login" id="code-view">
+      <div class="login-card">
+        <p class="login-card-eyebrow">Mitarbeiter-Kalender</p>
+        <h1>Moin!</h1>
+        <p class="login-lead">Bitte den 6-stelligen Code eingeben. Den Code bekommen Sie vom Chef.</p>
+        <form id="staff-form" class="staff-form" autocomplete="off" novalidate>
+          <label>
+            <span>Code</span>
+            <input type="password" name="code" id="staff-code" class="staff-pin"
+                   inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
+                   placeholder="••••••" required aria-describedby="staff-status" />
+          </label>
+          <label class="staff-remember">
+            <input type="checkbox" id="staff-remember" />
+            <span>Auf diesem Gerät angemeldet bleiben</span>
+          </label>
+          <button type="submit" class="btn btn-primary form-submit">Kalender öffnen</button>
+          <p class="form-status" id="staff-status" role="status" aria-live="polite"></p>
+        </form>
+        <p class="login-help">Nur zum Ansehen: Reservierungen und Abholungen, ohne Telefonnummern oder E-Mails.</p>
+      </div>
+    </section>
+
+    <!-- Kalender -->
+    <section class="admin-dashboard staff-view" id="cal-view" hidden>
+      <div class="container">
+        <div class="admin-welcome admin-welcome-slim">
+          <h1>Moin! <span class="welcome-date" id="staff-today-label">Kalender</span></h1>
+          <p class="admin-sub">Reservierungen und Abholungen der Woche. Nur zum Ansehen.</p>
+        </div>
+        <div class="cal-toolbar">
+          <div class="week-switch">
+            <button type="button" class="week-nav" id="staff-prev" aria-label="Vorherige Woche">←</button>
+            <div class="week-label">
+              <span class="week-kw" id="staff-kw">KW –</span>
+              <span class="week-range" id="staff-range">–</span>
+            </div>
+            <button type="button" class="week-nav" id="staff-next" aria-label="Nächste Woche">→</button>
+            <button type="button" class="btn btn-link" id="staff-today">Heute</button>
+          </div>
+        </div>
+        <p class="save-status" id="staff-cal-status" aria-live="polite"></p>
+        <div class="cal-days" id="staff-cal"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <div class="container">
+      <p>© <span id="year"></span> Alstercafé · Mitarbeiter-Kalender · <a href="index.html">Zur Webseite</a></p>
+    </div>
+  </footer>
+
+  <script src="vendor/supabase-js-2.117.2.js" defer></script>
+  <script src="config.js?v=2026-05-10-r189" defer></script>
+  <script src="db.js?v=2026-05-10-r189" defer></script>
+  <script src="calendar.js?v=2026-05-10-r189" defer></script>
+  <script src="kalender.js?v=2026-05-10-r189" defer></script>
+</body>
+</html>

@@ -76,7 +76,6 @@ async function init() {
     // true = immer frischen Stand holen (Inhaber bearbeitet Inhalte).
     if (window.alsterDb) await window.alsterDb.ready(true);
     if (await isAuthenticated()) await showDashboard();
-    else if (staffSessionCode()) await openStaffView(staffSessionCode(), true);
     else showLogin();
   } catch (err) {
     console.error('Admin-Init fehlgeschlagen, zeige Login:', err);
@@ -418,38 +417,17 @@ function updateSyncPill(status) {
   el.classList.add(cls);
 }
 
-/* ---------- Kalender (Inhaber + Mitarbeiter mit Code) ----------
-   Gleiche Darstellung für beide: je Tag Reservierungen und Abholungen nach
-   Uhrzeit. Mitarbeiter bekommen die Daten von der Datenbank OHNE Kontaktdaten
-   (supabase/staff-calendar.sql) und können nichts ändern. */
-const STAFF_SESSION_KEY = 'alstercafe.staff-code';
+/* ---------- Kalender (Inhaber) + Mitarbeiter-Code ----------
+   Darstellung kommt aus calendar.js (gemeinsam mit kalender.html, dem
+   Mitarbeiter-Kalender mit 6-stelligem Code, ohne Kontaktdaten). */
 let calMonday = mondayOf(new Date());
-let staffMonday = mondayOf(new Date());
-let staffTimer = null;
-
-function staffSessionCode() { try { return sessionStorage.getItem(STAFF_SESSION_KEY) || ''; } catch { return ''; } }
 
 function initCalendar() {
   const on = (id, ev, fn) => document.getElementById(id)?.addEventListener(ev, fn);
-  const shiftOwner = (d) => { calMonday = new Date(calMonday); calMonday.setDate(calMonday.getDate() + d); calMonday = mondayOf(calMonday); renderOwnerCalendar(); };
-  on('cal-prev', 'click', () => shiftOwner(-7));
-  on('cal-next', 'click', () => shiftOwner(7));
+  const shift = (d) => { calMonday = new Date(calMonday); calMonday.setDate(calMonday.getDate() + d); calMonday = mondayOf(calMonday); renderOwnerCalendar(); };
+  on('cal-prev', 'click', () => shift(-7));
+  on('cal-next', 'click', () => shift(7));
   on('cal-today', 'click', () => { calMonday = mondayOf(new Date()); renderOwnerCalendar(); });
-  const shiftStaff = (d) => { staffMonday = new Date(staffMonday); staffMonday.setDate(staffMonday.getDate() + d); staffMonday = mondayOf(staffMonday); loadStaffWeek(); };
-  on('staff-prev', 'click', () => shiftStaff(-7));
-  on('staff-next', 'click', () => shiftStaff(7));
-  on('staff-today', 'click', () => { staffMonday = mondayOf(new Date()); loadStaffWeek(); });
-  on('staff-logout', 'click', closeStaffView);
-  on('staff-form', 'submit', async (e) => {
-    e.preventDefault();
-    const input = document.getElementById('staff-code');
-    const code = (input?.value || '').replace(/\D/g, '');
-    const status = document.getElementById('staff-status');
-    if (code.length < 6) { setStatus(status, 'Bitte den Code mit mindestens 6 Ziffern eingeben.', 'error'); return; }
-    setStatus(status, 'Wird geprüft …');
-    const ok = await openStaffView(code, false);
-    if (ok) { input.value = ''; setStatus(status, ''); }
-  });
   on('staff-code-form', 'submit', onSaveStaffCode);
   on('staff-code-off', 'click', async () => {
     if (!confirm('Mitarbeiter-Zugang ausschalten? Der bisherige Code gilt dann nicht mehr.')) return;
@@ -459,135 +437,23 @@ function initCalendar() {
     else setStatus(el, staffSetupText(res?.error), 'error');
     renderStaffAccessState();
   });
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && !document.getElementById('staff-view')?.hidden) loadStaffWeek();
-  });
 }
 
-function staffErrorText(err) {
-  if (err === 'invalid') return 'Der Code stimmt nicht.';
-  if (err === 'locked') return 'Zu viele Versuche. Bitte in 10 Minuten noch einmal.';
-  if (err === 'setup') return 'Der Mitarbeiter-Zugang ist noch nicht eingerichtet. Bitte beim Chef melden.';
-  return 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.';
-}
 function staffSetupText(err) {
   return err === 'setup'
     ? 'Der Mitarbeiter-Zugang ist in der Datenbank noch nicht eingerichtet (SQL-Schritt fehlt).'
     : 'Speichern fehlgeschlagen' + (err ? `: ${err}` : '.');
 }
 
-async function openStaffView(code, silent) {
-  const data = await window.alsterDb?.staffAgenda(code, staffMonday, 7);
-  if (!data || data.error) {
-    try { sessionStorage.removeItem(STAFF_SESSION_KEY); } catch {}
-    if (silent) { showLogin(); return false; }
-    setStatus(document.getElementById('staff-status'), staffErrorText(data?.error), 'error');
-    return false;
-  }
-  try { sessionStorage.setItem(STAFF_SESSION_KEY, code); } catch {}
-  dom.loginView.hidden = true;
-  dom.dashboard.hidden = true;
-  dom.actions.hidden = true;
-  document.getElementById('staff-view').hidden = false;
-  renderStaffWeek(data);
-  clearInterval(staffTimer);
-  staffTimer = setInterval(() => { if (!document.hidden) loadStaffWeek(); }, 60000);
-  return true;
-}
-
-async function loadStaffWeek() {
-  const code = staffSessionCode();
-  if (!code) { closeStaffView(); return; }
-  const status = document.getElementById('staff-cal-status');
-  const data = await window.alsterDb?.staffAgenda(code, staffMonday, 7);
-  if (!data || data.error) {
-    if (data?.error === 'invalid') { closeStaffView(); setStatus(document.getElementById('staff-status'), 'Der Code wurde geändert. Bitte neu eingeben.', 'error'); return; }
-    setStatus(status, staffErrorText(data?.error), 'error');
-    return;
-  }
-  setStatus(status, '');
-  renderStaffWeek(data);
-}
-
-function renderStaffWeek(data) {
-  setWeekLabel('staff', staffMonday);
-  renderCalendar(document.getElementById('staff-cal'), data, staffMonday);
-  const t = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  setStatus(document.getElementById('staff-cal-status'), `Stand ${t} Uhr · aktualisiert sich jede Minute`);
-}
-
-function closeStaffView() {
-  clearInterval(staffTimer);
-  try { sessionStorage.removeItem(STAFF_SESSION_KEY); } catch {}
-  const v = document.getElementById('staff-view');
-  if (v) { v.hidden = true; const c = document.getElementById('staff-cal'); if (c) c.innerHTML = ''; }
-  showLogin();
-}
-
-function setWeekLabel(prefix, monday) {
-  const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
-  const kw = document.getElementById(prefix + '-kw');
-  const range = document.getElementById(prefix + '-range');
-  if (kw) kw.textContent = `KW ${isoWeek(monday)}`;
-  if (range) range.textContent = `${formatShort(monday)} – ${formatShort(sunday)}`;
-}
-
 function renderOwnerCalendar() {
   const el = document.getElementById('owner-cal');
-  if (!el) return;
-  setWeekLabel('cal', calMonday);
+  if (!el || !window.AlsterCalendar) return;
+  const lbl = window.AlsterCalendar.weekLabel(calMonday);
+  const kw = document.getElementById('cal-kw'); if (kw) kw.textContent = lbl.kw;
+  const range = document.getElementById('cal-range'); if (range) range.textContent = lbl.range;
   const res = window.alsterDb?.get('reservations') || [];
   const ord = window.alsterDb?.get('orders') || [];
-  renderCalendar(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [] }, calMonday);
-}
-
-function renderCalendar(el, data, monday) {
-  if (!el) return;
-  const todayIso = isoDate(new Date());
-  const byDay = {};
-  (data.reservations || []).forEach(r => { if (r.date) (byDay[r.date] = byDay[r.date] || []).push({ kind: 'res', time: r.time || '', r }); });
-  (data.orders || []).forEach(o => { if (o.pickupDate) (byDay[o.pickupDate] = byDay[o.pickupDate] || []).push({ kind: 'order', time: o.pickupTime || '', o }); });
-  let total = 0;
-  const html = DAYS.map((d, i) => {
-    const date = new Date(monday); date.setDate(date.getDate() + i);
-    const iso = isoDate(date);
-    const items = (byDay[iso] || []).sort((a, b) => String(a.time).localeCompare(String(b.time)));
-    total += items.length;
-    const nRes = items.filter(x => x.kind === 'res').length;
-    const nOrd = items.length - nRes;
-    const summary = items.length
-      ? [nRes ? `${nRes} ${nRes === 1 ? 'Reservierung' : 'Reservierungen'}` : '', nOrd ? `${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}` : ''].filter(Boolean).join(' · ')
-      : 'Nichts eingetragen';
-    const rows = items.map(x => {
-      if (x.kind === 'res') {
-        const r = x.r;
-        return `<li class="cal-item is-res${r.status === 'done' ? ' is-done' : ''}">
-          <span class="cal-time">${escapeHtml(r.time || '–')}</span>
-          <span class="cal-main"><span class="cal-type">Tisch</span> <strong>${escapeHtml(r.name || 'Ohne Namen')}</strong>${r.persons ? ` · ${escapeHtml(r.persons)}` : ''}</span>
-          ${r.status === 'done' ? '<span class="cal-pill">erledigt</span>' : ''}
-        </li>`;
-      }
-      const o = x.o;
-      const its = Array.isArray(o.items) ? o.items : [];
-      const berliner = its.some(it => it && it.kind === 'berliner');
-      const list = its.filter(it => it && (parseInt(it.qty, 10) || 0) > 0).map(it => `${parseInt(it.qty, 10)}× ${escapeHtml(it.name || '')}`).join(', ');
-      return `<li class="cal-item is-order${berliner ? ' is-berliner' : ''}${o.status === 'done' ? ' is-done' : ''}">
-        <span class="cal-time">${escapeHtml(o.pickupTime || '–')}</span>
-        <span class="cal-main"><span class="cal-type">${berliner ? 'Berliner' : 'Abholung'}</span> <strong>${escapeHtml(o.name || 'Ohne Namen')}</strong>${o.totalCount ? ` · ${o.totalCount} Stück` : ''}${list ? `<span class="cal-detail">${list}</span>` : ''}</span>
-        ${o.status === 'done' ? '<span class="cal-pill">erledigt</span>' : ''}
-      </li>`;
-    }).join('');
-    return `<section class="cal-day${iso === todayIso ? ' is-today' : ''}${iso < todayIso ? ' is-past' : ''}${items.length ? '' : ' is-empty'}">
-      <header class="cal-day-head">
-        <span class="cal-day-name">${d.label}</span>
-        <span class="cal-day-date">${date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
-        ${iso === todayIso ? '<span class="day-pill">Heute</span>' : ''}
-        <span class="cal-day-sum">${summary}</span>
-      </header>
-      ${rows ? `<ul class="cal-list">${rows}</ul>` : ''}
-    </section>`;
-  }).join('');
-  el.innerHTML = (total ? '' : '<p class="cal-empty-week">Diese Woche ist noch nichts eingetragen.</p>') + html;
+  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [] }, calMonday);
 }
 
 async function renderStaffAccessState() {
@@ -597,9 +463,9 @@ async function renderStaffAccessState() {
   if (active === null || active === undefined) {
     el.textContent = 'Noch nicht eingerichtet: Bitte einmal den SQL-Schritt „Mitarbeiter-Kalender“ in Supabase ausführen. Danach hier einen Code festlegen.';
   } else if (active) {
-    el.innerHTML = 'Der Zugang ist <strong>aktiv</strong>. Mitarbeiter öffnen <strong>alstercafe.de/admin.html</strong> → „Mitarbeiter? Mit Code zum Kalender“. Sie sehen Namen, Uhrzeiten und Bestellungen – keine Telefonnummern oder E-Mails.';
+    el.innerHTML = 'Der Zugang ist <strong>aktiv</strong>. Mitarbeiter öffnen <strong>alstercafe.de/kalender.html</strong> und geben den 6-stelligen Code ein. Sie sehen Namen, Uhrzeiten und Bestellungen – keine Telefonnummern oder E-Mails.';
   } else {
-    el.textContent = 'Der Zugang ist ausgeschaltet. Legen Sie einen Code fest, um ihn einzuschalten.';
+    el.textContent = 'Der Zugang ist ausgeschaltet. Legen Sie einen 6-stelligen Code fest, um ihn einzuschalten.';
   }
 }
 
@@ -608,8 +474,8 @@ async function onSaveStaffCode(e) {
   const input = document.getElementById('staff-code-new');
   const status = document.getElementById('staff-code-status');
   const code = (input.value || '').trim();
-  if (!/^\d{6,12}$/.test(code)) { setStatus(status, 'Bitte 6 bis 12 Ziffern eingeben (nur Zahlen).', 'error'); return; }
-  if (/^(\d)\1+$/.test(code) || '0123456789012'.includes(code) || '9876543210987'.includes(code)) {
+  if (!/^\d{6}$/.test(code)) { setStatus(status, 'Bitte genau 6 Ziffern eingeben (nur Zahlen).', 'error'); return; }
+  if (/^(\d)\1+$/.test(code) || '01234567890'.includes(code) || '98765432109'.includes(code)) {
     setStatus(status, 'Bitte keinen zu einfachen Code wie 111111 oder 123456 wählen.', 'error'); return;
   }
   const res = await window.alsterDb?.setStaffCode(code);

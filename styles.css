@@ -10026,14 +10026,24 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 .week-image-dialog .confirm-dialog-actions { flex-wrap: wrap; }
 
 /* ===== Kalender (Inhaber) + Mitarbeiter-Zugang mit Code ===== */
-.staff-login { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; text-align: left; }
-.staff-login > summary {
-  cursor: pointer; list-style: none; text-align: center;
-  font-size: .9rem; font-weight: 600; color: var(--gold-text, #8A6420);
-  min-height: 44px; display: flex; align-items: center; justify-content: center;
+.staff-login { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; }
+.staff-login a {
+  display: inline-flex; align-items: center; min-height: 44px;
+  font-size: .9rem; font-weight: 600; color: var(--gold-text, #8A6420); text-decoration: none;
 }
-.staff-login > summary::-webkit-details-marker { display: none; }
-.staff-form { margin-top: 10px; }
+.staff-login a:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* Mitarbeiter-Kalender (kalender.html) */
+.staff-page .login-card h1 { margin-bottom: 8px; }
+.login-card #staff-form input.staff-pin {
+  font-family: 'Inter', sans-serif; font-size: 1.8rem; letter-spacing: .5em; text-align: center;
+  padding-left: .5em; font-variant-numeric: tabular-nums;
+}
+.login-card #staff-form label.staff-remember {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 4px 0 10px;
+  font: 400 .92rem 'Inter', sans-serif; letter-spacing: 0; text-transform: none; color: var(--bean); cursor: pointer;
+}
+.login-card #staff-form label.staff-remember input { padding: 0; border: 0; width: 20px; height: 20px; margin: 0; accent-color: var(--bean); flex: none; }
+.login-card #staff-form label.staff-remember span { margin: 0; font: inherit; color: inherit; }
 .cal-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px 18px; flex-wrap: wrap; margin: 6px 0 18px; }
 .cal-days { display: grid; gap: 12px; align-items: start; }
 .cal-day {
