@@ -142,6 +142,8 @@ async function init() {
   dom.menuReset.addEventListener('click', onResetMenu);
   dom.menuAddSection?.addEventListener('click', () => addMenuSection());
   dom.menuPdf?.addEventListener('click', downloadMenuPdf);
+  document.getElementById('week-poster')?.addEventListener('click', printWeekPoster);
+  document.getElementById('week-insta')?.addEventListener('click', makeWeekImage);
 
   // Öffnungszeiten
   dom.hoursForm.addEventListener('submit', onSaveHours);
@@ -891,15 +893,18 @@ function downloadMenuPdf() {
     return;
   }
 
-  // Druck über ein verstecktes, gleich-Ursprung-Iframe statt window.open().
-  // Grund: window.open('', '_blank') wird auf Handys — vor allem iOS Safari —
-  // lautlos vom Popup-Blocker geschluckt, dann "passiert nichts". Ein Iframe,
-  // das ein Blob-Dokument lädt, umgeht den Blocker komplett; das eingebettete
-  // Skript ruft window.print() aus seinem EIGENEN Fenster auf und druckt so
-  // zuverlässig genau diese Karte (nicht die Admin-Seite).
+  printHtmlDocument(buildMenuPrintHtml(data), dom.menuStatus);
+}
+
+// Druck über ein verstecktes, gleich-Ursprung-Iframe statt window.open().
+// Grund: window.open('', '_blank') wird auf Handys — vor allem iOS Safari —
+// lautlos vom Popup-Blocker geschluckt, dann "passiert nichts". Ein Iframe,
+// das ein Blob-Dokument lädt, umgeht den Blocker komplett; das eingebettete
+// Skript ruft window.print() aus seinem EIGENEN Fenster auf und druckt so
+// zuverlässig genau dieses Dokument (nicht die Admin-Seite).
+function printHtmlDocument(html, statusEl) {
   try {
     document.getElementById('menu-print-frame')?.remove();
-    const html = buildMenuPrintHtml(data);
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
 
@@ -919,15 +924,274 @@ function downloadMenuPdf() {
       // __alsterPrinted verhindert, dass der Dialog doppelt aufgeht.
       try {
         const w = frame.contentWindow;
-        if (w && !w.__alsterPrinted) { w.__alsterPrinted = true; w.focus(); w.print(); }
+        if (w && !w.__alsterPrinted && !w.__alsterWaitFonts) { w.__alsterPrinted = true; w.focus(); w.print(); }
       } catch (e) {}
       setTimeout(cleanup, 60000); // Spätestens nach 1 min Blob freigeben.
     });
 
-    setStatus(dom.menuStatus, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern“.', 'ok');
+    setStatus(statusEl, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern“ oder Ihren Drucker.', 'ok');
   } catch (e) {
-    setStatus(dom.menuStatus, 'PDF konnte nicht erzeugt werden. Bitte erneut versuchen.', 'error');
+    setStatus(statusEl, 'Druckansicht konnte nicht erzeugt werden. Bitte erneut versuchen.', 'error');
   }
+}
+
+/* ---------- Wochenplan weitergeben: Aushang (A4) + Instagram-Bild ----------
+   Beides nimmt den AKTUELLEN Formular-Stand (auch ungespeichert). */
+function weekShareData() {
+  const week = readFormToWeek();
+  const days = DAYS.map((d, i) => {
+    const date = new Date(currentMonday); date.setDate(date.getDate() + i);
+    const e = week[d.key] || {};
+    const dishes = [{ dish: e.dish, side: e.side }, { dish: e.dish2, side: e.side2 }]
+      .map(x => ({ dish: String(x.dish || '').trim(), side: String(x.side || '').trim() }))
+      .filter(x => x.dish);
+    return { label: d.label, date, closed: !!e.closed, dishes: e.closed ? [] : dishes, weekend: i >= 5 };
+  }).filter(d => !d.weekend || d.dishes.length);
+  const sunday = new Date(currentMonday); sunday.setDate(sunday.getDate() + 6);
+  const dm = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  return {
+    days,
+    kw: isoWeek(currentMonday),
+    range: `${dm(currentMonday)} – ${dm(sunday)}`,
+    hasAny: days.some(d => d.dishes.length)
+  };
+}
+// Beilage: „mit …“ nur voranstellen, wenn der Text nicht schon so anfängt
+function shareSide(side) {
+  const t = String(side || '').trim();
+  if (!t) return '';
+  return /^(mit|serviert|dazu|und|inkl|wahlweise|oder)\b/i.test(t) ? t : `mit ${t}`;
+}
+function weekShareStatus(msg, kind) { setStatus(document.getElementById('week-share-status'), msg, kind); }
+
+function printWeekPoster() {
+  const data = weekShareData();
+  if (!data.hasAny) { weekShareStatus('Bitte zuerst Gerichte eintragen.', 'error'); return; }
+  printHtmlDocument(buildWeekPosterHtml(data), document.getElementById('week-share-status'));
+}
+
+function buildWeekPosterHtml(data) {
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const origin = location.origin;
+  // Grobe Füllmenge: Gerichte, Beilagen und lange Namen (Zeilenumbrüche)
+  const load = data.days.reduce((a, d) => a + 1 + d.dishes.reduce((b, x) => b + 1 + (x.side ? .45 : 0) + (x.dish.length > 45 ? .8 : 0), 0) + Math.max(0, d.dishes.length - 1) * .4, 0);
+  const density = load > 16 ? 'dense xdense' : load > 11 ? 'dense' : '';
+  const rows = data.days.map(d => {
+    let body;
+    if (d.closed) body = '<p class="none">Kein Mittagstisch</p>';
+    else if (!d.dishes.length) body = '<p class="none">Folgt in Kürze</p>';
+    else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}`)
+      .join('<p class="or"><span>oder</span></p>');
+    return `<div class="day"><div class="when"><span class="name">${esc(d.label)}</span><span class="date">${d.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span></div><div class="what">${body}</div></div>`;
+  }).join('');
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<title>Mittagstisch KW ${data.kw} · Alstercafé</title>
+<link rel="stylesheet" href="${origin}/fonts.css">
+<style>
+  @page { size: A4; margin: 14mm 16mm; }
+  * { box-sizing: border-box; font-style: normal !important; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Inter', Arial, sans-serif; color: #2A1810; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sheet { border: 1.5pt solid #B8893E; border-radius: 6mm; padding: 12mm 12mm 9mm; min-height: 265mm; display: flex; flex-direction: column; }
+  header { text-align: center; margin-bottom: 8mm; }
+  header img { width: 22mm; height: 22mm; display: block; margin: 0 auto 3mm; border-radius: 50%; }
+  .brand { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 30pt; margin: 0; color: #3D2415; }
+  .kicker { margin: 3mm 0 0; font-size: 10pt; font-weight: 600; letter-spacing: 3pt; text-transform: uppercase; color: #8A6420; }
+  .range { margin: 1.5mm 0 0; font-size: 10pt; color: #6b5a4a; }
+  .days { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .day { display: grid; grid-template-columns: 36mm 1fr; gap: 6mm; padding: 4.5mm 0; border-top: 0.6pt solid #E3D4BB; break-inside: avoid; }
+  .day:first-child { border-top: 0; }
+  /* Volle Woche (viele Gerichte): kompakter, damit alles auf eine Seite passt */
+  .dense header { margin-bottom: 5mm; } .dense header img { width: 16mm; height: 16mm; } .dense .brand { font-size: 25pt; }
+  .dense .day { padding: 3mm 0; } .dense .dish { font-size: 14.5pt; } .dense .side { font-size: 9.5pt; } .dense .or { margin: 1.4mm 0; }
+  .xdense .day { padding: 2.2mm 0; } .xdense .dish { font-size: 12.5pt; } .xdense .side { font-size: 9pt; margin-top: .6mm; } .xdense .or { margin: .8mm 0; font-size: 7.5pt; }
+  .name { display: block; font-size: 11pt; font-weight: 700; letter-spacing: 1.2pt; text-transform: uppercase; color: #3D2415; }
+  .date { display: block; font-size: 9.5pt; color: #8a7a68; margin-top: 1mm; }
+  .dish { font-family: 'Fraunces', Georgia, serif; font-size: 17pt; line-height: 1.2; margin: 0; color: #2A1810; }
+  .side { font-size: 10.5pt; color: #6b5a4a; margin: 1mm 0 0; }
+  .or { margin: 2.2mm 0; font-size: 8.5pt; font-weight: 600; letter-spacing: 2pt; text-transform: uppercase; color: #B8893E; }
+  .none { margin: 0; font-size: 11pt; color: #8a7a68; padding-top: 1mm; }
+  footer { text-align: center; margin-top: 6mm; padding-top: 5mm; border-top: 1pt solid #B8893E; font-size: 10.5pt; color: #3D2415; line-height: 1.6; }
+  footer strong { color: #8A6420; }
+</style></head><body>
+<div class="sheet ${density}">
+  <header>
+    <img src="${origin}/image-192.webp" alt="">
+    <h1 class="brand">Alstercafé</h1>
+    <p class="kicker">Mittagstisch · KW ${data.kw}</p>
+    <p class="range">${esc(data.range)}</p>
+  </header>
+  <div class="days">${rows}</div>
+  <footer><strong>Ab 12:00 Uhr</strong> · Beilage und Salat sind immer dabei<br>Ifflandstraße 45 · 040 – 22 69 28 91 · alstercafe.de</footer>
+</div>
+<script>
+  /* Erst drucken, wenn Schriften und Logo geladen sind */
+  window.__alsterWaitFonts = true;
+  function alsterPrint(){ if (window.__alsterPrinted) return; window.__alsterPrinted = true; try { window.focus(); window.print(); } catch (e) {} }
+  window.addEventListener('load', function(){
+    var go = function(){ setTimeout(alsterPrint, 200); };
+    try { document.fonts.ready.then(go, go); } catch (e) { go(); }
+    setTimeout(alsterPrint, 3000);
+  });
+</script>
+</body></html>`;
+}
+
+/* Instagram-Bild 1080×1350 (Hochformat-Post) per Canvas */
+async function makeWeekImage() {
+  const data = weekShareData();
+  if (!data.hasAny) { weekShareStatus('Bitte zuerst Gerichte eintragen.', 'error'); return; }
+  weekShareStatus('Bild wird erstellt …');
+  try {
+    await Promise.all([
+      document.fonts.load('500 64px Fraunces'), document.fonts.load('400 40px Fraunces'),
+      document.fonts.load('600 24px Inter'), document.fonts.load('400 24px Inter')
+    ]);
+  } catch (e) {}
+  let logo = null;
+  try {
+    logo = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = 'image-192.webp'; });
+  } catch (e) {}
+  const canvas = drawWeekImage(data, logo);
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+  if (!blob) { weekShareStatus('Bild konnte nicht erstellt werden.', 'error'); return; }
+  weekShareStatus('');
+  showWeekImageDialog(blob, `alstercafe-mittagstisch-KW${data.kw}.png`);
+}
+
+function drawWeekImage(data, logo) {
+  const W = 1080, H = 1350;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  const C = { espresso: '#2A1810', bean: '#3D2415', gold: '#B8893E', goldSoft: '#D4B380', linen: '#F1E7D3' };
+  const bg = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  bg.addColorStop(0, C.bean); bg.addColorStop(1, C.espresso);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(212,179,128,.55)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(40, 40, W - 80, H - 80, 28) : ctx.rect(40, 40, W - 80, H - 80); ctx.stroke();
+  const spacing = (px) => { if ('letterSpacing' in ctx) ctx.letterSpacing = px + 'px'; };
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+
+  let y = 92;
+  if (logo) {
+    ctx.save(); ctx.beginPath(); ctx.arc(W / 2, y + 48, 48, 0, Math.PI * 2); ctx.clip();
+    ctx.drawImage(logo, W / 2 - 48, y, 96, 96); ctx.restore();
+    y += 96 + 66;
+  } else y += 60;
+  spacing(0); ctx.fillStyle = C.linen; ctx.font = '500 66px Fraunces, Georgia, serif';
+  ctx.fillText('Alstercafé', W / 2, y);
+  y += 54; spacing(6); ctx.fillStyle = C.goldSoft; ctx.font = '600 25px Inter, Arial, sans-serif';
+  ctx.fillText(`MITTAGSTISCH · KW ${data.kw}`, W / 2, y);
+  y += 40; spacing(1); ctx.fillStyle = 'rgba(241,231,211,.72)'; ctx.font = '400 24px Inter, Arial, sans-serif';
+  ctx.fillText(data.range, W / 2, y);
+
+  const top = y + 46, bottom = H - 150, left = 110, right = W - 110;
+  const wrap = (text, maxW) => {
+    const words = String(text).split(/\s+/); const lines = []; let cur = '';
+    words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; });
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  // Volle Woche: zwei Spalten (Tag über dem Gericht), sonst eine Spalte (Tag links)
+  const totalDishes = data.days.reduce((a, d) => a + d.dishes.length, 0);
+  const cols = (data.days.length > 5 || totalDishes > 7) ? 2 : 1;
+  const colGap = 56;
+  const cellW = cols === 2 ? (right - left - colGap) / 2 : right - left;
+  const labelW = cols === 2 ? 0 : 210;
+  const head = cols === 2 ? 44 : 0; // Platz für den Tag über dem Gericht
+  const textW = cellW - labelW;
+  const measure = (d, k) => {
+    const dishPx = Math.round(40 * k), sidePx = Math.round(25 * Math.max(k, 0.8)), orPx = 19;
+    const parts = [];
+    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? 'Kein Mittagstisch' : 'Folgt in Kürze', h: 34 });
+    d.dishes.forEach((x, i) => {
+      if (i) parts.push({ kind: 'or', h: orPx + 18 });
+      spacing(0); ctx.font = `400 ${dishPx}px Fraunces, Georgia, serif`;
+      const lines = wrap(x.dish, textW);
+      parts.push({ kind: 'dish', lines, h: lines.length * dishPx * 1.15 });
+      if (x.side) {
+        ctx.font = `400 ${sidePx}px Inter, Arial, sans-serif`;
+        const sl = wrap(shareSide(x.side), textW);
+        parts.push({ kind: 'side', lines: sl, h: 8 + sl.length * sidePx * 1.3 });
+      }
+    });
+    return { d, parts, h: Math.max(cols === 2 ? 0 : 56, head + parts.reduce((a, p) => a + p.h, 0)) };
+  };
+  // Layout messen und bei Bedarf verkleinern, bis alles passt
+  let layout;
+  for (let k = 1; k >= 0.5; k -= 0.05) {
+    const gap = Math.round(28 * Math.max(k, 0.7));
+    const cells = data.days.map(d => measure(d, k));
+    const rows = [];
+    for (let i = 0; i < cells.length; i += cols) rows.push({ cells: cells.slice(i, i + cols), h: Math.max(...cells.slice(i, i + cols).map(c => c.h)) });
+    const h = rows.reduce((a, r) => a + r.h + gap * 2, 0);
+    layout = { rows, k, dishPx: Math.round(40 * k), sidePx: Math.round(25 * Math.max(k, 0.8)), orPx: 19, gap, h };
+    if (h <= bottom - top) break;
+  }
+  let ry = top + Math.max(0, (bottom - top - layout.h) / 2);
+  layout.rows.forEach((row, i) => {
+    if (i) { ctx.strokeStyle = 'rgba(212,179,128,.25)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(left, ry); ctx.lineTo(right, ry); ctx.stroke(); }
+    ry += layout.gap;
+    row.cells.forEach((r, ci) => {
+      const cx = left + ci * (cellW + colGap);
+      const dateTxt = r.d.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+      ctx.textAlign = 'left';
+      spacing(3); ctx.fillStyle = C.goldSoft; ctx.font = '600 22px Inter, Arial, sans-serif';
+      ctx.fillText(r.d.label.toUpperCase(), cx, ry + 26);
+      if (cols === 2) {
+        const lw = ctx.measureText(r.d.label.toUpperCase()).width;
+        spacing(0); ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = '400 20px Inter, Arial, sans-serif';
+        ctx.fillText(dateTxt, cx + lw + 14, ry + 26);
+      } else {
+        spacing(0); ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = '400 20px Inter, Arial, sans-serif';
+        ctx.fillText(dateTxt, cx, ry + 54);
+      }
+      let ty = ry + head; const tx = cx + labelW;
+      r.parts.forEach(p => {
+        if (p.kind === 'none') { ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = '400 26px Inter, Arial, sans-serif'; ctx.fillText(p.text, tx, ty + 28); }
+        if (p.kind === 'or') { spacing(4); ctx.fillStyle = C.gold; ctx.font = `600 ${layout.orPx}px Inter, Arial, sans-serif`; ctx.fillText('ODER', tx, ty + layout.orPx + 6); spacing(0); }
+        if (p.kind === 'dish') { ctx.fillStyle = '#FFFCF4'; ctx.font = `400 ${layout.dishPx}px Fraunces, Georgia, serif`; p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + layout.dishPx * (0.9 + k * 1.15))); }
+        if (p.kind === 'side') { ctx.fillStyle = 'rgba(241,231,211,.75)'; ctx.font = `400 ${layout.sidePx}px Inter, Arial, sans-serif`; p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + 8 + layout.sidePx * (1 + k * 1.3))); }
+        ty += p.h;
+      });
+    });
+    ry += row.h + layout.gap;
+  });
+
+  ctx.textAlign = 'center'; spacing(2);
+  ctx.fillStyle = C.goldSoft; ctx.font = '600 25px Inter, Arial, sans-serif';
+  ctx.fillText('AB 12:00 UHR', W / 2, H - 100);
+  spacing(0); ctx.fillStyle = 'rgba(241,231,211,.8)'; ctx.font = '400 23px Inter, Arial, sans-serif';
+  ctx.fillText('Ifflandstraße 45 · Hamburg-Hohenfelde · alstercafe.de', W / 2, H - 66);
+  return c;
+}
+
+function showWeekImageDialog(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const file = (typeof File === 'function') ? new File([blob], filename, { type: 'image/png' }) : null;
+  const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+  const dlg = document.createElement('dialog');
+  dlg.className = 'confirm-dialog week-image-dialog';
+  dlg.innerHTML = `
+    <div class="confirm-dialog-form">
+      <h3 class="confirm-dialog-title">Bild für Instagram</h3>
+      <img class="week-image-preview" src="${url}" alt="Vorschau: Mittagstisch der Woche als Bild" />
+      <p class="confirm-dialog-hint">${canShare ? 'Tippen Sie auf „Teilen“ und wählen Sie Instagram, WhatsApp oder „Bild sichern“.' : 'Bild speichern und dann bei Instagram als Beitrag hochladen.'}</p>
+      <div class="confirm-dialog-actions">
+        <button type="button" class="btn btn-link" data-act="close">Schließen</button>
+        <a class="btn ${canShare ? 'btn-link' : 'btn-primary'}" href="${url}" download="${filename}" data-act="save">Bild speichern</a>
+        ${canShare ? '<button type="button" class="btn btn-primary" data-act="share">Teilen …</button>' : ''}
+      </div>
+    </div>`;
+  document.body.appendChild(dlg);
+  dlg.querySelector('[data-act="close"]').addEventListener('click', () => dlg.close());
+  dlg.querySelector('[data-act="share"]')?.addEventListener('click', async () => {
+    try { await navigator.share({ files: [file], title: 'Mittagstisch im Alstercafé' }); } catch (e) { /* abgebrochen */ }
+  });
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  dlg.addEventListener('close', () => { dlg.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); });
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
 }
 
 function buildMenuPrintHtml(data) {
