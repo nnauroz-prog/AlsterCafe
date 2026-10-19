@@ -102,8 +102,8 @@
     'Familiengeführt': 'Family-run',
     'seit': 'for',
     'Jahren.': 'years.',
-    'Unsere Backstube läuft ab vier Uhr morgens – wer früh kommt, bekommt Brötchen und Franzbrötchen noch warm. Dazu Frühstück, wie man es sich wünscht, jeden Werktag ein anderer Mittagstisch und Croques frisch aus dem Ofen.':
-      'Our bakery starts at four in the morning – come early and the rolls and Franzbrötchen are still warm. Add a breakfast just the way you like it, a different lunch every weekday and croques fresh from the oven.',
+    'Täglich frisch gebackene Backwaren, ein frisches Frühstück, ein täglich wechselnder, hausgemachter Mittagstisch und leckere Croques — zubereitet mit sorgfältig ausgewählten Zutaten, viele davon aus der Region.':
+      'Freshly baked goods every day, a fresh breakfast, a daily-changing homemade lunch and tasty croques — prepared with carefully chosen ingredients, many of them from the region.',
     'Familienbetrieb · Hamburg-Hohenfelde': 'Family business · Hamburg-Hohenfelde',
 
     /* Bewertungen */
@@ -130,8 +130,8 @@
     'Aus dem Ofen': 'From the oven',
     'Unsere': 'Our',
     'Croques.': 'Croques.',
-    'Knusprig überbacken, innen schön saftig: Unsere Croques belegen und backen wir frisch bei uns – das Brot kommt von einer Bäckerei aus der Region.':
-      'Crisp on top, nice and juicy inside: we fill and bake our croques fresh in-house – the bread comes from a bakery in the region.',
+    'Unsere Croques stehen für echte Frische: Das Brot dafür kommt von einer Bäckerei aus der Region, belegt und überbacken wird bei uns.':
+      'Our croques stand for real freshness: the bread comes from a bakery in the region, and we top and bake them here.',
     'Jetzt bestellen': 'Order now',
     'Werktags ab zwölf': 'Weekdays from noon',
     'Mittagstisch.': 'Lunch.',
@@ -182,7 +182,7 @@
       'Filled, gratinated with cheese, three minutes under the salamander. The classic with ham, the Madame with fried egg, plus a vegetarian version with mountain cheese and vegetables. Pre-order for pickup or local delivery via the',
     'Croques online bestellen': 'Order Croques online',
     'Familiäre Atmosphäre': 'Family atmosphere',
-    'Frisch aus dem Ofen': 'Fresh from the oven',
+    'Hausgemacht': 'Homemade',
     'Die Tische vor der Tür kriegen Sonne, wenn welche da ist. An den anderen Tagen ist':
       'The tables out front catch the sun, when there is any. On the other days it’s',
     'drinnen schöner': 'nicer inside',
