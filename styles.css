@@ -9717,3 +9717,35 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
   .anfrage-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; }
   .anfrage-actions > * { width: auto; }
 }
+
+/* ---------- Facelift: Bewertungs-Karten ---------- */
+.reviews-card { border-radius: 14px; gap: 18px; }
+.reviews-card-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(184, 137, 63, .12); color: var(--gold-text, #8A6420);
+  border: 1px solid rgba(184, 137, 63, .35);
+  transition: background .25s ease, color .25s ease, transform .25s ease;
+}
+.reviews-card-icon .ico { width: 24px; height: 24px; }
+.reviews-card-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.reviews-card-text .reviews-card-platform { margin-bottom: 0; }
+.reviews-card-note { font: 400 .92rem/1.4 'Inter', sans-serif; color: var(--muted, #7A6152); }
+@media (hover: hover) and (pointer: fine) {
+  .reviews-card:hover .reviews-card-icon { background: var(--gold, #B8893F); color: #fff; transform: scale(1.05); }
+}
+@media (max-width: 880px) {
+  .reviews-card {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center;
+    column-gap: 16px; row-gap: 10px;
+  }
+  .reviews-card-icon { width: 46px; height: 46px; grid-row: span 2; }
+  .reviews-card-action { grid-column: 2; }
+}
+.landing-reviews .quotes-eyebrow { justify-content: flex-start; text-align: left; }
+
+/* ---------- Facelift: Kopfbereiche der Unterseiten am Computer straffer ----------
+   Vorher begann der Inhalt erst bei ~760 px (fast ein ganzer Bildschirm Kopf). */
+@media (min-width: 981px) {
+  main > .page-hero-editorial { padding-top: clamp(64px, 6vw, 96px); padding-bottom: clamp(36px, 4vw, 56px); }
+}

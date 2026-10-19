@@ -321,6 +321,9 @@
       'Clicking “Load map” connects to Google (Google Ireland Ltd.); your IP address and possibly cookies are processed, including in the USA. We store your choice in your browser; you can withdraw it via “Cookie settings” in the footer.',
     'Karte laden': 'Load map',
     'Bäckerei · Café · Mittagstisch': 'Bakery · Café · Lunch',
+    'Erfahrungen unserer Gäste': 'What our guests say',
+    'Sterne & Rezensionen': 'Stars & reviews',
+    'Fotos aus dem Café': 'Photos from the café',
     /* Berliner-Vorbestellung */
     'Berliner-Bestellservice': 'Doughnut pre-orders',
     'Berliner vorbestellen': 'Pre-order doughnuts',
