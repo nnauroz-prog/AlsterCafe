@@ -31,6 +31,7 @@
     'Kontakt': 'Contact',
     'Vielleicht gesucht:': 'Perhaps you were looking for:',
     'Vielleicht gesucht': 'Perhaps you were looking for',
+    'Mit Kollegen teilen': 'Share with colleagues',
     'Webshop': 'Shop',
     'Freies WLAN': 'Free Wi-Fi',
     'Menü öffnen': 'Open menu',
@@ -155,6 +156,7 @@
     'Eckhaus mit drei Tischen vor der Tür – wenn die Sonne scheint, unser Lieblingsplatz. Gleich um die Ecke von der Alsterschwimmhalle.':
       'A corner house with three tables outside – our favourite spot when the sun is out. Just around the corner from the Alsterschwimmhalle.',
     'Route ansehen →': 'View directions →',
+    'Route planen →': 'Get directions →',
 
     /* Footer */
     'Alstercafé · Ifflandstraße 45 · 22087 Hamburg': 'Alstercafé · Ifflandstraße 45 · 22087 Hamburg',

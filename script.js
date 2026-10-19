@@ -273,6 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initNavExtra);
   safeRun(initKarteJump);
   safeRun(initToTop);
+  safeRun(initRouteLinks);
   safeRun(noteGermanOnlyLegal);
   safeRun(initLegalToc);
   safeRun(decorativeShouts);
@@ -859,6 +860,16 @@ function openGalleryLightbox(images, start) {
   document.body.classList.add('sheet-open');
   dlg.showModal();
   dlg.querySelector('.gallery-lightbox-close').focus({ preventScroll: true });
+}
+
+/* Kontakt „Route planen": auf iPhone/iPad/Mac direkt Apple Karten, sonst Google Maps */
+function initRouteLinks() {
+  const ua = navigator.userAgent || '';
+  const apple = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && !/Chrome|Firefox|Edg/.test(ua));
+  if (!apple) return;
+  document.querySelectorAll('a.js-route').forEach(a => {
+    a.href = 'https://maps.apple.com/?daddr=Ifflandstra%C3%9Fe+45%2C+22087+Hamburg';
+  });
 }
 
 /* ---------- Scroll-Aware Header ---------- */
@@ -1479,6 +1490,47 @@ function sideText(side, en) {
   return en ? `with ${t}` : `mit ${t}`;
 }
 
+/* „Mit Kollegen teilen": Handy → Teilen-Menü des Geräts (WhatsApp, Signal, Mail …
+   wählt der Gast selbst), Computer → Text in die Zwischenablage. */
+const SHARE_ICON = '<svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+function lunchShareLabel(en) { return en ? 'Share with colleagues' : 'Mit Kollegen teilen'; }
+function lunchShareButton(cls) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = `btn btn-link lunch-share ${cls || ''}`.trim();
+  btn.setAttribute('data-no-i18n', '');
+  btn.addEventListener('click', () => shareLunch(btn));
+  return btn;
+}
+function setLunchShare(btn, dishes, isTomorrow, en) {
+  btn._share = { dishes, isTomorrow, en };
+  btn.innerHTML = `${SHARE_ICON} <span>${lunchShareLabel(en)}</span>`;
+  btn.hidden = !dishes.length;
+}
+async function shareLunch(btn) {
+  const { dishes = [], isTomorrow, en } = btn._share || {};
+  if (!dishes.length) return;
+  const names = dishes.map(d => d.dish).join(en ? ' or ' : ' oder ');
+  const when = isTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
+  const text = en
+    ? `${when} at Alstercafé: ${names} – from 12:00, Ifflandstraße 45.`
+    : `${when} im Alstercafé: ${names} – ab 12 Uhr, Ifflandstraße 45.`;
+  const url = 'https://alstercafe.de/mittagstisch.html';
+  if (navigator.share) {
+    try { await navigator.share({ title: en ? 'Lunch at Alstercafé' : 'Mittagstisch im Alstercafé', text, url }); } catch (e) { /* abgebrochen */ }
+    return;
+  }
+  const label = btn.querySelector('span');
+  try {
+    await navigator.clipboard.writeText(`${text} ${url}`);
+    if (label) label.textContent = en ? 'Copied – paste it into your chat' : 'Kopiert – einfach in den Chat einfügen';
+  } catch (e) {
+    if (label) label.textContent = en ? 'Copying not possible' : 'Kopieren nicht möglich';
+  }
+  clearTimeout(btn._reset);
+  btn._reset = setTimeout(() => { if (label) label.textContent = lunchShareLabel(en); }, 3200);
+}
+
 /* Mittagsmenü der Woche als Fenster (Tipp aufs Tagesgericht auf der Startseite). */
 function openLunchSheet(refDate) {
   const en = alsterLang() === 'en';
@@ -1541,6 +1593,13 @@ function openLunchSheet(refDate) {
       <a class="lunch-sheet-more" href="mittagstisch.html">${en ? 'Go to the lunch page →' : 'Zur Mittagstisch-Seite →'}</a>
     </div>`;
   dlg.querySelector('.lunch-sheet-close').addEventListener('click', () => dlg.close());
+  const focusEntry = week?.days?.[DAY_KEYS[(new Date(focusIso + 'T12:00').getDay() + 6) % 7]];
+  const focusDishes = dayDishes(focusEntry);
+  if (focusDishes.length) {
+    const share = lunchShareButton();
+    setLunchShare(share, focusDishes, focusIso !== todayIso, en);
+    dlg.querySelector('.lunch-sheet-cta').appendChild(share);
+  }
   document.body.classList.add('sheet-open');
   if (typeof dlg.showModal === 'function') dlg.showModal(); else location.href = 'mittagstisch.html';
   // Heutigen Tag in den sichtbaren Bereich holen
@@ -2591,6 +2650,9 @@ function renderTodayLunch(weekData, today) {
       sideEl.hidden = !first.side;
     }
     renderAltDish(sideEl || dishEl, entry, alsterLang() === 'en', false);
+    let share = todayBox.querySelector('.lunch-share');
+    if (!share) { share = lunchShareButton('light'); todayBox.appendChild(share); }
+    setLunchShare(share, dayDishes(entry), false, alsterLang() === 'en');
     todayBox.hidden = false;
     emptyBox.hidden = true;
   } else if (entry?.closed) {
