@@ -8,18 +8,19 @@
   <title>Alstercafé – Bäckerei, Café &amp; Mittagstisch in Hohenfelde</title>
   <meta name="description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und ein wechselnder Mittagstisch — mitten in der Ifflandstraße 45 in Hamburg." />
   <meta name="theme-color" content="#3D2415" />
-  <link rel="icon" type="image/png" href="image.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <!-- image.png wird per <img> im Header geladen. Kein Preload nötig — Browser
        holt es on-demand, fetchpriority=low am img-Tag. -->
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r179" />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r182" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Alstercafé" />
-  <link rel="apple-touch-icon" href="image.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 
   <style>
     *,*::before,*::after{box-sizing:border-box}
@@ -35,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r179" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r182" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r179';
+      var V='2026-05-10-r182';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -75,14 +76,17 @@
   <meta property="og:description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und wechselnder Mittagstisch in der Ifflandstraße 45." />
   <meta property="og:url" content="https://alstercafe.de/" />
   <meta property="og:site_name" content="Alstercafé" />
-  <meta property="og:image" content="https://alstercafe.de/image.png" />
+  <meta property="og:image" content="https://alstercafe.de/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Alstercafé – Bäckerei, Café und Mittagstisch in Hamburg-Hohenfelde" />
   <meta property="og:locale" content="de_DE" />
 
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Alstercafé – Café & Bäckerei in Hamburg" />
   <meta name="twitter:description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und wechselnder Mittagstisch." />
-  <meta name="twitter:image" content="https://alstercafe.de/image.png" />
+  <meta name="twitter:image" content="https://alstercafe.de/og-image.jpg" />
 
   <!-- Strukturierte Daten -->
   <script type="application/ld+json" id="ld-business">
@@ -169,7 +173,7 @@
     </div>
   </aside>
 
-  <div class="topbar">
+  <div class="topbar" role="region" aria-label="Kurzinfo">
     <div class="container topbar-inner">
       <a href="tel:+494022692891" class="topbar-link">
         <svg class="ico ico-sm"><use href="#i-phone"/></svg>
@@ -195,7 +199,7 @@
         <img src="image-192.webp" alt="" class="brand-logo" width="46" height="46" decoding="async" fetchpriority="low" />
         <span class="brand-name">Alstercafé</span>
       </a>
-      <button class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="primary-nav">
+      <button type="button" class="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="primary-nav">
         <span></span><span></span><span></span>
       </button>
       <nav class="primary-nav" id="primary-nav">
@@ -254,7 +258,7 @@
           </p>
         </div>
 
-        <aside class="hero-coord">
+        <div class="hero-coord">
           <div class="hero-coord-row hero-coord-lunch">
             <span class="hero-coord-label" id="hero-coord-lunch-label">Mittag</span>
             <button type="button" class="hero-coord-value hero-coord-dish" id="hero-coord-lunch" aria-haspopup="dialog">—</button>
@@ -267,7 +271,7 @@
             <img src="image-192.webp" alt="" class="hero-coord-logo" width="42" height="42" decoding="async" fetchpriority="low" />
             <span class="hero-coord-stamp">Est. 2004 · Hohenfelde</span>
           </div>
-        </aside>
+        </div>
       </div>
 
       <!-- Marquee-Ticker am unteren Hero-Rand -->
@@ -503,9 +507,9 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r179" defer></script>
-  <script src="db.js?v=2026-05-10-r179" defer></script>
-  <script src="script.js?v=2026-05-10-r179" defer></script>
-  <script src="i18n.js?v=2026-05-10-r179" defer></script>
+  <script src="config.js?v=2026-05-10-r182" defer></script>
+  <script src="db.js?v=2026-05-10-r182" defer></script>
+  <script src="script.js?v=2026-05-10-r182" defer></script>
+  <script src="i18n.js?v=2026-05-10-r182" defer></script>
 </body>
 </html>

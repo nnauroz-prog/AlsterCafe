@@ -232,6 +232,18 @@ function initLegalToc() {
   first ? art.insertBefore(toc, first) : art.appendChild(toc);
 }
 
+// Deko-Schriftzüge (riesige, fast durchsichtige Wörter) sind reine Gestaltung:
+// Text in data-text verschieben und per CSS anzeigen — so zählen sie nicht als
+// lesbarer Text mit zu schwachem Kontrast.
+function decorativeShouts() {
+  document.querySelectorAll('.section-shout, .page-hero-watermark').forEach(el => {
+    if (el.dataset.text || !el.textContent.trim()) return;
+    el.dataset.text = el.textContent.trim();
+    el.textContent = '';
+    el.setAttribute('aria-hidden', 'true');
+  });
+}
+
 // Rechtstexte (Impressum, Datenschutz) gibt es nur auf Deutsch: auf der
 // englischen Seite einen kurzen Hinweis oben einblenden.
 function noteGermanOnlyLegal() {
@@ -263,6 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initToTop);
   safeRun(noteGermanOnlyLegal);
   safeRun(initLegalToc);
+  safeRun(decorativeShouts);
   safeRun(initStickyHeader);
   safeRun(initReveal);
   safeRun(initCounters);
@@ -1424,9 +1437,6 @@ function initLandingTeaser() {
       el.classList.add('is-tappable');
       el.addEventListener('click', open);
     });
-    dishEl.setAttribute('role', 'button');
-    dishEl.setAttribute('tabindex', '0');
-    dishEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     const hint = document.createElement('button');
     hint.type = 'button';
     hint.className = 'today-feature-week';
@@ -1451,7 +1461,6 @@ function initLandingTeaser() {
   }
   const hintEl = block.querySelector('.today-feature-week');
   if (hintEl) hintEl.textContent = en ? 'See the whole week ›' : 'Ganze Woche ansehen ›';
-  dishEl.setAttribute('aria-haspopup', 'dialog');
   if (prefixEl) prefixEl.textContent = showTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
   if (dayEl)    dayEl.textContent    = dayLabels()[dayIdx];
 
@@ -1763,7 +1772,7 @@ function injectReservationTips() {
   if (!intro) return;
   if (intro.querySelector('.reservation-tips')) return;
 
-  const tips = document.createElement('aside');
+  const tips = document.createElement('div');
   tips.className = 'reservation-tips';
   tips.innerHTML = `
     <p class="reservation-tips-eyebrow">Gut zu wissen</p>
@@ -1938,7 +1947,7 @@ function enhanceFooterEditorial() {
   payWrap.innerHTML = `
     <p class="footer-col-label">Wir akzeptieren</p>
     <ul class="footer-pay-list">${PAYMENT_BADGES.map(b =>
-      `<li class="pay-badge" role="img" aria-label="${b.label}" title="${b.label}">${b.svg}</li>`).join('')}</ul>
+      `<li class="pay-badge"><span role="img" aria-label="${b.label}" title="${b.label}">${b.svg}</span></li>`).join('')}</ul>
   `;
   footer.appendChild(payWrap);
 

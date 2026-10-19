@@ -281,6 +281,8 @@
     'z. B. drei ohne Zwiebeln, glutenfrei wenn möglich …': 'e.g. three without onions, gluten-free if possible …',
 
     /* ---------------- Reservierung ---------------- */
+    // Überschrift Reservierung: „Tisch <em>für Sie</em> freihalten.“ → „Reserve a table for you.“
+    'Tisch': 'Reserve',
     'für Sie': 'a table',
     'freihalten.': 'for you.',
     'Online über das Formular oder kurz anrufen. Wir melden uns am\n          gleichen Tag zurück.':
@@ -324,6 +326,9 @@
     'Erfahrungen unserer Gäste': 'What our guests say',
     'Sterne & Rezensionen': 'Stars & reviews',
     'Fotos aus dem Café': 'Photos from the café',
+    'Kurzinfo': 'Quick info',
+    'Brötchen': 'rolls',
+    'Rechtliches': 'Legal',
     /* Berliner-Vorbestellung */
     'Berliner-Bestellservice': 'Doughnut pre-orders',
     'Berliner vorbestellen': 'Pre-order doughnuts',
