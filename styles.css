@@ -9788,3 +9788,32 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
 .lunch-meta:empty::before { content: "\00a0"; }
 /* Über uns: das goldene „ saß auf dem ersten Buchstaben des Zitats */
 .about-aside blockquote::before { line-height: 1; height: .42em; margin-bottom: 18px; transform: translateY(-.48em); }
+
+/* ===============================================
+   KNÖPFE · einheitliche Sprache auf der ganzen Seite
+   Alle Hauptknöpfe (braun/gold): runde Pille, gleiche Höhe, gut lesbare Schrift.
+   Vorher: Absende-Knöpfe der Formulare fast eckig, 12 px, gesperrt — und
+   „Reservierung anfragen“ zusätzlich in Großbuchstaben.
+   =============================================== */
+.btn.btn-primary, .btn.btn-gold,
+.reservation-form .form-submit, .order-submit, .save-actions .btn.btn-primary {
+  border-radius: 999px;
+  min-height: 56px;
+  padding: 14px 30px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-transform: none;
+}
+/* Formulare: Absende-Knopf in voller Breite, damit er nicht übersehen wird */
+.reservation-form .form-submit, .order-summary .order-submit { width: 100%; }
+/* Mitgliederbereich: Speichern-Knöpfe ebenfalls als Pille, Nebenknöpfe bleiben Text-Links */
+.save-actions .btn.btn-primary { min-height: 48px; padding: 12px 24px; font-size: .95rem; }
+/* Bestellknopf in der dunklen Bestellkarte: Gold statt Braun-auf-Braun */
+.order-summary-card .order-submit:not(:disabled):not(.is-success):not(.is-loading) {
+  --btn-bg: var(--gold, #B8893F); --btn-fg: var(--espresso, #2A1810); --btn-bd: var(--gold, #B8893F);
+  background: var(--gold, #B8893F); color: var(--espresso, #2A1810); border-color: var(--gold, #B8893F);
+  box-shadow: 0 10px 24px -12px rgba(184, 137, 63, .6);
+}
+.order-summary-card .order-submit:not(:disabled):not(.is-success):not(.is-loading):hover { background: var(--gold-soft, #D4B380); }
