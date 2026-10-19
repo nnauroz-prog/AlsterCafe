@@ -9486,3 +9486,40 @@ input, select, textarea { caret-color: var(--gold, #B8893F); accent-color: var(-
   padding: 0 8px; border: 1px solid rgba(184, 137, 63, .45); border-radius: 999px;
 }
 .day-alt[open] > summary { margin-bottom: 8px; }
+
+/* ---------- Facelift Teil 2 ---------- */
+/* Kontakt: Karten-Platzhalter auf dem Handy nicht mehr abgeschnitten */
+@media (max-width: 640px) {
+  .map-card { min-height: 0; }
+  .map-card .map-placeholder { position: relative; inset: auto; min-height: 320px; padding: 32px 22px; }
+  .map-ph-text { font-size: .84rem; line-height: 1.55; }
+}
+
+/* Brötchen/Berliner: gesperrter Bestellknopf bleibt als Knopf erkennbar */
+.order-summary-card .order-submit:disabled {
+  opacity: 1;
+  background: rgba(241, 231, 211, .08);
+  color: rgba(241, 231, 211, .5);
+  border: 1px dashed rgba(212, 179, 128, .35);
+  box-shadow: none;
+}
+
+/* Mengen-Knöpfe: „+“ mit goldenem Akzent, damit klar ist, wo man tippt */
+.qty-btn[data-step="1"] { color: var(--gold-text, #8A6420); font-weight: 600; }
+.broetchen-row.is-active .qty-stepper { border-color: var(--gold, #B8893F); box-shadow: 0 0 0 3px rgba(184, 137, 63, .14); }
+.broetchen-row.is-active .qty-value { color: var(--gold-text, #8A6420); font-weight: 600; }
+
+/* Reservierung: Aufzählung im dunklen Bereich mit goldenen Punkten */
+.reservation-info { list-style: none; padding-left: 0; }
+.reservation-info li { position: relative; padding-left: 20px; margin-bottom: 10px; }
+.reservation-info li::before {
+  content: ""; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold, #B8893F);
+}
+
+/* Datenschutz-Hinweis in Formularen: dezenter */
+.form-privacy { font-size: .76rem; opacity: .68; line-height: 1.55; }
+.reservation-tips-list li::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold, #B8893F); top: calc(12px + .62em); left: 2px;
+}
