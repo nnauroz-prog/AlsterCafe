@@ -9854,3 +9854,17 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
   .topbar a.topbar-link { position: relative; }
   .topbar a.topbar-link::after { content: ""; position: absolute; inset: -12px -6px; }
 }
+/* Telefonnummern nie mitten in der Nummer umbrechen („040 – 22 69 | 28 91“) */
+a[href^="tel:"] { white-space: nowrap; }
+
+/* ---------- Kleine „neueres Modell“-Details ---------- */
+/* Bildlaufleiste in Café-Farben (Computer) */
+html { scrollbar-color: rgba(61, 36, 21, .35) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(61, 36, 21, .3); border-radius: 999px; border: 2px solid var(--paper, #FFFCF4); }
+::-webkit-scrollbar-thumb:hover { background: rgba(61, 36, 21, .5); }
+::-webkit-scrollbar-track { background: transparent; }
+/* Einheitlicher Tastatur-Fokus: goldener Ring mit Abstand, nur bei Tastaturbedienung */
+a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--gold, #B8893F); outline-offset: 3px; border-radius: 6px;
+}
