@@ -210,6 +210,28 @@ function initBerlinerPage() {
   }
 }
 
+// Lange Rechtstexte: aufklappbares Inhaltsverzeichnis mit Sprungmarken
+function initLegalToc() {
+  const art = document.querySelector('.legal-article');
+  if (!art || art.querySelector('.legal-toc')) return;
+  const heads = Array.from(art.querySelectorAll('section > h2'));
+  if (heads.length < 6) return;
+  const en = alsterLang() === 'en';
+  const items = heads.map((h, i) => {
+    const sec = h.closest('section');
+    if (!sec.id) sec.id = 'abschnitt-' + (i + 1);
+    return `<li><a href="#${sec.id}">${escapeHtml(h.textContent.trim())}</a></li>`;
+  }).join('');
+  const toc = document.createElement('details');
+  toc.className = 'legal-toc';
+  toc.setAttribute('data-no-i18n', '');
+  // Am Computer offen, am Handy zugeklappt (sonst eine lange Liste vor dem Text)
+  if (window.matchMedia('(min-width: 981px)').matches) toc.open = true;
+  toc.innerHTML = `<summary>${en ? 'Contents' : 'Inhalt'} <span class="legal-toc-count">${heads.length} ${en ? 'sections' : 'Abschnitte'}</span></summary><ol>${items}</ol>`;
+  const first = art.querySelector('section');
+  first ? art.insertBefore(toc, first) : art.appendChild(toc);
+}
+
 // Rechtstexte (Impressum, Datenschutz) gibt es nur auf Deutsch: auf der
 // englischen Seite einen kurzen Hinweis oben einblenden.
 function noteGermanOnlyLegal() {
@@ -240,6 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initKarteJump);
   safeRun(initToTop);
   safeRun(noteGermanOnlyLegal);
+  safeRun(initLegalToc);
   safeRun(initStickyHeader);
   safeRun(initReveal);
   safeRun(initCounters);
