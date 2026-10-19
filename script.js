@@ -739,13 +739,16 @@ function renderHomeGallery(images) {
           <h2>Eindrücke aus<br/>unserem Café</h2>
         </div>
         <div class="gallery-grid"></div>
+        <div class="gallery-dots" aria-hidden="true"></div>
       </div>
     `;
-    // Reihenfolge: Galerie kommt VOR dem Closer mit "Fin.",
-    // sonst macht das Schlusszeichen keinen Sinn.
+    // Galerie direkt nach dem Tagesgericht: Fotos machen früh Appetit.
+    // Fallback: VOR dem Closer mit "Fin.".
+    const today = document.getElementById('today-feature');
     const closer = document.querySelector('.landing-closer');
     const reservation = document.getElementById('reservierung');
-    if (closer) closer.parentElement.insertBefore(section, closer);
+    if (today) today.after(section);
+    else if (closer) closer.parentElement.insertBefore(section, closer);
     else if (reservation) reservation.parentElement.insertBefore(section, reservation);
     else document.querySelector('main').appendChild(section);
   }
@@ -768,15 +771,94 @@ function renderHomeGallery(images) {
     return;
   }
 
+  const en = alsterLang() === 'en';
+  const dots = section.querySelector('.gallery-dots');
+  if (dots) dots.innerHTML = gallery.length > 1 ? gallery.map((_, i) => `<span${i ? '' : ' class="is-active"'}></span>`).join('') : '';
   gallery.forEach((src, i) => {
     const item = document.createElement('figure');
     item.className = 'gallery-item' + (i === 0 ? ' is-feature' : '');
     // Galerie-Photos haben (noch) keine individuellen Alt-Texte.
     // Generischer aber sinnvoller Text fuer Screen-Reader bis Maria
     // im Admin Captions hinterlegen kann.
-    item.innerHTML = `<img src="${src}" alt="Eindruck aus dem Alstercafé in Hamburg-Hohenfelde" loading="lazy" />`;
+    item.innerHTML = `<button type="button" class="gallery-open" aria-label="${en ? `Enlarge photo ${i + 1} of ${gallery.length}` : `Foto ${i + 1} von ${gallery.length} vergrößern`}"><img src="${src}" alt="Eindruck aus dem Alstercafé in Hamburg-Hohenfelde" loading="lazy" decoding="async" /></button>`;
+    item.querySelector('button').addEventListener('click', () => openGalleryLightbox(gallery, i));
     grid.appendChild(item);
   });
+  // Handy: Punkte zeigen, welches Foto gerade in der Wischreihe steht
+  if (dots && !grid.dataset.dotsBound) {
+    grid.dataset.dotsBound = '1';
+    let raf = 0;
+    grid.addEventListener('scroll', () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const items = grid.querySelectorAll('.gallery-item');
+        if (!items.length) return;
+        const step = items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : 1;
+        const idx = Math.max(0, Math.min(items.length - 1, Math.round(grid.scrollLeft / (step || 1))));
+        dots.querySelectorAll('span').forEach((d, i) => d.classList.toggle('is-active', i === idx));
+      });
+    }, { passive: true });
+  }
+}
+
+/* Großansicht der Galerie-Fotos: blättern per Pfeil, Wischen, Pfeiltasten */
+function openGalleryLightbox(images, start) {
+  const en = alsterLang() === 'en';
+  let idx = start || 0;
+  let dlg = document.getElementById('gallery-lightbox');
+  const opener = document.activeElement;
+  if (!dlg) {
+    dlg = document.createElement('dialog');
+    dlg.id = 'gallery-lightbox';
+    dlg.className = 'gallery-lightbox';
+    dlg.setAttribute('data-no-i18n', '');
+    document.body.appendChild(dlg);
+    dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.classList.contains('gallery-lightbox-stage')) dlg.close(); });
+    dlg.addEventListener('close', () => {
+      document.body.classList.remove('sheet-open');
+      if (dlg._opener && document.contains(dlg._opener)) dlg._opener.focus({ preventScroll: true });
+    });
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); dlg._go?.(1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); dlg._go?.(-1); }
+    });
+    let x0 = null;
+    dlg.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    dlg.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 45) dlg._go?.(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+  dlg._opener = opener;
+  const many = images.length > 1;
+  dlg.setAttribute('aria-label', en ? 'Photo gallery' : 'Fotogalerie');
+  dlg.innerHTML = `
+    <div class="gallery-lightbox-stage">
+      <img class="gallery-lightbox-img" alt="Eindruck aus dem Alstercafé in Hamburg-Hohenfelde" />
+    </div>
+    <button type="button" class="gallery-lightbox-close" aria-label="${en ? 'Close' : 'Schließen'}">×</button>
+    ${many ? `
+    <button type="button" class="gallery-lightbox-nav is-prev" aria-label="${en ? 'Previous photo' : 'Vorheriges Foto'}">‹</button>
+    <button type="button" class="gallery-lightbox-nav is-next" aria-label="${en ? 'Next photo' : 'Nächstes Foto'}">›</button>` : ''}
+    <p class="gallery-lightbox-count" aria-live="polite"></p>`;
+  const img = dlg.querySelector('.gallery-lightbox-img');
+  const count = dlg.querySelector('.gallery-lightbox-count');
+  const show = () => {
+    img.src = images[idx];
+    count.textContent = many ? `${idx + 1} / ${images.length}` : '';
+  };
+  dlg._go = (d) => { if (!many) return; idx = (idx + d + images.length) % images.length; show(); };
+  dlg.querySelector('.gallery-lightbox-close').addEventListener('click', () => dlg.close());
+  dlg.querySelector('.is-prev')?.addEventListener('click', () => dlg._go(-1));
+  dlg.querySelector('.is-next')?.addEventListener('click', () => dlg._go(1));
+  show();
+  if (typeof dlg.showModal !== 'function') { window.open(images[idx], '_blank', 'noopener'); return; }
+  document.body.classList.add('sheet-open');
+  dlg.showModal();
+  dlg.querySelector('.gallery-lightbox-close').focus({ preventScroll: true });
 }
 
 /* ---------- Scroll-Aware Header ---------- */
