@@ -10005,3 +10005,22 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 .lunch-share[hidden] { display: none !important; }
 .lunch-today .lunch-share { display: inline-flex; align-items: center; gap: 8px; margin: 8px 0 0 18px; }
 @media (max-width: 480px) { .lunch-today .lunch-share { margin: 6px 0 0; } }
+
+/* Mitgliederbereich: Wochenplan weitergeben (Aushang + Instagram-Bild) */
+.week-share {
+  margin-top: 28px; padding: 22px 20px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--paper);
+}
+.week-share-title { margin: 0 0 6px; font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.25rem; color: var(--bean); }
+.week-share-text { margin: 0 0 16px; color: var(--muted); font-size: .95rem; line-height: 1.5; max-width: 60ch; }
+.week-share-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.week-share .save-status:empty { display: none; }
+.week-share .save-status { margin: 12px 0 0; }
+@media (max-width: 560px) { .week-share-actions .btn { flex: 1 1 100%; justify-content: center; } }
+.week-image-dialog { overflow: auto; }
+.week-image-preview {
+  display: block; width: 100%; height: auto; max-height: 56vh; object-fit: contain;
+  border-radius: 10px; background: var(--espresso);
+}
+.week-image-dialog .confirm-dialog-actions { flex-wrap: wrap; }
