@@ -9868,3 +9868,22 @@ html { scrollbar-color: rgba(61, 36, 21, .35) transparent; scrollbar-width: thin
 a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
   outline: 2px solid var(--gold, #B8893F); outline-offset: 3px; border-radius: 6px;
 }
+
+/* ---------- „Heute“ in den Öffnungszeiten + Datums-Hilfe ---------- */
+.hours-today {  /* nur für Screenreader („heute“), optisch reicht die Hervorhebung */
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.is-today > span:first-child { font-weight: 600; color: var(--gold-text, #8A6420); }
+.site-footer .is-today > span:first-child, .landing-visit-dark .is-today > span:first-child { color: var(--gold-soft, #D4B380); }
+.footer-hours-lines .is-today > span:first-child::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; margin-right: 8px; vertical-align: 2px;
+}
+.date-hint {
+  margin: -6px 0 14px; font: 500 .84rem/1.4 'Inter', sans-serif; color: var(--gold-text, #8A6420);
+}
+.date-hint:empty { display: none; }
+.date-hint.is-closed { color: #a3322b; }
+.date-hint { margin-top: -4px; }
+/* Kontaktseite: Wochentag-Zelle ist „display: contents“ → Farbe an der Zeile setzen */
+.contact .hours-list li.is-today { color: var(--gold-text, #8A6420); font-weight: 600; }

@@ -311,6 +311,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initBerlinerPage);
   safeRun(initNavExtra);
   safeRun(syncBusinessSchema);
+  safeRun(attachDateHints);
+  safeRun(() => document.querySelectorAll('input[name="Datum"]').forEach(i => i.__dateHintUpdate?.()));
   // Bestellzeitraum kann um Mitternacht beginnen/enden
   setInterval(() => { safeRun(initBerlinerPromo); safeRun(initBerlinerPage); }, 5 * 60 * 1000);
 
@@ -1254,12 +1256,66 @@ function renderKarteHtml(data) {
   return `<div class="karte-grid">${blocks}</div>${foot}`;
 }
 
+/* Heutigen Wochentag in allen Öffnungszeiten-Listen hervorheben
+   (Fußzeile, Kontaktseite, Startseite). */
+function markTodayInHours() {
+  const today = (new Date().getDay() + 6) % 7;
+  const en = alsterLang() === 'en';
+  document.querySelectorAll('#hours-list li, .landing-visit li, .footer-hours-lines .footer-line').forEach(row => {
+    const label = row.querySelector('span')?.textContent || '';
+    const days = parseDayLabel(label);
+    const isToday = Array.isArray(days) && days.includes(today);
+    row.classList.toggle('is-today', isToday);
+    let badge = row.querySelector('.hours-today');
+    if (isToday && !badge) {
+      badge = document.createElement('span');
+      badge.className = 'hours-today';
+      badge.setAttribute('data-no-i18n', '');
+      row.appendChild(badge);
+    }
+    if (badge) { if (isToday) badge.textContent = en ? 'today' : 'heute'; else badge.remove(); }
+  });
+}
+
+/* Hilfe unter Datumsfeldern: Wochentag + Öffnungszeit des gewählten Tages
+   (z. B. „Mittwoch, 21. Oktober · geöffnet 06:30 – 15:00 Uhr“). */
+function attachDateHints() {
+  document.querySelectorAll('.reservation-form input[name="Datum"], .order-form input[name="Datum"]').forEach(input => {
+    const label = input.closest('.form-row') || input.closest('label');
+    if (!label || label.nextElementSibling?.classList.contains('date-hint')) return;
+    const hint = document.createElement('p');
+    hint.className = 'date-hint';
+    hint.setAttribute('aria-live', 'polite');
+    hint.setAttribute('data-no-i18n', '');
+    label.after(hint);
+    const update = () => {
+      const en = alsterLang() === 'en';
+      const m = String(input.value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) { hint.textContent = ''; hint.className = 'date-hint'; return; }
+      const d = new Date(+m[1], +m[2] - 1, +m[3]);
+      const name = d.toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+      const hol = holidayOn(d);
+      const day = openingFor(d);
+      if (hol || !day) {
+        hint.textContent = `${name} · ${en ? 'closed' : 'geschlossen'}${hol?.label ? ' (' + hol.label + ')' : ''}`;
+        hint.className = 'date-hint is-closed';
+      } else {
+        hint.textContent = `${name} · ${en ? 'open' : 'geöffnet'} ${formatMin(day.openMin)} – ${formatMin(day.closeMin)}${en ? '' : ' Uhr'}`;
+        hint.className = 'date-hint';
+      }
+    };
+    ['input', 'change'].forEach(ev => input.addEventListener(ev, update));
+    update();
+    input.__dateHintUpdate = update;
+  });
+}
+
 /* ---------- Öffnungszeiten ----------
    HTML enthaelt Standard-Werte. JS ueberschreibt nur bei Custom-Daten. */
 function initHours() {
   renderFooterHours();
   const root = document.getElementById('hours-list');
-  if (!root) return;
+  if (!root) { markTodayInHours(); return; }
   let hours = null;
   try {
     const raw = localStorage.getItem(STORAGE_HOURS);
@@ -1268,10 +1324,12 @@ function initHours() {
       if (Array.isArray(parsed) && parsed.length) hours = parsed;
     }
   } catch {}
-  if (!hours) return; // Standard-HTML beibehalten
-  root.innerHTML = hours.map(h => `
-    <li><span>${escapeHtml(h.label || '')}</span><span class="time">${escapeHtml(h.time || '')}</span></li>
-  `).join('');
+  if (hours) {
+    root.innerHTML = hours.map(h => `
+      <li><span>${escapeHtml(h.label || '')}</span><span class="time">${escapeHtml(h.time || '')}</span></li>
+    `).join('');
+  }
+  markTodayInHours();
 }
 
 /* ---------- Mittagstisch (Wochenplan) ---------- */
