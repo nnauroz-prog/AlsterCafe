@@ -155,6 +155,9 @@ async function init() {
   dom.holidaysForm?.addEventListener('submit', onSaveHolidays);
   dom.holidaysAdd?.addEventListener('click', () => addHolidayRow());
   dom.holidaysClear?.addEventListener('click', onClearHolidays);
+  document.getElementById('holiday-range-add')?.addEventListener('click', onAddHolidayRange);
+  document.getElementById('holidays-hh')?.addEventListener('click', onAddHamburgHolidays);
+  document.getElementById('holidays-past')?.addEventListener('click', onRemovePastHolidays);
 
   // Brötchen-Sorten
   dom.broetchenForm?.addEventListener('submit', onSaveBroetchen);
@@ -1408,14 +1411,100 @@ function addHolidayRow(date = '', label = '') {
   const row = document.createElement('div');
   row.className = 'hours-row holiday-row';
   row.innerHTML = `
-    <input type="date" class="holiday-date" value="${escapeAttr(date)}" />
-    <input type="text" class="holiday-label" value="${escapeAttr(label)}" placeholder="Grund (optional), z. B. Betriebsurlaub" />
+    <input type="date" class="holiday-date" value="${escapeAttr(date)}" aria-label="Datum" />
+    <span class="holiday-weekday" aria-hidden="true"></span>
+    <input type="text" class="holiday-label" value="${escapeAttr(label)}" placeholder="Grund (optional), z. B. Betriebsurlaub" aria-label="Grund" />
     <button type="button" class="btn-icon holiday-remove" aria-label="Zeile entfernen">
       <svg class="ico ico-sm"><use href="#i-x"/></svg>
     </button>
   `;
+  const dateInput = row.querySelector('.holiday-date');
+  const update = () => markHolidayRow(row);
+  dateInput.addEventListener('change', update);
   row.querySelector('.holiday-remove').addEventListener('click', () => row.remove());
   dom.holidaysRows.appendChild(row);
+  update();
+}
+
+/* Wochentag neben dem Datum anzeigen, vergangene Tage dämpfen */
+function markHolidayRow(row) {
+  const v = row.querySelector('.holiday-date').value;
+  const wd = row.querySelector('.holiday-weekday');
+  const d = v ? new Date(v + 'T12:00:00') : null;
+  wd.textContent = d && !isNaN(d) ? d.toLocaleDateString('de-DE', { weekday: 'short' }) : '';
+  row.classList.toggle('is-past', !!v && v < isoDate(new Date()));
+}
+
+function holidayToolStatus(msg, kind) { setStatus(document.getElementById('holiday-tools-status'), msg, kind); }
+function existingHolidayDates() {
+  return new Set(Array.from(dom.holidaysRows?.querySelectorAll('.holiday-date') || []).map(i => i.value).filter(Boolean));
+}
+function sortHolidayRows() {
+  const rows = Array.from(dom.holidaysRows.querySelectorAll('.holiday-row'));
+  rows.sort((a, b) => (a.querySelector('.holiday-date').value || '9999').localeCompare(b.querySelector('.holiday-date').value || '9999'))
+    .forEach(r => dom.holidaysRows.appendChild(r));
+}
+
+/* Zeitraum (von–bis) → eine Zeile pro Tag, ohne Doppelte */
+function onAddHolidayRange() {
+  const from = document.getElementById('holiday-range-from').value;
+  const to = document.getElementById('holiday-range-to').value || from;
+  const label = document.getElementById('holiday-range-label').value.trim();
+  if (!from) { holidayToolStatus('Bitte ein Startdatum („von“) wählen.', 'error'); return; }
+  if (to < from) { holidayToolStatus('„bis“ liegt vor „von“ – bitte prüfen.', 'error'); return; }
+  const have = existingHolidayDates();
+  const d = new Date(from + 'T12:00:00'), end = new Date(to + 'T12:00:00');
+  let added = 0, skipped = 0, count = 0;
+  while (d <= end && count < 60) {
+    const iso = isoDate(d);
+    if (have.has(iso)) skipped++; else { addHolidayRow(iso, label); added++; }
+    d.setDate(d.getDate() + 1); count++;
+  }
+  sortHolidayRows();
+  const more = d <= end ? ' (höchstens 60 Tage auf einmal)' : '';
+  holidayToolStatus(`${added} ${added === 1 ? 'Tag' : 'Tage'} eingetragen${skipped ? `, ${skipped} schon vorhanden` : ''}${more}. Jetzt unten „Schließtage speichern“.`, 'ok');
+}
+
+/* Gesetzliche Feiertage in Hamburg (Ostern nach Gauß / Meeus) */
+function easterSunday(year) {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day, 12);
+}
+function hamburgHolidays(year) {
+  const e = easterSunday(year);
+  const rel = (n) => { const d = new Date(e); d.setDate(d.getDate() + n); return isoDate(d); };
+  const fix = (m, day) => isoDate(new Date(year, m - 1, day, 12));
+  return [
+    [fix(1, 1), 'Neujahr'], [rel(-2), 'Karfreitag'], [rel(1), 'Ostermontag'], [fix(5, 1), 'Tag der Arbeit'],
+    [rel(39), 'Christi Himmelfahrt'], [rel(50), 'Pfingstmontag'], [fix(10, 3), 'Tag der Deutschen Einheit'],
+    [fix(10, 31), 'Reformationstag'], [fix(12, 25), '1. Weihnachtstag'], [fix(12, 26), '2. Weihnachtstag']
+  ];
+}
+function onAddHamburgHolidays() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const until = new Date(today); until.setFullYear(until.getFullYear() + 1);
+  const a = isoDate(today), b = isoDate(until);
+  const have = existingHolidayDates();
+  let added = 0;
+  [today.getFullYear(), today.getFullYear() + 1].forEach(y => hamburgHolidays(y).forEach(([iso, name]) => {
+    if (iso >= a && iso < b && !have.has(iso)) { addHolidayRow(iso, name); have.add(iso); added++; }
+  }));
+  sortHolidayRows();
+  holidayToolStatus(added
+    ? `${added} Feiertage eingetragen. Bitte prüfen: Nur speichern, wenn das Café an diesen Tagen geschlossen ist.`
+    : 'Alle Feiertage der nächsten 12 Monate sind schon eingetragen.', 'ok');
+}
+function onRemovePastHolidays() {
+  const today = isoDate(new Date());
+  let n = 0;
+  dom.holidaysRows.querySelectorAll('.holiday-row').forEach(r => {
+    const v = r.querySelector('.holiday-date').value;
+    if (v && v < today) { r.remove(); n++; }
+  });
+  holidayToolStatus(n ? `${n === 1 ? '1 vergangener Tag' : `${n} vergangene Tage`} entfernt. Jetzt unten „Schließtage speichern“.` : 'Es gibt keine vergangenen Tage.', 'ok');
 }
 
 function onSaveHolidays(e) {

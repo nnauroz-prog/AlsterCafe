@@ -11,9 +11,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r191" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r191" />
-  <script>(function(){var V='2026-05-10-r191';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r192" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r192" />
+  <script>(function(){var V='2026-05-10-r192';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -525,12 +525,28 @@
                   <li>Tragen Sie je Zeile ein <strong>Datum</strong> ein, an dem geschlossen ist (z. B. Betriebsurlaub oder Feiertag). Rechts optional ein kurzer <strong>Grund</strong> („Betriebsurlaub“, „1. Weihnachtstag“).</li>
                   <li><strong>„+ Tag hinzufügen“</strong> für einen weiteren Eintrag, das Papierkorb-Symbol entfernt eine Zeile. Für mehrere Urlaubstage einfach mehrere Zeilen anlegen.</li>
                   <li>An einem solchen Tag zeigt die Webseite automatisch <strong>„Heute geschlossen“</strong> (Banner + Status) — ganz ohne weiteres Zutun.</li>
-                  <li>Unten auf <strong>„Schließtage speichern“</strong>. Vergangene Tage können Sie bei Gelegenheit löschen.</li>
+                  <li><strong>Mehrere Tage am Stück</strong> (z. B. Betriebsurlaub): oben bei „Zeitraum hinzufügen“ von–bis eintragen → für jeden Tag entsteht automatisch eine Zeile.</li>
+                  <li><strong>„Feiertage Hamburg einfügen“</strong> trägt die gesetzlichen Feiertage der nächsten 12 Monate ein. Nur speichern, wenn das Café an diesen Tagen wirklich zu hat – sonst einzelne Zeilen wieder entfernen.</li>
+                  <li>Unten auf <strong>„Schließtage speichern“</strong>. Vergangene Tage entfernt der Knopf „Vergangene Tage entfernen“.</li>
                 </ul>
               </div>
             </details>
 
             <form id="holidays-form">
+              <div class="holiday-tools">
+                <fieldset class="holiday-range">
+                  <legend>Zeitraum hinzufügen (z. B. Betriebsurlaub)</legend>
+                  <label><span>von</span><input type="date" id="holiday-range-from" /></label>
+                  <label><span>bis</span><input type="date" id="holiday-range-to" /></label>
+                  <label class="holiday-range-label"><span>Grund</span><input type="text" id="holiday-range-label" placeholder="z. B. Betriebsurlaub" /></label>
+                  <button type="button" class="btn btn-link" id="holiday-range-add">+ Zeitraum eintragen</button>
+                </fieldset>
+                <div class="holiday-quick">
+                  <button type="button" class="btn btn-link" id="holidays-hh">+ Feiertage Hamburg (12 Monate) einfügen</button>
+                  <button type="button" class="btn btn-link" id="holidays-past">Vergangene Tage entfernen</button>
+                </div>
+                <p class="holiday-tools-status save-status" id="holiday-tools-status" aria-live="polite"></p>
+              </div>
               <div class="hours-rows" id="holidays-rows"></div>
               <button type="button" class="btn btn-link" id="holidays-add">+ Tag hinzufügen</button>
 
@@ -1052,10 +1068,10 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r191" defer></script>
-  <script src="db.js?v=2026-05-10-r191" defer></script>
-  <script src="menudata.js?v=2026-05-10-r191" defer></script>
-  <script src="calendar.js?v=2026-05-10-r191" defer></script>
-  <script src="admin.js?v=2026-05-10-r191" defer></script>
+  <script src="config.js?v=2026-05-10-r192" defer></script>
+  <script src="db.js?v=2026-05-10-r192" defer></script>
+  <script src="menudata.js?v=2026-05-10-r192" defer></script>
+  <script src="calendar.js?v=2026-05-10-r192" defer></script>
+  <script src="admin.js?v=2026-05-10-r192" defer></script>
 </body>
 </html>
