@@ -10244,3 +10244,36 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 .design-control .gallery-visible-toggle .day-toggle-text {
   font: 600 .95rem 'Inter', sans-serif; letter-spacing: 0; text-transform: none; color: var(--bean); margin: 0;
 }
+
+/* Mitgliederbereich · Urlaub & Feiertage: Zeitraum, Feiertage, Wochentag */
+.holiday-tools { margin: 0 0 18px; display: grid; gap: 12px; }
+.holiday-range {
+  margin: 0; padding: 14px 16px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; align-items: end;
+}
+.holiday-range legend { padding: 0 6px; font: 600 .9rem 'Inter', sans-serif; color: var(--bean); }
+.holiday-range label { display: grid; gap: 4px; font: 600 .74rem 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #6b5a4a; }
+.holiday-range input {
+  width: 100%; min-height: 48px; font: 400 1rem 'Inter', sans-serif; letter-spacing: 0; text-transform: none; color: var(--ink);
+  background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px;
+}
+.holiday-range-label, .holiday-range .btn { grid-column: 1 / -1; }
+.holiday-range .btn { justify-self: start; }
+.holiday-quick { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.holiday-tools-status:empty { display: none; }
+.holiday-row { grid-template-columns: minmax(0, 1fr) 2.6em minmax(0, 1.4fr) auto; }
+.holiday-weekday { font: 600 .9rem 'Inter', sans-serif; color: var(--bean); text-align: center; }
+.holiday-row.is-past input { color: #6b5a4a; background: var(--cream); }
+.holiday-row.is-past .holiday-weekday { color: #6b5a4a; }
+@media (min-width: 761px) {
+  .holiday-range { grid-template-columns: 1fr 1fr 1.4fr auto; }
+  .holiday-range-label { grid-column: auto; }
+  .holiday-range .btn { grid-column: auto; align-self: center; }
+}
+@media (max-width: 560px) {
+  .holiday-row { grid-template-columns: minmax(0, 1fr) 2.6em auto; }
+  .holiday-row .holiday-label { grid-column: 1 / -1; grid-row: 2; }
+  .holiday-row .btn-icon { grid-column: 3; grid-row: 1; justify-self: end; }
+}
+@media (max-width: 560px) { .holiday-range { grid-template-columns: minmax(0, 1fr); } }
+.holiday-range input { min-width: 0; max-width: 100%; }
