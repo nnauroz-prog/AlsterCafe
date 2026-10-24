@@ -10277,3 +10277,5 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 }
 @media (max-width: 560px) { .holiday-range { grid-template-columns: minmax(0, 1fr); } }
 .holiday-range input { min-width: 0; max-width: 100%; }
+.admin-toast.is-clickable { pointer-events: auto; cursor: pointer; }
+.admin-toast.is-shown.is-clickable:hover { background: var(--bean); }

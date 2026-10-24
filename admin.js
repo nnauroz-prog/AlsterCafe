@@ -381,9 +381,14 @@ async function showDashboard() {
   // Live-Update wenn ueber das oeffentliche Formular etwas reinkommt
   if (!window.__alsterInboxSubscribed) {
     window.__alsterInboxSubscribed = true;
-    window.alsterDb?.subscribe?.((key) => {
-      if (key === 'reservations') refreshAnfragen();
-      if (key === 'orders') refreshOrders();
+    window.alsterDb?.subscribe?.(async (key) => {
+      if (key !== 'reservations' && key !== 'orders') return;
+      // Vorher bekannte Einträge merken → nur wirklich neue melden
+      const ids = (() => { const l = window.alsterDb?.get(key); return new Set((Array.isArray(l) ? l : []).map(x => x.id)); })();
+      if (key === 'reservations') await refreshAnfragen(); else await refreshOrders();
+      const list = window.alsterDb?.get(key);
+      const fresh = (Array.isArray(list) ? list : []).filter(x => x && !ids.has(x.id) && x.status !== 'done');
+      if (fresh.length) announceNewEntries(key, fresh);
     });
   }
   // Sichtbare Anzeige, ob die Live-Verbindung steht (Aenderungen erscheinen
@@ -1946,6 +1951,9 @@ function renderOverviewSummary() {
   const ordArr = (() => { const l = window.alsterDb?.get('orders'); return Array.isArray(l) ? l : []; })();
   const newRes = resArr.filter(r => r.status !== 'done').length;
   const newOrd = ordArr.filter(o => o.status !== 'done').length;
+  // Offene Anfragen im Browser-Tab sichtbar, z. B. „(2) Mitgliederbereich · Alstercafé“
+  const openTotal = newRes + newOrd;
+  document.title = (openTotal ? `(${openTotal}) ` : '') + 'Mitgliederbereich · Alstercafé';
   if (dom.summaryAnfragen) dom.summaryAnfragen.textContent = String(newRes);
   if (dom.summaryOrders)   dom.summaryOrders.textContent   = String(newOrd);
   // Offene Einträge golden hervorheben (Facelift)
@@ -2302,7 +2310,7 @@ async function onDeleteAnfrage(id) {
 }
 
 /* Dezente Erfolgsmeldung unten (statt Pop-up). Fehler bleiben als deutliches Fenster. */
-function showToast(msg) {
+function showToast(msg, opts = {}) {
   let el = document.getElementById('admin-toast');
   if (!el) {
     el = document.createElement('div');
@@ -2310,12 +2318,29 @@ function showToast(msg) {
     el.className = 'admin-toast';
     el.setAttribute('role', 'status');
     el.setAttribute('aria-live', 'polite');
+    el.addEventListener('click', () => { if (el._onClick) { el._onClick(); el.classList.remove('is-shown'); } });
     document.body.appendChild(el);
   }
   el.textContent = msg;
+  el._onClick = opts.onClick || null;
+  el.classList.toggle('is-clickable', !!opts.onClick);
   el.classList.add('is-shown');
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('is-shown'), 3800);
+  el._t = setTimeout(() => el.classList.remove('is-shown'), opts.duration || 3800);
+}
+
+/* Neue Reservierung/Bestellung kam live rein: kurz einblenden, Antippen öffnet den Bereich */
+function announceNewEntries(key, items) {
+  const it = items[0];
+  const more = items.length > 1 ? ` (+${items.length - 1} weitere)` : '';
+  let msg;
+  if (key === 'reservations') {
+    msg = `Neue Reservierung: ${it.name || 'ohne Namen'} · ${formatAnfrageDate(it.date, it.time)}${more} – antippen zum Ansehen`;
+  } else {
+    const berliner = Array.isArray(it.items) && it.items.some(x => x && x.kind === 'berliner');
+    msg = `Neue ${berliner ? 'Berliner-' : ''}Bestellung: ${it.name || 'ohne Namen'} · ${it.totalCount || 0} Stück${more} – antippen zum Ansehen`;
+  }
+  showToast('🔔 ' + msg, { duration: 9000, onClick: () => switchTab(key === 'reservations' ? 'anfragen' : 'bestellungen') });
 }
 
 // Gemeinsame Fehlermeldung, wenn Supabase eine Aenderung ablehnt (z. B. wenn die

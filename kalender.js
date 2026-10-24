@@ -67,6 +67,11 @@
     $('staff-actions').hidden = false;
     $('staff-today-label').textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
     renderWeek(data);
+    // Beim Öffnen den heutigen Tag in den Blick holen (nur am Handy nötig)
+    requestAnimationFrame(() => {
+      const today = $('staff-cal').querySelector('.cal-day.is-today');
+      if (today && today.getBoundingClientRect().top > window.innerHeight * 0.6) today.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
     clearInterval(timer);
     timer = setInterval(() => { if (!document.hidden) refresh(); }, 60000);
     return null;

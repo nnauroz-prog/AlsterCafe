@@ -1,0 +1,20 @@
+{
+  "name": "Alstercafé Kalender",
+  "short_name": "Kalender",
+  "description": "Reservierungen und Abholungen für das Team des Alstercafés",
+  "id": "./kalender.html",
+  "start_url": "./kalender.html",
+  "scope": "./kalender.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF5EC",
+  "theme_color": "#3D2415",
+  "lang": "de",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
