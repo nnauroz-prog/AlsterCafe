@@ -86,6 +86,24 @@ async function init() {
   // Login
   dom.loginForm.addEventListener('submit', onLogin);
   initCalendar();
+  initFormGuards();
+  // Bleibt der Mitgliederbereich über Nacht offen: neuen Tag übernehmen (Heute, Woche,
+  // Zähler, Kalender) – aber nie mitten in ungespeicherten Eingaben
+  let shownDay = isoDate(new Date());
+  setInterval(() => {
+    const now = isoDate(new Date());
+    if (now === shownDay || dirtyForms.size || dom.dashboard?.hidden) return;
+    shownDay = now;
+    sundaySpillover = false;
+    currentMonday = mondayOf(new Date());
+    maybeEnableSundaySpillover();
+    calMonday = mondayOf(new Date());
+    renderWeek(); renderOverviewSummary(); renderOwnerCalendar(); renderAnfragen(); renderOrders();
+    if (dom.welcome) {
+      const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+      dom.welcome.innerHTML = `Moin! <span class="welcome-date">${escapeHtml(today)}</span>`;
+    }
+  }, 5 * 60 * 1000);
   dom.pwToggle.addEventListener('click', onPwToggle);
   dom.logoutBtn.addEventListener('click', onLogout);
 
@@ -107,10 +125,11 @@ async function init() {
   dom.ordersSearch?.addEventListener('input', () => renderOrders());
 
   // Wochenplan
-  dom.menuForm.addEventListener('submit', onSaveWeek);
+  dom.menuForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('menu-form', () => onSaveWeek(e)); });
   dom.weekPrev.addEventListener('click', () => changeWeek(-7));
   dom.weekNext.addEventListener('click', () => changeWeek(7));
-  dom.weekToday.addEventListener('click', () => {
+  dom.weekToday.addEventListener('click', async () => {
+    if (!(await confirmLeave(dom.menuForm))) return;
     sundaySpillover = false;
     currentMonday = mondayOf(new Date());
     maybeEnableSundaySpillover();
@@ -135,11 +154,11 @@ async function init() {
   });
 
   // Notice
-  dom.noticeForm.addEventListener('submit', onSaveNotice);
+  dom.noticeForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('notice-form', () => onSaveNotice(e)); });
   dom.noticeClear.addEventListener('click', onClearNotice);
 
   // Speisekarte
-  dom.menuCardsForm.addEventListener('submit', onSaveMenu);
+  dom.menuCardsForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('menu-cards-form', () => onSaveMenu(e)); });
   dom.menuReset.addEventListener('click', onResetMenu);
   dom.menuAddSection?.addEventListener('click', () => addMenuSection());
   dom.menuPdf?.addEventListener('click', downloadMenuPdf);
@@ -147,12 +166,12 @@ async function init() {
   document.getElementById('week-insta')?.addEventListener('click', makeWeekImage);
 
   // Öffnungszeiten
-  dom.hoursForm.addEventListener('submit', onSaveHours);
+  dom.hoursForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('hours-form', () => onSaveHours(e)); });
   dom.hoursAdd.addEventListener('click', () => addHourRow());
   dom.hoursReset.addEventListener('click', onResetHours);
 
   // Urlaub & Feiertage
-  dom.holidaysForm?.addEventListener('submit', onSaveHolidays);
+  dom.holidaysForm?.addEventListener('submit', (e) => { e.preventDefault(); runSave('holidays-form', () => onSaveHolidays(e)); });
   dom.holidaysAdd?.addEventListener('click', () => addHolidayRow());
   dom.holidaysClear?.addEventListener('click', onClearHolidays);
   document.getElementById('holiday-range-add')?.addEventListener('click', onAddHolidayRange);
@@ -160,14 +179,14 @@ async function init() {
   document.getElementById('holidays-past')?.addEventListener('click', onRemovePastHolidays);
 
   // Brötchen-Sorten
-  dom.broetchenForm?.addEventListener('submit', onSaveBroetchen);
+  dom.broetchenForm?.addEventListener('submit', (e) => { e.preventDefault(); runSave('broetchen-form', () => onSaveBroetchen(e)); });
   dom.broetchenAdd?.addEventListener('click', () => addBroetchenRow());
   dom.broetchenReset?.addEventListener('click', onResetBroetchen);
 
   // Berliner-Vorbestellung
-  document.getElementById('berliner-settings-form')?.addEventListener('submit', onSaveBerlinerSettings);
+  document.getElementById('berliner-settings-form')?.addEventListener('submit', (e) => { e.preventDefault(); runSave('berliner-settings-form', () => onSaveBerlinerSettings(e)); });
   document.getElementById('berliner-switch')?.addEventListener('click', onToggleBerliner);
-  document.getElementById('berliner-items-form')?.addEventListener('submit', onSaveBerlinerItems);
+  document.getElementById('berliner-items-form')?.addEventListener('submit', (e) => { e.preventDefault(); runSave('berliner-items-form', () => onSaveBerlinerItems(e)); });
   document.getElementById('berliner-add')?.addEventListener('click', () => addBerlinerRow());
 
   // Account
@@ -333,10 +352,11 @@ function onPwToggle() {
 }
 
 async function onLogout() {
+  if (!(await confirmLeave())) return;
   await window.alsterDb.auth.signOut();
   // Gast-Daten (Namen, Telefon, E-Mail) nicht im Browser liegen lassen.
   try {
-    ['reservations', 'orders'].forEach(k => localStorage.removeItem('alstercafe.' + k));
+    ['reservations', 'orders', 'activity'].forEach(k => localStorage.removeItem('alstercafe.' + k));
   } catch (e) {}
   showLogin();
   location.reload();
@@ -382,6 +402,25 @@ async function showDashboard() {
   if (!window.__alsterInboxSubscribed) {
     window.__alsterInboxSubscribed = true;
     window.alsterDb?.subscribe?.(async (key) => {
+      // Inhalte wurden auf einem anderen Gerät geändert → Editor auffrischen,
+      // aber nie über ungespeicherte Eingaben hinweg
+      const editors = {
+        'weekly-menu': ['menu-form', () => { renderWeek(); renderOverviewSummary(); }],
+        'menu': ['menu-cards-form', () => renderMenuEditor()],
+        'hours': ['hours-form', () => renderHoursEditor()],
+        'holidays': ['holidays-form', () => { renderHolidaysEditor(); renderOwnerCalendar(); }],
+        'notice': ['notice-form', () => renderNotice()],
+        'broetchen-items': ['broetchen-form', () => renderBroetchenEditor()],
+        'berliner-settings': ['berliner-settings-form', () => renderBerlinerAdmin()],
+        'berliner-items': ['berliner-items-form', () => renderBerlinerAdmin()],
+        'design': [null, () => renderDesignEditor()]
+      };
+      if (editors[key]) {
+        const [formId, fn] = editors[key];
+        const busy = formId && (dirtyForms.has(formId) || (key.startsWith('berliner') && (dirtyForms.has('berliner-settings-form') || dirtyForms.has('berliner-items-form'))));
+        if (!busy) { try { fn(); } catch (e) { console.warn(e); } }
+        return;
+      }
       if (key !== 'reservations' && key !== 'orders') return;
       // Vorher bekannte Einträge merken → nur wirklich neue melden
       const ids = (() => { const l = window.alsterDb?.get(key); return new Set((Array.isArray(l) ? l : []).map(x => x.id)); })();
@@ -496,16 +535,156 @@ async function onSaveStaffCode(e) {
   renderStaffAccessState();
 }
 
+/* ---------- Formular-System ----------
+   Jedes Bearbeitungs-Formular meldet ungespeicherte Änderungen. Wer den Bereich
+   verlässt (Tab, „Zurück“, andere Woche, Abmelden, Seite schließen), wird gefragt.
+   Speichern läuft über runSave: Knopf gesperrt, kein Doppel-Speichern, erst nach
+   Erfolg gilt das Formular als gespeichert. */
+const GUARDED_FORMS = {
+  'menu-form': 'Mittagstisch',
+  'menu-cards-form': 'Speisekarte',
+  'hours-form': 'Öffnungszeiten',
+  'holidays-form': 'Schließtage',
+  'notice-form': 'Hinweis-Banner',
+  'broetchen-form': 'Brötchen-Sorten',
+  'berliner-settings-form': 'Berliner-Aktion',
+  'berliner-items-form': 'Berliner-Sorten'
+};
+const dirtyForms = new Set();
+
+function initFormGuards() {
+  Object.keys(GUARDED_FORMS).forEach(id => {
+    const f = document.getElementById(id);
+    if (!f || f.dataset.guarded) return;
+    f.dataset.guarded = '1';
+    const mark = (e) => {
+      if (e.target.closest('[data-no-dirty]')) return;
+      if (e.type === 'click' && !e.target.closest('button[type="button"]')) return;
+      markDirty(id);
+    };
+    f.addEventListener('input', mark);
+    f.addEventListener('change', mark);
+    f.addEventListener('click', mark);
+  });
+  window.addEventListener('beforeunload', (e) => {
+    if (!dirtyForms.size) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+}
+
+function markDirty(id) {
+  if (!GUARDED_FORMS[id]) return;
+  dirtyForms.add(id);
+  document.getElementById(id)?.classList.add('is-dirty');
+}
+function markClean(id) {
+  dirtyForms.delete(id);
+  document.getElementById(id)?.classList.remove('is-dirty');
+}
+
+async function runSave(id, fn) {
+  const f = document.getElementById(id);
+  if (!f || f.dataset.saving) return;
+  f.dataset.saving = '1';
+  const btns = Array.from(f.querySelectorAll('button[type="submit"]'));
+  btns.forEach(b => { b.disabled = true; b.setAttribute('aria-busy', 'true'); });
+  try {
+    const ok = await fn();
+    if (ok !== false) markClean(id);
+  } catch (err) {
+    console.error('Speichern fehlgeschlagen', err);
+    warnWriteFailed();
+  } finally {
+    delete f.dataset.saving;
+    btns.forEach(b => { b.disabled = false; b.removeAttribute('aria-busy'); });
+  }
+}
+
+/* Schönes Auswahlfenster statt grauem Browser-Fenster. Liefert den value des Knopfs, null bei Abbruch. */
+function askChoice({ title, text, actions }) {
+  return new Promise(resolve => {
+    const dlg = document.createElement('dialog');
+    if (typeof dlg.showModal !== 'function') { resolve(confirm(`${title}\n\n${text}`) ? actions[actions.length - 1].value : null); return; }
+    dlg.className = 'confirm-dialog';
+    dlg.innerHTML = `
+      <div class="confirm-dialog-form">
+        <h3 class="confirm-dialog-title">${escapeHtml(title)}</h3>
+        <p class="confirm-dialog-hint">${escapeHtml(text)}</p>
+        <div class="confirm-dialog-actions">
+          ${actions.map((a, i) => `<button type="button" class="btn ${a.kind === 'primary' ? 'btn-primary' : a.kind === 'danger' ? 'btn-link danger' : 'btn-link'}" data-i="${i}">${escapeHtml(a.label)}</button>`).join('')}
+        </div>
+      </div>`;
+    document.body.appendChild(dlg);
+    let result = null;
+    dlg.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { result = actions[+b.dataset.i].value; dlg.close(); }));
+    dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
+    dlg.showModal();
+    dlg.querySelector('.btn-primary, [data-i]')?.focus();
+  });
+}
+
+/* Vor dem Verlassen: ungespeicherte Formulare (optional nur in einem Bereich) abfragen.
+   true = weiter (gespeichert oder verworfen), false = bleiben. */
+async function confirmLeave(scopeEl) {
+  const ids = Array.from(dirtyForms).filter(id => !scopeEl || scopeEl.contains(document.getElementById(id)));
+  if (!ids.length) return true;
+  const names = ids.map(id => GUARDED_FORMS[id]).join(', ');
+  const choice = await askChoice({
+    title: 'Ungespeicherte Änderungen',
+    text: `In „${names}“ gibt es Änderungen, die noch nicht gespeichert sind.`,
+    actions: [
+      { label: 'Weiter bearbeiten', value: 'stay' },
+      { label: 'Verwerfen', value: 'discard', kind: 'danger' },
+      { label: 'Speichern', value: 'save', kind: 'primary' }
+    ]
+  });
+  if (choice === 'save') {
+    for (const id of ids) {
+      const f = document.getElementById(id);
+      if (f) f.requestSubmit ? f.requestSubmit() : f.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+    // kurz warten, bis die Speicherung durch ist
+    for (let i = 0; i < 40 && ids.some(id => document.getElementById(id)?.dataset.saving); i++) await new Promise(r => setTimeout(r, 100));
+    return !ids.some(id => dirtyForms.has(id));
+  }
+  if (choice === 'discard') {
+    ids.forEach(id => { markClean(id); rerenderForm(id); });
+    return true;
+  }
+  return false;
+}
+function rerenderForm(id) {
+  ({
+    'menu-form': () => renderWeek(),
+    'menu-cards-form': () => renderMenuEditor(),
+    'hours-form': () => renderHoursEditor(),
+    'holidays-form': () => renderHolidaysEditor(),
+    'notice-form': () => renderNotice(),
+    'broetchen-form': () => renderBroetchenEditor(),
+    'berliner-settings-form': () => renderBerlinerAdmin(),
+    'berliner-items-form': () => renderBerlinerAdmin()
+  }[id] || (() => {}))();
+}
+function activePanel() {
+  if (dom.workspaceView?.hidden) return null;
+  return Array.from(dom.panels || []).find(p => !p.hidden) || null;
+}
+
 /* ---------- Tabs ---------- */
 
-function showOverview() {
+async function showOverview() {
+  const panel = activePanel();
+  if (panel && !(await confirmLeave(panel))) return;
   dom.dashboard?.classList.remove('is-working');
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
 }
 
-function switchTab(name) {
+async function switchTab(name) {
+  const panel = activePanel();
+  if (panel && panel.id !== `panel-${name}` && !(await confirmLeave(panel))) return;
   const apply = () => {
     dom.dashboard?.classList.add('is-working');
     if (dom.overviewView) dom.overviewView.hidden = true;
@@ -524,7 +703,7 @@ function switchTab(name) {
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
     // Beim Wechsel auf Mittagsmenue: heutigen Tag in den Sichtbereich
     // rollen (renderWeek hat diese Logik gegen das Flag).
-    if (name === 'week') { pendingScrollOnRender = true; renderWeek(); }
+    if (name === 'week' && !dirtyForms.has('menu-form')) { pendingScrollOnRender = true; renderWeek(); }
   };
   // Smooth Tab-Wechsel via View-Transitions API (Chromium); Fallback: direkt
   if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -536,7 +715,8 @@ function switchTab(name) {
 
 /* ---------- Wochenplan ---------- */
 
-function changeWeek(deltaDays) {
+async function changeWeek(deltaDays) {
+  if (!(await confirmLeave(dom.menuForm))) return;
   sundaySpillover = false; // Manueller Wochen-Wechsel deaktiviert Spillover
   const d = new Date(currentMonday);
   d.setDate(d.getDate() + deltaDays);
@@ -552,10 +732,11 @@ async function onResetWeek() {
   const ok = await saveAll(all);
   renderWeek();
   reportWeekSave(ok, 'Woche zurückgesetzt.');
-  if (ok) logActivity('Woche zurückgesetzt');
+  if (ok) { logActivity('Woche zurückgesetzt'); renderOverviewSummary(); }
 }
 
 async function onCopyFromPrevious() {
+  if (!(await confirmLeave(dom.menuForm))) return;
   const prevMonday = new Date(currentMonday);
   prevMonday.setDate(prevMonday.getDate() - 7);
   const all = loadAll();
@@ -564,7 +745,7 @@ async function onCopyFromPrevious() {
     setStatus(dom.saveStatus, 'Keine Daten in der Vorwoche gefunden.', 'error');
     return;
   }
-  if (!confirm('Eintraege der Vorwoche in die aktuelle Woche kopieren?')) return;
+  if (!confirm('Einträge der Vorwoche in diese Woche übernehmen? Die Einträge dieser Woche werden dabei ersetzt und sofort gespeichert.')) return;
   all[isoDate(currentMonday)] = {
     weekStart: isoDate(currentMonday),
     updatedAt: new Date().toISOString(),
@@ -572,7 +753,8 @@ async function onCopyFromPrevious() {
   };
   const ok = await saveAll(all);
   renderWeek();
-  reportWeekSave(ok, 'Vorwoche kopiert. Bitte ggf. anpassen und speichern.');
+  reportWeekSave(ok, `Vorwoche übernommen und gespeichert · ${formatTime(new Date())}. Änderungen danach bitte erneut speichern.`);
+  if (ok) { logActivity('Vorwoche übernommen'); renderOverviewSummary(); }
 }
 
 function onExportJson() {
@@ -594,6 +776,12 @@ async function onSaveWeek(e) {
 
   // Aktuelle Woche aus den 7 Standard-Karten lesen
   const week = readFormToWeek();
+  // Beilage ohne Gericht würde auf der Webseite nie erscheinen → vorher melden
+  const orphan = DAYS.filter(d => { const x = week[d.key]; return x && !x.closed && ((x.side && !x.dish && !x.dish2) || (x.side2 && !x.dish2)); }).map(d => d.label);
+  if (orphan.length) {
+    setStatus(dom.saveStatus, `Nicht gespeichert: Bei ${orphan.join(', ')} steht eine Beilage ohne Gericht. Bitte das Gericht ergänzen oder die Beilage löschen.`, 'error');
+    return false;
+  }
   all[isoDate(currentMonday)] = {
     weekStart: isoDate(currentMonday),
     updatedAt: new Date().toISOString(),
@@ -614,22 +802,27 @@ async function onSaveWeek(e) {
     const prevMonday = mondayOf(today);
     const prevKey = isoDate(prevMonday);
     const prevWeek = all[prevKey] || { weekStart: prevKey, days: {} };
+    prevWeek.days = prevWeek.days || {};
     if (dish || side || dish2 || side2 || closed) {
-      prevWeek.days = prevWeek.days || {};
       prevWeek.days.sun = { dish, side, closed };
       if (dish2 || side2) { prevWeek.days.sun.dish2 = dish2; prevWeek.days.sun.side2 = side2; }
-      prevWeek.updatedAt = new Date().toISOString();
-      all[prevKey] = prevWeek;
+    } else {
+      // Karte geleert → Eintrag wirklich entfernen (sonst bliebe das alte Gericht online)
+      delete prevWeek.days.sun;
     }
+    prevWeek.updatedAt = new Date().toISOString();
+    all[prevKey] = prevWeek;
   }
 
   const ok = await saveAll(all);
   renderWeek();
   reportWeekSave(ok, `Gespeichert · ${formatTime(new Date())}`);
-  if (ok) logActivity('Wochenplan gespeichert');
+  if (ok) { logActivity('Wochenplan gespeichert'); renderOverviewSummary(); }
+  return ok;
 }
 
 function renderWeek() {
+  markClean('menu-form');
   const weekKw = isoWeek(currentMonday);
   const sunday = new Date(currentMonday); sunday.setDate(sunday.getDate() + 6);
   dom.weekKw.textContent = sundaySpillover ? `Heute + KW ${weekKw}` : `KW ${weekKw}`;
@@ -772,6 +965,7 @@ function readFormToWeek() {
 /* ---------- Notice ---------- */
 
 function renderNotice() {
+  markClean('notice-form');
   const text = loadNotice();
   if (dom.noticeInput) dom.noticeInput.value = text;
   setStatus(dom.noticeStatus, text ? 'Banner ist aktiv.' : 'Kein Banner aktiv.');
@@ -781,8 +975,9 @@ async function onSaveNotice(e) {
   e.preventDefault();
   const text = (dom.noticeInput.value || '').trim();
   const ok = await saveNotice(text);
-  if (!ok) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
+  if (!ok) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
   setStatus(dom.noticeStatus, text ? 'Hinweis gespeichert. Banner ist sichtbar.' : 'Banner ausgeblendet.', 'ok');
+  return true;
 }
 
 async function onClearNotice() {
@@ -806,6 +1001,7 @@ function loadMenuData() {
 }
 
 function renderMenuEditor() {
+  markClean('menu-cards-form');
   if (!dom.menuSections) return;
   const data = loadMenuData();
   if (dom.menuIntro) dom.menuIntro.value = data.intro || '';
@@ -919,6 +1115,7 @@ function collectMenuData() {
       const name  = row.querySelector('.menu-item-name').value.trim();
       const price = row.querySelector('.menu-item-price').value.trim();
       const desc  = row.querySelector('.menu-item-desc').value.trim();
+      row.classList.toggle('is-invalid', !name && !!(price || desc));
       if (name || price || desc) {
         const it = { name };
         if (price) it.price = price;
@@ -946,13 +1143,25 @@ function onSaveMenu(e) {
   const data = collectMenuData();
   if (!data.sections.length) {
     setStatus(dom.menuStatus, 'Mindestens eine Kategorie mit einem Gericht nötig.', 'error');
-    return;
+    return false;
   }
-  window.alsterDb.set('menu', data).then(ok => {
+  const nameless = dom.menuSections.querySelectorAll('.menu-item-row.is-invalid');
+  if (nameless.length) {
+    setStatus(dom.menuStatus, `Nicht gespeichert: ${nameless.length === 1 ? 'ein Eintrag hat' : nameless.length + ' Einträge haben'} Preis oder Beschreibung, aber keinen Namen (rot markiert).`, 'error');
+    nameless[0].querySelector('.menu-item-name')?.focus();
+    return false;
+  }
+  const emptyCats = data.sections.filter(sec => !sec.items.some(it => it.name)).map(sec => sec.title || 'ohne Titel');
+  if (emptyCats.length) {
+    setStatus(dom.menuStatus, `Nicht gespeichert: Kategorie „${emptyCats.join('“, „')}“ hat noch kein Gericht – Gericht ergänzen oder Kategorie entfernen.`, 'error');
+    return false;
+  }
+  return window.alsterDb.set('menu', data).then(ok => {
     setStatus(dom.menuStatus,
       ok ? `Gespeichert · ${formatTime(new Date())} — jetzt auf der Webseite sichtbar.` : 'Speichern fehlgeschlagen.',
       ok ? 'ok' : 'error');
-    if (ok) logActivity('Speisekarte gespeichert');
+    if (ok) logActivity('Speisekarte gespeichert'); else warnWriteFailed();
+    return ok !== false;
   });
 }
 
@@ -1344,6 +1553,7 @@ function buildMenuPrintHtml(data) {
 /* ---------- Öffnungszeiten ---------- */
 
 function renderHoursEditor() {
+  markClean('hours-form');
   if (!dom.hoursRows) return;
   let hours = DEFAULT_HOURS;
   try {
@@ -1355,7 +1565,23 @@ function renderHoursEditor() {
   } catch {}
   dom.hoursRows.innerHTML = '';
   hours.forEach(h => addHourRow(h.label, h.time));
-  setStatus(dom.hoursStatus, 'Bereit zum Bearbeiten.');
+  setStatus(dom.hoursStatus, '');
+}
+
+/* Zeigt unter jeder Zeile, wie die Webseite sie versteht (gleiche Regeln wie die Webseite) */
+function checkHourRows() {
+  const rows = Array.from(dom.hoursRows.querySelectorAll('.hours-row'));
+  const data = rows.map(r => ({ label: r.querySelector('.hours-label').value, time: r.querySelector('.hours-time').value }));
+  const res = window.AlsterRules.checkHours(data);
+  rows.forEach((r, i) => {
+    const c = res.rows[i];
+    let hint = r.nextElementSibling && r.nextElementSibling.classList.contains('hours-hint') ? r.nextElementSibling : null;
+    if (!hint) { hint = document.createElement('p'); hint.className = 'hours-hint'; r.after(hint); }
+    hint.className = 'hours-hint' + (c.empty ? '' : c.ok ? (c.warn ? ' is-warn' : ' is-ok') : ' is-error');
+    hint.textContent = c.empty ? '' : c.ok ? (c.warn ? `⚠ ${c.warn}` : `✓ ${c.message}`) : `✗ ${c.message}`;
+    r.classList.toggle('is-invalid', !c.ok);
+  });
+  return res;
 }
 
 function addHourRow(label = '', time = '') {
@@ -1368,8 +1594,15 @@ function addHourRow(label = '', time = '') {
       <svg class="ico ico-sm"><use href="#i-x"/></svg>
     </button>
   `;
-  row.querySelector('.hours-remove').addEventListener('click', () => row.remove());
+  row.querySelector('.hours-remove').addEventListener('click', () => {
+    const hint = row.nextElementSibling;
+    if (hint && hint.classList.contains('hours-hint')) hint.remove();
+    row.remove();
+    checkHourRows();
+  });
+  row.querySelectorAll('input').forEach(i => i.addEventListener('input', () => checkHourRows()));
   dom.hoursRows.appendChild(row);
+  checkHourRows();
 }
 
 function onSaveHours(e) {
@@ -1380,11 +1613,28 @@ function onSaveHours(e) {
     const time  = r.querySelector('.hours-time').value.trim();
     if (label || time) rows.push({ label, time });
   });
-  window.alsterDb.set('hours', rows).then(ok => {
+  // Erst prüfen, dann speichern: unlesbare Zeiten würden sonst Reservierungen sperren
+  const check = checkHourRows();
+  const bad = check.rows.filter(r => !r.ok);
+  if (bad.length) {
+    setStatus(dom.hoursStatus, `Nicht gespeichert: ${bad.length === 1 ? '1 Zeile ist' : bad.length + ' Zeilen sind'} nicht lesbar (rot markiert).`, 'error');
+    dom.hoursRows.querySelector('.hours-row.is-invalid input')?.focus();
+    return false;
+  }
+  if (!rows.length) {
+    setStatus(dom.hoursStatus, 'Bitte mindestens eine Zeile eintragen – sonst gelten die Standardzeiten.', 'error');
+    return false;
+  }
+  if (!check.week.some(Boolean)) {
+    setStatus(dom.hoursStatus, 'So wäre das Café an allen Tagen geschlossen. Bitte Zeiten prüfen.', 'error');
+    return false;
+  }
+  return window.alsterDb.set('hours', rows).then(ok => {
     setStatus(dom.hoursStatus,
       ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
       ok ? 'ok' : 'error');
-    if (ok) logActivity('Öffnungszeiten gespeichert');
+    if (ok) logActivity('Öffnungszeiten gespeichert'); else warnWriteFailed();
+    return ok !== false;
   });
 }
 
@@ -1400,6 +1650,7 @@ function onResetHours() {
    Gespeichert als Content-Key 'holidays' = [{date:'YYYY-MM-DD', label}].
    Die öffentliche Seite zeigt an solchen Tagen automatisch „Heute geschlossen“. */
 function renderHolidaysEditor() {
+  markClean('holidays-form');
   if (!dom.holidaysRows) return;
   const stored = window.alsterDb?.get('holidays');
   const holidays = Array.isArray(stored) ? stored : [];
@@ -1457,6 +1708,7 @@ function onAddHolidayRange() {
   const label = document.getElementById('holiday-range-label').value.trim();
   if (!from) { holidayToolStatus('Bitte ein Startdatum („von“) wählen.', 'error'); return; }
   if (to < from) { holidayToolStatus('„bis“ liegt vor „von“ – bitte prüfen.', 'error'); return; }
+  if (to < isoDate(new Date())) { holidayToolStatus('Dieser Zeitraum liegt komplett in der Vergangenheit – bitte Datum prüfen.', 'error'); return; }
   const have = existingHolidayDates();
   const d = new Date(from + 'T12:00:00'), end = new Date(to + 'T12:00:00');
   let added = 0, skipped = 0, count = 0;
@@ -1512,20 +1764,48 @@ function onRemovePastHolidays() {
   holidayToolStatus(n ? `${n === 1 ? '1 vergangener Tag' : `${n} vergangene Tage`} entfernt. Jetzt unten „Schließtage speichern“.` : 'Es gibt keine vergangenen Tage.', 'ok');
 }
 
-function onSaveHolidays(e) {
+async function onSaveHolidays(e) {
   e.preventDefault();
   const rows = [];
+  const seen = new Set();
+  let missing = 0, dupes = 0;
   dom.holidaysRows.querySelectorAll('.holiday-row').forEach(r => {
     const date  = r.querySelector('.holiday-date').value.trim();
     const label = r.querySelector('.holiday-label').value.trim();
-    if (date) rows.push({ date, label });
+    r.classList.remove('is-invalid');
+    if (!date) { if (label) { missing++; r.classList.add('is-invalid'); } return; }
+    if (seen.has(date)) { dupes++; return; }
+    seen.add(date);
+    rows.push({ date, label });
   });
+  if (missing) {
+    setStatus(dom.holidaysStatus, `Nicht gespeichert: ${missing === 1 ? 'eine Zeile hat' : missing + ' Zeilen haben'} einen Grund, aber kein Datum (rot markiert).`, 'error');
+    return false;
+  }
   rows.sort((a, b) => a.date.localeCompare(b.date));
-  window.alsterDb.set('holidays', rows).then(ok => {
+  // Warnen, wenn an neuen Schließtagen schon Reservierungen oder Abholungen stehen
+  const before = new Set((window.alsterDb?.get('holidays') || []).map(h => h && h.date));
+  const added = rows.filter(r => !before.has(r.date)).map(r => r.date);
+  if (added.length) {
+    const res = (window.alsterDb?.get('reservations') || []).filter(x => added.includes(x.date) && x.status !== 'done');
+    const ord = (window.alsterDb?.get('orders') || []).filter(x => added.includes(x.pickupDate) && x.status !== 'done');
+    if (res.length || ord.length) {
+      const go = await askChoice({
+        title: 'Achtung: Es gibt schon Termine',
+        text: `An den neuen Schließtagen ${res.length + ord.length === 1 ? 'steht' : 'stehen'} schon ${[res.length ? (res.length === 1 ? 'eine Reservierung' : res.length + ' Reservierungen') : '', ord.length ? (ord.length === 1 ? 'eine Abholung' : ord.length + ' Abholungen') : ''].filter(Boolean).join(' und ')}. Bitte die Gäste informieren. Trotzdem als geschlossen speichern?`,
+        actions: [{ label: 'Abbrechen', value: false }, { label: 'Trotzdem speichern', value: true, kind: 'primary' }]
+      });
+      if (!go) return false;
+    }
+  }
+  return window.alsterDb.set('holidays', rows).then(ok => {
+    if (ok && dupes) { renderHolidaysEditor(); }
+    renderOwnerCalendar();
     setStatus(dom.holidaysStatus,
-      ok ? `Gespeichert · ${formatTime(new Date())}` : 'Speichern fehlgeschlagen.',
+      ok ? `Gespeichert · ${formatTime(new Date())}${dupes ? ` · ${dupes} doppelte${dupes === 1 ? 'r Tag' : ' Tage'} zusammengefasst` : ''}` : 'Speichern fehlgeschlagen.',
       ok ? 'ok' : 'error');
-    if (ok) logActivity('Schließtage gespeichert');
+    if (ok) logActivity('Schließtage gespeichert'); else warnWriteFailed();
+    return ok !== false;
   });
 }
 
@@ -1614,14 +1894,17 @@ function initDesignEditor() {
     chip.addEventListener('click', () => setAccentColor(chip.dataset.color));
   });
   const colorInput = document.getElementById('color-input');
-  colorInput?.addEventListener('input', (e) => setAccentColor(e.target.value));
+  // Beim Ziehen nur Vorschau, gespeichert wird beim Loslassen (sonst Dutzende Speicherungen)
+  colorInput?.addEventListener('input', (e) => document.documentElement.style.setProperty('--gold', e.target.value));
+  colorInput?.addEventListener('change', (e) => setAccentColor(e.target.value));
 
   // Reset all design
   document.getElementById('design-reset')?.addEventListener('click', async () => {
     if (!confirm('Alle Design-Anpassungen (Logo, Bilder, Galerie, Farbe) entfernen?')) return;
-    await window.alsterDb.remove('design');
+    const ok = await window.alsterDb.remove('design');
     renderDesignEditor();
-    flashDesignStatus('Auf Standard zurückgesetzt.');
+    if (ok === false) { flashDesignStatus('Zurücksetzen fehlgeschlagen.', 'error'); warnWriteFailed(); }
+    else flashDesignStatus('Auf Standard zurückgesetzt.');
   });
 }
 
@@ -1694,6 +1977,7 @@ function renderGalleryEdit() {
     tile.className = 'gallery-tile-edit';
     tile.draggable = true;
     tile.dataset.idx = idx;
+    tile.dataset.src = src;
     tile.innerHTML = `
       <img src="${src}" alt="" />
       <button type="button" class="gallery-remove" aria-label="Bild entfernen">
@@ -1702,7 +1986,8 @@ function renderGalleryEdit() {
     `;
     tile.querySelector('.gallery-remove').addEventListener('click', () => {
       const d = loadDesign();
-      d.gallery = (d.gallery || []).filter((_, i) => i !== idx);
+      // nach Bildadresse entfernen (nicht nach Position – die kann sich verschoben haben)
+      d.gallery = (d.gallery || []).filter(g => g !== src);
       saveDesign(d);
       renderGalleryEdit();
       flashDesignStatus('Bild entfernt.');
@@ -1710,19 +1995,26 @@ function renderGalleryEdit() {
     attachDragHandlers(tile, '.gallery-tile-edit');
     grid.appendChild(tile);
   });
-  // Nach Drop: Reihenfolge speichern
-  grid.addEventListener('drop', () => {
-    setTimeout(() => {
-      const newOrder = Array.from(grid.querySelectorAll('.gallery-tile-edit'))
-        .map(t => gallery[parseInt(t.dataset.idx, 10)])
-        .filter(Boolean);
-      const d = loadDesign();
-      d.gallery = newOrder;
-      saveDesign(d);
-      flashDesignStatus('Reihenfolge gespeichert.');
-      renderGalleryEdit();
-    }, 50);
-  });
+  // Nach Drop: Reihenfolge speichern. Nur EINMAL binden und die Reihenfolge aus den
+  // aktuell angezeigten Bildern lesen – sonst speicherten alte Listener eine leere Galerie.
+  if (!grid.dataset.dropBound) {
+    grid.dataset.dropBound = '1';
+    grid.addEventListener('drop', () => {
+      setTimeout(() => {
+        const newOrder = Array.from(grid.querySelectorAll('.gallery-tile-edit'))
+          .map(t => t.dataset.src)
+          .filter(Boolean);
+        const d = loadDesign();
+        const current = Array.isArray(d.gallery) ? d.gallery : [];
+        // Sicherheitsnetz: nie Bilder verlieren – nur speichern, wenn dieselben Bilder umsortiert wurden
+        if (newOrder.length !== current.length || newOrder.some(x => !current.includes(x))) { renderGalleryEdit(); return; }
+        d.gallery = newOrder;
+        saveDesign(d);
+        flashDesignStatus('Reihenfolge gespeichert.');
+        renderGalleryEdit();
+      }, 50);
+    });
+  }
   if (counter) counter.textContent = `${gallery.length} / ${GALLERY_MAX}`;
   if (uploadBtn) uploadBtn.style.display = gallery.length >= GALLERY_MAX ? 'none' : '';
 }
@@ -1768,29 +2060,35 @@ function flashDesignStatus(msg, kind = 'ok') {
 
 async function onResetContent() {
   if (!confirm('Alle bearbeiteten Webseiten-Texte zurücksetzen? Wochenplan, Speisekarte und Design bleiben erhalten.')) return;
-  await window.alsterDb.remove('content');
+  const ok = await window.alsterDb.remove('content');
+  if (ok === false) { warnWriteFailed(); return; }
   showToast('Texte wurden auf den Original-Zustand zurückgesetzt.');
 }
 
 async function onResetAll() {
-  if (!confirm('Möchten Sie wirklich ALLE Daten löschen (Wochenplan, Speisekarte, Öffnungszeiten, Banner, Design)?')) return;
-  await Promise.all([
-    window.alsterDb.remove('weekly-menu'),
-    window.alsterDb.remove('notice'),
-    window.alsterDb.remove('menu'),
-    window.alsterDb.remove('hours'),
-    window.alsterDb.remove('holidays'),
-    window.alsterDb.remove('design'),
-    window.alsterDb.remove('content')
-  ]);
+  const ok1 = await askChoice({
+    title: 'Alle Inhalte zurücksetzen?',
+    text: 'Gelöscht werden: Mittagstisch (alle Wochen), Speisekarte, Öffnungszeiten, Schließtage, Hinweis-Banner, Bilder & Farben, Webseiten-Texte, Brötchen-Sorten und die Berliner-Aktion (wird ausgeschaltet). Reservierungen, Bestellungen und Ihr Konto bleiben erhalten. Das lässt sich nicht rückgängig machen.',
+    actions: [{ label: 'Abbrechen', value: false }, { label: 'Alles zurücksetzen', value: true, kind: 'danger' }]
+  });
+  if (!ok1) return;
+  const keys = ['weekly-menu', 'notice', 'menu', 'hours', 'holidays', 'design', 'content', 'broetchen-items', 'berliner-items', 'berliner-settings'];
+  const results = await Promise.all(keys.map(k => window.alsterDb.remove(k).catch(() => false)));
+  Object.keys(GUARDED_FORMS).forEach(markClean);
   renderWeek();
   renderNotice();
   renderMenuEditor();
   renderHoursEditor();
   renderHolidaysEditor();
   renderDesignEditor();
-  alert('Alle Daten wurden gelöscht.');
+  renderBroetchenEditor();
+  renderBerlinerAdmin();
+  renderOverviewSummary();
+  if (results.some(r => r === false)) { warnWriteFailed(); return; }
+  logActivity('Alle Inhalte zurückgesetzt');
+  showToast('✓ Alle Inhalte wurden auf Standard zurückgesetzt.');
 }
+
 
 /* ---------- Storage ---------- */
 
@@ -1862,8 +2160,12 @@ async function onChangePassword(e) {
   e.preventDefault();
   const a = dom.newPassword.value;
   const b = dom.newPasswordConfirm.value;
-  if (a.length < 8) {
-    setStatus(dom.passwordStatus, 'Mindestens 8 Zeichen erforderlich.', 'error');
+  if (a !== a.trim()) {
+    setStatus(dom.passwordStatus, 'Bitte keine Leerzeichen am Anfang oder Ende des Passworts.', 'error');
+    return;
+  }
+  if (a.length < 10 || !/\S/.test(a)) {
+    setStatus(dom.passwordStatus, 'Bitte mindestens 10 Zeichen verwenden.', 'error');
     return;
   }
   if (a !== b) {
@@ -1871,7 +2173,10 @@ async function onChangePassword(e) {
     return;
   }
   setStatus(dom.passwordStatus, 'Wird gespeichert …');
-  const result = await window.alsterDb.auth.updatePassword(a);
+  const btn = dom.passwordForm.querySelector('button[type="submit"]');
+  if (btn?.disabled) return;
+  if (btn) btn.disabled = true;
+  const result = await window.alsterDb.auth.updatePassword(a).finally(() => { if (btn) btn.disabled = false; });
   if (result.ok) {
     dom.passwordForm.reset();
     setStatus(dom.passwordStatus, 'Passwort wurde geändert.', 'ok');
@@ -1949,8 +2254,8 @@ function setStatus(el, msg, kind = '') {
 function renderOverviewSummary() {
   const resArr = (() => { const l = window.alsterDb?.get('reservations'); return Array.isArray(l) ? l : []; })();
   const ordArr = (() => { const l = window.alsterDb?.get('orders'); return Array.isArray(l) ? l : []; })();
-  const newRes = resArr.filter(r => r.status !== 'done').length;
-  const newOrd = ordArr.filter(o => o.status !== 'done').length;
+  const newRes = resArr.filter(r => isOpenEntry(r, 'date')).length;
+  const newOrd = ordArr.filter(o => isOpenEntry(o, 'pickupDate')).length;
   // Offene Anfragen im Browser-Tab sichtbar, z. B. „(2) Mitgliederbereich · Alstercafé“
   const openTotal = newRes + newOrd;
   document.title = (openTotal ? `(${openTotal}) ` : '') + 'Mitgliederbereich · Alstercafé';
@@ -2026,7 +2331,7 @@ function renderAnfragen() {
   if (deferRenderWhileTyping('anfragen-list', renderAnfragen)) return;
   const list = window.alsterDb?.get('reservations') || [];
   const items = Array.isArray(list) ? list : [];
-  const newCount = items.filter(r => r.status !== 'done').length;
+  const newCount = items.filter(r => isOpenEntry(r, 'date')).length;
 
   if (dom.anfragenBadge) {
     dom.anfragenBadge.hidden = newCount === 0;
@@ -2052,7 +2357,8 @@ function renderAnfragen() {
     ? upcoming.map(r => buildAnfrageItem(r)).join('')
     : `<li class="anfragen-empty">${hasQuery ? 'Keine Treffer bei den kommenden Anfragen.' : 'Keine kommenden Anfragen.'}</li>`;
   if (past.length) {
-    html += `<li class="anfragen-past"><details${hasQuery ? ' open' : ''}>
+    const wasOpen = !!dom.anfragenList.querySelector('.anfragen-past details')?.open;
+    html += `<li class="anfragen-past"><details${hasQuery || wasOpen ? ' open' : ''}>
       <summary>Vergangene (${past.length})</summary>
       <ul class="anfragen-sublist">${past.map(r => buildAnfrageItem(r)).join('')}</ul>
     </details></li>`;
@@ -2065,13 +2371,28 @@ function renderAnfragen() {
 
 /* Teilt + filtert Inbox-Einträge: Suche nach Name/Telefon/E-Mail/Datum und
    Aufteilung in kommende (heute/zukünftig/ohne Datum) vs. vergangene. */
+/* Eine Definition für „offen“ überall (Übersicht, Kachel, Reiter, Browser-Tab):
+   noch nicht erledigt UND Termin heute oder später (vergangene zählen nicht mehr). */
+function isOpenEntry(it, dateKey) {
+  if (!it || it.status === 'done') return false;
+  const ds = it[dateKey];
+  return !ds || ds >= isoDate(new Date());
+}
+
+// "2026-10-24" → "24.10.2026" (für die Suche nach deutschem Datum)
+function deDate(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : '';
+}
+
 function splitByDate(items, query, dateKey) {
   const q = (query || '').trim().toLowerCase();
   const filtered = q ? items.filter(it =>
     (it.name  || '').toLowerCase().includes(q) ||
     (it.phone || '').toLowerCase().includes(q) ||
     (it.email || '').toLowerCase().includes(q) ||
-    (it[dateKey] || '').toLowerCase().includes(q)
+    (it[dateKey] || '').toLowerCase().includes(q) ||
+    deDate(it[dateKey]).includes(q)
   ) : items.slice();
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const upcoming = [], past = [];
@@ -2266,6 +2587,7 @@ function formatAnfrageDate(date, time) {
   if (!date) return time ? `Uhrzeit ${time}` : 'Datum offen';
   try {
     const d = new Date(date + 'T00:00:00');
+    if (isNaN(d)) return time ? `${date} · ${time} Uhr` : String(date);
     const opts = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
     const datePart = d.toLocaleDateString('de-DE', opts);
     return time ? `${datePart} · ${time} Uhr` : datePart;
@@ -2370,7 +2692,7 @@ function renderOrders() {
   if (deferRenderWhileTyping('orders-list', renderOrders)) return;
   const list = window.alsterDb?.get('orders') || [];
   const items = Array.isArray(list) ? list : [];
-  const newCount = items.filter(o => o.status !== 'done').length;
+  const newCount = items.filter(o => isOpenEntry(o, 'pickupDate')).length;
 
   if (dom.ordersBadge) {
     dom.ordersBadge.hidden = newCount === 0;
@@ -2396,7 +2718,8 @@ function renderOrders() {
     ? upcoming.map(o => buildOrderItem(o)).join('')
     : `<li class="orders-empty">${hasQuery ? 'Keine Treffer bei den kommenden Bestellungen.' : 'Keine kommenden Bestellungen.'}</li>`;
   if (past.length) {
-    html += `<li class="anfragen-past"><details${hasQuery ? ' open' : ''}>
+    const wasOpen = !!dom.ordersList.querySelector('.anfragen-past details')?.open;
+    html += `<li class="anfragen-past"><details${hasQuery || wasOpen ? ' open' : ''}>
       <summary>Vergangene (${past.length})</summary>
       <ul class="anfragen-sublist">${past.map(o => buildOrderItem(o)).join('')}</ul>
     </details></li>`;
@@ -2514,6 +2837,7 @@ const DEFAULT_BROETCHEN = [
 ];
 
 function renderBroetchenEditor() {
+  markClean('broetchen-form');
   if (!dom.broetchenEditor) return;
   let items = window.alsterDb?.get('broetchen-items');
   if (!Array.isArray(items) || !items.length) items = DEFAULT_BROETCHEN;
@@ -2546,6 +2870,25 @@ function addBroetchenRow(item, skipStatus) {
   if (!skipStatus) setStatus(dom.broetchenStatus, 'Nicht vergessen: „Sorten speichern“ klicken.', '');
 }
 
+/* Preise prüfen und einheitlich schreiben ("2.5 €" → "2,50"). Ungültige Felder rot markieren.
+   Gleiche Regeln wie die Webseite (rules.js). Liefert die Zahl fehlerhafter Felder. */
+function normalizePriceFields(container) {
+  let bad = 0;
+  container?.querySelectorAll('.broetchen-edit-price').forEach(inp => {
+    const raw = inp.value.trim();
+    inp.classList.remove('is-invalid');
+    inp.removeAttribute('aria-invalid');
+    if (!raw) return;
+    const n = window.AlsterRules.parseEuro(raw);
+    if (n === null) { bad++; inp.classList.add('is-invalid'); inp.setAttribute('aria-invalid', 'true'); }
+    else inp.value = window.AlsterRules.euroText(n);
+  });
+  return bad;
+}
+function priceErrorText(bad) {
+  return `Nicht gespeichert: ${bad === 1 ? '1 Preis ist' : bad + ' Preise sind'} ungültig (rot markiert). Bitte z. B. „2,50“ eintragen – ohne Minus, größer als 0.`;
+}
+
 function readBroetchenForm() {
   const rows = Array.from(dom.broetchenEditor.querySelectorAll('.broetchen-edit-row'));
   const out = [];
@@ -2565,17 +2908,21 @@ function readBroetchenForm() {
 
 function onSaveBroetchen(e) {
   e.preventDefault();
+  const badPrices = normalizePriceFields(dom.broetchenEditor);
+  if (badPrices) { setStatus(dom.broetchenStatus, priceErrorText(badPrices), 'error'); dom.broetchenEditor.querySelector('.is-invalid')?.focus(); return false; }
   const items = readBroetchenForm();
   if (!items.length) {
     setStatus(dom.broetchenStatus, 'Bitte mindestens eine Sorte angeben.', 'error');
-    return;
+    return false;
   }
-  window.alsterDb?.set('broetchen-items', items).then(ok => {
+  return window.alsterDb?.set('broetchen-items', items).then(ok => {
     setStatus(dom.broetchenStatus,
       ok === false ? 'Speichern fehlgeschlagen.' : `Gespeichert · ${items.length} Sorten`,
       ok === false ? 'error' : 'ok');
+    if (ok === false) { warnWriteFailed(); return false; }
+    logActivity('Brötchen-Sorten aktualisiert');
+    return true;
   });
-  if (typeof logActivity === 'function') logActivity('Brötchen-Sorten aktualisiert');
 }
 
 function onResetBroetchen() {
@@ -2603,6 +2950,7 @@ const fmtIsoDe = iso => {
 };
 
 function renderBerlinerAdmin() {
+  markClean('berliner-settings-form'); markClean('berliner-items-form');
   const st = window.alsterDb?.get('berliner-settings') || {};
   if (bEl('berliner-active')) bEl('berliner-active').checked = !!st.active;
   updateBerlinerSwitch(!!st.active);
@@ -2625,16 +2973,21 @@ function renderBerlinerAdmin() {
 
 // Zeigt verständlich, ob die Aktion JETZT auf der Webseite sichtbar ist.
 function updateBerlinerLive(st) {
+  const { msg, live } = berlinerLiveState(st);
+  const el = bEl('berliner-live');
+  if (el) { el.textContent = msg; el.classList.toggle('is-live', live); }
+  const badge = bEl('overview-berliner-badge');
+  if (badge) badge.hidden = !live;
+}
+/* Eine Quelle für „ist die Aktion gerade auf der Webseite?“ – Anzeige und Speichern-Meldung */
+function berlinerLiveState(st) {
   const today = todayIso();
   let msg, live = false;
   if (!st.active) msg = 'Aus — nur hier im Mitgliederbereich, auf der Webseite nicht sichtbar.';
   else if (st.orderFrom && today < st.orderFrom) msg = `Eingeschaltet — erscheint ab ${fmtIsoDe(st.orderFrom)} auf der Webseite.`;
   else if (st.orderTo && today > st.orderTo) msg = `Bestellzeitraum ist am ${fmtIsoDe(st.orderTo)} abgelaufen — nicht mehr sichtbar.`;
   else { live = true; msg = `Jetzt sichtbar: Menüpunkt „Berliner-Bestellservice“ und Hinweis auf der Startseite${st.orderTo ? ` (bis ${fmtIsoDe(st.orderTo)})` : ''}.`; }
-  const el = bEl('berliner-live');
-  if (el) { el.textContent = msg; el.classList.toggle('is-live', live); }
-  const badge = bEl('overview-berliner-badge');
-  if (badge) badge.hidden = !live;
+  return { msg, live };
 }
 
 function addBerlinerRow(item, skipStatus) {
@@ -2670,14 +3023,22 @@ function updateBerlinerSwitch(active) {
 }
 
 // Ein Knopfdruck: an/aus umschalten und sofort speichern (inkl. eingetragener Daten).
+let berlinerToggling = false;
 async function onToggleBerliner() {
   const box = bEl('berliner-active');
-  if (!box) return;
+  if (!box || berlinerToggling) return; // kein Doppelklick (an → sofort wieder aus)
   const next = !box.checked;
   if (next && !confirm('Berliner-Vorbestellung jetzt auf der Webseite aktivieren?\n\nDann erscheinen der Menüpunkt und der Hinweis auf der Startseite (im eingestellten Zeitraum).')) return;
+  berlinerToggling = true;
+  const sw = bEl('berliner-switch'); if (sw) sw.disabled = true;
   box.checked = next;
-  const ok = await onSaveBerlinerSettings();
-  if (ok === false) { box.checked = !next; }
+  try {
+    const ok = await onSaveBerlinerSettings();
+    if (ok === false) { box.checked = !next; } else markClean('berliner-settings-form');
+  } finally {
+    berlinerToggling = false;
+    if (sw) sw.disabled = false;
+  }
   updateBerlinerSwitch(box.checked);
 }
 
@@ -2699,10 +3060,21 @@ async function onSaveBerlinerSettings(e) {
   if (st.pickupFrom && st.pickupTo && st.pickupFrom > st.pickupTo) {
     setStatus(status, '„Abholung von“ liegt nach „Abholung bis“.', 'error'); return false;
   }
+  // Abholung muss nach Bestellbeginn und in der Zukunft liegen – sonst kann niemand bestellen
+  const today = todayIso();
+  if (st.pickupTo && st.pickupTo < today) {
+    setStatus(status, `„Abholung bis“ (${fmtIsoDe(st.pickupTo)}) liegt in der Vergangenheit – so kann niemand bestellen.`, 'error'); return false;
+  }
+  if (st.pickupTo && st.orderFrom && st.pickupTo < st.orderFrom) {
+    setStatus(status, '„Abholung bis“ liegt vor „Bestellbar ab“ – bitte Zeiträume prüfen.', 'error'); return false;
+  }
+  if (st.pickupFrom && st.orderFrom && st.pickupFrom < st.orderFrom) {
+    setStatus(status, '„Abholung von“ liegt vor „Bestellbar ab“ – Abholung muss nach Bestellbeginn sein.', 'error'); return false;
+  }
   const ok = await window.alsterDb?.set('berliner-settings', st);
   if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
   updateBerlinerLive(st);
-  setStatus(status, st.active ? 'Gespeichert · auf der Webseite aktiv' : 'Gespeichert · nur im Mitgliederbereich (nicht auf der Webseite)', 'ok');
+  setStatus(status, `Gespeichert · ${berlinerLiveState(st).msg}`, 'ok');
   if (typeof logActivity === 'function') logActivity(st.active ? 'Berliner-Vorbestellung eingeschaltet' : 'Berliner-Vorbestellung ausgeschaltet');
   return true;
 }
@@ -2710,6 +3082,8 @@ async function onSaveBerlinerSettings(e) {
 async function onSaveBerlinerItems(e) {
   e.preventDefault();
   const status = bEl('berliner-items-status');
+  const badPrices = normalizePriceFields(bEl('berliner-editor'));
+  if (badPrices) { setStatus(status, priceErrorText(badPrices), 'error'); bEl('berliner-editor').querySelector('.is-invalid')?.focus(); return false; }
   const items = Array.from(bEl('berliner-editor')?.querySelectorAll('.broetchen-edit-row') || [])
     .map(row => {
       const name = row.querySelector('.broetchen-edit-name').value.trim();
@@ -2721,12 +3095,13 @@ async function onSaveBerlinerItems(e) {
       return it;
     })
     .filter(Boolean);
-  if (!items.length) { setStatus(status, 'Bitte mindestens eine Sorte angeben.', 'error'); return; }
+  if (!items.length) { setStatus(status, 'Bitte mindestens eine Sorte angeben.', 'error'); return false; }
   const ok = await window.alsterDb?.set('berliner-items', items);
-  if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
+  if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
   const noPrice = items.filter(it => !it.price).length;
   setStatus(status, `Gespeichert · ${items.length} Sorten${noPrice ? ` (${noPrice} ohne Preis — bitte Preise ergänzen)` : ''}`, noPrice ? '' : 'ok');
   if (typeof logActivity === 'function') logActivity('Berliner-Sorten aktualisiert');
+  return true;
 }
 
 function mondayOf(date) {
@@ -2755,6 +3130,7 @@ function formatShort(d) { return d.toLocaleDateString('de-DE', { day: '2-digit',
 function formatTime(d)  { return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
 function formatDateTime(d) { return d.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function formatRelative(d) {
+  if (!(d instanceof Date) || isNaN(d)) return '';
   const diff = (Date.now() - d.getTime()) / 1000;
   if (diff < 60)    return 'gerade eben';
   if (diff < 3600)  return `vor ${Math.floor(diff/60)} Min.`;

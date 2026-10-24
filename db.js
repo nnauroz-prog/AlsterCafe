@@ -317,6 +317,10 @@
     return true;
   }
 
+  function inboxCutoff() {
+    const d = new Date(); d.setDate(d.getDate() - 90);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
   async function listReservations() {
     if (!useSupabase) {
       const list = readCache('reservations') || [];
@@ -324,10 +328,13 @@
     }
     // select('*') statt fester Spaltenliste: so bricht das Lesen nicht, falls
     // die optionale Spalte 'note' in einer alten DB noch fehlt.
+    // Alle kommenden + die letzten 90 Tage (statt „die neuesten 200 Eingänge“ – sonst
+    // fielen früh gebuchte, aber noch kommende Termine heraus)
     const { data, error } = await sb.from('reservations')
       .select('*')
+      .or(`date.gte.${inboxCutoff()},date.is.null`)
       .order('received_at', { ascending: false })
-      .limit(200);
+      .limit(1000);
     if (error) { console.warn('Reservierungen-Read fehlgeschlagen', error); return readCache('reservations') || []; }
     const items = (data || []).map(r => ({
       id: r.id,
@@ -437,8 +444,9 @@
     // Notiz) in einer alten DB noch fehlt.
     const { data, error } = await sb.from('orders')
       .select('*')
+      .or(`pickup_date.gte.${inboxCutoff()},pickup_date.is.null`)
       .order('received_at', { ascending: false })
-      .limit(200);
+      .limit(1000);
     if (error) { console.warn('Bestellungen-Read fehlgeschlagen', error); return readCache('orders') || []; }
     const items = (data || []).map(o => ({
       id: o.id,
@@ -508,7 +516,10 @@
     if (!useSupabase) {
       notifySync('LOCAL');
       window.addEventListener('storage', e => {
-        if (e.key && e.key.startsWith(PREFIX)) cb(e.key.slice(PREFIX.length));
+        if (!e.key || !e.key.startsWith(PREFIX)) return;
+        const key = e.key.slice(PREFIX.length);
+        delete cache[key]; // anderer Tab hat geändert → Zwischenspeicher neu lesen
+        cb(key);
       });
       return;
     }
@@ -588,9 +599,10 @@
   async function staffAgenda(code, from, days) {
     const start = new Date(from); start.setHours(0, 0, 0, 0);
     if (!useSupabase) {
-      let demoCode = '123456';
-      try { demoCode = localStorage.getItem(DEMO_STAFF_KEY) || demoCode; } catch {}
-      if (demoCode === 'off' || String(code) !== demoCode) return { error: 'invalid' };
+      // Demo: aus, bis im Mitgliederbereich ein Code festgelegt wurde (wie im echten Betrieb)
+      let demoCode = '';
+      try { demoCode = localStorage.getItem(DEMO_STAFF_KEY) || ''; } catch {}
+      if (!demoCode || demoCode === 'off' || String(code) !== demoCode) return { error: 'invalid' };
       const end = new Date(start); end.setDate(end.getDate() + (days || 7));
       const a = isoDay(start), b = isoDay(end);
       const res = (readCache('reservations') || []).filter(r => r.date >= a && r.date < b)
@@ -617,7 +629,7 @@
     return { ok: true, active: !!data };
   }
   async function isStaffCodeSet() {
-    if (!useSupabase) { try { return localStorage.getItem(DEMO_STAFF_KEY) !== 'off'; } catch { return true; } }
+    if (!useSupabase) { try { const v = localStorage.getItem(DEMO_STAFF_KEY); return !!v && v !== 'off'; } catch { return false; } }
     const { data, error } = await sb.rpc('staff_code_set');
     if (error) return null; // unbekannt / SQL fehlt
     return !!data;

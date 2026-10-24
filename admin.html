@@ -11,9 +11,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r193" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r193" />
-  <script>(function(){var V='2026-05-10-r193';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r194" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r194" />
+  <script>(function(){var V='2026-05-10-r194';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -274,6 +274,15 @@
               <span class="overview-card-body">
                 <span class="overview-card-title">Urlaub &amp; Feiertage</span>
                 <span class="overview-card-desc">Schließtage eintragen</span>
+              </span>
+              <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+            </button>
+
+            <button class="overview-card" type="button" data-tab="account">
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-user"/></svg></span>
+              <span class="overview-card-body">
+                <span class="overview-card-title">Konto &amp; Passwort</span>
+                <span class="overview-card-desc">Passwort ändern, Zugänge, Aktivitäten</span>
               </span>
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
             </button>
@@ -698,8 +707,8 @@
             <form id="notice-form">
               <label>
                 <span>Hinweistext</span>
-                <textarea name="notice" id="notice-input" rows="3"
-                          placeholder="z. B. „Wir haben am 1. Mai geschlossen. Ihr Alstercafé-Team"></textarea>
+                <textarea name="notice" id="notice-input" rows="3" maxlength="300"
+                          placeholder="z. B. „Wir haben am 1. Mai geschlossen. Ihr Alstercafé-Team“"></textarea>
               </label>
               <div class="save-bar inline">
                 <p class="save-status" id="notice-status"></p>
@@ -886,7 +895,7 @@
             <form id="berliner-settings-form" class="berliner-settings">
               <!-- Ein Knopfdruck schaltet die Aktion auf der Webseite an/aus (speichert sofort) -->
               <input type="checkbox" id="berliner-active" hidden />
-              <button type="button" class="btn btn-primary berliner-switch" id="berliner-switch">
+              <button type="button" class="btn btn-primary berliner-switch" id="berliner-switch" data-no-dirty>
                 Auf der Webseite aktivieren
               </button>
               <div class="berliner-dates">
@@ -959,21 +968,21 @@
               <div class="help-box-body">
                 <ul>
                   <li>Zweimal das <strong>neue Passwort</strong> eintippen (beide Felder identisch) und auf <strong>„Passwort speichern“</strong>.</li>
-                  <li>Mindestens 12 Zeichen empfohlen — Buchstaben, Zahlen, ein Sonderzeichen.</li>
+                  <li>Mindestens 10 Zeichen (besser 12 und mehr) – am besten ein kurzer Satz, den nur Sie kennen.</li>
                   <li>Beim nächsten Anmelden gilt das neue Passwort.</li>
                 </ul>
               </div>
             </details>
-            <form id="password-form" class="account-form">
+            <form id="password-form" class="account-form" novalidate>
               <label>
                 <span>Neues Passwort</span>
                 <input type="password" id="new-password" autocomplete="new-password"
-                       minlength="8" required placeholder="••••••••" />
+                       minlength="10" required placeholder="••••••••" />
               </label>
               <label>
                 <span>Neues Passwort wiederholen</span>
                 <input type="password" id="new-password-confirm" autocomplete="new-password"
-                       minlength="8" required placeholder="••••••••" />
+                       minlength="10" required placeholder="••••••••" />
               </label>
               <div class="account-form-actions">
                 <p class="save-status" id="password-status"></p>
@@ -994,7 +1003,7 @@
             <div class="panel-card">
               <h3>Mitarbeiter-Zugang anlegen</h3>
               <p class="panel-help">E-Mail des Mitarbeiters und ein Start-Passwort eintippen, auf <strong>„Zugang anlegen“</strong> klicken. Sagen Sie der Person beide Angaben — sie kann sich anmelden und ihr Passwort später selbst ändern.</p>
-              <form id="invite-form" class="account-form">
+              <form id="invite-form" class="account-form" novalidate>
                 <label>
                   <span>E-Mail-Adresse</span>
                   <input type="email" id="invite-email" autocomplete="email"
@@ -1068,10 +1077,11 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r193" defer></script>
-  <script src="db.js?v=2026-05-10-r193" defer></script>
-  <script src="menudata.js?v=2026-05-10-r193" defer></script>
-  <script src="calendar.js?v=2026-05-10-r193" defer></script>
-  <script src="admin.js?v=2026-05-10-r193" defer></script>
+  <script src="config.js?v=2026-05-10-r194" defer></script>
+  <script src="db.js?v=2026-05-10-r194" defer></script>
+  <script src="menudata.js?v=2026-05-10-r194" defer></script>
+  <script src="calendar.js?v=2026-05-10-r194" defer></script>
+  <script src="rules.js?v=2026-05-10-r194" defer></script>
+  <script src="admin.js?v=2026-05-10-r194" defer></script>
 </body>
 </html>
