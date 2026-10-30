@@ -10306,3 +10306,200 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 .lunch-today-dish.is-long, .lunch-today-dish.is-xlong, .dish-alt-name.is-long, .dish-alt-name.is-xlong,
 .today-feature-dish.is-long, .today-feature-dish.is-xlong { letter-spacing: -0.005em; word-spacing: .04em; }
 @media (max-width: 760px) { .today-feature-dish.is-xlong, .today-feature-dish.is-long { padding: 0 8px; } }
+
+/* =====================================================================
+   FACELIFT 2 · Webseite (Herbst 2026)
+   Gleicher Aufbau, gleiche Texte, gleiche Farben & Schriften – nur feiner:
+   einheitliche Abstände, Rundungen, Schatten, Linien, Knöpfe und Felder.
+   Was der Mitgliederbereich mitbenutzt, ist mit body:not(.admin-body) auf die
+   Webseite begrenzt. Kein Kursiv (Regel des Inhabers bleibt).
+   ===================================================================== */
+:root {
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-pill: 999px;
+  --surface-1: #FFFCF4; --surface-2: #FAF5EC; --surface-3: #F4EBDA;
+  --surface-dark: #2E1B11; --surface-dark-2: #3A2317;
+  --surface-glass: rgba(255, 252, 244, .95);
+  --hairline: rgba(61, 36, 21, .12); --hairline-strong: rgba(61, 36, 21, .22);
+  --hairline-gold: rgba(184, 137, 62, .38); --hairline-on-dark: rgba(241, 231, 211, .14);
+  --text-2: #5E4A3D; --text-3: #786152;
+  --accent-text: #8A6420; --accent-wash: rgba(184, 137, 62, .10);
+  --sh-1: 0 1px 1px rgba(42, 24, 16, .04), 0 2px 6px -2px rgba(42, 24, 16, .06);
+  --sh-2: 0 1px 2px rgba(42, 24, 16, .05), 0 10px 26px -14px rgba(42, 24, 16, .18);
+  --sh-3: 0 2px 4px rgba(42, 24, 16, .05), 0 26px 50px -26px rgba(42, 24, 16, .26);
+  --sh-dark: 0 2px 6px rgba(0, 0, 0, .18), 0 32px 64px -32px rgba(0, 0, 0, .55);
+  --ring: 0 0 0 3px rgba(184, 137, 62, .28);
+  --track-label: .16em;
+}
+
+/* --- Fehler aus der Design-Prüfung --- */
+/* Platzhalter waren noch schräg (verstößt gegen „kein Kursiv“) */
+*::placeholder { font-style: normal !important; }
+html { font-synthesis: weight; }
+/* Startseite: Knöpfe unter dem Tagesgericht auf dem normalen Seitenrand */
+@media (max-width: 760px) { .today-feature-inner { padding-left: var(--gutter, 20px); padding-right: var(--gutter, 20px); } }
+/* Wochenkarte: „heute“ nicht mehr wie durchgestrichen, sondern Goldpunkt; Karten gleich hoch & breit */
+.lunch-day.is-today .lunch-day-name { background-image: none; padding: 0; }
+.lunch-day.is-today .lunch-day-name::after {
+  content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold); margin-left: 8px; vertical-align: middle;
+}
+.lunch-day.is-today { transform: none !important; }
+@media (min-width: 1100px) { .lunch-week:not(.lunch-week-empty) { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; } }
+/* Kapitel-Leiste rechts überdeckte Inhalte → nur auf sehr breiten Bildschirmen */
+@media (max-width: 1439px) { .chapter-rail { display: none !important; } }
+/* Auswahlfelder nicht abgeschnitten („Bitte wähl…“) */
+body:not(.admin-body) select { padding-right: 36px; text-overflow: ellipsis; }
+/* Kleiner Goldtext auf hellem Grund: dunkleres Gold für gute Lesbarkeit */
+.col-link, .map-ph-link, .page-hero .lunch-meta, .date-hint { color: var(--accent-text); }
+/* Kleinste Beschriftungen nicht unter 11 px */
+.col-label, .karte-tag, .spread-kicker, .order-summary-eyebrow { font-size: max(.6875rem, 11px); }
+/* „Nach oben“-Knopf: heller, kleiner, verdeckt weniger */
+.to-top {
+  width: 42px; height: 42px; background: var(--surface-glass); color: var(--bean);
+  border: 1px solid var(--hairline-strong); box-shadow: var(--sh-2);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+html { scroll-padding-bottom: 72px; }
+/* Dekorative Riesen-Wörter im Hintergrund leiser, damit sie nicht über Texten „schmieren“ */
+.section-shout, .page-hero-watermark { opacity: .03 !important; }
+.chapter-dark .section-shout, .chapter-dark .page-hero-watermark { opacity: .04 !important; }
+@media (max-width: 640px) { .chapter-mark { display: none !important; } }
+/* Lange Überschriften-Zeilen ausgewogen umbrechen */
+.eyebrow, .hero-eyebrow, .page-hero p.eyebrow { text-wrap: balance; }
+
+/* --- Schrift: ruhigere Laufweite, klare Hierarchie --- */
+body:not(.admin-body) h1, body:not(.admin-body) h2 { letter-spacing: -0.018em; }
+body:not(.admin-body) h3 { letter-spacing: -0.01em; line-height: 1.18; }
+.hero-cinema-h1 { letter-spacing: -0.024em; word-spacing: .04em; }
+body:not(.admin-body) .eyebrow { letter-spacing: var(--track-label); font-weight: 600; }
+.spread-kicker { letter-spacing: var(--track-label); }
+body:not(.admin-body) .lead, body:not(.admin-body) .page-lead { line-height: 1.6; max-width: 36em; }
+body:not(.admin-body) main p { text-wrap: pretty; }
+/* Markierung unter Wörtern wie „Sie da“: feine Linie statt Balken */
+.page-hero-editorial h1 em, .hero-cinema-h1 .head-2 em {
+  background-image: linear-gradient(180deg, transparent 86%, rgba(184, 137, 62, .38) 86%, rgba(184, 137, 62, .38) 93%, transparent 93%);
+}
+
+/* --- Kopfleiste: Glas-Effekt mit feiner Linie --- */
+.site-header.is-scrolled, .site-header {
+  -webkit-backdrop-filter: saturate(160%) blur(14px); backdrop-filter: saturate(160%) blur(14px);
+}
+.site-header.is-scrolled { background: var(--surface-glass); box-shadow: 0 1px 0 var(--hairline); }
+.nav-shop { box-shadow: var(--sh-1); }
+
+/* --- Ein Kartensystem: gleiche Rundung, feine Linie, weicher Schatten --- */
+.spread-card, .reviews-card, .karte-block, .contact-info-block, .map-card, .hero-coord {
+  border-radius: var(--r-lg);
+  border-color: var(--hairline);
+}
+.karte-block, .contact-info-block, .map-card, .reviews-card { box-shadow: var(--sh-2); }
+@media (hover: hover) and (pointer: fine) {
+  .reviews-card, .spread-card, .karte-block { transition: transform .26s cubic-bezier(.22,1,.36,1), box-shadow .26s cubic-bezier(.22,1,.36,1), border-color .26s; }
+  .reviews-card:hover, .spread-card:hover { transform: translateY(-2px); box-shadow: var(--sh-3); border-color: var(--hairline-gold); }
+}
+.reservation-form, .order-summary-card, .reservation-tips { border-radius: var(--r-lg); }
+.hero-coord { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), var(--sh-2); }
+
+/* --- Knöpfe (nur Webseite) --- */
+body:not(.admin-body) .btn-primary {
+  background: linear-gradient(180deg, #4A2C1A, #3D2415);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), var(--sh-2);
+}
+body:not(.admin-body) .btn-gold {
+  background: linear-gradient(180deg, #C39548, #B0823A);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), var(--sh-2);
+}
+@media (hover: hover) and (pointer: fine) {
+  body:not(.admin-body) .btn-primary:hover, body:not(.admin-body) .btn-gold:hover { transform: translateY(-1px); box-shadow: var(--sh-3); }
+}
+body:not(.admin-body) .btn-primary:active, body:not(.admin-body) .btn-gold:active { transform: scale(.98); }
+body:not(.admin-body) .btn:focus-visible { box-shadow: var(--ring); }
+@media (hover: hover) and (pointer: fine) {
+  .spread-link .ico, body:not(.admin-body) .btn .ico-arrow { transition: transform .16s ease; }
+  .spread-link:hover .ico { transform: translateX(3px); }
+}
+
+/* --- Formularfelder (Reservierung, Brötchen, Berliner): klare Kästen statt nur Unterstrich --- */
+.reservation-form input:not([type="checkbox"]):not([type="radio"]), .reservation-form select, .reservation-form textarea,
+.order-form input:not([type="checkbox"]):not([type="radio"]):not(.qty-input), .order-form select, .order-form textarea {
+  min-height: 52px; padding: 13px 16px;
+  border: 1px solid var(--hairline-strong); border-radius: var(--r-sm);
+  background-color: #FFFFFF; background-image: none;
+  font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.4; color: var(--ink, #2A1810);
+  box-shadow: inset 0 1px 2px rgba(42, 24, 16, .04);
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.reservation-form textarea, .order-form textarea { min-height: 120px; resize: vertical; }
+.reservation-form select, .order-form select { padding-right: 40px; }
+.reservation-form input::placeholder, .reservation-form textarea::placeholder,
+.order-form input::placeholder, .order-form textarea::placeholder { color: rgba(120, 97, 82, .6); }
+@media (hover: hover) and (pointer: fine) {
+  .reservation-form input:hover, .reservation-form select:hover, .reservation-form textarea:hover,
+  .order-form input:hover, .order-form select:hover, .order-form textarea:hover { border-color: rgba(61, 36, 21, .34); }
+}
+.reservation-form input:focus, .reservation-form select:focus, .reservation-form textarea:focus,
+.order-form input:focus, .order-form select:focus, .order-form textarea:focus {
+  border-color: var(--gold); box-shadow: var(--ring); outline: none;
+}
+/* Doppelrahmen um die Formular-Karten entfernen (wirkte altmodisch) */
+.reservation-form, .order-summary-card { box-shadow: var(--sh-3); }
+
+/* --- Speisekarte: Kopf mit Linie, Preise sauber untereinander --- */
+.karte-block-head { border-bottom: 1px solid var(--hairline); padding-bottom: 14px; margin-bottom: 6px; }
+.karte-list > li { border-bottom-color: var(--hairline); }
+.karte-preis { font-variant-numeric: tabular-nums lining-nums; color: var(--accent-text); }
+.karte-desc { color: var(--text-3); }
+.karte-jump {
+  background: var(--surface-glass) !important;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 var(--hairline);
+}
+.karte-jump-link { border-color: var(--hairline-strong); }
+
+/* --- Dunkle Bereiche: eine feine Goldlinie oben, ruhige Lesefarben --- */
+.chapter-dark { box-shadow: inset 0 1px 0 var(--hairline-gold); }
+.lunch-day { border-radius: var(--r-md); border-color: var(--hairline-on-dark); }
+.lunch-day.is-today { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184, 137, 62, .12); }
+.lunch-today { border-radius: var(--r-lg); box-shadow: var(--sh-dark); }
+@media (min-width: 761px) { .lunch-today .btn-gold { white-space: nowrap; } }
+.lunch-today > .btn-link, .lunch-today > .lunch-share { justify-self: start; }
+
+/* --- Bewertungen: Symbol im Goldkreis, Pfeil bewegt sich beim Zeigen --- */
+@media (hover: hover) and (pointer: fine) {
+  .reviews-card .ico { transition: transform .16s ease; }
+  .reviews-card:hover .ico:last-child { transform: translateX(3px); }
+}
+
+/* --- Fragen (Über uns) --- */
+.faq-summary { padding-top: 20px; padding-bottom: 20px; }
+
+/* --- Fußzeile: Linien bündig mit dem Inhalt, Zahlen sauber untereinander --- */
+.site-footer .hours-list, .site-footer time { font-variant-numeric: tabular-nums; }
+
+/* --- Bewegung nur, wenn erwünscht --- */
+@media (prefers-reduced-motion: reduce) {
+  .reviews-card, .spread-card, body:not(.admin-body) .btn-primary, body:not(.admin-body) .btn-gold { transition: none !important; transform: none !important; }
+}
+/* Handy: Kopfleiste ohne Unschärfe (Leistung) → fast deckend, damit kein Text durchscheint */
+@media (max-width: 980px) {
+  .site-header, .site-header.is-scrolled { background: #FFFCF4 !important; box-shadow: 0 1px 0 var(--hairline); }
+}
+/* Startseite: Croque-Karte ohne leere Fläche – am Computer bleibt sie beim Scrollen
+   neben den drei rechten Karten stehen (Magazin-Stil) */
+@media (min-width: 981px) {
+  .spread-grid > .spread-card-hero { align-self: start; position: sticky; top: 104px; }
+  .spread-card-hero {
+    background:
+      radial-gradient(120% 80% at 100% 100%, rgba(184, 137, 62, .14), transparent 60%),
+      radial-gradient(900px 300px at 0% 0%, rgba(184, 137, 62, .10), transparent 60%),
+      var(--cream);
+  }
+}
+.spread-num { color: var(--gold-soft); }
+.spread-card-hero .spread-num { opacity: .7; }
+/* Fußzeile: Linien bündig, Index-Links ruhiger */
+@media (min-width: 981px) {
+  .site-footer .footer-nav { grid-template-columns: repeat(3, max-content); column-gap: 64px; row-gap: 2px; justify-content: start; }
+  .site-footer .footer-nav a { border-bottom: 0; letter-spacing: .08em; font-size: .78rem; }
+}
+.footer-grid::before { background: var(--hairline-on-dark); left: 0; right: 0; }
