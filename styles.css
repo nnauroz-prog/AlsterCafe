@@ -10885,11 +10885,11 @@ body:not(.admin-body) .reservation-form .form-row > label { margin-bottom: 0; }
   body:not(.admin-body) .reservation-form .form-row.three { column-gap: 16px; grid-template-columns: minmax(0, 1.15fr) minmax(0, .9fr) minmax(0, 1.15fr); }
 }
 
-/* Fußzeile ganz unten: „Erstellt durch Sitalo.de“ */
-.site-footer .footer-maker { margin: 0 auto; padding: 14px 0 max(18px, env(safe-area-inset-bottom)); text-align: center;
-  font: 500 .76rem/1.4 'Inter', sans-serif; letter-spacing: .04em; color: rgba(241, 231, 211, .58); }
-.site-footer .footer-maker a { color: var(--gold-soft, #D4B380); text-decoration: none; border-bottom: 1px solid rgba(212, 179, 128, .4); padding-bottom: 1px; }
-@media (hover: hover) { .site-footer .footer-maker a:hover { color: #F1D28E; border-bottom-color: #F1D28E; } }
+/* Fußzeile ganz unten: dezenter Hinweis „Erstellt durch Sitalo.de“ */
+.site-footer .footer-maker { margin: 0 auto; padding: 4px 0 max(16px, env(safe-area-inset-bottom)); text-align: center;
+  font: 400 .7rem/1.4 'Inter', sans-serif; letter-spacing: .02em; color: rgba(241, 231, 211, .56); }
+.site-footer .footer-maker a { color: inherit; text-decoration: none; }
+@media (hover: hover) { .site-footer .footer-maker a:hover { color: rgba(241, 231, 211, .8); text-decoration: underline; text-underline-offset: 2px; } }
 
 /* ============================================================
    SOMMER-SPECIALS · Speisekarte + Startseite
