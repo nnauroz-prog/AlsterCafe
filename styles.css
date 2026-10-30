@@ -10503,3 +10503,93 @@ body:not(.admin-body) .btn:focus-visible { box-shadow: var(--ring); }
   .site-footer .footer-nav a { border-bottom: 0; letter-spacing: .08em; font-size: .78rem; }
 }
 .footer-grid::before { background: var(--hairline-on-dark); left: 0; right: 0; }
+
+/* =====================================================================
+   FACELIFT 3 · Premium-Feinschliff (Webseite)
+   Gleiches Grundgerüst – nur hochwertiger: Rhythmus, Details, Material.
+   ===================================================================== */
+:root { --section-y: clamp(72px, 9vw, 128px); }
+
+/* 1 · Rhythmus: Abstände zwischen Eyebrow, Überschrift und Einleitung */
+body:not(.admin-body) .section-head .eyebrow { margin-bottom: 14px; }
+body:not(.admin-body) .section-head h2 + p, body:not(.admin-body) .section-head h2 + .lead { margin-top: 16px; }
+body:not(.admin-body) .page-hero .page-lead { margin-top: 18px; }
+
+/* 2 · Kopfbereich */
+.topbar { font-size: .76rem; letter-spacing: .02em; }
+@media (min-width: 981px) {
+  .primary-nav a:not(.nav-shop):not(.lang-toggle) { position: relative; }
+  .primary-nav a:not(.nav-shop):not(.lang-toggle)::after {
+    content: ''; position: absolute; left: 50%; right: 50%; bottom: -6px; height: 1.5px;
+    background: var(--gold); border-radius: 2px; transition: left .26s cubic-bezier(.22,1,.36,1), right .26s cubic-bezier(.22,1,.36,1);
+  }
+  .primary-nav a:not(.nav-shop):not(.lang-toggle):hover::after,
+  .primary-nav a.is-active:not(.nav-shop)::after { left: 0; right: 0; }
+}
+.nav-shop { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), var(--sh-1); }
+@media (hover: hover) and (pointer: fine) { .nav-shop:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), var(--sh-2); transform: translateY(-1px); } }
+
+/* 3 · Startseite-Hero: Info-Karte & Live-Status */
+.hero-coord { font-variant-numeric: tabular-nums; }
+.live-status { background: rgba(255, 252, 244, .72); box-shadow: var(--sh-1); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+/* 4 · Dunkle Bereiche: warmer Lichtverlauf + feine Filmkörnung statt flach */
+.chapter-dark { position: relative; isolation: isolate; }
+.chapter-dark::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(212, 179, 128, .10), transparent 60%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .95  0 0 0 0 .85  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.06'/></svg>");
+  mix-blend-mode: soft-light;
+}
+
+/* 5 · Wochenkarte: Tag in Gold-Serif, Datum ruhiger, „heute“ glimmt */
+.lunch-day { background: rgba(255, 252, 244, .035); }
+.lunch-day.is-today { background: linear-gradient(180deg, rgba(184, 137, 62, .12), rgba(184, 137, 62, .04)); }
+.lunch-day-date { letter-spacing: .08em; }
+
+/* 6 · Speisekarte: Kategorie-Symbol im Goldkreis */
+.karte-block-head .ico {
+  width: 40px; height: 40px; padding: 9px; box-sizing: border-box;
+  border-radius: 50%; background: var(--accent-wash); color: var(--accent-text);
+}
+.karte-desc { max-width: 46ch; }
+
+/* 7 · Brötchen/Berliner: Mengen-Stepper als ruhige Pille, „+“ hervorgehoben */
+body:not(.admin-body) .qty-stepper { border-radius: var(--r-pill); background: var(--surface-1); border-color: var(--hairline-strong); box-shadow: var(--sh-1); }
+body:not(.admin-body) .qty-btn { border-radius: 50%; }
+body:not(.admin-body) .qty-btn:last-child { background: var(--bean); color: var(--surface-1); }
+@media (hover: hover) and (pointer: fine) {
+  body:not(.admin-body) .qty-btn:first-child:hover { background: var(--accent-wash); }
+  body:not(.admin-body) .qty-btn:last-child:hover { background: #4A2C1A; }
+}
+.broetchen-row.is-active { background: linear-gradient(90deg, var(--accent-wash), transparent 70%); border-radius: var(--r-md); }
+
+/* 8 · Kontakt: Social-Links als Pillen, Karten-Platzhalter edel statt Streifen */
+.contact .social { display: flex; flex-wrap: wrap; gap: 8px; }
+.contact .social a {
+  display: inline-flex; margin: 0; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px;
+  border: 1px solid var(--hairline-strong); border-radius: var(--r-pill); background: var(--surface-1);
+  text-decoration: none; transition: border-color .16s ease, background-color .16s ease;
+}
+@media (hover: hover) and (pointer: fine) { .contact .social a:hover { border-color: var(--gold); background: var(--accent-wash); } }
+.map-placeholder {
+  background:
+    radial-gradient(80% 60% at 50% 40%, var(--surface-1), var(--surface-3)),
+    var(--surface-2);
+}
+
+/* 9 · Bewertungen: Überschrift mittig wie die anderen Abschnitte */
+.landing-reviews .section-head { text-align: center; margin-left: auto; margin-right: auto; max-width: 760px; }
+.landing-reviews .section-head .eyebrow { justify-content: center; }
+
+/* 10 · Fragen & Fußzeile */
+.faq-item[open] .faq-summary::after { background: var(--bean); color: var(--surface-1); border-color: var(--bean); }
+.faq-item { border-color: var(--hairline); }
+.site-footer { padding-top: clamp(72px, 8vw, 104px); }
+.pay-badge > span { box-shadow: none; }
+
+/* 11 · Feine Bewegung */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal:not(.in) { transform: translateY(12px); }
+}
