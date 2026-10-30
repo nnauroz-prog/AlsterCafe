@@ -39,8 +39,32 @@
     return { kw: `KW ${isoWeek(monday)}`, range: `${f(monday)} – ${f(sunday)}` };
   }
 
-  function render(el, data, monday) {
+  // Status-Pille wie im Mitgliederbereich: Neu → bestätigt → erledigt
+  function pill(x) {
+    if (x.status === 'done') return '<span class="cal-pill">erledigt</span>';
+    if (x.confirmedAt) return '<span class="cal-pill is-confirmed">bestätigt</span>';
+    return '';
+  }
+  // opts.onOpen(kind, id): Einträge antippbar (nur Inhaber); ohne opts wie bisher statisch
+  function render(el, data, monday, opts) {
     if (!el) return;
+    const open = opts && typeof opts.onOpen === 'function' ? opts.onOpen : null;
+    el._calOpen = open;
+    if (open && !el._calBound) {
+      el._calBound = true;
+      const go = (e) => {
+        const it = e.target.closest('.cal-item[data-id]');
+        if (!it || !el._calOpen) return;
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        el._calOpen(it.dataset.kind, it.dataset.id);
+      };
+      el.addEventListener('click', go);
+      el.addEventListener('keydown', go);
+    }
+    const tap = (kind, id, label) => open && id
+      ? ` data-kind="${kind}" data-id="${escapeHtml(id)}" tabindex="0" role="button" aria-label="${escapeHtml(label)} öffnen"`
+      : '';
     const todayIso = isoDate(new Date());
     const byDay = {};
     (data.reservations || []).forEach(r => { if (r.date) (byDay[r.date] = byDay[r.date] || []).push({ kind: 'res', time: r.time || '', r }); });
@@ -59,20 +83,20 @@
       const rows = items.map(x => {
         if (x.kind === 'res') {
           const r = x.r;
-          return `<li class="cal-item is-res${r.status === 'done' ? ' is-done' : ''}">
+          return `<li class="cal-item is-res${r.status === 'done' ? ' is-done' : ''}"${tap('res', r.id, 'Reservierung ' + (r.name || ''))}>
             <span class="cal-time">${escapeHtml(r.time || '–')}</span>
             <span class="cal-main"><span class="cal-type">Tisch</span> <strong>${escapeHtml(r.name || 'Ohne Namen')}</strong>${r.persons ? ` · ${escapeHtml(r.persons)}` : ''}</span>
-            ${r.status === 'done' ? '<span class="cal-pill">erledigt</span>' : ''}
+            ${pill(r)}
           </li>`;
         }
         const o = x.o;
         const its = Array.isArray(o.items) ? o.items : [];
         const berliner = its.some(it => it && it.kind === 'berliner');
         const list = its.filter(it => it && (parseInt(it.qty, 10) || 0) > 0).map(it => `${parseInt(it.qty, 10)}× ${escapeHtml(it.name || '')}`).join(', ');
-        return `<li class="cal-item is-order${berliner ? ' is-berliner' : ''}${o.status === 'done' ? ' is-done' : ''}">
+        return `<li class="cal-item is-order${berliner ? ' is-berliner' : ''}${o.status === 'done' ? ' is-done' : ''}"${tap('order', o.id, 'Bestellung ' + (o.name || ''))}>
           <span class="cal-time">${escapeHtml(o.pickupTime || '–')}</span>
           <span class="cal-main"><span class="cal-type">${berliner ? 'Berliner' : 'Abholung'}</span> <strong>${escapeHtml(o.name || 'Ohne Namen')}</strong>${o.totalCount ? ` · ${o.totalCount} Stück` : ''}${list ? `<span class="cal-detail">${list}</span>` : ''}</span>
-          ${o.status === 'done' ? '<span class="cal-pill">erledigt</span>' : ''}
+          ${pill(o)}
         </li>`;
       }).join('');
       return `<section class="cal-day${iso === todayIso ? ' is-today' : ''}${iso < todayIso ? ' is-past' : ''}${items.length ? '' : ' is-empty'}">

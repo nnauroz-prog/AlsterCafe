@@ -10708,3 +10708,121 @@ body:not(.admin-body) .qty-btn:last-child { background: var(--bean); color: var(
 }
 .today-feature > .today-feature-inner { position: relative; z-index: 1; }
 .site-footer .footer-brand img, footer .footer-brand img { filter: drop-shadow(0 0 16px rgba(214, 168, 92, .28)); }
+
+/* ============================================================
+   STUFE 2 · Mitgliederbereich als System + Wow
+   ============================================================ */
+/* Status-Pillen: Neu (gold) → Bestätigt (grün) → Erledigt (grau) */
+.admin-body .anfrage-tag.is-stage-confirmed { background: rgba(77, 124, 84, .14); color: #2F6B3A; border-color: rgba(77, 124, 84, .35); }
+.admin-body .anfrage-tag.is-stage-done { background: rgba(42, 24, 16, .06); color: #6A5A4C; }
+.admin-body .anfrage-tag { transition: background-color .3s ease, color .3s ease; }
+.cal-pill.is-confirmed { background: rgba(77, 124, 84, .14); color: #2F6B3A; }
+.anfrage-nomail { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; font-size: .88rem; line-height: 1.45;
+  background: rgba(184, 137, 62, .08); border: 1px dashed rgba(184, 137, 62, .45); color: var(--coffee, #5B3A26); }
+.anfrage-nomail a { color: var(--accent-text, #8A6420); font-weight: 600; margin-left: 4px; }
+.panel-warn { padding: 10px 12px; border-radius: 12px; background: rgba(160, 60, 40, .07); border: 1px solid rgba(160, 60, 40, .22); }
+
+/* Dialoge: rote Bestätigungs-Taste */
+.confirm-dialog .btn-danger { background: #A63A2A; border-color: #A63A2A; color: #fff; }
+.confirm-dialog .btn-danger:hover { background: #8E2F22; }
+.confirm-dialog[open] { animation: dlg-in .26s cubic-bezier(.2, .8, .2, 1); }
+@keyframes dlg-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+.admin-toast.is-error { background: #8E2F22; }
+
+/* Speichern: einheitliche Status-Sprache + goldener Haken */
+.save-status.is-pending { color: var(--accent-text, #8A6420); font-weight: 600; }
+.save-status.is-pending::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--gold); vertical-align: middle; }
+.save-tick { display: inline-flex; width: 26px; height: 26px; flex: 0 0 auto; color: #3E7A49; opacity: 0; }
+.save-tick svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.save-tick.is-on { opacity: 1; animation: tick-out .4s ease 2.6s forwards; }
+.save-tick.is-on circle, .save-tick.is-on path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: art-draw .6s cubic-bezier(.6, .05, .25, 1) forwards; }
+.save-tick.is-on path { animation-delay: .35s; }
+@keyframes tick-out { to { opacity: 0; } }
+
+/* Kalender-Einträge antippbar */
+.cal-item[data-id] { cursor: pointer; border-radius: 10px; transition: background-color .16s ease, transform .16s ease; }
+@media (hover: hover) { .cal-item[data-id]:hover { background: rgba(184, 137, 62, .10); } }
+.cal-item[data-id]:active { transform: scale(.99); }
+.cal-item[data-id]:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.anfrage-item.is-spotlit { animation: spotlit 2.2s ease; }
+@keyframes spotlit { 0%, 100% { box-shadow: 0 0 0 0 rgba(184, 137, 62, 0); } 20%, 60% { box-shadow: 0 0 0 4px rgba(184, 137, 62, .45), 0 18px 40px -18px rgba(184, 137, 62, .7); } }
+
+/* Erledigt: Funkenregen */
+.anfrage-item { position: relative; }
+.done-burst { position: absolute; right: 64px; bottom: 34px; width: 0; height: 0; pointer-events: none; z-index: 3; }
+.done-burst i { position: absolute; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: radial-gradient(circle, #F1D28E, #C8963F 60%, transparent 70%);
+  animation: burst 1s cubic-bezier(.15, .7, .3, 1) forwards; }
+@keyframes burst { 0% { transform: translate(0, 0) scale(.4); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; } }
+.anfrage-item.just-done { animation: just-done .9s ease; }
+@keyframes just-done { 0% { transform: scale(1); } 35% { transform: scale(1.012); box-shadow: 0 0 0 3px rgba(184, 137, 62, .35); } 100% { transform: scale(1); } }
+
+/* „Heute auf einen Blick“: Tasse + Goldstaub + Morgenlicht */
+.overview-summary { position: relative; overflow: hidden; isolation: isolate; }
+.overview-summary::after { content: ""; position: absolute; inset: auto -20% -60% 40%; height: 140%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(214, 168, 92, .28), transparent 72%); }
+.overview-summary .summary-head { min-height: 48px; align-items: center; }
+.summary-art { position: absolute; right: 16px; top: 6px; width: 60px; color: var(--gold-soft, #D4B380); opacity: .9; pointer-events: none; z-index: 0; }
+.summary-art svg { width: 100%; height: auto; display: block; overflow: visible; }
+.summary-art svg * { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.summary-art .art-steam { stroke-width: 1.3; opacity: .75; }
+@media (min-width: 900px) { .summary-art { width: 66px; right: 26px; top: 10px; } }
+.overview-summary > :not(.summary-art):not(.summary-dust) { position: relative; z-index: 1; }
+.summary-dust { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.summary-dust i { position: absolute; bottom: -8px; left: var(--x); width: 4px; height: 4px; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, rgba(236, 202, 136, .95), transparent 70%); }
+.summary-stat-num { font-variant-numeric: tabular-nums; }
+
+/* Kacheln: Goldkreis-Icons, Anheben, Lichtschein */
+.admin-body .overview-card { transition: transform .2s var(--ease-out, ease), box-shadow .2s ease, border-color .2s ease; }
+.admin-body .overview-card .overview-card-icon { background: radial-gradient(circle at 35% 30%, #FFF6E2, #F1E2C2); color: var(--accent-text, #8A6420); box-shadow: inset 0 0 0 1px rgba(184, 137, 62, .35); }
+@media (hover: hover) and (pointer: fine) {
+  .admin-body .overview-card:hover { transform: translateY(-3px); box-shadow: 0 22px 40px -24px rgba(42, 24, 16, .45); border-color: rgba(184, 137, 62, .5); }
+}
+.admin-body .overview-card:active { transform: scale(.985); }
+
+/* Leere Zustände mit Zeichnung */
+.anfragen-empty, .orders-empty { text-align: center; padding: 34px 18px 26px !important; color: var(--coffee, #5B3A26); }
+.anfragen-empty::before, .orders-empty::before { content: ""; display: block; width: 74px; height: 68px; margin: 0 auto 12px; opacity: .85;
+  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220' fill='none' stroke='%23B8893E' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M102 84C90 68 114 58 102 40M121 82C109 64 135 54 121 34M140 84C128 68 152 58 140 40' opacity='.6'/%3E%3Cpath d='M28 190C28 172 212 172 212 190C212 208 28 208 28 190Z'/%3E%3Cpath d='M60 104C62 140 70 170 96 182C110 188 130 188 144 182C170 170 178 140 180 104'/%3E%3Cpath d='M60 104C60 90 180 90 180 104C180 118 60 118 60 104Z'/%3E%3Cpath d='M178 120C208 112 216 152 168 162'/%3E%3C/svg%3E"); }
+
+/* Untere Leiste am Handy */
+.admin-bottombar { display: none; }
+@media (max-width: 720px) {
+  .admin-bottombar {
+    --bb-n: 5;
+    display: grid; grid-template-columns: repeat(var(--bb-n), 1fr);
+    position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 120;
+    padding: 6px; border-radius: 22px;
+    background: rgba(42, 24, 16, .9); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+    box-shadow: 0 18px 40px -14px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(241, 210, 142, .18);
+  }
+  .bb-glow { position: absolute; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / var(--bb-n)); border-radius: 16px;
+    background: linear-gradient(180deg, rgba(212, 179, 128, .28), rgba(212, 179, 128, .12)); box-shadow: inset 0 0 0 1px rgba(212, 179, 128, .35);
+    transform: translateX(calc(var(--bb-i, 0) * 100%)); transition: transform .38s cubic-bezier(.3, 1.3, .5, 1), opacity .2s; opacity: 0; }
+  .admin-bottombar.has-active .bb-glow { opacity: 1; }
+  .bb-item { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 54px; padding: 4px 2px; border: 0; background: none; color: rgba(241, 231, 211, .7); font: 600 .64rem/1.1 'Inter', sans-serif; letter-spacing: .01em; cursor: pointer; }
+  .bb-item.is-active { color: #F1D28E; }
+  .bb-ico .ico { width: 22px; height: 22px; }
+  .bb-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .bb-badge { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+    background: #C8963F; color: #2A1810; font: 700 .62rem/17px 'Inter', sans-serif; text-align: center; box-shadow: 0 0 0 2px rgba(42, 24, 16, .9); }
+  /* Platz schaffen: Inhalt, Speichern-Leiste, Toast und „nach oben“ über der Leiste */
+  .admin-body .admin-dashboard:not([hidden]) { padding-bottom: 96px; }
+  .admin-body .save-bar:not(.inline) { bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .admin-body .admin-toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .admin-body .to-top { bottom: calc(86px + env(safe-area-inset-bottom)) !important; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .summary-art .art-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: art-draw 2.2s cubic-bezier(.6, .05, .25, 1) .3s forwards; }
+  .summary-art .art-steam { stroke-dasharray: .28 .72; animation: art-steam 4.2s linear infinite; }
+  .summary-art .art-steam:nth-of-type(2) { animation-delay: -1.4s; }
+  .summary-art .art-steam:nth-of-type(3) { animation-delay: -2.6s; }
+  .summary-dust i { animation: sdust var(--d) linear var(--dl) infinite; }
+}
+@keyframes sdust { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(10px, -220px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .save-tick.is-on, .save-tick.is-on * { animation: none !important; stroke-dashoffset: 0 !important; }
+  .bb-glow { transition: none; }
+}
