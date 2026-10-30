@@ -116,6 +116,8 @@ async function init() {
     switchTab(c.dataset.tab);
   }));
   dom.backToOverview?.addEventListener('click', () => showOverview());
+  initBottomBar();
+  initOverviewArt();
 
   // Übersicht-Zähler: Klick springt in den passenden Bereich
   dom.summaryStats.forEach(s => s.addEventListener('click', () => switchTab(s.dataset.tab)));
@@ -477,13 +479,34 @@ function initCalendar() {
   on('cal-today', 'click', () => { calMonday = mondayOf(new Date()); renderOwnerCalendar(); });
   on('staff-code-form', 'submit', onSaveStaffCode);
   on('staff-code-off', 'click', async () => {
-    if (!confirm('Mitarbeiter-Zugang ausschalten? Der bisherige Code gilt dann nicht mehr.')) return;
+    if (!(await askConfirm('Der bisherige Code gilt dann nicht mehr. Mitarbeiter sehen den Kalender erst wieder mit einem neuen Code.', { title: 'Kalender-Code ausschalten?', ok: 'Ausschalten' }))) return;
     const res = await window.alsterDb?.setStaffCode('');
     const el = document.getElementById('staff-code-status');
     if (res?.ok) setStatus(el, 'Mitarbeiter-Zugang ist ausgeschaltet.', 'ok');
     else setStatus(el, staffSetupText(res?.error), 'error');
     renderStaffAccessState();
   });
+}
+
+let spotlight = { id: null, until: 0 };
+const spotClass = (id) => (spotlight.id === id && Date.now() < spotlight.until) ? ' is-spotlit' : '';
+/* Kalender-Eintrag antippen → passende Karte öffnen, hinscrollen, kurz hervorheben */
+async function openEntryCard(kind, id) {
+  const tab = kind === 'order' ? 'bestellungen' : 'anfragen';
+  await switchTab(tab);
+  const panel = document.getElementById('panel-' + tab);
+  // Der Bereichswechsel läuft ggf. als View-Transition: kurz warten, bis er sichtbar ist
+  for (let i = 0; i < 20 && panel && panel.hidden; i++) await new Promise(res => setTimeout(res, 40));
+  if (!panel || panel.hidden) return;
+  const search = document.getElementById(kind === 'order' ? 'orders-search' : 'anfragen-search');
+  if (search && search.value) { search.value = ''; search.dispatchEvent(new Event('input', { bubbles: true })); }
+  const card = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item');
+  if (!card) return;
+  const pastList = card.closest('details');
+  if (pastList && !pastList.open) pastList.open = true;
+  card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  spotlight = { id, until: Date.now() + 2400 };
+  card.classList.add('is-spotlit');
 }
 
 function staffSetupText(err) {
@@ -500,7 +523,7 @@ function renderOwnerCalendar() {
   const range = document.getElementById('cal-range'); if (range) range.textContent = lbl.range;
   const res = window.alsterDb?.get('reservations') || [];
   const ord = window.alsterDb?.get('orders') || [];
-  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [] }, calMonday);
+  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [] }, calMonday, { onOpen: openEntryCard });
 }
 
 async function renderStaffAccessState() {
@@ -573,14 +596,34 @@ function initFormGuards() {
   });
 }
 
+/* Einheitliche Rückmeldung in jeder Speichern-Leiste */
+function formStatusEl(id) { return document.getElementById(id)?.querySelector('.save-status'); }
+const nowHM = () => new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 function markDirty(id) {
   if (!GUARDED_FORMS[id]) return;
+  const first = !dirtyForms.has(id);
   dirtyForms.add(id);
   document.getElementById(id)?.classList.add('is-dirty');
+  const st = formStatusEl(id);
+  if (first && st && !st.classList.contains('error')) { st.textContent = 'Nicht gespeicherte Änderungen'; st.classList.remove('ok'); st.classList.add('is-pending'); }
 }
 function markClean(id) {
   dirtyForms.delete(id);
   document.getElementById(id)?.classList.remove('is-dirty');
+  formStatusEl(id)?.classList.remove('is-pending');
+}
+/* Erfolgs-Moment: goldener Haken zeichnet sich in der Speichern-Leiste */
+function celebrateSave(form) {
+  const bar = form.querySelector('.save-bar');
+  if (!bar) return;
+  let tick = bar.querySelector('.save-tick');
+  if (!tick) {
+    tick = document.createElement('span');
+    tick.className = 'save-tick'; tick.setAttribute('aria-hidden', 'true');
+    tick.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" pathLength="1"/><path d="M7 12.5l3.2 3.2L17 9" pathLength="1"/></svg>';
+    bar.prepend(tick);
+  }
+  tick.classList.remove('is-on'); void tick.offsetWidth; tick.classList.add('is-on');
 }
 
 async function runSave(id, fn) {
@@ -589,9 +632,17 @@ async function runSave(id, fn) {
   f.dataset.saving = '1';
   const btns = Array.from(f.querySelectorAll('button[type="submit"]'));
   btns.forEach(b => { b.disabled = true; b.setAttribute('aria-busy', 'true'); });
+  const st = f.querySelector('.save-status');
+  if (st) { st.textContent = 'Wird gespeichert …'; st.classList.remove('ok', 'error', 'is-pending'); }
   try {
     const ok = await fn();
-    if (ok !== false) markClean(id);
+    if (ok !== false) {
+      markClean(id);
+      if (st && (st.textContent === 'Wird gespeichert …' || !st.textContent.trim())) setStatus(st, `Gespeichert · ${nowHM()} Uhr`, 'ok');
+      if (st && st.classList.contains('ok')) celebrateSave(f);
+    } else if (st && st.textContent === 'Wird gespeichert …') {
+      setStatus(st, 'Fehler – nicht gespeichert. Bitte erneut versuchen.', 'error');
+    }
   } catch (err) {
     console.error('Speichern fehlgeschlagen', err);
     warnWriteFailed();
@@ -612,7 +663,7 @@ function askChoice({ title, text, actions }) {
         <h3 class="confirm-dialog-title">${escapeHtml(title)}</h3>
         <p class="confirm-dialog-hint">${escapeHtml(text)}</p>
         <div class="confirm-dialog-actions">
-          ${actions.map((a, i) => `<button type="button" class="btn ${a.kind === 'primary' ? 'btn-primary' : a.kind === 'danger' ? 'btn-link danger' : 'btn-link'}" data-i="${i}">${escapeHtml(a.label)}</button>`).join('')}
+          ${actions.map((a, i) => `<button type="button" class="btn ${a.kind === 'primary' ? 'btn-primary' : a.kind === 'danger-solid' ? 'btn-primary btn-danger' : a.kind === 'danger' ? 'btn-link danger' : 'btn-link'}" data-i="${i}">${escapeHtml(a.label)}</button>`).join('')}
         </div>
       </div>`;
     document.body.appendChild(dlg);
@@ -620,8 +671,22 @@ function askChoice({ title, text, actions }) {
     dlg.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { result = actions[+b.dataset.i].value; dlg.close(); }));
     dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
     dlg.showModal();
-    dlg.querySelector('.btn-primary, [data-i]')?.focus();
+    // Gefährliche Aktionen nie vorauswählen: Fokus dann auf „Abbrechen“
+    (dlg.querySelector('.btn-danger') ? dlg.querySelector('[data-i="0"]') : dlg.querySelector('.btn-primary, [data-i]'))?.focus();
   });
+}
+
+/* Einheitliche Sicherheitsabfrage (statt grauem Browser-Fenster). true = bestätigt. */
+async function askConfirm(text, { title = 'Sind Sie sicher?', ok = 'Ja, fortfahren', danger = true } = {}) {
+  const v = await askChoice({ title, text, actions: [
+    { label: 'Abbrechen', value: 'no' },
+    { label: ok, value: 'yes', kind: danger ? 'danger-solid' : 'primary' }
+  ] });
+  return v === 'yes';
+}
+/* Hinweis mit nur einem Knopf (statt alert) */
+function askNotice(title, text) {
+  return askChoice({ title, text, actions: [{ label: 'Verstanden', value: 'ok', kind: 'primary' }] });
 }
 
 /* Vor dem Verlassen: ungespeicherte Formulare (optional nur in einem Bereich) abfragen.
@@ -679,6 +744,7 @@ async function showOverview() {
   dom.dashboard?.classList.remove('is-working');
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
+  setBottomBarActive('overview');
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
 }
 
@@ -700,6 +766,7 @@ async function switchTab(name) {
       p.hidden = !active;
     });
     try { sessionStorage.setItem(ACTIVE_TAB_KEY, name); } catch {}
+    setBottomBarActive(name);
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
     // Beim Wechsel auf Mittagsmenue: heutigen Tag in den Sichtbereich
     // rollen (renderWeek hat diese Logik gegen das Flag).
@@ -726,7 +793,7 @@ async function changeWeek(deltaDays) {
 }
 
 async function onResetWeek() {
-  if (!confirm('Möchten Sie alle Eingaben für diese Woche entfernen?')) return;
+  if (!(await askConfirm('Alle Gerichte dieser Woche werden entfernt.', { title: 'Woche leeren?', ok: 'Woche leeren' }))) return;
   const all = loadAll();
   delete all[isoDate(currentMonday)];
   const ok = await saveAll(all);
@@ -745,7 +812,7 @@ async function onCopyFromPrevious() {
     setStatus(dom.saveStatus, 'Keine Daten in der Vorwoche gefunden.', 'error');
     return;
   }
-  if (!confirm('Einträge der Vorwoche in diese Woche übernehmen? Die Einträge dieser Woche werden dabei ersetzt und sofort gespeichert.')) return;
+  if (!(await askConfirm('Die Einträge dieser Woche werden dabei ersetzt und sofort gespeichert.', { title: 'Vorwoche übernehmen?', ok: 'Übernehmen', danger: false }))) return;
   all[isoDate(currentMonday)] = {
     weekStart: isoDate(currentMonday),
     updatedAt: new Date().toISOString(),
@@ -1034,8 +1101,8 @@ function buildMenuSection(sec) {
   block.querySelector('.menu-add-item').addEventListener('click', () => {
     itemsBox.appendChild(buildMenuItemRow({ name: '', desc: '', price: '' }));
   });
-  block.querySelector('.menu-section-remove').addEventListener('click', () => {
-    if (confirm('Diese ganze Kategorie mit allen Gerichten entfernen?')) block.remove();
+  block.querySelector('.menu-section-remove').addEventListener('click', async () => {
+    if (await askConfirm('Die Kategorie mit allen Gerichten verschwindet aus dem Formular (erst „Speisekarte speichern“ übernimmt es).', { title: 'Kategorie entfernen?', ok: 'Entfernen' })) block.remove();
   });
   return block;
 }
@@ -1165,8 +1232,8 @@ function onSaveMenu(e) {
   });
 }
 
-function onResetMenu() {
-  if (!confirm('Speisekarte auf die Original-Frühstückskarte zurücksetzen? Ihre Änderungen gehen verloren.')) return;
+async function onResetMenu() {
+  if (!(await askConfirm('Ihre Änderungen an der Speisekarte gehen verloren.', { title: 'Original-Speisekarte wiederherstellen?', ok: 'Zurücksetzen' }))) return;
   window.alsterDb.remove('menu').then(() => {
     renderMenuEditor();
     setStatus(dom.menuStatus, 'Auf Original zurückgesetzt.', 'ok');
@@ -1638,8 +1705,8 @@ function onSaveHours(e) {
   });
 }
 
-function onResetHours() {
-  if (!confirm('Öffnungszeiten auf Standardwerte zurücksetzen?')) return;
+async function onResetHours() {
+  if (!(await askConfirm('Die eingetragenen Zeiten werden durch die Standardzeiten ersetzt.', { title: 'Öffnungszeiten zurücksetzen?', ok: 'Zurücksetzen' }))) return;
   window.alsterDb.remove('hours').then(() => {
     renderHoursEditor();
     setStatus(dom.hoursStatus, 'Auf Standardwerte zurückgesetzt.', 'ok');
@@ -1809,8 +1876,8 @@ async function onSaveHolidays(e) {
   });
 }
 
-function onClearHolidays() {
-  if (!confirm('Alle Schließtage entfernen?')) return;
+async function onClearHolidays() {
+  if (!(await askConfirm('Alle eingetragenen Schließtage werden gelöscht.', { title: 'Alle Schließtage entfernen?', ok: 'Alle entfernen' }))) return;
   window.alsterDb.remove('holidays').then(() => {
     renderHolidaysEditor();
     setStatus(dom.holidaysStatus, 'Alle Schließtage entfernt.', 'ok');
@@ -1900,7 +1967,7 @@ function initDesignEditor() {
 
   // Reset all design
   document.getElementById('design-reset')?.addEventListener('click', async () => {
-    if (!confirm('Alle Design-Anpassungen (Logo, Bilder, Galerie, Farbe) entfernen?')) return;
+    if (!(await askConfirm('Logo, Bilder, Galerie und Farbe gehen zurück auf den Standard.', { title: 'Alle Bilder & Farben zurücksetzen?', ok: 'Zurücksetzen' }))) return;
     const ok = await window.alsterDb.remove('design');
     renderDesignEditor();
     if (ok === false) { flashDesignStatus('Zurücksetzen fehlgeschlagen.', 'error'); warnWriteFailed(); }
@@ -2059,7 +2126,7 @@ function flashDesignStatus(msg, kind = 'ok') {
 /* ---------- Account ---------- */
 
 async function onResetContent() {
-  if (!confirm('Alle bearbeiteten Webseiten-Texte zurücksetzen? Wochenplan, Speisekarte und Design bleiben erhalten.')) return;
+  if (!(await askConfirm('Wochenplan, Speisekarte und Bilder bleiben erhalten.', { title: 'Bearbeitete Texte zurücksetzen?', ok: 'Zurücksetzen' }))) return;
   const ok = await window.alsterDb.remove('content');
   if (ok === false) { warnWriteFailed(); return; }
   showToast('Texte wurden auf den Original-Zustand zurückgesetzt.');
@@ -2231,7 +2298,7 @@ async function renderUserList() {
   dom.userList.querySelectorAll('.user-remove').forEach(btn => {
     btn.addEventListener('click', async () => {
       const email = btn.dataset.email;
-      if (!confirm(`Zugang für ${email} entfernen?`)) return;
+      if (!(await askConfirm(`${email} kann sich danach nicht mehr anmelden.`, { title: 'Zugang entfernen?', ok: 'Entfernen' }))) return;
       await window.alsterDb.auth.removeUser(email);
       await renderUserList();
     });
@@ -2243,7 +2310,7 @@ async function renderUserList() {
 function setStatus(el, msg, kind = '') {
   if (!el) return;
   el.textContent = msg;
-  el.classList.remove('ok', 'error');
+  el.classList.remove('ok', 'error', 'is-pending');
   if (kind) el.classList.add(kind);
 }
 
@@ -2259,8 +2326,10 @@ function renderOverviewSummary() {
   // Offene Anfragen im Browser-Tab sichtbar, z. B. „(2) Mitgliederbereich · Alstercafé“
   const openTotal = newRes + newOrd;
   document.title = (openTotal ? `(${openTotal}) ` : '') + 'Mitgliederbereich · Alstercafé';
-  if (dom.summaryAnfragen) dom.summaryAnfragen.textContent = String(newRes);
-  if (dom.summaryOrders)   dom.summaryOrders.textContent   = String(newOrd);
+  countTo(dom.summaryAnfragen, newRes);
+  countTo(dom.summaryOrders, newOrd);
+  setBottomBadge('anfragen', newRes);
+  setBottomBadge('bestellungen', newOrd);
   // Offene Einträge golden hervorheben (Facelift)
   dom.summaryAnfragen?.closest('.summary-stat')?.classList.toggle('has-open', newRes > 0);
   dom.summaryOrders?.closest('.summary-stat')?.classList.toggle('has-open', newOrd > 0);
@@ -2472,6 +2541,25 @@ function askPersonalMessage(email) {
   });
 }
 
+/* Ein Status für alle Karten: Neu → Bestätigt → Erledigt */
+function entryStage(x) {
+  if (x && x.status === 'done') return 'done';
+  if (x && x.confirmedAt) return 'confirmed';
+  return 'new';
+}
+function statusTagHtml(x) {
+  const st = entryStage(x);
+  if (st === 'done') return '<span class="anfrage-tag is-stage-done">Erledigt</span>';
+  if (st === 'confirmed') return '<span class="anfrage-tag is-stage-confirmed">Bestätigt</span>';
+  return '<span class="anfrage-tag is-new">Neu</span>';
+}
+/* Ohne E-Mail: klarer Hinweis statt fehlendem Knopf */
+function noMailHintHtml(x) {
+  if (!x || x.email || x.status === 'done') return '';
+  const tel = x.phone ? ` <a href="tel:${escapeAttr(String(x.phone).replace(/\s+/g, ''))}">${escapeHtml(x.phone)} anrufen</a>` : '';
+  return `<p class="anfrage-nomail">Keine E-Mail-Adresse – bitte telefonisch bestätigen.${tel}</p>`;
+}
+
 /* Verlauf an der Karte: wann bestätigt (Mail) und wann erledigt */
 function formatStamp(iso) {
   const d = new Date(iso);
@@ -2494,7 +2582,7 @@ async function onSendConfirmation(id, ctype) {
   const list = window.alsterDb?.get(key) || [];
   const it = (Array.isArray(list) ? list : []).find(x => x.id === id);
   if (!it) return;
-  if (!it.email) { alert('Für diese Anfrage ist keine E-Mail-Adresse hinterlegt.'); return; }
+  if (!it.email) { showToast('Für diese Anfrage ist keine E-Mail-Adresse hinterlegt – bitte telefonisch bestätigen.', { tone: 'error' }); return; }
   const message = await askPersonalMessage(it.email);
   if (message === null) return; // abgebrochen
 
@@ -2518,8 +2606,8 @@ async function onSendConfirmation(id, ctype) {
     if (ctype === 'order') renderOrders(); else renderAnfragen();
     showToast(`✓ Bestätigung an ${it.email} gesendet`);
   } else {
-    alert('Bestätigung konnte nicht gesendet werden.\n\n' + ((res && res.error) || 'Unbekannter Fehler') +
-      '\n\nHinweis: Der E-Mail-Versand muss evtl. erst eingerichtet werden (siehe BENACHRICHTIGUNG.md).');
+    askNotice('Bestätigung nicht gesendet', 'Die E-Mail konnte nicht verschickt werden: ' + ((res && res.error) || 'unbekannter Fehler') +
+      '. Bitte später erneut versuchen oder den Gast anrufen.');
   }
 }
 
@@ -2540,15 +2628,13 @@ function buildAnfrageItem(r) {
     : '';
 
   return `
-    <li class="anfrage-item ${isDone ? 'is-done' : ''}">
+    <li class="anfrage-item ${isDone ? 'is-done' : ''}${spotClass(r.id)}">
       <div class="anfrage-head">
         <div>
           <span class="anfrage-name">${escapeHtml(r.name || 'Ohne Namen')}</span>
           ${r.persons ? `<span class="anfrage-pers">· ${escapeHtml(String(r.persons).trim())}${/^\d+$/.test(String(r.persons).trim()) ? (Number(r.persons) === 1 ? ' Person' : ' Personen') : ''}</span>` : ''}
         </div>
-        ${isDone
-          ? '<span class="anfrage-tag">Erledigt</span>'
-          : '<span class="anfrage-tag is-new">Neu</span>'}
+        ${statusTagHtml(r)}
       </div>
       <p class="anfrage-when">${escapeHtml(dateLabel)}${pickupBadgeHtml(r.date)}</p>
       <div class="anfrage-contact">
@@ -2560,6 +2646,7 @@ function buildAnfrageItem(r) {
         <span class="anfrage-note-label">Notiz (intern)</span>
         <textarea class="anfrage-note-input" data-note="${escapeAttr(r.id)}" rows="1" placeholder="z. B. angerufen, Tisch am Fenster …">${escapeHtml(r.note || '')}</textarea>
       </label>
+      ${noMailHintHtml(r)}
       <div class="anfrage-meta">
         <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(r)}</span>
         <div class="anfrage-actions">
@@ -2617,13 +2704,14 @@ async function onMarkAnfrage(id) {
   // db.js aktualisiert den Cache synchron beim Aufruf → erst aufrufen, dann sofort rendern.
   const pending = window.alsterDb?.updateReservationStatus(id, nextStatus);
   renderAnfragen();
+  if (nextStatus === 'done') sparkleCard(id);
   const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshAnfragen();
 }
 
 async function onDeleteAnfrage(id) {
-  if (!confirm('Diese Anfrage wirklich löschen?')) return;
+  if (!(await askConfirm('Die Reservierung wird dauerhaft gelöscht. Tipp: „Als erledigt markieren“ behält sie im Verlauf.', { title: 'Reservierung löschen?', ok: 'Löschen' }))) return;
   const pending = window.alsterDb?.deleteReservation(id);
   renderAnfragen();
   const ok = await pending;
@@ -2644,6 +2732,7 @@ function showToast(msg, opts = {}) {
     document.body.appendChild(el);
   }
   el.textContent = msg;
+  el.classList.toggle('is-error', opts.tone === 'error');
   el._onClick = opts.onClick || null;
   el.classList.toggle('is-clickable', !!opts.onClick);
   el.classList.add('is-shown');
@@ -2670,13 +2759,10 @@ function announceNewEntries(key, items) {
 // wuerde der Eintrag beim naechsten Laden einfach wieder auftauchen — verwirrend.
 function warnWriteFailed() {
   const detail = (window.alsterDb?.writeError && window.alsterDb.writeError()) || '';
-  alert(
-    'Änderung konnte nicht gespeichert werden.\n\n' +
-    'Die Datenbank nimmt gerade keine Änderungen an — die Anzeige wird daher ' +
-    'beim Neuladen auf den Server-Stand zurückgesetzt.\n\n' +
-    'Bitte den Datenbank-Status (Supabase) prüfen.' +
-    (detail ? '\n\nTechnischer Hinweis: ' + detail : '')
-  );
+  askNotice('Nicht gespeichert',
+    'Die Datenbank nimmt gerade keine Änderungen an – beim Neuladen erscheint wieder der Server-Stand. ' +
+    'Bitte Internetverbindung prüfen und erneut speichern.' +
+    (detail ? ' (Technischer Hinweis: ' + detail + ')' : ''));
 }
 
 /* ---------- Bestellungen (belegte Brötchen) ---------- */
@@ -2759,16 +2845,14 @@ function buildOrderItem(o) {
     + (priced.length ? `<li class="order-line-total">Summe${priced.length < lineItems.length ? ' (ohne Sorten ohne Preis)' : ''} <span class="order-line-price">${fmtEuro(sumCents / 100)}</span></li>` : '');
 
   return `
-    <li class="anfrage-item order-item ${isDone ? 'is-done' : ''}">
+    <li class="anfrage-item order-item ${isDone ? 'is-done' : ''}${spotClass(o.id)}">
       <div class="anfrage-head">
         <div>
           <span class="anfrage-name">${escapeHtml(o.name || 'Ohne Namen')}</span>
           <span class="anfrage-pers">· ${escapeHtml(String(o.totalCount || 0))} ${unit}</span>
           ${isBerliner ? '<span class="anfrage-tag is-berliner">Berliner</span>' : ''}
         </div>
-        ${isDone
-          ? '<span class="anfrage-tag">Erledigt</span>'
-          : '<span class="anfrage-tag is-new">Neu</span>'}
+        ${statusTagHtml(o)}
       </div>
       <p class="anfrage-when">Abholung: ${escapeHtml(dateLabel)}${pickupBadgeHtml(o.pickupDate)}</p>
       <ul class="order-line-list">${itemsList}</ul>
@@ -2781,6 +2865,7 @@ function buildOrderItem(o) {
         <span class="anfrage-note-label">Notiz (intern)</span>
         <textarea class="anfrage-note-input" data-note="${escapeAttr(o.id)}" rows="1" placeholder="z. B. vorbereitet, bezahlt …">${escapeHtml(o.note || '')}</textarea>
       </label>
+      ${noMailHintHtml(o)}
       <div class="anfrage-meta">
         <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(o)}</span>
         <div class="anfrage-actions">
@@ -2810,13 +2895,14 @@ async function onMarkOrder(id) {
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
   const pending = window.alsterDb?.updateOrderStatus(id, nextStatus);
   renderOrders();
+  if (nextStatus === 'done') sparkleCard(id);
   const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshOrders();
 }
 
 async function onDeleteOrder(id) {
-  if (!confirm('Diese Bestellung wirklich löschen?')) return;
+  if (!(await askConfirm('Die Bestellung wird dauerhaft gelöscht. Tipp: „Als erledigt markieren“ behält sie im Verlauf.', { title: 'Bestellung löschen?', ok: 'Löschen' }))) return;
   const pending = window.alsterDb?.deleteOrder(id);
   renderOrders();
   const ok = await pending;
@@ -2925,8 +3011,8 @@ function onSaveBroetchen(e) {
   });
 }
 
-function onResetBroetchen() {
-  if (!confirm('Sorten auf die Standard-Auswahl zurücksetzen?')) return;
+async function onResetBroetchen() {
+  if (!(await askConfirm('Ihre eingetragenen Sorten und Preise werden ersetzt.', { title: 'Brötchen-Sorten zurücksetzen?', ok: 'Zurücksetzen' }))) return;
   window.alsterDb?.remove('broetchen-items').then(() => {
     renderBroetchenEditor();
     setStatus(dom.broetchenStatus, 'Auf Standard zurückgesetzt.', 'ok');
@@ -3028,7 +3114,7 @@ async function onToggleBerliner() {
   const box = bEl('berliner-active');
   if (!box || berlinerToggling) return; // kein Doppelklick (an → sofort wieder aus)
   const next = !box.checked;
-  if (next && !confirm('Berliner-Vorbestellung jetzt auf der Webseite aktivieren?\n\nDann erscheinen der Menüpunkt und der Hinweis auf der Startseite (im eingestellten Zeitraum).')) return;
+  if (next && !(await askConfirm('Dann erscheinen der Menüpunkt und der Hinweis auf der Startseite (im eingestellten Zeitraum).', { title: 'Berliner-Vorbestellung aktivieren?', ok: 'Aktivieren', danger: false }))) return;
   berlinerToggling = true;
   const sw = bEl('berliner-switch'); if (sw) sw.disabled = true;
   box.checked = next;
@@ -3141,3 +3227,106 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 function escapeAttr(s) { return escapeHtml(s); }
+
+
+/* ---------- Stufe 2: untere Leiste am Handy, Zähler, Wow-Übersicht ---------- */
+const BOTTOM_ITEMS = [
+  { tab: 'overview', label: 'Übersicht', icon: 'i-home' },
+  { tab: 'anfragen', label: 'Reservierungen', icon: 'i-inbox' },
+  { tab: 'bestellungen', label: 'Bestellungen', icon: 'i-bag' },
+  { tab: 'week', label: 'Mittagstisch', icon: 'i-fork' },
+  { tab: 'kalender', label: 'Kalender', icon: 'i-clock' }
+];
+function initBottomBar() {
+  if (!dom.dashboard || document.getElementById('admin-bottombar')) return;
+  const nav = document.createElement('nav');
+  nav.id = 'admin-bottombar';
+  nav.className = 'admin-bottombar';
+  nav.setAttribute('aria-label', 'Schnellwahl');
+  const hasIcon = (id) => !!document.getElementById(id);
+  nav.innerHTML = '<span class="bb-glow" aria-hidden="true"></span>' + BOTTOM_ITEMS.map(it => `
+    <button type="button" class="bb-item" data-bb="${it.tab}">
+      <span class="bb-ico" aria-hidden="true">${hasIcon(it.icon) ? `<svg class="ico"><use href="#${it.icon}"/></svg>` : (it.tab === 'overview' ? '<svg class="ico" viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' : '')}</span>
+      <span class="bb-label">${it.label}</span>
+      <span class="bb-badge" hidden></span>
+    </button>`).join('');
+  dom.dashboard.appendChild(nav);
+  nav.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-bb]');
+    if (!b) return;
+    if (b.dataset.bb === 'overview') showOverview(); else switchTab(b.dataset.bb);
+  });
+  setBottomBarActive(dom.workspaceView && !dom.workspaceView.hidden ? (activePanel()?.id || '').replace('panel-', '') : 'overview');
+  try { renderOverviewSummary(); } catch {}
+}
+function setBottomBarActive(tab) {
+  const nav = document.getElementById('admin-bottombar');
+  if (!nav) return;
+  let idx = -1;
+  nav.querySelectorAll('.bb-item').forEach((b, i) => {
+    const on = b.dataset.bb === tab;
+    b.classList.toggle('is-active', on);
+    if (on) { b.setAttribute('aria-current', 'page'); idx = i; } else b.removeAttribute('aria-current');
+  });
+  nav.style.setProperty('--bb-i', String(Math.max(idx, 0)));
+  nav.classList.toggle('has-active', idx >= 0);
+}
+function setBottomBadge(tab, n) {
+  const b = document.querySelector(`#admin-bottombar [data-bb="${tab}"] .bb-badge`);
+  if (!b) return;
+  b.hidden = !n;
+  b.textContent = n > 9 ? '9+' : String(n);
+}
+/* Zahl zählt sanft hoch (nur Anzeige) */
+function countTo(el, n) {
+  if (!el) return;
+  const from = parseInt(el.textContent, 10) || 0;
+  if (from === n || matchMedia('(prefers-reduced-motion: reduce)').matches || dom.overviewView?.hidden) { el.textContent = String(n); return; }
+  const t0 = performance.now(), dur = 650;
+  cancelAnimationFrame(el._cnt);
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / dur);
+    el.textContent = String(Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3))));
+    if (k < 1) el._cnt = requestAnimationFrame(step);
+  };
+  el._cnt = requestAnimationFrame(step);
+}
+/* Übersicht: goldene Tasse + Goldstaub in der „Heute auf einen Blick“-Karte */
+function initOverviewArt() {
+  const box = document.getElementById('overview-summary');
+  if (!box || box.querySelector('.summary-art')) return;
+  const art = document.createElement('div');
+  art.className = 'summary-art'; art.setAttribute('aria-hidden', 'true');
+  art.innerHTML = '<svg viewBox="0 0 240 220"><path class="art-steam" pathLength="1" d="M102 84 C90 68 114 58 102 40 C94 28 106 18 102 8"/><path class="art-steam" pathLength="1" d="M121 82 C109 64 135 54 121 34"/><path class="art-steam" pathLength="1" d="M140 84 C128 68 152 58 140 40 C134 30 142 22 140 14"/><path class="art-line" pathLength="1" d="M28 190 C28 172 212 172 212 190 C212 208 28 208 28 190 Z"/><path class="art-line" pathLength="1" d="M60 104 C62 140 70 170 96 182 C110 188 130 188 144 182 C170 170 178 140 180 104"/><path class="art-line" pathLength="1" d="M60 104 C60 90 180 90 180 104 C180 118 60 118 60 104 Z"/><path class="art-line" pathLength="1" d="M178 120 C208 112 216 152 168 162"/></svg>';
+  box.prepend(art);
+  const dust = document.createElement('div');
+  dust.className = 'summary-dust'; dust.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('i');
+    p.style.setProperty('--x', (5 + Math.random() * 90).toFixed(1) + '%');
+    p.style.setProperty('--d', (9 + Math.random() * 8).toFixed(1) + 's');
+    p.style.setProperty('--dl', (-Math.random() * 16).toFixed(1) + 's');
+    dust.appendChild(p);
+  }
+  box.prepend(dust);
+}
+/* „Erledigt“: kurzer Gold-Funkenregen an der Karte */
+function sparkleCard(id) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  requestAnimationFrame(() => {
+    const card = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item');
+    if (!card) return;
+    card.classList.add('just-done');
+    const burst = document.createElement('span');
+    burst.className = 'done-burst'; burst.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('i');
+      const a = (Math.PI * 2 * i) / 12;
+      p.style.setProperty('--tx', Math.round(Math.cos(a) * (40 + Math.random() * 30)) + 'px');
+      p.style.setProperty('--ty', Math.round(Math.sin(a) * (30 + Math.random() * 24)) + 'px');
+      burst.appendChild(p);
+    }
+    card.appendChild(burst);
+    setTimeout(() => { burst.remove(); card.classList.remove('just-done'); }, 1200);
+  });
+}
