@@ -161,6 +161,14 @@ async function init() {
 
   // Speisekarte
   dom.menuCardsForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('menu-cards-form', () => onSaveMenu(e)); });
+  const spForm = document.getElementById('specials-form');
+  spForm?.addEventListener('submit', (e) => { e.preventDefault(); runSave('specials-form', () => onSaveSpecials()); });
+  document.getElementById('specials-add-section')?.addEventListener('click', () => {
+    const box = document.getElementById('specials-sections');
+    const block = buildMenuSection({ title: '', icon: 'i-cup', items: [{ name: '', desc: '', price: '' }] });
+    box?.appendChild(block); block.querySelector('.menu-section-title')?.focus();
+  });
+  document.getElementById('specials-reset')?.addEventListener('click', onResetSpecials);
   dom.menuReset.addEventListener('click', onResetMenu);
   dom.menuAddSection?.addEventListener('click', () => addMenuSection());
   dom.menuPdf?.addEventListener('click', downloadMenuPdf);
@@ -390,6 +398,7 @@ async function showDashboard() {
   renderOverviewSummary();
   renderNotice();
   renderMenuEditor();
+  renderSpecialsEditor();
   renderHoursEditor();
   renderHolidaysEditor();
   renderDesignEditor();
@@ -409,6 +418,7 @@ async function showDashboard() {
       const editors = {
         'weekly-menu': ['menu-form', () => { renderWeek(); renderOverviewSummary(); }],
         'menu': ['menu-cards-form', () => renderMenuEditor()],
+        'specials': ['specials-form', () => renderSpecialsEditor()],
         'hours': ['hours-form', () => renderHoursEditor()],
         'holidays': ['holidays-form', () => { renderHolidaysEditor(); renderOwnerCalendar(); }],
         'notice': ['notice-form', () => renderNotice()],
@@ -566,6 +576,7 @@ async function onSaveStaffCode(e) {
 const GUARDED_FORMS = {
   'menu-form': 'Mittagstisch',
   'menu-cards-form': 'Speisekarte',
+  'specials-form': 'Sommer-Specials',
   'hours-form': 'Öffnungszeiten',
   'holidays-form': 'Schließtage',
   'notice-form': 'Hinweis-Banner',
@@ -723,6 +734,7 @@ function rerenderForm(id) {
   ({
     'menu-form': () => renderWeek(),
     'menu-cards-form': () => renderMenuEditor(),
+    'specials-form': () => renderSpecialsEditor(),
     'hours-form': () => renderHoursEditor(),
     'holidays-form': () => renderHolidaysEditor(),
     'notice-form': () => renderNotice(),
@@ -1172,8 +1184,15 @@ function attachDragHandlers(el, siblingSelector) {
 
 /* Liest den Editor-Stand zurueck ins Daten-Modell. */
 function collectMenuData() {
+  return {
+    intro:    (dom.menuIntro?.value || '').trim(),
+    sections: collectSectionsFrom(dom.menuSections),
+    footnote: (dom.menuFootnote?.value || '').trim()
+  };
+}
+function collectSectionsFrom(container) {
   const sections = [];
-  dom.menuSections.querySelectorAll('.menu-section').forEach(block => {
+  container.querySelectorAll('.menu-section').forEach(block => {
     const title = block.querySelector('.menu-section-title').value.trim();
     const icon  = block.querySelector('.menu-section-icon').value;
     const note  = block.querySelector('.menu-section-note').value.trim();
@@ -1198,11 +1217,48 @@ function collectMenuData() {
       sections.push(sec);
     }
   });
-  return {
-    intro:    (dom.menuIntro?.value || '').trim(),
-    sections,
-    footnote: (dom.menuFootnote?.value || '').trim()
-  };
+  return sections;
+}
+
+/* ---------- Sommer-Specials (eigener Block, ein-/ausschaltbar) ---------- */
+function loadSpecialsData() {
+  const stored = window.alsterDb?.get('specials');
+  const base = (stored && Array.isArray(stored.sections)) ? stored : (window.ALSTERCAFE_SPECIALS_DEFAULT || { visible: true, title: 'Sommer-Specials', sections: [] });
+  return JSON.parse(JSON.stringify(base));
+}
+function renderSpecialsEditor() {
+  markClean('specials-form');
+  const box = document.getElementById('specials-sections');
+  if (!box) return;
+  const d = loadSpecialsData();
+  document.getElementById('specials-visible').checked = d.visible !== false;
+  document.getElementById('specials-title').value = d.title || '';
+  document.getElementById('specials-footnote').value = d.footnote || '';
+  box.innerHTML = '';
+  (d.sections || []).forEach(sec => box.appendChild(buildMenuSection(sec)));
+  setStatus(document.getElementById('specials-status'), d.visible !== false ? 'Sichtbar auf Speisekarte und Startseite.' : 'Ausgeblendet – auf der Webseite nicht zu sehen.');
+}
+async function onSaveSpecials() {
+  const box = document.getElementById('specials-sections');
+  const st = document.getElementById('specials-status');
+  const sections = collectSectionsFrom(box);
+  const nameless = box.querySelectorAll('.menu-item-row.is-invalid');
+  if (nameless.length) { setStatus(st, 'Nicht gespeichert: Ein Eintrag hat Preis oder Beschreibung, aber keinen Namen (rot markiert).', 'error'); return false; }
+  const visible = document.getElementById('specials-visible').checked;
+  if (visible && !sections.some(sec => sec.items.some(it => it.name))) { setStatus(st, 'Nicht gespeichert: Bitte mindestens ein Getränk eintragen oder den Schalter ausschalten.', 'error'); return false; }
+  const data = { visible, title: (document.getElementById('specials-title').value || '').trim() || 'Sommer-Specials', sections, footnote: (document.getElementById('specials-footnote').value || '').trim() };
+  const ok = await window.alsterDb.set('specials', data);
+  if (!ok) { setStatus(st, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
+  setStatus(st, `Gespeichert · ${formatTime(new Date())} — ${visible ? 'auf der Webseite sichtbar' : 'auf der Webseite ausgeblendet'}.`, 'ok');
+  logActivity(visible ? 'Sommer-Specials gespeichert' : 'Sommer-Specials ausgeblendet');
+  return true;
+}
+async function onResetSpecials() {
+  if (!(await askConfirm('Die Sommer-Specials gehen zurück auf den Stand der Tafel (alle Getränke und Preise).', { title: 'Auf Tafel-Stand zurücksetzen?', ok: 'Zurücksetzen' }))) return;
+  const ok = await window.alsterDb.remove('specials');
+  if (ok === false) { warnWriteFailed(); return; }
+  renderSpecialsEditor();
+  setStatus(document.getElementById('specials-status'), 'Auf Tafel-Stand zurückgesetzt.', 'ok');
 }
 
 function onSaveMenu(e) {
@@ -2139,12 +2195,13 @@ async function onResetAll() {
     actions: [{ label: 'Abbrechen', value: false }, { label: 'Alles zurücksetzen', value: true, kind: 'danger' }]
   });
   if (!ok1) return;
-  const keys = ['weekly-menu', 'notice', 'menu', 'hours', 'holidays', 'design', 'content', 'broetchen-items', 'berliner-items', 'berliner-settings'];
+  const keys = ['weekly-menu', 'notice', 'menu', 'specials', 'hours', 'holidays', 'design', 'content', 'broetchen-items', 'berliner-items', 'berliner-settings'];
   const results = await Promise.all(keys.map(k => window.alsterDb.remove(k).catch(() => false)));
   Object.keys(GUARDED_FORMS).forEach(markClean);
   renderWeek();
   renderNotice();
   renderMenuEditor();
+  renderSpecialsEditor();
   renderHoursEditor();
   renderHolidaysEditor();
   renderDesignEditor();

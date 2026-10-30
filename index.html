@@ -15,7 +15,7 @@
        holt es on-demand, fetchpriority=low am img-Tag. -->
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r201" />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r203" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r201" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r203" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r201';
+      var V='2026-05-10-r203';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -401,6 +401,21 @@
       </div>
     </section>
 
+    <!-- SOMMER-SPECIALS · Kurzhinweis, Inhalt kommt aus menudata.js / Mitgliederbereich -->
+    <section class="specials-teaser-wrap" id="specials-teaser-wrap" hidden>
+      <div class="container">
+        <a class="specials-teaser reveal" href="speisekarte.html#sommer">
+          <span class="specials-art" aria-hidden="true"><svg viewBox="0 0 120 140" focusable="false"><path class="art-line" pathLength="1" d="M30 40 L40 128 C41 134 79 134 80 128 L90 40 Z"/><path class="art-line" pathLength="1" d="M26 40 L94 40"/><path class="art-line" pathLength="1" d="M70 40 L84 6"/><path class="art-line art-thin" pathLength="1" d="M40 72 C52 66 68 78 82 70"/><path class="art-fill" d="M36 76 C52 70 68 82 83 74 L80 126 C79 131 41 131 40 126 Z"/><g class="art-cubes"><rect x="46" y="88" width="10" height="10" rx="2"/><rect x="62" y="96" width="10" height="10" rx="2"/><rect x="50" y="106" width="10" height="10" rx="2"/></g><g class="art-spark"><circle cx="14" cy="30" r="2"/><circle cx="104" cy="58" r="2.4"/><path d="M104 20 l2 -6 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 z"/></g></svg></span>
+          <span class="specials-teaser-body">
+            <span class="specials-teaser-eyebrow">Saisonal</span>
+            <span class="specials-teaser-title" id="specials-teaser-title">Sommer-Specials</span>
+            <span class="specials-teaser-list" id="specials-teaser-list"></span>
+            <span class="specials-teaser-go">Zur Karte <svg class="ico ico-sm" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+          </span>
+        </a>
+      </div>
+    </section>
+
     <!-- BEWERTUNGEN · ehrliche Verlinkung zu echten Quellen statt erfundener Zitate -->
     <section class="landing-reviews chapter" data-chapter="IV">
       <span class="chapter-mark" aria-hidden="true">IV</span>
@@ -518,14 +533,16 @@
         <a href="admin.html">Mitgliederbereich</a>
       </nav>
       <p class="footer-meta">© <span id="year"></span> Alstercafé</p>
+      <p class="footer-maker">Erstellt durch <a href="https://sitalo.de" target="_blank" rel="noopener">Sitalo.de</a></p>
     </div>
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r201" defer></script>
-  <script src="db.js?v=2026-05-10-r201" defer></script>
-  <script src="rules.js?v=2026-05-10-r201" defer></script>
-  <script src="script.js?v=2026-05-10-r201" defer></script>
-  <script src="i18n.js?v=2026-05-10-r201" defer></script>
+  <script src="config.js?v=2026-05-10-r203" defer></script>
+  <script src="db.js?v=2026-05-10-r203" defer></script>
+  <script src="rules.js?v=2026-05-10-r203" defer></script>
+  <script src="menudata.js?v=2026-05-10-r203" defer></script>
+  <script src="script.js?v=2026-05-10-r203" defer></script>
+  <script src="i18n.js?v=2026-05-10-r203" defer></script>
 </body>
 </html>
