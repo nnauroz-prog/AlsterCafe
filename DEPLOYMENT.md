@@ -40,7 +40,7 @@ abgesicherten Webseite mit echter Cloud-Anmeldung.
    - **Name:** `alstercafe`
    - **Database Password:** ein zufälliges, starkes Passwort
      (notieren Sie es, brauchen wir nur für Notfälle)
-   - **Region:** **Frankfurt (eu-central-1)** für DSGVO-Konformität
+   - **Region:** aktuelles Projekt liegt in **London (eu-west-2)** – Vereinigtes Königreich mit EU-Angemessenheitsbeschluss; bei einem neuen Projekt besser **Frankfurt (eu-central-1)** wählen und die Datenschutzerklärung anpassen
 4. **Create new project** klicken — dauert ~2 Min.
 
 ---

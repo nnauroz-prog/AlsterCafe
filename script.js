@@ -1476,6 +1476,14 @@ function dayDishes(entry) {
 function orDividerHtml(en, cls = 'dish-or') {
   return `<span class="${cls}" aria-hidden="false"><span>${en ? 'or' : 'oder'}</span></span>`;
 }
+/* Große Gerichts-Schrift passt sich der Textlänge an: kurze Namen bleiben groß,
+   längere Texte (z. B. „Heute ist Croque-Tag! …“) werden kleiner statt riesig. */
+function sizeDishText(el, text) {
+  if (!el) return;
+  const n = String(text ?? el.textContent ?? '').trim().length;
+  el.classList.toggle('is-long', n > 26 && n <= 60);
+  el.classList.toggle('is-xlong', n > 60);
+}
 // Zweites Gericht unter einem großen Tagesgericht (Startseite / Mittagstisch-Seite)
 function renderAltDish(afterEl, entry, en, withMit) {
   if (!afterEl) return;
@@ -1492,9 +1500,10 @@ function renderAltDish(afterEl, entry, en, withMit) {
   const d = list[1];
   const side = d.side ? (withMit ? sideText(d.side, en) : d.side) : '';
   // Gleiche Gestaltung wie das erste Gericht (beide Optionen auf Augenhöhe)
-  const dishCls = (host.querySelector('[id$="-dish"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b/g, '').trim();
+  const dishCls = (host.querySelector('[id$="-dish"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b|\bis-x?long\b/g, '').trim();
   const sideCls = (host.querySelector('[id$="-side"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b/g, '').trim();
   alt.innerHTML = `${orDividerHtml(en)}<p class="dish-alt-name ${dishCls}">${escapeHtml(d.dish)}</p>${side ? `<p class="dish-alt-side ${sideCls}">${escapeHtml(side)}</p>` : ''}`;
+  sizeDishText(alt.querySelector('.dish-alt-name'), d.dish);
 }
 
 /* Beilage: "mit …" nur voranstellen, wenn der Text nicht schon so anfängt
@@ -1728,6 +1737,7 @@ function initLandingTeaser() {
       : (en ? 'Fresh rolls, Croques and coffee — all day long.' : 'Frische Brötchen, Croques und Kaffee — den ganzen Tag.');
     if (sideEl) sideEl.hidden = true;
   }
+  sizeDishText(dishEl);
 }
 
 /* Magnetic Hover: Primary-CTAs ziehen den Mauspointer leicht an (Desktop) */
@@ -2671,7 +2681,7 @@ function renderTodayLunch(weekData, today) {
     const dishEl = document.getElementById('today-dish');
     const sideEl = document.getElementById('today-side');
     const first = dayDishes(entry)[0];
-    if (dishEl) dishEl.textContent = first.dish;
+    if (dishEl) { dishEl.textContent = first.dish; sizeDishText(dishEl); }
     if (sideEl) {
       sideEl.textContent = first.side || '';
       sideEl.hidden = !first.side;
