@@ -105,3 +105,27 @@ window.ALSTERCAFE_MENU_DEFAULT = {
   ],
   footnote: 'Alle Preise in Euro inkl. MwSt. Änderungen vorbehalten. Brötchen, Croissants und Franzbrötchen kommen frisch aus unserer eigenen Backstube.'
 };
+
+/* Sommer-Specials (Tafel im Schaufenster) – im Mitgliederbereich unter
+   „Speisekarte → Sommer-Specials“ änderbar und ein-/ausschaltbar
+   (gespeichert unter dem 'specials'-Key). */
+window.ALSTERCAFE_SPECIALS_DEFAULT = {
+  visible: true,
+  title: 'Sommer-Specials',
+  sections: [
+    { title: 'Fruchtige Matcha-Highlights', icon: 'i-leaf', items: [
+      { name: 'Iced Strawberry Matcha', price: '6,90 €' },
+      { name: 'Iced Passionsfrucht Matcha', price: '6,90 €' }
+    ] },
+    { title: 'Hot Latte Specials', icon: 'i-cup', items: [
+      { name: 'Hot Matcha Latte', price: '5,90 €' },
+      { name: 'Hot Vanille Latte', price: '5,90 €' },
+      { name: 'Hot Caramel Latte', price: '5,90 €' }
+    ] },
+    { title: 'Eiskaffee', icon: 'i-cup', items: [
+      { name: 'Klassischer Eiskaffee', price: '4,90 €', desc: 'Kalter Kaffee, Milch, Eiswürfel' },
+      { name: 'Karamell-Eiskaffee', price: '5,90 €', desc: 'Mit einem feinen Schuss Karamell' }
+    ] }
+  ],
+  footnote: 'Für den perfekten Geschmack verwenden wir ausschließlich hochwertigen Bio-Matcha und standardmäßig cremige Hafermilch.'
+};

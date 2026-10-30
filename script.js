@@ -301,6 +301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initNotice);
   safeRun(initHolidays);
   safeRun(initMenu);
+  safeRun(initSpecialsTeaser);
   safeRun(initHours);
   safeRun(initLunchWeek);
   safeRun(initLandingTeaser);
@@ -330,6 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'notice':      initNotice(); break;
       case 'holidays':    initHolidays(); updateLiveStatus(); initLunchWeek(); initLandingTeaser(); break;
       case 'menu':        initMenu(); break;
+      case 'specials':    initMenu(); initSpecialsTeaser(); break;
       case 'hours':       initHours(); updateLiveStatus(); initNavExtra(); syncBusinessSchema(); initLandingTeaser(); break;
       case 'weekly-menu': initLunchWeek(); initLandingTeaser(); break;
       case 'broetchen-items':
@@ -453,6 +455,33 @@ function parseHoursFromDom() { return getWeekHours(); }
 function isoLocal(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
+/* Kein Mittagstisch, aber das Café hat an dem Tag geöffnet (z. B. Samstag):
+   im Wochenplan als „geschlossen“ markiert oder am Wochenende leer, kein Schließtag. */
+function noLunchButOpen(entry, d) {
+  if (!d || dayDishes(entry).length || (entry && entry.holiday !== undefined) || !openingFor(d)) return false;
+  const weekend = d.getDay() === 0 || d.getDay() === 6;
+  return !!(entry && entry.closed) || weekend;
+}
+/* Wochenplan-Eintrag (roh) für ein Datum */
+function lunchEntryForDate(d) {
+  const wk = loadCurrentWeek(mondayOf(d));
+  return wk?.days?.[DAY_KEYS[(d.getDay() + 6) % 7]];
+}
+/* Nächster Tag mit Mittagstisch: erster folgender Tag mit Eintrag, sonst nächster offener Werktag */
+function nextLunchDay(from) {
+  const d = new Date(from);
+  let fallback = null;
+  for (let i = 1; i <= 14; i++) {
+    d.setDate(d.getDate() + 1);
+    if (!openingFor(d)) continue;
+    const entry = lunchEntryFor(lunchEntryForDate(d), d);
+    if (dayDishes(entry).length) return new Date(d);
+    const wd = d.getDay();
+    if (!fallback && wd >= 1 && wd <= 5 && !(entry && entry.closed)) fallback = new Date(d);
+  }
+  return fallback;
+}
+
 /* Mittagstisch-Eintrag eines Tages – an Schließtagen (Urlaub & Feiertage) immer „geschlossen“,
    auch wenn im Wochenplan ein Gericht steht. */
 function lunchEntryFor(entry, d) {
@@ -1168,8 +1197,63 @@ function initMenu() {
   const data = getMenuData();
   if (!data || !Array.isArray(data.sections) || !data.sections.length) return;
   mount.innerHTML = renderKarteHtml(data);
-  injectMenuSchema(data);
+  renderSpecialsBlock(mount);
+  const sp = getSpecials();
+  injectMenuSchema(sp ? { ...data, sections: [...sp.sections, ...data.sections] } : data);
   initKarteJump();
+  if (location.hash === '#sommer' && !mount.dataset.jumped) {
+    mount.dataset.jumped = '1';
+    requestAnimationFrame(() => document.getElementById('sommer')?.scrollIntoView({ block: 'start' }));
+  }
+}
+
+/* ---------- Sommer-Specials (saisonal, im Mitgliederbereich schaltbar) ---------- */
+function getSpecials() {
+  let stored = null;
+  try { stored = window.alsterDb?.get('specials'); } catch {}
+  if (!stored) { try { stored = JSON.parse(localStorage.getItem('alstercafe.specials') || 'null'); } catch {} }
+  const data = (stored && Array.isArray(stored.sections)) ? stored : window.ALSTERCAFE_SPECIALS_DEFAULT;
+  if (!data || data.visible === false) return null;
+  const sections = (data.sections || []).filter(s => s && Array.isArray(s.items) && s.items.some(it => it && it.name));
+  return sections.length ? { ...data, sections } : null;
+}
+// Auf der Speisekarte als erster, breiter Block „Sommer-Specials“
+function renderSpecialsBlock(mount) {
+  mount.querySelector('#sommer')?.remove();
+  const sp = getSpecials();
+  const grid = mount.querySelector('.karte-grid');
+  if (!sp || !grid) return;
+  const groups = sp.sections.map(sec => `
+    <div class="specials-group">
+      <h3 class="specials-group-title"><svg class="ico" aria-hidden="true"><use href="#${escapeAttr(sec.icon || 'i-cup')}"/></svg>${escapeHtml(sec.title || '')}</h3>
+      <ul class="karte-list">${sec.items.filter(it => it && it.name).map(it => `
+        <li><div class="karte-row"><span class="karte-name">${escapeHtml(it.name)}</span>${it.price ? `<span class="karte-preis">${escapeHtml(it.price)}</span>` : ''}</div>${it.desc ? `<p class="karte-desc">${escapeHtml(it.desc)}</p>` : ''}</li>`).join('')}
+      </ul>
+    </div>`).join('');
+  const block = document.createElement('div');
+  block.className = 'karte-block karte-block-specials reveal in';
+  block.id = 'sommer';
+  block.innerHTML = `
+    <span class="specials-sun" aria-hidden="true"></span>
+    <div class="karte-block-head"><svg class="ico"><use href="#i-leaf"/></svg><h2>${escapeHtml(sp.title || 'Sommer-Specials')}</h2></div>
+    <div class="specials-groups">${groups}</div>
+    ${sp.footnote ? `<p class="specials-foot">${escapeHtml(sp.footnote)}</p>` : ''}`;
+  grid.prepend(block);
+}
+// Startseite: kleine Karte, die zur Speisekarte führt
+function initSpecialsTeaser() {
+  const wrap = document.getElementById('specials-teaser-wrap');
+  if (!wrap) return;
+  const sp = getSpecials();
+  wrap.hidden = !sp;
+  if (!sp) return;
+  const t = document.getElementById('specials-teaser-title');
+  if (t) t.textContent = sp.title || 'Sommer-Specials';
+  const list = document.getElementById('specials-teaser-list');
+  if (list) {
+    const names = sp.sections.flatMap(s => s.items.filter(it => it && it.name).map(it => it.name));
+    list.textContent = names.slice(0, 4).join(' · ') + (names.length > 4 ? ' …' : '');
+  }
 }
 
 /* Speisekarte: Sprung-Knöpfe zu den Kategorien (mobil oben „klebend“,
@@ -1678,7 +1762,8 @@ function initLandingTeaser() {
     const short = (t, n) => t.length > n ? t.slice(0, n).replace(/\s+\S*$/, '') + ' …' : t;
     heroLunch.textContent = list.length
       ? (list.length > 1 ? list.map(d => short(d.dish, 24)).join(en ? ' or ' : ' oder ') : list[0].dish)
-      : entry?.closed ? (entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') : (en ? 'No lunch' : 'Kein Mittagstisch')) : (en ? 'Menu coming soon' : 'Karte folgt');
+      : (entry?.holiday !== undefined || !openingFor(targetDate)) ? (en ? 'Closed' : 'Geschlossen')
+      : (entry?.closed || noLunchButOpen(entry, targetDate)) ? (en ? 'No lunch' : 'Kein Mittagstisch') : (en ? 'Menu coming soon' : 'Karte folgt');
     if (!heroLunch.dataset.wired) {
       heroLunch.dataset.wired = '1';
       heroLunch.addEventListener('click', () => openLunchSheet(block._targetDate || new Date()));
@@ -1706,15 +1791,26 @@ function initLandingTeaser() {
       if (sideEl) { sideEl.textContent = only.side ? sideText(only.side, en) : ''; sideEl.hidden = !only.side; }
     }
     renderAltDish(sideEl || dishEl, entry, en, true);
-  } else if (entry?.closed) {
+  } else if (noLunchButOpen(entry, targetDate)) {
+    // Café hat offen, nur kein Mittagstisch (z. B. Wochenende) – nicht „geschlossen“ sagen
+    block.dataset.state = 'closed';
+    renderAltDish(sideEl || dishEl, null, en);
+    if (kickerEl) kickerEl.textContent = showTomorrow
+      ? (en ? 'No lunch menu tomorrow' : 'Morgen kein Mittagstisch')
+      : (en ? 'No lunch menu today' : 'Heute kein Mittagstisch');
+    const nextLunch = nextLunchDay(targetDate);
+    dishEl.textContent = (en ? 'Breakfast, rolls and Croques as usual – all day.' : 'Frühstück, Brötchen und Croques gibt es trotzdem – den ganzen Tag.')
+      + (nextLunch ? (en ? ` Lunch is back on ${nextLunch.toLocaleDateString('en-GB', { weekday: 'long' })}.` : ` Mittagstisch wieder ab ${nextLunch.toLocaleDateString('de-DE', { weekday: 'long' })}.`) : '');
+    if (sideEl) sideEl.hidden = true;
+  } else if (entry?.closed || (!dayDishes(entry).length && !openingFor(targetDate))) {
     block.dataset.state = 'closed';
     renderAltDish(sideEl || dishEl, null, en);
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Closed tomorrow' : 'Morgen geschlossen')
       : (en ? 'Closed today' : 'Wir machen heute Pause');
-    if (entry.holiday !== undefined) {
+    if (entry?.holiday !== undefined || !openingFor(targetDate)) {
       // Schließtag (Urlaub/Feiertag): nächsten Öffnungstag nennen statt pauschal „bis morgen“
-      if (kickerEl) kickerEl.textContent = (showTomorrow ? (en ? 'Closed tomorrow' : 'Morgen geschlossen') : (en ? 'Closed today' : 'Heute geschlossen')) + (entry.holiday ? ' · ' + entry.holiday : '');
+      if (kickerEl) kickerEl.textContent = (showTomorrow ? (en ? 'Closed tomorrow' : 'Morgen geschlossen') : (en ? 'Closed today' : 'Heute geschlossen')) + (entry?.holiday ? ' · ' + entry.holiday : '');
       const next = new Date(targetDate);
       let found = null;
       for (let i = 1; i <= 60; i++) { next.setDate(next.getDate() + 1); if (openingFor(next)) { found = new Date(next); break; } }
@@ -2141,6 +2237,8 @@ function enhanceFooterEditorial() {
 
   // Brand-Block bleibt erhalten — verbessern wir nur die Typo via CSS
   const brand = grid.querySelector('.footer-brand');
+  // „Erstellt durch Sitalo.de“ wandert ganz nach unten
+  const maker = grid.querySelector('.footer-maker');
 
   // Hours- und Address-Spalten zusammenstellen
   const adresseCol = document.createElement('div');
@@ -2195,6 +2293,7 @@ function enhanceFooterEditorial() {
   strip.className = 'footer-bottom-strip container';
   strip.innerHTML = `<span>© ${year} <em>Alstercafé</em> · Croquenoah Cafe</span><nav class="footer-legal" aria-label="${alsterLang() === 'en' ? 'Legal' : 'Rechtliches'}"></nav>`;
   footer.appendChild(strip);
+  if (maker) { maker.classList.add('container'); footer.appendChild(maker); }
   const legal = strip.querySelector('.footer-legal');
   const navEl = footer.querySelector('.footer-nav-wrap .footer-nav');
   ['impressum.html', 'datenschutz.html', '#cookie-reset', 'admin.html'].forEach(sel => {
@@ -3248,4 +3347,19 @@ function escapeAttr(s) { return escapeHtml(s); }
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 300));
   else setTimeout(run, 300);
+})();
+
+/* Facelift 6: Stückzahl der Bestellung „springt“, wenn sie sich ändert */
+(function initOrderCountPop() {
+  const run = () => {
+    const el = document.getElementById('order-count');
+    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let last = el.textContent;
+    new MutationObserver(() => {
+      if (el.textContent === last) return;
+      last = el.textContent;
+      el.classList.remove('is-pop'); void el.offsetWidth; el.classList.add('is-pop');
+    }).observe(el, { childList: true, characterData: true, subtree: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
 })();

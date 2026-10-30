@@ -11,9 +11,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r201" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r201" />
-  <script>(function(){var V='2026-05-10-r201';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r203" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r203" />
+  <script>(function(){var V='2026-05-10-r203';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -434,7 +434,7 @@
             <summary>Hilfe: So ändern Sie die Frühstückskarte</summary>
             <div class="help-box-body">
               <ul>
-                <li>Das ist die <strong>Frühstücks-/Getränkekarte</strong> (nicht der Mittagstisch — der ist unter „Mittagsmenü“).</li>
+                <li>Das ist die <strong>Frühstücks-/Getränkekarte</strong> (nicht der Mittagstisch — der ist unter „Mittagstisch“).</li>
                 <li>Gerichte, Preise und Beschreibungen direkt in die Felder tippen.</li>
                 <li><strong>„Neue Kategorie hinzufügen“</strong> für einen neuen Abschnitt (z. B. „Heiße Getränke“).</li>
                 <li>Unten auf <strong>„Speisekarte speichern“</strong> — erscheint sofort auf der Webseite.</li>
@@ -483,6 +483,42 @@
                 <button type="submit" class="btn btn-primary">
                   <svg class="ico ico-sm"><use href="#i-check"/></svg>
                   Speisekarte speichern
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <form id="specials-form" class="panel-card specials-admin" novalidate>
+            <h3>Sommer-Specials</h3>
+            <p class="panel-card-sub">Eigener Block ganz oben auf der Speisekarte und eine kleine Karte auf der Startseite. Im Winter einfach ausschalten.</p>
+            <label class="specials-toggle">
+              <input type="checkbox" id="specials-visible" />
+              <span>Sommer-Specials auf der Webseite zeigen</span>
+            </label>
+            <p class="menu-intro-field">
+              <label>
+                <span>Überschrift</span>
+                <input type="text" id="specials-title" placeholder="Sommer-Specials" />
+              </label>
+            </p>
+            <div class="menu-sections" id="specials-sections"></div>
+            <button type="button" class="btn btn-link menu-add-section" id="specials-add-section">
+              <svg class="ico ico-sm"><use href="#i-plus"/></svg>
+              Neue Gruppe hinzufügen
+            </button>
+            <p class="menu-foot-field">
+              <label>
+                <span>Hinweis unter den Specials</span>
+                <input type="text" id="specials-footnote" placeholder="z. B. Bio-Matcha und Hafermilch" />
+              </label>
+            </p>
+            <div class="save-bar inline">
+              <p class="save-status" id="specials-status"></p>
+              <div class="save-actions">
+                <button type="button" class="btn btn-link danger" id="specials-reset">Auf Tafel-Stand zurücksetzen</button>
+                <button type="submit" class="btn btn-primary">
+                  <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                  Sommer-Specials speichern
                 </button>
               </div>
             </div>
@@ -1078,11 +1114,11 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r201" defer></script>
-  <script src="db.js?v=2026-05-10-r201" defer></script>
-  <script src="menudata.js?v=2026-05-10-r201" defer></script>
-  <script src="calendar.js?v=2026-05-10-r201" defer></script>
-  <script src="rules.js?v=2026-05-10-r201" defer></script>
-  <script src="admin.js?v=2026-05-10-r201" defer></script>
+  <script src="config.js?v=2026-05-10-r203" defer></script>
+  <script src="db.js?v=2026-05-10-r203" defer></script>
+  <script src="menudata.js?v=2026-05-10-r203" defer></script>
+  <script src="calendar.js?v=2026-05-10-r203" defer></script>
+  <script src="rules.js?v=2026-05-10-r203" defer></script>
+  <script src="admin.js?v=2026-05-10-r203" defer></script>
 </body>
 </html>
