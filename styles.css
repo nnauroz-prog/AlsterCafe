@@ -10277,3 +10277,17 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 }
 @media (max-width: 560px) { .holiday-range { grid-template-columns: minmax(0, 1fr); } }
 .holiday-range input { min-width: 0; max-width: 100%; }
+.admin-toast.is-clickable { pointer-events: auto; cursor: pointer; }
+.admin-toast.is-shown.is-clickable:hover { background: var(--bean); }
+/* Hinweis-Banner: lange Wörter/Links umbrechen statt die Seite zu sprengen */
+#notice-text { overflow-wrap: anywhere; min-width: 0; }
+.notice-inner { min-width: 0; }
+/* Öffnungszeiten: Vorschau, wie die Webseite die Zeile versteht */
+.hours-hint { margin: -4px 0 6px; font-size: .86rem; line-height: 1.4; color: #6b5a4a; }
+.hours-hint:empty { display: none; }
+.hours-hint.is-ok { color: #2f6b3a; }
+.hours-hint.is-warn { color: #8A6420; }
+.hours-hint.is-error { color: #a3322b; font-weight: 600; }
+.hours-row.is-invalid input { border-color: #a3322b; background: #fff6f5; }
+.broetchen-edit-price.is-invalid, .admin-panel input.is-invalid { border-color: #a3322b !important; background: #fff6f5 !important; }
+.holiday-row.is-invalid input, .menu-item-row.is-invalid input, .menu-item-row.is-invalid textarea { border-color: #a3322b; background: #fff6f5; }

@@ -316,6 +316,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(() => document.querySelectorAll('input[name="Datum"]').forEach(i => i.__dateHintUpdate?.()));
   // Bestellzeitraum kann um Mitternacht beginnen/enden
   setInterval(() => { safeRun(initBerlinerPromo); safeRun(initBerlinerPage); }, 5 * 60 * 1000);
+  // Startseite: um 15 Uhr von „Heute“ auf „Morgen“ wechseln, auch wenn die Seite offen bleibt
+  setInterval(() => { if (!document.hidden) safeRun(initLandingTeaser); }, 5 * 60 * 1000);
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
@@ -326,10 +328,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'design':      initDesign(); break;
       case 'content':     initContent(); break;
       case 'notice':      initNotice(); break;
-      case 'holidays':    initHolidays(); updateLiveStatus(); break;
+      case 'holidays':    initHolidays(); updateLiveStatus(); initLunchWeek(); initLandingTeaser(); break;
       case 'menu':        initMenu(); break;
-      case 'hours':       initHours(); updateLiveStatus(); initNavExtra(); syncBusinessSchema(); break;
-      case 'weekly-menu': initLunchWeek(); break;
+      case 'hours':       initHours(); updateLiveStatus(); initNavExtra(); syncBusinessSchema(); initLandingTeaser(); break;
+      case 'weekly-menu': initLunchWeek(); initLandingTeaser(); break;
       case 'broetchen-items':
       case 'berliner-items': if (refreshOrderSorts) refreshOrderSorts(); break;
       case 'berliner-settings': initBerlinerPromo(); initBerlinerPage(); break;
@@ -425,33 +427,9 @@ function updateLiveStatus() {
 /* Öffnungszeiten als Array[7] (0 = Mo … 6 = So) mit {openMin, closeMin} bzw. null.
    Quelle sind die im Mitgliederbereich gepflegten Zeiten (Key 'hours'), sonst die
    Standardzeiten — nicht der angezeigte Text, der auf der englischen Seite übersetzt ist. */
-const WEEKDAY_KEYS = ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'];
-const WEEKDAY_ALIASES = { tu: 1, we: 2, th: 3, su: 6, mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 };
-function weekdayIndex(word) {
-  const w = String(word || '').toLowerCase().replace(/[^a-zäöü]/g, '');
-  if (!w) return -1;
-  const de = WEEKDAY_KEYS.indexOf(w.slice(0, 2));   // mo di mi do fr sa so (auch Langform)
-  if (de >= 0) return de;
-  return WEEKDAY_ALIASES[w.slice(0, 3)] ?? WEEKDAY_ALIASES[w.slice(0, 2)] ?? -1;  // englisch
-}
-// "Mo – Fr", "Mo-Fr", "Sa & So", "Sa, So", "Samstag", "täglich", "Mo bis Sa" …
-function parseDayLabel(label) {
-  const l = String(label || '').toLowerCase().trim();
-  if (/t[äa]glich|jeden tag|every day|daily/.test(l)) return [0, 1, 2, 3, 4, 5, 6];
-  const out = new Set();
-  l.split(/,|&|\+|\bund\b|\band\b|\//).forEach(part => {
-    const range = part.split(/\s*(?:[‐-―−\-]|\bbis\b|\bto\b)\s*/).map(x => x.trim()).filter(Boolean);
-    if (range.length >= 2) {
-      const a = weekdayIndex(range[0]), b = weekdayIndex(range[range.length - 1]);
-      if (a < 0 || b < 0) return;
-      for (let d = a; ; d = (d + 1) % 7) { out.add(d); if (d === b) break; }
-    } else if (range.length === 1) {
-      const d = weekdayIndex(range[0]);
-      if (d >= 0) out.add(d);
-    }
-  });
-  return [...out];
-}
+// Tage und Zeiten liest rules.js – dieselben Regeln prüft der Mitgliederbereich beim Speichern.
+const weekdayIndex = (w) => window.AlsterRules.weekdayIndex(w);
+const parseDayLabel = (l) => window.AlsterRules.parseDayLabel(l);
 function getWeekHours() {
   let rows = null;
   try {
@@ -461,12 +439,11 @@ function getWeekHours() {
   if (!rows) rows = DEFAULT_HOURS;
   const out = new Array(7).fill(null);
   rows.forEach(r => {
-    // Akzeptiert alle gängigen Trenner (Bindestrich, Gedankenstrich, Minus, "bis").
-    const m = String(r && r.time || '').match(/(\d{1,2})[:.](\d{2})\s*(?:[‐-―−\-]|bis)\s*(\d{1,2})[:.](\d{2})/i);
-    if (!m) return; // z. B. "geschlossen" → Tag bleibt zu
-    const openMin = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
-    const closeMin = parseInt(m[3], 10) * 60 + parseInt(m[4], 10);
-    parseDayLabel(r.label).forEach(d => { out[d] = { openMin, closeMin }; });
+    const days = parseDayLabel(r && r.label);
+    if (/geschlossen|closed|ruhetag/i.test(String(r && r.time || ''))) { days.forEach(d => { out[d] = null; }); return; }
+    const range = window.AlsterRules.parseTimeRange(r && r.time);
+    if (!range || range.closeMin <= range.openMin) return; // unlesbar → Tag bleibt zu
+    days.forEach(d => { out[d] = { openMin: range.openMin, closeMin: range.closeMin }; });
   });
   return out;
 }
@@ -475,6 +452,12 @@ function parseHoursFromDom() { return getWeekHours(); }
 
 function isoLocal(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+/* Mittagstisch-Eintrag eines Tages – an Schließtagen (Urlaub & Feiertage) immer „geschlossen“,
+   auch wenn im Wochenplan ein Gericht steht. */
+function lunchEntryFor(entry, d) {
+  const h = d ? holidayOn(d) : null;
+  return h ? { closed: true, holiday: h.label || '' } : entry;
 }
 function holidayOn(d) {
   const iso = isoLocal(d);
@@ -1109,8 +1092,18 @@ function initNotice() {
 
   const text = banner?.querySelector('#notice-text');
   if (!banner || !text) return;
+  // Der Speicher legt Werte als JSON ab ("Text" mit Anführungszeichen) → sauber auslesen.
+  // Ältere Einträge ohne JSON werden weiter verstanden.
   let value = '';
-  try { value = (localStorage.getItem(STORAGE_NOTICE) || '').trim(); } catch {}
+  try {
+    const v = window.alsterDb?.get?.('notice');
+    if (typeof v === 'string') value = v;
+    else {
+      const raw = localStorage.getItem(STORAGE_NOTICE) || '';
+      try { const p = JSON.parse(raw); value = typeof p === 'string' ? p : raw; } catch { value = raw; }
+    }
+    value = String(value || '').trim();
+  } catch {}
   if (value) {
     text.textContent = value;
     banner.hidden = false;
@@ -1566,14 +1559,14 @@ function openLunchSheet(refDate) {
   const labels = dayLabels();
   const rows = DAY_KEYS.map((key, i) => {
     const d = new Date(monday); d.setDate(d.getDate() + i);
-    const entry = week?.days?.[key];
+    const entry = lunchEntryFor(week?.days?.[key], d);
     // Wochenende nur zeigen, wenn dort wirklich etwas eingetragen ist
     if (i >= 5 && !dayDishes(entry).length) return '';
     const iso = isoLocal(d);
     const isToday = iso === focusIso;
     const past = iso < todayIso;
     let body;
-    if (entry?.closed) body = `<span class="lunch-sheet-closed">${en ? 'No lunch' : 'Kein Mittagstisch'}</span>`;
+    if (entry?.closed) body = `<span class="lunch-sheet-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch' : 'Kein Mittagstisch')}</span>`;
     else if (dayDishes(entry).length) body = dayDishes(entry).map(d =>
       `<span class="lunch-sheet-dish">${escapeHtml(d.dish)}</span>${d.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(d.side, en))}</span>` : ''}`
     ).join(orDividerHtml(en, 'lunch-sheet-or'));
@@ -1616,7 +1609,7 @@ function openLunchSheet(refDate) {
       <a class="lunch-sheet-more" href="mittagstisch.html">${en ? 'Go to the lunch page →' : 'Zur Mittagstisch-Seite →'}</a>
     </div>`;
   dlg.querySelector('.lunch-sheet-close').addEventListener('click', () => dlg.close());
-  const focusEntry = week?.days?.[DAY_KEYS[(new Date(focusIso + 'T12:00').getDay() + 6) % 7]];
+  const focusEntry = lunchEntryFor(week?.days?.[DAY_KEYS[(new Date(focusIso + 'T12:00').getDay() + 6) % 7]], new Date(focusIso + 'T12:00'));
   const focusDishes = dayDishes(focusEntry);
   if (focusDishes.length) {
     const share = lunchShareButton();
@@ -1647,13 +1640,14 @@ function initLandingTeaser() {
   const weekData = loadCurrentWeek(monday);
   const dayIdx = (targetDate.getDay() + 6) % 7;
   const dayKey = DAY_KEYS[dayIdx];
-  const entry  = weekData?.days?.[dayKey];
+  const entry  = lunchEntryFor(weekData?.days?.[dayKey], targetDate);
 
   const en = alsterLang() === 'en';
+  block._targetDate = targetDate; // für Klicks nach dem 15-Uhr-Wechsel
   // Tipp aufs Gericht (oder auf "Ganze Woche ansehen") öffnet das Mittagsmenü
   if (!dishEl.dataset.sheetWired) {
     dishEl.dataset.sheetWired = '1';
-    const open = () => openLunchSheet(targetDate);
+    const open = () => openLunchSheet(block._targetDate || new Date());
     [dishEl, sideEl].forEach(el => {
       if (!el) return;
       el.classList.add('is-tappable');
@@ -1675,10 +1669,10 @@ function initLandingTeaser() {
     const short = (t, n) => t.length > n ? t.slice(0, n).replace(/\s+\S*$/, '') + ' …' : t;
     heroLunch.textContent = list.length
       ? (list.length > 1 ? list.map(d => short(d.dish, 24)).join(en ? ' or ' : ' oder ') : list[0].dish)
-      : entry?.closed ? (en ? 'No lunch' : 'Kein Mittagstisch') : (en ? 'Menu coming soon' : 'Karte folgt');
+      : entry?.closed ? (entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') : (en ? 'No lunch' : 'Kein Mittagstisch')) : (en ? 'Menu coming soon' : 'Karte folgt');
     if (!heroLunch.dataset.wired) {
       heroLunch.dataset.wired = '1';
-      heroLunch.addEventListener('click', () => openLunchSheet(targetDate));
+      heroLunch.addEventListener('click', () => openLunchSheet(block._targetDate || new Date()));
     }
   }
   const hintEl = block.querySelector('.today-feature-week');
@@ -1709,7 +1703,17 @@ function initLandingTeaser() {
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Closed tomorrow' : 'Morgen geschlossen')
       : (en ? 'Closed today' : 'Wir machen heute Pause');
-    dishEl.textContent = showTomorrow
+    if (entry.holiday !== undefined) {
+      // Schließtag (Urlaub/Feiertag): nächsten Öffnungstag nennen statt pauschal „bis morgen“
+      if (kickerEl) kickerEl.textContent = (showTomorrow ? (en ? 'Closed tomorrow' : 'Morgen geschlossen') : (en ? 'Closed today' : 'Heute geschlossen')) + (entry.holiday ? ' · ' + entry.holiday : '');
+      const next = new Date(targetDate);
+      let found = null;
+      for (let i = 1; i <= 60; i++) { next.setDate(next.getDate() + 1); if (openingFor(next)) { found = new Date(next); break; } }
+      dishEl.textContent = found
+        ? (en ? `We are back on ${found.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}.`
+              : `Ab ${found.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })} sind wir wieder für Sie da.`)
+        : (en ? 'We look forward to seeing you again soon.' : 'Wir freuen uns, Sie bald wieder zu sehen.');
+    } else dishEl.textContent = showTomorrow
       ? (en ? 'Back the day after — we look forward to seeing you.' : 'Übermorgen geht es weiter — wir freuen uns auf Sie.')
       : (en ? 'See you tomorrow — we look forward to your visit.' : 'Bis morgen — wir freuen uns auf Sie.');
     if (sideEl) sideEl.hidden = true;
@@ -2652,7 +2656,7 @@ function renderTodayLunch(weekData, today) {
   const dayIdx = (today.getDay() + 6) % 7;
   const dayKey = DAY_KEYS[dayIdx];
   const dayLabel = dayLabels()[dayIdx];
-  const entry = weekData?.days?.[dayKey];
+  const entry = lunchEntryFor(weekData?.days?.[dayKey], today);
 
   const nameEl = document.getElementById('today-name');
   if (nameEl) nameEl.textContent = dayLabel;
@@ -2680,7 +2684,10 @@ function renderTodayLunch(weekData, today) {
     emptyBox.hidden = true;
   } else if (entry?.closed) {
     // Explizit als geschlossen markiert — bewusste Pause
-    if (emptyText) emptyText.innerHTML = 'Heute servieren wir Frühstück &amp; Backwaren — kein Mittagstisch.';
+    if (emptyText) {
+      if (entry.holiday !== undefined) emptyText.textContent = alsterLang() === 'en' ? `We are closed today${entry.holiday ? ' – ' + entry.holiday : ''}.` : `Heute ist das Café geschlossen${entry.holiday ? ' – ' + entry.holiday : ''}.`;
+      else emptyText.innerHTML = 'Heute servieren wir Frühstück &amp; Backwaren — kein Mittagstisch.';
+    }
     todayBox.hidden = true;
     emptyBox.hidden = false;
   } else if (wholeWeekEmpty) {
@@ -2722,14 +2729,14 @@ function renderWeekList(weekData, monday, today) {
 
   DAY_KEYS.forEach((key, idx) => {
     const date = new Date(monday); date.setDate(date.getDate() + idx);
-    const entry = weekData?.days?.[key];
+    const entry = lunchEntryFor(weekData?.days?.[key], date);
     const isToday = isSameDay(date, today);
     const li = document.createElement('li');
     li.className = 'lunch-day' + (isToday ? ' is-today' : '');
     const en = alsterLang() === 'en';
     let body;
     if (entry?.closed) {
-      body = `<span class="lunch-closed">${en ? 'No lunch today' : 'Kein Mittagstisch'}</span>`;
+      body = `<span class="lunch-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch today' : 'Kein Mittagstisch')}</span>`;
     } else if (dayDishes(entry).length) {
       body = dayDishes(entry).map(d =>
         `<span class="lunch-day-dish">${escapeHtml(d.dish)}</span>` + (d.side ? `<span class="lunch-day-side">${escapeHtml(d.side)}</span>` : '')
@@ -2751,12 +2758,7 @@ function renderWeekList(weekData, monday, today) {
 /* Preis-Helfer für den Brötchen-Service.
    parseEuro: "2,50 €" / "2.5" / 2.5 -> 2.5 (Euro, auf Cent gerundet) oder null.
    formatEuro: 2.5 -> "2,50 €". */
-function parseEuro(v) {
-  if (typeof v === 'number') return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
-  const m = String(v || '').replace(/\s/g, '').replace(',', '.').match(/\d+(\.\d+)?/);
-  const n = m ? parseFloat(m[0]) : NaN;
-  return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
-}
+function parseEuro(v) { return window.AlsterRules.parseEuro(v); }
 function formatEuro(n) {
   return Number(n).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 }
