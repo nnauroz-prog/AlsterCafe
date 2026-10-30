@@ -10955,3 +10955,71 @@ body:not(.admin-body) .reservation-form .form-row > label { margin-bottom: 0; }
 .specials-admin .specials-toggle { display: flex; align-items: center; gap: 12px; min-height: 48px; margin: 6px 0 14px; padding: 10px 14px;
   border-radius: 14px; background: rgba(184, 137, 62, .08); border: 1px solid rgba(184, 137, 62, .3); font-weight: 600; cursor: pointer; }
 .specials-admin .specials-toggle input { width: 22px; height: 22px; accent-color: #B8893E; }
+
+/* ============================================================
+   FACELIFT 7 · Über uns, FAQ, Kontakt-Karte, 404
+   ============================================================ */
+/* Über uns: Merkmale als Kacheln */
+body:not(.admin-body) .about-text .features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 28px; padding: 0; }
+body:not(.admin-body) .about-text .features li {
+  display: flex; align-items: center; gap: 14px; margin: 0; padding: 16px 16px; border: 1px solid rgba(184, 137, 62, .26) !important;
+  border-radius: 16px; background: linear-gradient(160deg, #FFFCF4, #FBF3E2); box-shadow: 0 14px 30px -26px rgba(42, 24, 16, .5);
+}
+body:not(.admin-body) .about-text .features .ico {
+  flex: 0 0 auto; width: 40px; height: 40px; padding: 9px; border-radius: 50%; box-sizing: border-box;
+  background: radial-gradient(circle at 35% 30%, #FFF6E2, #F1E2C2); box-shadow: inset 0 0 0 1px rgba(184, 137, 62, .35);
+}
+@media (max-width: 420px) { body:not(.admin-body) .about-text .features { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: no-preference) {
+  .about-text.reveal .features li { opacity: 0; transform: translateY(10px); transition: opacity .5s ease, transform .5s cubic-bezier(.2, .8, .2, 1); }
+  .about-text.reveal.in .features li { opacity: 1; transform: none; }
+  .about-text.reveal.in .features li:nth-child(2) { transition-delay: .08s; }
+  .about-text.reveal.in .features li:nth-child(3) { transition-delay: .16s; }
+  .about-text.reveal.in .features li:nth-child(4) { transition-delay: .24s; }
+}
+
+/* FAQ: weich auf- und zuklappen, „+“ wird „×“ */
+.faq-item { transition: background-color .25s ease; border-radius: 12px; }
+.faq-item[open] { background: linear-gradient(180deg, rgba(184, 137, 62, .06), transparent 80%); }
+.faq-item .faq-summary::after { transition: transform .3s cubic-bezier(.3, 1.3, .5, 1), background-color .2s, color .2s; }
+@supports (interpolate-size: allow-keywords) {
+  .faq-list { interpolate-size: allow-keywords; }
+  .faq-item::details-content { height: 0; overflow: clip; transition: height .35s cubic-bezier(.2, .8, .2, 1), content-visibility .35s allow-discrete; }
+  .faq-item[open]::details-content { height: auto; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .faq-item[open] .faq-content { animation: faq-in .35s ease; }
+}
+@keyframes faq-in { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .faq-item::details-content { transition: none !important; } }
+
+/* Kontakt: goldene Strichkarte im Platzhalter */
+.map-placeholder { position: relative; overflow: hidden; isolation: isolate; }
+.map-placeholder > div { position: relative; z-index: 1; background: rgba(255, 252, 244, .82); border-radius: 18px; padding: 18px 16px;
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.map-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.map-art .map-water { fill: rgba(140, 170, 180, .16); }
+.map-art .map-shore { fill: none; stroke: rgba(120, 150, 160, .55); stroke-width: 1.6; }
+.map-art .map-road { fill: none; stroke: rgba(184, 137, 62, .45); stroke-width: 6; stroke-linecap: round; }
+.map-art .map-road.thin { stroke-width: 3; stroke: rgba(184, 137, 62, .3); }
+.map-art .map-pin path { fill: #B8893E; }
+.map-art .map-pin circle { fill: #FFFCF4; }
+.map-art .map-label { font: 600 11px 'Inter', sans-serif; letter-spacing: .2em; text-transform: uppercase; fill: rgba(90, 120, 130, .7); }
+@media (prefers-reduced-motion: no-preference) {
+  .map-art .map-road, .map-art .map-shore { stroke-dasharray: 1; stroke-dashoffset: 1; animation: art-draw 2.4s cubic-bezier(.6, .05, .25, 1) .2s forwards; }
+  .map-art .map-pin { transform-box: fill-box; transform-origin: 50% 100%; animation: pin-drop .7s cubic-bezier(.3, 1.6, .5, 1) 1.4s both; }
+}
+@keyframes pin-drop { from { transform: translateY(-24px) scale(.8); opacity: 0; } }
+
+/* 404: umgekippte Tasse */
+.error-art { width: clamp(160px, 30vw, 240px); margin: 0 0 18px; color: var(--gold); }
+.error-art svg { width: 100%; height: auto; overflow: visible; display: block; }
+.error-art svg * { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.error-art .art-fill { fill: #B8893E; fill-opacity: .18; stroke: none; }
+.error-art .art-dot { fill: currentColor; stroke: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .error-art .art-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: art-draw 1.8s cubic-bezier(.6, .05, .25, 1) .2s forwards; }
+  .error-art .art-steam { stroke-dasharray: 1; stroke-dashoffset: 1; animation: art-draw 1s ease 1.4s forwards; }
+}
+.error-links a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid rgba(184, 137, 62, .35); text-decoration: none; }

@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'design':      initDesign(); break;
       case 'content':     initContent(); break;
       case 'notice':      initNotice(); break;
-      case 'holidays':    initHolidays(); updateLiveStatus(); initLunchWeek(); initLandingTeaser(); break;
+      case 'holidays':    initHolidays(); updateLiveStatus(); initLunchWeek(); initLandingTeaser(); syncBusinessSchema(); break;
       case 'menu':        initMenu(); break;
       case 'specials':    initMenu(); initSpecialsTeaser(); break;
       case 'hours':       initHours(); updateLiveStatus(); initNavExtra(); syncBusinessSchema(); initLandingTeaser(); break;
@@ -1335,6 +1335,17 @@ function syncBusinessSchema() {
     g ? g.dayOfWeek.push(names[i]) : groups.push({ '@type': 'OpeningHoursSpecification', dayOfWeek: [names[i]], opens, closes });
   });
   data.openingHoursSpecification = groups;
+  // Schließtage (Urlaub & Feiertage) der nächsten 60 Tage für Google
+  try {
+    const today = isoLocal(new Date());
+    const limit = new Date(); limit.setDate(limit.getDate() + 60);
+    const until = isoLocal(limit);
+    const special = (getHolidays() || [])
+      .filter(h => h && h.date && h.date >= today && h.date <= until)
+      .map(h => ({ '@type': 'OpeningHoursSpecification', validFrom: h.date, validThrough: h.date, opens: '00:00', closes: '00:00' }));
+    if (special.length) data.specialOpeningHoursSpecification = special;
+    else delete data.specialOpeningHoursSpecification;
+  } catch {}
   el.textContent = JSON.stringify(data, null, 2);
 }
 
