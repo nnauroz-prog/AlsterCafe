@@ -10885,11 +10885,37 @@ body:not(.admin-body) .reservation-form .form-row > label { margin-bottom: 0; }
   body:not(.admin-body) .reservation-form .form-row.three { column-gap: 16px; grid-template-columns: minmax(0, 1.15fr) minmax(0, .9fr) minmax(0, 1.15fr); }
 }
 
-/* Fußzeile ganz unten: „Erstellt durch Sitalo.de“ */
-.site-footer .footer-maker { margin: 0 auto; padding: 14px 0 max(18px, env(safe-area-inset-bottom)); text-align: center;
-  font: 500 .76rem/1.4 'Inter', sans-serif; letter-spacing: .04em; color: rgba(241, 231, 211, .58); }
-.site-footer .footer-maker a { color: var(--gold-soft, #D4B380); text-decoration: none; border-bottom: 1px solid rgba(212, 179, 128, .4); padding-bottom: 1px; }
-@media (hover: hover) { .site-footer .footer-maker a:hover { color: #F1D28E; border-bottom-color: #F1D28E; } }
+/* Fußzeile ganz unten: Signatur „Erstellt durch Sitalo.de“ */
+.site-footer .footer-maker {
+  position: relative; margin: 0 auto; padding: 22px 0 max(26px, env(safe-area-inset-bottom));
+  display: flex; justify-content: center; text-align: center;
+}
+.site-footer .footer-maker::before {
+  content: ""; position: absolute; top: 0; left: 50%; width: min(360px, 70%); height: 1px; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(212, 179, 128, .55), transparent);
+}
+.site-footer .footer-maker a {
+  display: inline-flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 18px 6px 16px;
+  border-radius: 999px; text-decoration: none; color: rgba(241, 231, 211, .62);
+  border: 1px solid rgba(212, 179, 128, .18); background: rgba(255, 252, 244, .03);
+  transition: border-color .25s ease, background-color .25s ease, color .25s ease, box-shadow .3s ease;
+}
+.site-footer .maker-by { font: 600 .62rem/1 'Inter', sans-serif; letter-spacing: .22em; text-transform: uppercase; }
+.site-footer .maker-sign { display: inline-flex; align-items: center; gap: 8px; color: #F1E7D3; }
+.site-footer .maker-mark {
+  display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  font: 600 .72rem/1 'Fraunces', serif; color: #2A1810; background: linear-gradient(145deg, #F1D28E, #C8963F);
+  box-shadow: 0 0 0 1px rgba(241, 210, 142, .4), 0 4px 10px -4px rgba(200, 150, 63, .8);
+}
+.site-footer .maker-name { font: 500 1rem/1 'Fraunces', serif; letter-spacing: -.005em; }
+.site-footer .maker-arrow { width: 14px; height: 14px; color: var(--gold-soft, #D4B380); transition: transform .3s cubic-bezier(.3, 1.4, .5, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .site-footer .footer-maker a:hover { color: rgba(241, 231, 211, .85); border-color: rgba(212, 179, 128, .5); background: rgba(212, 179, 128, .08);
+    box-shadow: 0 10px 30px -14px rgba(200, 150, 63, .6); }
+  .site-footer .footer-maker a:hover .maker-arrow { transform: translate(2px, -2px); }
+}
+.site-footer .footer-maker a:focus-visible { outline: 2px solid var(--gold-soft, #D4B380); outline-offset: 3px; }
+@media (max-width: 420px) { .site-footer .footer-maker a { gap: 10px; padding: 6px 14px; } .site-footer .maker-by { letter-spacing: .16em; } }
 
 /* ============================================================
    SOMMER-SPECIALS · Speisekarte + Startseite
