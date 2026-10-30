@@ -3188,3 +3188,25 @@ function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 function escapeAttr(s) { return escapeHtml(s); }
+
+/* Facelift 4: Lichtkegel auf Karten folgt der Maus (nur echte Maus, ohne reduzierte Bewegung) */
+(function initCardSpotlight() {
+  if (document.body && document.body.classList.contains('admin-body')) return;
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const run = () => {
+    document.querySelectorAll('.spread-card, .reviews-card').forEach(card => {
+      if (card.classList.contains('has-spot')) return;
+      const s = document.createElement('span');
+      s.className = 'spot-light'; s.setAttribute('aria-hidden', 'true');
+      card.prepend(s); card.classList.add('has-spot');
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      }, { passive: true });
+    });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 400));
+  else setTimeout(run, 400);
+})();
