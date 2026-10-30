@@ -3210,3 +3210,42 @@ function escapeAttr(s) { return escapeHtml(s); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 400));
   else setTimeout(run, 400);
 })();
+
+/* Facelift 5: Goldstaub in dunklen Kapiteln + Tasse im Kopf folgt leicht der Maus */
+(function initGoldDustAndParallax() {
+  if (document.body && document.body.classList.contains('admin-body')) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const run = () => {
+    document.querySelectorAll('.chapter-dark').forEach(sec => {
+      if (sec.querySelector(':scope > .gold-dust')) return;
+      const box = document.createElement('div');
+      box.className = 'gold-dust'; box.setAttribute('aria-hidden', 'true');
+      for (let i = 0; i < 14; i++) {
+        const p = document.createElement('i');
+        p.style.setProperty('--x', (4 + Math.random() * 92).toFixed(1) + '%');
+        p.style.setProperty('--s', (3 + Math.random() * 4).toFixed(1) + 'px');
+        p.style.setProperty('--d', (14 + Math.random() * 12).toFixed(1) + 's');
+        p.style.setProperty('--dl', (-Math.random() * 24).toFixed(1) + 's');
+        box.appendChild(p);
+      }
+      sec.prepend(box);
+    });
+    const art = document.querySelector('.hero-cinematic > .hero-art');
+    if (!art || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    let mx = 0, my = 0, raf = 0;
+    const apply = () => {
+      raf = 0;
+      const lift = Math.min(window.scrollY, 600) * -0.06;
+      art.style.transform = `translate3d(${mx.toFixed(1)}px, ${(my + lift).toFixed(1)}px, 0)`;
+    };
+    const queue = () => { if (!raf) raf = requestAnimationFrame(apply); };
+    window.addEventListener('pointermove', e => {
+      mx = (e.clientX / window.innerWidth - 0.5) * 16;
+      my = (e.clientY / window.innerHeight - 0.5) * 12;
+      queue();
+    }, { passive: true });
+    window.addEventListener('scroll', queue, { passive: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 300));
+  else setTimeout(run, 300);
+})();
