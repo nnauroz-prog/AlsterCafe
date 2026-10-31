@@ -1690,7 +1690,7 @@ function openLunchSheet(refDate) {
     const isToday = iso === focusIso;
     const past = iso < todayIso;
     let body;
-    if (entry?.closed) body = `<span class="lunch-sheet-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (entry.croque ? (en ? 'Croque day' : 'Croque-Tag') : (en ? 'No lunch' : 'Kein Mittagstisch'))}</span>`;
+    if (entry?.closed) body = `<span class="lunch-sheet-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch' : 'Kein Mittagstisch')}</span>`;
     else if (dayDishes(entry).length) body = dayDishes(entry).map(d =>
       `<span class="lunch-sheet-dish">${escapeHtml(d.dish)}</span>${d.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(d.side, en))}</span>` : ''}`
     ).join(orDividerHtml(en, 'lunch-sheet-or'));
@@ -1794,7 +1794,6 @@ function initLandingTeaser() {
     heroLunch.textContent = list.length
       ? (list.length > 1 ? list.map(d => short(d.dish, 24)).join(en ? ' or ' : ' oder ') : list[0].dish)
       : (entry?.holiday !== undefined || !openingFor(targetDate)) ? (en ? 'Closed' : 'Geschlossen')
-      : (entry?.closed && entry?.croque) ? (en ? 'Croque day' : 'Croque-Tag')
       : (entry?.closed || noLunchButOpen(entry, targetDate)) ? (en ? 'No lunch' : 'Kein Mittagstisch') : (en ? 'Menu coming soon' : 'Karte folgt');
     if (!heroLunch.dataset.wired) {
       heroLunch.dataset.wired = '1';
@@ -1832,17 +1831,9 @@ function initLandingTeaser() {
       ? (en ? 'No lunch menu tomorrow' : 'Morgen kein Mittagstisch')
       : (en ? 'No lunch menu today' : 'Heute kein Mittagstisch');
     const nextLunch = nextLunchDay(targetDate);
-    if (entry?.croque) {
-      // Im Mittagstisch-Plan „Croque-Tag“ gewählt → Text des Inhabers
-      if (kickerEl) kickerEl.textContent = showTomorrow ? (en ? 'Tomorrow at midday' : 'Morgen mittag bei uns') : (en ? 'At midday today' : 'Heute mittag bei uns');
-      dishEl.textContent = croqueTitle(showTomorrow);
-      if (sideEl) { sideEl.textContent = croqueText(showTomorrow); sideEl.hidden = false; }
-      setCroqueLink(sideEl || dishEl, true, en);
-    } else {
-      dishEl.textContent = (en ? 'Breakfast, rolls and Croques as usual – all day.' : 'Frühstück, Brötchen und Croques gibt es trotzdem – den ganzen Tag.')
-        + (nextLunch ? (en ? ` Lunch is back on ${nextLunch.toLocaleDateString('en-GB', { weekday: 'long' })}.` : ` Mittagstisch wieder ab ${nextLunch.toLocaleDateString('de-DE', { weekday: 'long' })}.`) : '');
-      if (sideEl) sideEl.hidden = true;
-    }
+    dishEl.textContent = (en ? 'Breakfast, rolls and Croques as usual – all day.' : 'Frühstück, Brötchen und Croques gibt es trotzdem – den ganzen Tag.')
+      + (nextLunch ? (en ? ` Lunch is back on ${nextLunch.toLocaleDateString('en-GB', { weekday: 'long' })}.` : ` Mittagstisch wieder ab ${nextLunch.toLocaleDateString('de-DE', { weekday: 'long' })}.`) : '');
+    if (sideEl) sideEl.hidden = true;
   } else if (entry?.closed || (!dayDishes(entry).length && !openingFor(targetDate))) {
     block.dataset.state = 'closed';
     renderAltDish(sideEl || dishEl, null, en);
@@ -2836,9 +2827,6 @@ function renderTodayLunch(weekData, today) {
     // Explizit als geschlossen markiert — bewusste Pause
     if (emptyText) {
       if (entry.holiday !== undefined) emptyText.textContent = alsterLang() === 'en' ? `We are closed today${entry.holiday ? ' – ' + entry.holiday : ''}.` : `Heute ist das Café geschlossen${entry.holiday ? ' – ' + entry.holiday : ''}.`;
-      else if (entry.croque) {
-        emptyText.innerHTML = `<strong class="croque-day-title">${escapeHtml(CROQUE_DAY_TITLE)}</strong> <span class="croque-alt-text">${escapeHtml(CROQUE_ALT_TEXT)}</span> <a class="croque-alt-link" href="${CROQUE_SHOP_URL}" target="_blank" rel="noopener noreferrer">Croques bestellen →</a>`;
-      }
       else emptyText.innerHTML = 'Heute servieren wir Frühstück &amp; Backwaren — kein Mittagstisch.';
     }
     todayBox.hidden = true;
@@ -2889,7 +2877,7 @@ function renderWeekList(weekData, monday, today) {
     const en = alsterLang() === 'en';
     let body;
     if (entry?.closed) {
-      body = `<span class="lunch-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (entry.croque ? (en ? 'Croque day' : 'Croque-Tag') : (en ? 'No lunch today' : 'Kein Mittagstisch'))}</span>`;
+      body = `<span class="lunch-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch today' : 'Kein Mittagstisch')}</span>`;
     } else if (dayDishes(entry).length) {
       body = dayDishes(entry).map(d =>
         `<span class="lunch-day-dish">${escapeHtml(d.dish)}</span>` + (d.side ? `<span class="lunch-day-side">${escapeHtml(d.side)}</span>` : '')

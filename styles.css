@@ -11049,10 +11049,6 @@ body:not(.admin-body) .about-text .features .ico {
 @media (min-width: 1400px) {
   .chapter-mark, .page-hero-editorial::after { right: max(clamp(20px, 4vw, 56px), calc((100vw - var(--max)) / 2 + var(--gutter))); }
 }
-/* Mittagstisch-Editor: Croque-Schalter nur bei „kein Mittagstisch“ */
-.day-card .day-toggle-croque { display: none; }
-.day-card.is-closed .day-toggle-croque { display: flex; margin-top: 10px; }
-.day-card.is-closed .day-toggle-croque .day-toggle-text { color: var(--accent-text, #8A6420); }
 /* Croques als Alternative (Startseite + Mittagstisch-Seite) */
 .croque-alt-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; min-height: 40px; padding: 0 16px; border-radius: 999px;
   font: 600 .82rem/1 'Inter', sans-serif; letter-spacing: .04em; text-decoration: none;

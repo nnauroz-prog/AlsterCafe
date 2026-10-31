@@ -941,7 +941,7 @@ function renderWeek() {
     }));
   });
 
-  dom.dayGrid.querySelectorAll('.day-toggle:not(.day-toggle-croque) input').forEach(cb => {
+  dom.dayGrid.querySelectorAll('.day-toggle input').forEach(cb => {
     const card = cb.closest('.day-card');
     cb.addEventListener('change', () => card.classList.toggle('is-closed', cb.checked));
   });
@@ -1012,11 +1012,6 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
       <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
       <span class="day-toggle-text">An diesem Tag kein Mittagstisch</span>
     </label>
-    <label class="day-toggle day-toggle-croque">
-      <input type="checkbox" name="${fieldPrefix}-croque" ${saved.croque ? 'checked' : ''} />
-      <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
-      <span class="day-toggle-text">Croque-Tag (Croques statt Mittagstisch)</span>
-    </label>
   `;
   return card;
 }
@@ -1030,10 +1025,8 @@ function readFormToWeek() {
     const dish2 = (data.get(`${day.key}-dish2`) || '').toString().trim();
     const side2 = (data.get(`${day.key}-side2`) || '').toString().trim();
     const closed = data.get(`${day.key}-closed`) === 'on';
-    const croque = closed && data.get(`${day.key}-croque`) === 'on';
     if (dish || side || dish2 || side2 || closed) {
       week[day.key] = { dish, side, closed };
-      if (croque) week[day.key].croque = true;
       // Zweites Gericht nur speichern, wenn eingetragen (ältere Einträge bleiben gleich)
       if (dish2 || side2) { week[day.key].dish2 = dish2; week[day.key].side2 = side2; }
     }
@@ -1361,7 +1354,7 @@ function weekShareData() {
     const dishes = [{ dish: e.dish, side: e.side }, { dish: e.dish2, side: e.side2 }]
       .map(x => ({ dish: String(x.dish || '').trim(), side: String(x.side || '').trim() }))
       .filter(x => x.dish);
-    return { label: d.label, date, closed: !!e.closed, croque: !!(e.closed && e.croque), dishes: e.closed ? [] : dishes, weekend: i >= 5 };
+    return { label: d.label, date, closed: !!e.closed, dishes: e.closed ? [] : dishes, weekend: i >= 5 };
   }).filter(d => !d.weekend || d.dishes.length);
   const sunday = new Date(currentMonday); sunday.setDate(sunday.getDate() + 6);
   const dm = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
@@ -1395,7 +1388,7 @@ function buildWeekPosterHtml(data) {
   const density = load > 16 ? 'dense xdense' : load > 11 ? 'dense' : '';
   const rows = data.days.map(d => {
     let body;
-    if (d.closed) body = `<p class="none">${d.croque ? 'Croque-Tag' : 'Kein Mittagstisch'}</p>`;
+    if (d.closed) body = '<p class="none">Kein Mittagstisch</p>';
     else if (!d.dishes.length) body = '<p class="none">Folgt in Kürze</p>';
     else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}`)
       .join('<p class="or"><span>oder</span></p>');
@@ -1520,7 +1513,7 @@ function drawWeekImage(data, logo) {
   const measure = (d, k) => {
     const dishPx = Math.round(40 * k), sidePx = Math.round(25 * Math.max(k, 0.8)), orPx = 19;
     const parts = [];
-    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? (d.croque ? 'Croque-Tag' : 'Kein Mittagstisch') : 'Folgt in Kürze', h: 34 });
+    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? 'Kein Mittagstisch' : 'Folgt in Kürze', h: 34 });
     d.dishes.forEach((x, i) => {
       if (i) parts.push({ kind: 'or', h: orPx + 18 });
       spacing(0); ctx.font = `400 ${dishPx}px Fraunces, Georgia, serif`;
