@@ -1015,7 +1015,7 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
     <label class="day-toggle day-toggle-croque">
       <input type="checkbox" name="${fieldPrefix}-croque" ${saved.croque ? 'checked' : ''} />
       <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
-      <span class="day-toggle-text">Croques als Alternative anbieten</span>
+      <span class="day-toggle-text">Croque-Tag (Croques statt Mittagstisch)</span>
     </label>
   `;
   return card;
@@ -1395,7 +1395,7 @@ function buildWeekPosterHtml(data) {
   const density = load > 16 ? 'dense xdense' : load > 11 ? 'dense' : '';
   const rows = data.days.map(d => {
     let body;
-    if (d.closed) body = `<p class="none">Kein Mittagstisch${d.croque ? ' · Croques als Alternative' : ''}</p>`;
+    if (d.closed) body = `<p class="none">${d.croque ? 'Croque-Tag' : 'Kein Mittagstisch'}</p>`;
     else if (!d.dishes.length) body = '<p class="none">Folgt in Kürze</p>';
     else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}`)
       .join('<p class="or"><span>oder</span></p>');
@@ -1520,7 +1520,7 @@ function drawWeekImage(data, logo) {
   const measure = (d, k) => {
     const dishPx = Math.round(40 * k), sidePx = Math.round(25 * Math.max(k, 0.8)), orPx = 19;
     const parts = [];
-    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? (d.croque ? 'Kein Mittagstisch · Croques als Alternative' : 'Kein Mittagstisch') : 'Folgt in Kürze', h: 34 });
+    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? (d.croque ? 'Croque-Tag' : 'Kein Mittagstisch') : 'Folgt in Kürze', h: 34 });
     d.dishes.forEach((x, i) => {
       if (i) parts.push({ kind: 'or', h: orPx + 18 });
       spacing(0); ctx.font = `400 ${dishPx}px Fraunces, Georgia, serif`;
