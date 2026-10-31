@@ -11,9 +11,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r217" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r217" />
-  <script>(function(){var V='2026-05-10-r217';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r218" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r218" />
+  <script>(function(){var V='2026-05-10-r218';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -868,6 +868,11 @@
                 </ul>
               </div>
             </details>
+            <div class="orders-filter" id="orders-filter" role="group" aria-label="Bestellungen filtern">
+              <button type="button" class="filter-chip is-active" data-kind="all" aria-pressed="true">Alle</button>
+              <button type="button" class="filter-chip" data-kind="broetchen" aria-pressed="false">Brötchen</button>
+              <button type="button" class="filter-chip" data-kind="berliner" aria-pressed="false">Berliner</button>
+            </div>
             <input type="search" class="anfragen-search" id="orders-search"
                    placeholder="Suchen: Name, Telefon oder Datum …" autocomplete="off" />
             <ul class="anfragen-list" id="orders-list">
@@ -909,57 +914,28 @@
 
         <!-- TAB: BERLINER-VORBESTELLUNG (Saison-Aktion, z. B. Silvester) -->
         <div class="admin-panel" id="panel-berliner" role="tabpanel" hidden>
-          <div class="panel-card wide">
-            <h3>Berliner-Vorbestellung</h3>
-            <p class="panel-card-sub">
-              Wenn eingeschaltet, erscheint „Berliner-Bestellservice“ im Menü der Webseite
-              und eine Ankündigung auf der Startseite — aber nur im eingestellten Zeitraum.
-              Eingehende Vorbestellungen landen unter „Bestellungen“ (mit Kennzeichen „Berliner“).
-            </p>
-            <details class="help-box">
-              <summary>Hilfe: So funktioniert die Aktion</summary>
-              <div class="help-box-body">
-                <ul>
-                  <li>Zuerst Zeitraum und Sorten eintragen. Die Aktion bleibt so lange <strong>nur hier im Mitgliederbereich</strong>.</li>
-                  <li><strong>„Auf der Webseite aktivieren“</strong> drücken → ab sofort sichtbar (Menüpunkt + Hinweis auf der Startseite). Derselbe Knopf schaltet wieder ab.</li>
-                  <li><strong>Bestellbar ab / bis:</strong> Nur in diesem Zeitraum sind Menüpunkt, Startseiten-Hinweis und Formular zu sehen. Leer lassen = sofort bzw. ohne Ende.</li>
-                  <li><strong>Abholung von / bis:</strong> Nur diese Tage kann der Kunde als Abholdatum wählen (z. B. 30.12. bis 31.12.).</li>
-                  <li>Nach Silvester „Auf der Webseite deaktivieren“ drücken — oder „Bestellbar bis“ setzen, dann verschwindet alles automatisch.</li>
-                </ul>
-              </div>
-            </details>
-            <form id="berliner-settings-form" class="berliner-settings">
-              <!-- Ein Knopfdruck schaltet die Aktion auf der Webseite an/aus (speichert sofort) -->
-              <input type="checkbox" id="berliner-active" hidden />
-              <button type="button" class="btn btn-primary berliner-switch" id="berliner-switch" data-no-dirty>
-                Auf der Webseite aktivieren
-              </button>
-              <div class="berliner-dates">
-                <label><span>Bestellbar ab</span><input type="date" id="berliner-order-from" /></label>
-                <label><span>Bestellbar bis</span><input type="date" id="berliner-order-to" /></label>
-                <label><span>Abholung von</span><input type="date" id="berliner-pickup-from" /></label>
-                <label><span>Abholung bis</span><input type="date" id="berliner-pickup-to" /></label>
-              </div>
-              <label class="berliner-field"><span>Überschrift auf der Startseite</span>
-                <input type="text" id="berliner-title" maxlength="80" placeholder="Berliner für Silvester vorbestellen" /></label>
-              <label class="berliner-field"><span>Kurzer Ankündigungstext</span>
-                <textarea id="berliner-text" rows="2" maxlength="300" placeholder="Frisch aus unserer Backstube — jetzt vorbestellen und zur Abholung bereitlegen lassen."></textarea></label>
-              <p class="berliner-live" id="berliner-live"></p>
-              <div class="save-bar inline">
-                <p class="save-status" id="berliner-settings-status"></p>
-                <div class="save-actions">
-                  <a class="btn btn-link" href="berliner.html" target="_blank" rel="noopener">Seite ansehen</a>
-                  <button type="submit" class="btn btn-primary">
-                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
-                    Speichern
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
+          <h2 class="panel-title">Berliner</h2>
+          <details class="help-box">
+            <summary>Hilfe: So läuft die Berliner-Aktion</summary>
+            <div class="help-box-body">
+              <ul>
+                <li><strong>Schritt 1 – Sorten &amp; Preise:</strong> Welche Berliner gibt es, was kosten sie pro Stück.</li>
+                <li><strong>Schritt 2 – Zeitraum:</strong> Wann darf bestellt werden, an welchen Tagen wird abgeholt, wie viele Tage vorher muss bestellt sein (Vorlauf), ggf. Abholzeiten und Mindestmenge.</li>
+                <li><strong>Schritt 3 – Ankündigung:</strong> Überschrift und Text für die Startseite.</li>
+                <li><strong>Schritt 4 – Einschalten:</strong> Erst dann erscheinen Menüpunkt, Startseiten-Hinweis und Bestellformular – automatisch nur im Zeitraum. Nach dem letzten Abholtag verschwindet alles von selbst.</li>
+                <li>Die <strong>Backliste</strong> zeigt, wie viele Berliner je Sorte und Abholtag bestellt sind – zum Drucken für die Backstube.</li>
+              </ul>
+            </div>
+          </details>
+
+          <section class="panel-card wide berliner-status-card" id="berliner-status-card" aria-live="polite">
+            <p class="berliner-status-label">Status der Aktion</p>
+            <p class="berliner-status-text" id="berliner-live"></p>
+            <p class="berliner-status-numbers" id="berliner-numbers"></p>
+          </section>
 
           <div class="panel-card wide">
-            <h3>Berliner-Sorten &amp; Preise</h3>
+            <h3><span class="step-num">1</span> Sorten &amp; Preise</h3>
             <p class="panel-card-sub">Pro Zeile Sorte, kurze Beschreibung (z. B. Füllung) und Preis pro Stück.</p>
             <form id="berliner-items-form">
               <div class="broetchen-editor" id="berliner-editor"></div>
@@ -974,6 +950,74 @@
                 </div>
               </div>
             </form>
+          </div>
+
+          <div class="panel-card wide">
+            <h3><span class="step-num">2</span> Zeitraum &amp; Regeln</h3>
+            <form id="berliner-settings-form" class="berliner-settings">
+              <input type="checkbox" id="berliner-active" hidden />
+              <div class="berliner-dates">
+                <label><span>Bestellbar ab</span><input type="date" id="berliner-order-from" /></label>
+                <label><span>Bestellbar bis</span><input type="date" id="berliner-order-to" /></label>
+                <label><span>Abholung von</span><input type="date" id="berliner-pickup-from" /></label>
+                <label><span>Abholung bis</span><input type="date" id="berliner-pickup-to" /></label>
+              </div>
+              <div class="berliner-dates">
+                <label><span>Bestellvorlauf</span>
+                  <select id="berliner-lead">
+                    <option value="0">Am selben Tag möglich</option>
+                    <option value="1" selected>Mindestens 1 Tag vorher</option>
+                    <option value="2">Mindestens 2 Tage vorher</option>
+                    <option value="3">Mindestens 3 Tage vorher</option>
+                  </select>
+                </label>
+                <label><span>Mindestmenge (optional)</span><input type="number" id="berliner-min" min="1" max="500" step="1" inputmode="numeric" placeholder="z. B. 6" /></label>
+                <label><span>Abholzeit von (optional)</span><input type="time" id="berliner-time-from" /></label>
+                <label><span>Abholzeit bis (optional)</span><input type="time" id="berliner-time-to" /></label>
+              </div>
+              <p class="panel-help">Leer gelassene Abholzeiten = unsere normalen Öffnungszeiten. An Schließtagen (Urlaub &amp; Feiertage) ist keine Abholung möglich – das prüft die Webseite automatisch.</p>
+
+              <h3 class="berliner-step-head"><span class="step-num">3</span> Ankündigung auf der Startseite</h3>
+              <label class="berliner-field"><span>Überschrift</span>
+                <input type="text" id="berliner-title" maxlength="80" placeholder="Berliner für Silvester vorbestellen" /></label>
+              <label class="berliner-field"><span>Kurzer Text</span>
+                <textarea id="berliner-text" rows="2" maxlength="300" placeholder="Frisch aus unserer Backstube — jetzt vorbestellen und zur Abholung bereitlegen lassen."></textarea></label>
+
+              <div class="save-bar inline">
+                <p class="save-status" id="berliner-settings-status"></p>
+                <div class="save-actions">
+                  <a class="btn btn-link" href="berliner.html" target="_blank" rel="noopener">Seite ansehen</a>
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel-card wide">
+            <h3><span class="step-num">4</span> Auf der Webseite zeigen</h3>
+            <ul class="berliner-checklist" id="berliner-checklist"></ul>
+            <div class="berliner-switch-row">
+              <button type="button" class="btn btn-primary berliner-switch" id="berliner-switch" data-no-dirty>
+                Auf der Webseite aktivieren
+              </button>
+              <p class="panel-help" id="berliner-switch-hint"></p>
+            </div>
+          </div>
+
+          <div class="panel-card wide">
+            <h3>Backliste</h3>
+            <p class="panel-card-sub">Bestellte Berliner je Abholtag und Sorte – für die Backstube.</p>
+            <label class="berliner-done-toggle"><input type="checkbox" id="berliner-include-done" /> Erledigte Bestellungen mitzählen</label>
+            <div class="berliner-bake" id="berliner-bake"></div>
+            <div class="week-share-actions">
+              <button type="button" class="btn btn-gold" id="berliner-print" data-no-dirty>
+                <svg class="ico ico-sm"><use href="#i-download"/></svg>
+                Backliste drucken
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1102,11 +1146,11 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r217" defer></script>
-  <script src="db.js?v=2026-05-10-r217" defer></script>
-  <script src="menudata.js?v=2026-05-10-r217" defer></script>
-  <script src="calendar.js?v=2026-05-10-r217" defer></script>
-  <script src="rules.js?v=2026-05-10-r217" defer></script>
-  <script src="admin.js?v=2026-05-10-r217" defer></script>
+  <script src="config.js?v=2026-05-10-r218" defer></script>
+  <script src="db.js?v=2026-05-10-r218" defer></script>
+  <script src="menudata.js?v=2026-05-10-r218" defer></script>
+  <script src="calendar.js?v=2026-05-10-r218" defer></script>
+  <script src="rules.js?v=2026-05-10-r218" defer></script>
+  <script src="admin.js?v=2026-05-10-r218" defer></script>
 </body>
 </html>

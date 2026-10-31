@@ -11409,3 +11409,40 @@ body:not(.admin-body) .about-text .features .ico {
   .admin-body .save-bar:not(.inline) { left: 24px !important; right: 24px !important; }
   .admin-body .overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
+
+/* ============================================================
+   BERLINER-AKTION · Mitgliederbereich (Schritte, Status, Backliste)
+   ============================================================ */
+.step-num { display: inline-grid; place-items: center; width: 26px; height: 26px; margin-right: 8px; border-radius: 50%; vertical-align: middle;
+  background: var(--bean); color: #FFFCF4; font: 700 .78rem/1 'Inter', sans-serif; }
+.berliner-step-head { margin: 22px 0 6px; font-size: 1.25rem; }
+.berliner-status-card { background: #FAF6EF !important; }
+.berliner-status-label { margin: 0 0 6px; font: 600 .7rem/1 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #75614F; }
+.berliner-status-text { margin: 0; font-size: 1.02rem; line-height: 1.45; color: var(--bean); }
+.berliner-status-text.is-live { color: #245c2e; font-weight: 600; }
+.berliner-status-numbers { margin: 8px 0 0; font-size: .92rem; color: #6F5C4E; }
+.berliner-checklist { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 6px; }
+.berliner-checklist li { display: flex; gap: 10px; align-items: flex-start; font-size: .92rem; line-height: 1.45; }
+.berliner-checklist .chk-ico { flex: 0 0 auto; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 .78rem/1 'Inter', sans-serif; margin-top: 1px; }
+.berliner-checklist .is-ok .chk-ico { background: rgba(70, 140, 80, .14); color: #245c2e; }
+.berliner-checklist .is-warn .chk-ico { background: rgba(184, 137, 62, .16); color: #8A6420; }
+.berliner-checklist .is-fail .chk-ico { background: rgba(166, 58, 42, .12); color: #8E2F22; }
+.berliner-checklist .is-fail { color: #8E2F22; }
+.berliner-switch-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.berliner-switch-row .panel-help { margin: 0; flex: 1 1 260px; }
+.berliner-switch:disabled { opacity: .45; cursor: not-allowed; }
+.berliner-done-toggle { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: .9rem; cursor: pointer; }
+.berliner-done-toggle input { width: 18px; height: 18px; accent-color: #B8893E; }
+.berliner-bake-scroll { overflow-x: auto; margin: 0 0 14px; }
+.berliner-bake-table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+.berliner-bake-table th, .berliner-bake-table td { padding: 8px 10px; border-bottom: 1px solid rgba(42, 24, 16, .1); text-align: right; white-space: nowrap; }
+.berliner-bake-table th:first-child, .berliner-bake-table td:first-child { text-align: left; }
+.berliner-bake-table th { font: 600 .72rem/1.2 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #75614F; }
+.berliner-bake-table .is-sum td { font-weight: 700; background: #FAF6EF; }
+.berliner-bake-empty { margin: 0 0 12px; color: #6F5C4E; font-size: .92rem; }
+.berliner-dates select { width: 100%; min-height: 48px; }
+.orders-filter { display: flex; gap: 6px; margin: 0 0 12px; }
+.filter-chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(42, 24, 16, .14); background: #fff; color: #6F5C4E; font: 500 .84rem/1 'Inter', sans-serif; cursor: pointer; }
+.filter-chip.is-active { background: var(--bean); color: #FFFCF4; border-color: var(--bean); }
+@media (max-width: 720px) { .admin-body .berliner-switch-row .berliner-switch { width: 100%; } .admin-body .berliner-bake-table { font-size: .84rem; } }
+@media (max-width: 720px) { .admin-body .berliner-bake-table th, .admin-body .berliner-bake-table td { padding: 7px 6px; white-space: normal; } .admin-body .berliner-bake-table th { font-size: .62rem; } }
