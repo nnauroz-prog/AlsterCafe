@@ -11160,3 +11160,44 @@ body:not(.admin-body) .about-text .features .ico {
 @media (max-width: 720px) { .admin-body .save-bar:not(.inline) { padding: 10px 12px !important; gap: 8px !important; } .admin-body .save-bar:not(.inline) .save-status { font-size: .82rem; } }
 .admin-body .save-bar.inline { background: #FCF8F1 !important; border: 1px solid var(--soft-line) !important; border-radius: 16px !important; box-shadow: none !important; }
 .admin-body .save-bar.inline::before, .admin-body .save-bar.inline::after { display: none !important; }
+
+/* ============================================================
+   MITGLIEDERBEREICH · Kopf schlicht (weniger „Effekt“, mehr Werkzeug)
+   ============================================================ */
+/* Kopfleiste: Logo, Name, kleiner Bereichsname – Aktionen als einfache Text-Knöpfe */
+.admin-body .admin-header { background: #FFFFFF !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.admin-body .admin-pill { background: none !important; color: #8A7768 !important; border: 0 !important; padding: 0 0 0 12px !important; margin-left: 4px;
+  border-left: 1px solid rgba(42, 24, 16, .14) !important; border-radius: 0 !important; font: 500 .8rem/1.2 'Inter', sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; box-shadow: none !important; }
+.admin-body .user-badge { background: none !important; border: 0 !important; box-shadow: none !important; color: #776354 !important; font-size: .82rem !important; padding: 0 !important; }
+.admin-body .user-badge::before { display: none !important; }
+.admin-body .admin-action { border: 1px solid rgba(42, 24, 16, .12) !important; border-radius: 10px !important; padding: 8px 12px !important; min-height: 38px;
+  background: #FFFFFF !important; box-shadow: none !important; text-decoration: none !important; font-size: .86rem !important; letter-spacing: 0 !important; }
+.admin-body .admin-action::after { display: none !important; }
+.admin-body .sync-pill { background: none !important; border: 0 !important; box-shadow: none !important; width: auto !important; height: auto !important; padding: 0 4px !important; }
+.admin-body .sync-pill::before, .admin-body .sync-pill::after { box-shadow: none !important; animation: none !important; }
+@media (max-width: 720px) {
+  .admin-body .admin-action { width: 40px; height: 40px; min-height: 40px; padding: 0 !important; justify-content: center; }
+  .admin-body .admin-pill { display: none !important; }
+}
+
+/* Begrüßung: eine ruhige Zeile */
+.admin-body .admin-welcome h1 { font-size: clamp(1.5rem, 2.4vw, 1.9rem) !important; }
+.admin-body .admin-welcome .welcome-date { font: 500 .9rem/1.3 'Inter', sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; color: #776354 !important; }
+.admin-body .admin-welcome .admin-sub { display: none !important; }
+
+/* „Heute auf einen Blick“: ohne Tasse, ohne Schein – nur klare Zahlen */
+.admin-body .summary-art, .admin-body .summary-dust { display: none !important; }
+.admin-body .overview-summary { background: #FFFFFF !important; border-color: rgba(42, 24, 16, .08) !important; }
+.admin-body .overview-summary::after { display: none !important; }
+.admin-body .overview-summary .summary-head-title { font: 600 .74rem/1 'Inter', sans-serif !important; letter-spacing: .12em !important; color: #776354 !important; }
+.admin-body .overview-summary .summary-stat { background: #FAF6EF !important; border-color: transparent !important; box-shadow: none !important; }
+.admin-body .overview-summary .summary-stat-count.has-open { background: #FFF4DE !important; border-color: transparent !important; }
+.admin-body .overview-summary .summary-stat-label { letter-spacing: .06em !important; }
+.admin-body .overview-summary .summary-today { background: #FAF6EF !important; border-color: transparent !important; }
+
+/* Kurze Anleitung nur als Textlink */
+.admin-body .overview-help { background: none !important; border: 0 !important; margin: 0 0 12px !important; }
+.admin-body .overview-help > summary { padding: 4px 2px !important; font: 500 .88rem/1.3 'Inter', sans-serif !important; color: #776354 !important; }
+.admin-body .overview-help > summary::before { transform: scale(.8); }
+/* Kachel-Symbole flach statt Gold-Verlauf */
+.admin-body .overview-card .overview-card-icon { background: #FAF6EF !important; box-shadow: none !important; border: 0 !important; color: #8A6420 !important; }
