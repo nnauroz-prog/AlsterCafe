@@ -11201,3 +11201,128 @@ body:not(.admin-body) .about-text .features .ico {
 .admin-body .overview-help > summary::before { transform: scale(.8); }
 /* Kachel-Symbole flach statt Gold-Verlauf */
 .admin-body .overview-card .overview-card-icon { background: #FAF6EF !important; box-shadow: none !important; border: 0 !important; color: #8A6420 !important; }
+
+/* ============================================================
+   MITGLIEDERBEREICH · Handy ausgewogen
+   ============================================================ */
+@media (max-width: 720px) {
+  /* Bereichs-Reiter am Handy ausblenden – Navigation über untere Leiste und „Zurück“ */
+  .admin-body .admin-tabs { display: none !important; }
+
+  /* Rhythmus: gleiche Abstände, weniger Leerraum oben */
+  .admin-body .admin-dashboard > .container { padding-left: 16px !important; padding-right: 16px !important; }
+  .admin-body .admin-dashboard:not(.is-working) { padding-top: 20px !important; }
+  .admin-body .admin-dashboard.is-working { padding-top: 12px !important; }
+  .admin-body .admin-welcome { margin-bottom: 10px !important; }
+  .admin-body .admin-welcome h1 { font-size: 1.6rem !important; margin: 0 !important; }
+  .admin-body .overview-help { margin-bottom: 10px !important; }
+  .admin-body .overview-help > summary { padding: 6px 0 !important; }
+
+  /* Heute auf einen Blick: zwei Zahlen oben, darunter ruhige Zeilen */
+  .admin-body .overview-summary { padding: 14px !important; gap: 8px !important; border-radius: 18px !important; }
+  .admin-body .overview-summary .summary-stat { padding: 12px 14px !important; border-radius: 14px !important; min-height: 0 !important; }
+  .admin-body .overview-summary .summary-stat-count .summary-stat-num { font-size: 1.9rem !important; line-height: 1 !important; }
+  .admin-body .overview-summary .summary-stat-count .summary-stat-label { font-size: .64rem !important; margin-top: 6px; display: block; }
+  .admin-body .overview-summary .summary-stat-info { grid-column: 1 / -1 !important; display: flex !important; flex-direction: row !important;
+    justify-content: space-between; align-items: baseline; gap: 12px; padding: 11px 14px !important; }
+  .admin-body .overview-summary .summary-stat-info .summary-stat-label { flex: 0 0 auto; font-size: .64rem !important; }
+  .admin-body .overview-summary .summary-stat-info .summary-stat-value { text-align: right; font-size: .95rem !important; line-height: 1.35; min-width: 0; }
+  .admin-body .overview-summary .summary-today { padding: 11px 14px !important; font-size: .9rem; }
+
+  /* Kacheln kompakter und gleich hoch */
+  .admin-body .overview-group-label { margin: 18px 2px 8px !important; }
+  .admin-body .overview-grid { gap: 8px !important; }
+  .admin-body .overview-card { padding: 12px 14px !important; gap: 12px !important; min-height: 64px; border-radius: 16px !important; }
+  .admin-body .overview-card-icon { width: 38px !important; height: 38px !important; border-radius: 11px !important; }
+  .admin-body .overview-card-icon .ico { width: 18px !important; height: 18px !important; }
+  .admin-body .overview-card-title { font-size: .98rem !important; }
+  .admin-body .overview-card-desc { font-size: .8rem !important; line-height: 1.35; }
+
+  /* Arbeitsbereiche: Karten-Innenabstand, Texte, Hilfe */
+  .admin-body .back-to-overview { min-height: 40px !important; padding: 0 14px !important; font-size: .9rem !important; margin-bottom: 12px !important; top: 66px !important; }
+  .admin-body .panel-title { font-size: 1.45rem !important; margin: 4px 0 10px !important; }
+  .admin-body .panel-card { padding: 18px 16px !important; border-radius: 18px !important; }
+  .admin-body .panel-card h3 { font-size: 1.25rem !important; }
+  .admin-body .panel-card-sub, .admin-body .panel-help { font-size: .88rem !important; line-height: 1.5 !important; }
+  .admin-body .help-box { padding: 10px 12px !important; margin-bottom: 14px !important; }
+  .admin-body .help-box > summary { font: 600 .88rem/1.35 'Inter', sans-serif !important; }
+  .admin-body .anfragen-count { margin: 6px 0 10px !important; }
+  .admin-body .day-card { padding: 16px 14px !important; border-radius: 18px !important; }
+  .admin-body .day-card + .day-card { margin-top: 10px; }
+  .admin-body .anfrage-item { padding: 14px !important; }
+
+  /* Kalender: Wochen-Leiste in der Breite des Inhalts */
+  .admin-body .cal-toolbar, .admin-body .cal-toolbar .week-switch { width: 100%; max-width: 100%; box-sizing: border-box; }
+  .admin-body .cal-toolbar .week-switch { border-radius: 16px !important; background: #FFFFFF !important; border: 1px solid var(--soft-line) !important; }
+  .admin-body .cal-day { border-radius: 14px !important; }
+
+  /* Speichern-Leiste und untere Leiste: gleiche Kanten, kein Gedränge */
+  .admin-body .save-bar:not(.inline) { left: 12px !important; right: 12px !important; border-radius: 18px !important; }
+  .admin-bottombar { left: 12px !important; right: 12px !important; border-radius: 20px !important; }
+  .bb-item { font-size: .6rem !important; }
+}
+@media (max-width: 720px) {
+  /* Speichern-Leiste kompakt in einer Zeile */
+  .admin-body .save-bar:not(.inline) { flex-direction: row !important; align-items: center !important; gap: 10px !important; padding: 8px 8px 8px 14px !important; }
+  .admin-body .save-bar:not(.inline) .save-status { flex: 1 1 auto; margin: 0 !important; font: 500 .78rem/1.3 'Inter', sans-serif !important; color: #6F5C4E; }
+  .admin-body .save-bar:not(.inline) .save-actions { flex: 0 0 auto; width: auto !important; }
+  .admin-body .save-bar:not(.inline) .btn-primary { width: auto !important; min-height: 44px; padding: 0 18px !important; font-size: .9rem !important; }
+  .admin-body .save-bar:not(.inline) .save-tick { display: none; }
+  .admin-body .save-bar.inline .save-status { font: 500 .82rem/1.35 'Inter', sans-serif !important; }
+
+  /* Reservierungs-/Bestellkarten: Name und Status in einer Zeile, Datum ruhiger */
+  .admin-body .anfrage-head { display: flex !important; flex-direction: row !important; align-items: flex-start !important; justify-content: space-between; gap: 10px; }
+  .admin-body .anfrage-head > div:first-child { min-width: 0; }
+  .admin-body .anfrage-tag { flex: 0 0 auto; }
+  .admin-body .anfrage-name { font-size: 1.15rem !important; }
+  .admin-body .anfrage-when { font-size: .92rem !important; line-height: 1.45; }
+  .admin-body .anfragen-head { margin-bottom: 4px !important; }
+  .admin-body .panel-card-sub { margin-bottom: 10px !important; }
+
+  /* Kalender: Tage ruhiger */
+  .admin-body .cal-day-name { font-size: 1.05rem !important; }
+  .admin-body .cal-day-head { padding: 12px 14px !important; }
+  .admin-body .cal-day-sum { font-size: .82rem !important; }
+}
+@media (max-width: 720px) {
+  /* Öffnungszeiten: Tag | Zeit | × in einer Zeile */
+  .admin-body .hours-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) 40px !important; gap: 8px !important; }
+  .admin-body .hours-row .btn-icon { grid-column: auto !important; width: 40px; height: 40px; justify-self: end; }
+  .admin-body .hours-row input { padding: 10px 12px !important; font-size: .95rem !important; }
+  .admin-body .hours-hint { margin: 4px 2px 12px !important; font-size: .8rem !important; }
+
+  /* Speisekarte: Werkzeuge klein nebeneinander */
+  .admin-body .menu-toolbar { flex-wrap: nowrap !important; align-items: center; gap: 8px !important; margin-bottom: 14px !important; }
+  .admin-body .menu-toolbar .btn { min-height: 40px !important; padding: 0 14px !important; font-size: .86rem !important; flex: 1 1 0; justify-content: center; border-radius: 12px !important; }
+  .admin-body .menu-toolbar .btn-link { border: 1px solid var(--soft-line-2) !important; background: #fff !important; }
+  .admin-body .menu-toolbar .btn-link::after { display: none !important; }
+
+  /* Speisekarte: Kategorie und Gerichte ruhiger */
+  .admin-body .menu-section { padding: 12px !important; border-radius: 16px !important; background: #fff !important; border: 1px solid var(--soft-line) !important; }
+  .admin-body .menu-section-head { display: grid !important; grid-template-columns: minmax(0, 1fr) 96px 40px; gap: 8px !important; align-items: center; }
+  .admin-body .menu-section-title { font-size: 1.05rem !important; }
+  .admin-body .menu-item-row { flex-direction: row !important; align-items: flex-start !important; gap: 8px !important; padding: 10px 8px !important;
+    background: #FAF6EF !important; border: 0 !important; border-radius: 12px !important; }
+  .admin-body .menu-item-row .drag-handle { width: 16px; padding-top: 12px; }
+  .admin-body .menu-item-fields { flex: 1 1 auto; min-width: 0; display: grid !important; grid-template-columns: minmax(0, 1fr) 92px !important; gap: 6px !important; }
+  .admin-body .menu-item-fields .menu-item-desc { grid-column: 1 / -1; }
+  .admin-body .menu-item-row .btn-icon { align-self: flex-start !important; width: 36px; height: 36px; margin-top: 4px; }
+  .admin-body .menu-item-row input { padding: 9px 11px !important; font-size: .92rem !important; min-height: 42px !important; }
+}
+@media (max-width: 720px) {
+  /* Speisekarte: Ziehgriff am Handy weg (Sortieren geht dort ohnehin nicht), × neben den Preis */
+  .admin-body .menu-item-row { position: relative; padding: 10px 46px 10px 10px !important; }
+  .admin-body .menu-item-row .drag-handle { display: none !important; }
+  .admin-body .menu-item-row .btn-icon { position: absolute; top: 10px; right: 6px; margin: 0 !important; }
+  /* Speichern-Leisten im Formular: Links ruhig, nicht gesperrt */
+  .admin-body .save-bar.inline .btn-link { letter-spacing: .01em !important; text-transform: none !important; font-size: .88rem !important; }
+  .admin-body .save-bar.inline { padding: 12px !important; gap: 8px !important; }
+  /* Konto: Angaben kleiner und dichter */
+  .admin-body .account-grid dd, .admin-body .account-info dd, .admin-body .account-value { font-size: 1rem !important; line-height: 1.45 !important; }
+  .admin-body .account-grid > div, .admin-body .account-info > div { padding: 10px 0 !important; }
+}
+@media (max-width: 720px) {
+  .admin-body .account-list > div { padding: 10px 0 !important; }
+  .admin-body .account-list dt { font-size: .66rem !important; margin-bottom: 4px !important; }
+  .admin-body .account-list dd { font: 500 .98rem/1.45 'Inter', sans-serif !important; }
+}
