@@ -125,6 +125,11 @@ async function init() {
   // Suche in Anfragen / Bestellungen
   dom.anfragenSearch?.addEventListener('input', () => renderAnfragen());
   dom.ordersSearch?.addEventListener('input', () => renderOrders());
+  document.getElementById('orders-filter')?.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-kind]'); if (!b) return;
+    document.querySelectorAll('#orders-filter [data-kind]').forEach(x => { x.classList.toggle('is-active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+    renderOrders();
+  });
 
   // Wochenplan
   dom.menuForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('menu-form', () => onSaveWeek(e)); });
@@ -198,6 +203,10 @@ async function init() {
   document.getElementById('berliner-switch')?.addEventListener('click', onToggleBerliner);
   document.getElementById('berliner-items-form')?.addEventListener('submit', (e) => { e.preventDefault(); runSave('berliner-items-form', () => onSaveBerlinerItems(e)); });
   document.getElementById('berliner-add')?.addEventListener('click', () => addBerlinerRow());
+  document.getElementById('berliner-print')?.addEventListener('click', printBerlinerBake);
+  document.getElementById('berliner-include-done')?.addEventListener('change', renderBerlinerBake);
+  // Live-Vorschau der Prüfliste beim Tippen (ohne zu speichern)
+  document.getElementById('berliner-settings-form')?.addEventListener('input', () => renderBerlinerChecklist(readBerlinerForm()));
 
   // Account
   dom.resetAll.addEventListener('click', onResetAll);
@@ -429,7 +438,7 @@ async function showDashboard() {
       if (key !== 'reservations' && key !== 'orders') return;
       // Vorher bekannte Einträge merken → nur wirklich neue melden
       const ids = (() => { const l = window.alsterDb?.get(key); return new Set((Array.isArray(l) ? l : []).map(x => x.id)); })();
-      if (key === 'reservations') await refreshAnfragen(); else await refreshOrders();
+      if (key === 'reservations') await refreshAnfragen(); else { await refreshOrders(); try { renderBerlinerBake(); updateBerlinerLive(window.alsterDb?.get('berliner-settings') || {}); } catch {} }
       const list = window.alsterDb?.get(key);
       const fresh = (Array.isArray(list) ? list : []).filter(x => x && !ids.has(x.id) && x.status !== 'done');
       if (fresh.length) announceNewEntries(key, fresh);
@@ -2796,7 +2805,10 @@ function renderOrders() {
     return;
   }
   const hasQuery = !!(dom.ordersSearch && dom.ordersSearch.value.trim());
-  const { upcoming, past } = splitByDate(items, dom.ordersSearch?.value, 'pickupDate');
+  const kind = document.querySelector('#orders-filter .is-active')?.dataset.kind || 'all';
+  const isB = o => Array.isArray(o.items) && o.items.some(it => it && it.kind === 'berliner');
+  const kindItems = kind === 'berliner' ? items.filter(isB) : kind === 'broetchen' ? items.filter(o => !isB(o)) : items;
+  const { upcoming, past } = splitByDate(kindItems, dom.ordersSearch?.value, 'pickupDate');
   let html = upcoming.length
     ? upcoming.map(o => buildOrderItem(o)).join('')
     : `<li class="orders-empty">${hasQuery ? 'Keine Treffer bei den kommenden Bestellungen.' : 'Keine kommenden Bestellungen.'}</li>`;
@@ -2896,6 +2908,7 @@ async function onMarkOrder(id) {
   const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshOrders();
+  try { renderBerlinerBake(); } catch {}
 }
 
 async function onDeleteOrder(id) {
@@ -2905,6 +2918,7 @@ async function onDeleteOrder(id) {
   const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshOrders();
+  try { renderBerlinerBake(); } catch {}
 }
 
 /* ---------- Brötchen-Sorten-Editor ---------- */
@@ -3039,10 +3053,14 @@ function renderBerlinerAdmin() {
   updateBerlinerSwitch(!!st.active);
   [['berliner-order-from', 'orderFrom'], ['berliner-order-to', 'orderTo'],
    ['berliner-pickup-from', 'pickupFrom'], ['berliner-pickup-to', 'pickupTo'],
-   ['berliner-title', 'title'], ['berliner-text', 'text']].forEach(([id, k]) => {
+   ['berliner-title', 'title'], ['berliner-text', 'text'],
+   ['berliner-min', 'minQty'], ['berliner-time-from', 'pickupTimeFrom'], ['berliner-time-to', 'pickupTimeTo']].forEach(([id, k]) => {
     if (bEl(id)) bEl(id).value = st[k] || '';
   });
+  if (bEl('berliner-lead')) bEl('berliner-lead').value = String(berlinerLeadDays(st));
   updateBerlinerLive(st);
+  renderBerlinerChecklist(st);
+  renderBerlinerBake();
   const ed = bEl('berliner-editor');
   if (ed) {
     let items = window.alsterDb?.get('berliner-items');
@@ -3060,17 +3078,157 @@ function updateBerlinerLive(st) {
   const el = bEl('berliner-live');
   if (el) { el.textContent = msg; el.classList.toggle('is-live', live); }
   const badge = bEl('overview-berliner-badge');
-  if (badge) badge.hidden = !live;
+  const { phase } = berlinerLiveState(st);
+  if (badge) { badge.hidden = !(phase === 'live' || phase === 'planned'); badge.textContent = phase === 'live' ? 'läuft' : 'geplant'; }
+  const desc = bEl('overview-berliner-desc');
+  if (desc) {
+    const n = berlinerOrders(false).length;
+    desc.textContent = phase === 'live' ? `Läuft${st.pickupTo ? ' · Abholung bis ' + fmtIsoDe(st.pickupTo) : ''}${n ? ` · ${n} offene Bestellung${n > 1 ? 'en' : ''}` : ''}`
+      : phase === 'planned' ? `Geplant – ab ${fmtIsoDe(st.orderFrom)} auf der Webseite`
+      : phase === 'over' ? 'Beendet – Sorten, Zeitraum und Einschalten für die nächste Aktion'
+      : 'Aktion an/aus, Zeitraum und Sorten';
+  }
 }
 /* Eine Quelle für „ist die Aktion gerade auf der Webseite?“ – Anzeige und Speichern-Meldung */
+function getWeekHoursAdmin() {
+  try {
+    const rows = window.alsterDb?.get('hours');
+    if (Array.isArray(rows) && rows.length && window.AlsterRules) return window.AlsterRules.checkHours(rows).week;
+  } catch {}
+  return null; // keine eigenen Zeiten → Standard (alle Tage offen) → keine Warnung
+}
+function berlinerLeadDays(st) {
+  const n = parseInt(st && st.leadDays, 10);
+  return Number.isFinite(n) && n >= 0 ? Math.min(n, 7) : 1;
+}
+function addDaysIsoAdmin(iso, n) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]); d.setDate(d.getDate() + n);
+  return isoDate(d);
+}
 function berlinerLiveState(st) {
   const today = todayIso();
-  let msg, live = false;
-  if (!st.active) msg = 'Aus — nur hier im Mitgliederbereich, auf der Webseite nicht sichtbar.';
-  else if (st.orderFrom && today < st.orderFrom) msg = `Eingeschaltet — erscheint ab ${fmtIsoDe(st.orderFrom)} auf der Webseite.`;
-  else if (st.orderTo && today > st.orderTo) msg = `Bestellzeitraum ist am ${fmtIsoDe(st.orderTo)} abgelaufen — nicht mehr sichtbar.`;
-  else { live = true; msg = `Jetzt sichtbar: Menüpunkt „Berliner-Bestellservice“ und Hinweis auf der Startseite${st.orderTo ? ` (bis ${fmtIsoDe(st.orderTo)})` : ''}.`; }
-  return { msg, live };
+  const lead = berlinerLeadDays(st);
+  let msg, live = false, phase = 'off';
+  if (!st.active) { msg = 'Aus — nur hier im Mitgliederbereich, auf der Webseite nicht sichtbar.'; }
+  else if (st.orderFrom && today < st.orderFrom) { phase = 'planned'; msg = `Geplant — erscheint ab ${fmtIsoDe(st.orderFrom)} auf der Webseite.`; }
+  else if (st.orderTo && today > st.orderTo) { phase = 'over'; msg = `Beendet — Bestellzeitraum ist am ${fmtIsoDe(st.orderTo)} abgelaufen, nicht mehr sichtbar.`; }
+  else if (st.pickupTo && today > st.pickupTo) { phase = 'over'; msg = `Beendet — letzter Abholtag war der ${fmtIsoDe(st.pickupTo)}, nicht mehr sichtbar.`; }
+  else if (st.pickupTo && lead > 0 && addDaysIsoAdmin(today, lead) > st.pickupTo) { phase = 'over'; msg = `Beendet — mit ${lead} Tag${lead > 1 ? 'en' : ''} Vorlauf ist kein Abholtag mehr erreichbar (letzter: ${fmtIsoDe(st.pickupTo)}).`; }
+  else {
+    live = true; phase = 'live';
+    const until = st.orderTo ? `bestellbar bis ${fmtIsoDe(st.orderTo)}` : (st.pickupTo ? `bestellbar bis ${fmtIsoDe(addDaysIsoAdmin(st.pickupTo, -lead))}` : 'ohne Ende');
+    const pick = (st.pickupFrom || st.pickupTo) ? `Abholung ${fmtIsoDe(st.pickupFrom || st.pickupTo)}${st.pickupTo && st.pickupTo !== (st.pickupFrom || st.pickupTo) ? ` bis ${fmtIsoDe(st.pickupTo)}` : ''}` : 'Abholung jederzeit';
+    msg = `Läuft — ${until} · ${pick}. Menüpunkt, Startseiten-Hinweis und Formular sind sichtbar.`;
+  }
+  return { msg, live, phase };
+}
+/* Alle Berliner-Bestellungen (nicht gelöscht); optional ohne Erledigte */
+function berlinerOrders(includeDone) {
+  const list = window.alsterDb?.get('orders') || [];
+  return (Array.isArray(list) ? list : []).filter(o => Array.isArray(o.items) && o.items.some(it => it && it.kind === 'berliner') && (includeDone || o.status !== 'done'));
+}
+function berlinerTotals(orders) {
+  return orders.reduce((s, o) => s + (o.items || []).filter(it => it && it.kind === 'berliner').reduce((t, it) => t + (parseInt(it.qty, 10) || 0), 0), 0);
+}
+/* Vorab-Prüfung: Pflichtpunkte (blockieren das Einschalten) und Hinweise */
+function berlinerChecklist(st, items) {
+  const out = [];
+  const today = todayIso();
+  const ok = (text) => out.push({ ok: true, text });
+  const warn = (text) => out.push({ ok: false, warn: true, text });
+  const fail = (text) => out.push({ ok: false, text });
+  const named = (items || []).filter(it => it && it.name);
+  if (named.length) ok(`${named.length} Sorte${named.length > 1 ? 'n' : ''} eingetragen`); else fail('Noch keine Sorte eingetragen (Schritt 1)');
+  const noPrice = named.filter(it => !it.price).length;
+  if (named.length && noPrice) warn(`${noPrice} Sorte${noPrice > 1 ? 'n' : ''} ohne Preis – Kunden sehen dann keine Summe`); else if (named.length) ok('Alle Sorten mit Preis');
+  if (!st.pickupFrom && !st.pickupTo) fail('Abholzeitraum fehlt (Schritt 2: „Abholung von/bis“)');
+  else if (st.pickupTo && st.pickupTo < today) fail(`Abholzeitraum liegt in der Vergangenheit (bis ${fmtIsoDe(st.pickupTo)})`);
+  else {
+    // Schließtage im Abholzeitraum
+    const hol = (window.alsterDb?.get('holidays') || []).filter(h => h && h.date);
+    const from = st.pickupFrom || st.pickupTo, to = st.pickupTo || st.pickupFrom;
+    const closed = [], open = [];
+    let d = from;
+    for (let i = 0; i < 62 && d <= to; i++) {
+      const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      const date = new Date(+m[1], +m[2] - 1, +m[3]);
+      const h = hol.find(x => x.date === d);
+      const week = (typeof getWeekHoursAdmin === 'function') ? getWeekHoursAdmin() : null;
+      const dayOpen = week ? !!week[(date.getDay() + 6) % 7] : true;
+      if (h || !dayOpen) closed.push(fmtIsoDe(d).slice(0, 6) + (h && h.label ? ` (${h.label})` : h ? ' (Schließtag)' : ' (Ruhetag)')); else open.push(d);
+      d = addDaysIsoAdmin(d, 1);
+    }
+    if (!open.length) fail(`An allen Abholtagen ist geschlossen (${closed.join(', ')}) – so kann niemand abholen`);
+    else if (closed.length) warn(`Keine Abholung am ${closed.join(', ')} – die übrigen Tage sind buchbar`);
+    else ok(`Abholung ${fmtIsoDe(from)}${to !== from ? ` bis ${fmtIsoDe(to)}` : ''} – alle Tage geöffnet`);
+  }
+  const lead = berlinerLeadDays(st);
+  if (st.orderTo && st.pickupTo && st.orderTo > st.pickupTo) warn(`„Bestellbar bis“ (${fmtIsoDe(st.orderTo)}) liegt nach dem letzten Abholtag – die Aktion endet automatisch mit dem Abholtag`);
+  if (st.pickupTo && st.pickupFrom && lead > 0 && addDaysIsoAdmin(st.pickupFrom, -lead) < today && addDaysIsoAdmin(today, lead) > st.pickupTo) fail(`Mit ${lead} Tag${lead > 1 ? 'en' : ''} Vorlauf ist kein Abholtag mehr erreichbar`);
+  else ok(lead ? `Bestellvorlauf: ${lead} Tag${lead > 1 ? 'e' : ''} vorher` : 'Bestellung am Abholtag möglich');
+  if (st.pickupTimeFrom && st.pickupTimeTo && st.pickupTimeFrom >= st.pickupTimeTo) fail('Abholzeit „von“ liegt nicht vor „bis“');
+  if (!(st.title || '').trim()) warn('Keine Überschrift – die Webseite nutzt „Berliner für Silvester vorbestellen“');
+  return out;
+}
+function renderBerlinerChecklist(st) {
+  const ul = bEl('berliner-checklist');
+  if (!ul) return;
+  const items = window.alsterDb?.get('berliner-items');
+  const list = berlinerChecklist(st, Array.isArray(items) && items.length ? items : DEFAULT_BERLINER);
+  ul.innerHTML = list.map(x => `<li class="${x.ok ? 'is-ok' : x.warn ? 'is-warn' : 'is-fail'}"><span class="chk-ico" aria-hidden="true">${x.ok ? '✓' : x.warn ? '!' : '✕'}</span>${escapeHtml(x.text)}</li>`).join('');
+  const blocked = list.some(x => !x.ok && !x.warn);
+  const sw = bEl('berliner-switch'), hint = bEl('berliner-switch-hint');
+  if (sw && !st.active) sw.disabled = blocked;
+  if (hint) hint.textContent = st.active ? 'Die Aktion ist eingeschaltet. Derselbe Knopf schaltet sie wieder aus.' : (blocked ? 'Einschalten ist erst möglich, wenn die rot markierten Punkte behoben sind.' : 'Alles bereit – mit einem Tipp erscheint die Aktion auf der Webseite.');
+}
+/* Backliste: Abholtag × Sorte → Stück */
+function berlinerBakeData() {
+  const includeDone = !!bEl('berliner-include-done')?.checked;
+  const orders = berlinerOrders(includeDone);
+  const sorts = [], days = {};
+  orders.forEach(o => {
+    const day = o.pickupDate || 'ohne Datum';
+    days[day] = days[day] || { total: 0, by: {}, orders: 0 };
+    days[day].orders++;
+    (o.items || []).filter(it => it && it.kind === 'berliner').forEach(it => {
+      const q = parseInt(it.qty, 10) || 0; if (!q) return;
+      if (!sorts.includes(it.name)) sorts.push(it.name);
+      days[day].by[it.name] = (days[day].by[it.name] || 0) + q;
+      days[day].total += q;
+    });
+  });
+  return { sorts, days: Object.keys(days).sort().map(d => ({ date: d, ...days[d] })), orders: orders.length, total: berlinerTotals(orders) };
+}
+function renderBerlinerBake() {
+  const el = bEl('berliner-bake');
+  if (!el) return;
+  const { sorts, days, orders, total } = berlinerBakeData();
+  const num = bEl('berliner-numbers');
+  if (num) num.textContent = orders ? `${orders} Bestellung${orders > 1 ? 'en' : ''} · ${total} Berliner` : 'Noch keine Bestellungen.';
+  if (!days.length) { el.innerHTML = '<p class="berliner-bake-empty">Sobald Bestellungen eingehen, steht hier die Stückzahl je Sorte und Abholtag.</p>'; return; }
+  const head = `<tr><th>Abholtag</th>${sorts.map(s => `<th>${escapeHtml(s)}</th>`).join('')}<th>Gesamt</th></tr>`;
+  const rows = days.map(d => `<tr><td>${escapeHtml(d.date === 'ohne Datum' ? d.date : `${fmtIsoDe(d.date)} (${d.orders})`)}</td>${sorts.map(s => `<td>${d.by[s] || '–'}</td>`).join('')}<td><strong>${d.total}</strong></td></tr>`).join('');
+  const sum = `<tr class="is-sum"><td>Gesamt</td>${sorts.map(s => `<td>${days.reduce((t, d) => t + (d.by[s] || 0), 0)}</td>`).join('')}<td><strong>${total}</strong></td></tr>`;
+  el.innerHTML = `<div class="berliner-bake-scroll"><table class="berliner-bake-table">${head}${rows}${sum}</table></div>`;
+}
+function printBerlinerBake() {
+  const { sorts, days, orders, total } = berlinerBakeData();
+  if (!days.length) { showToast('Noch keine Berliner-Bestellungen.'); return; }
+  const includeDone = !!bEl('berliner-include-done')?.checked;
+  const orderRows = berlinerOrders(includeDone).sort((a, b) => ((a.pickupDate || '') + (a.pickupTime || '')).localeCompare((b.pickupDate || '') + (b.pickupTime || '')))
+    .map(o => `<tr><td>${escapeHtml(fmtIsoDe(o.pickupDate) || '–')} ${escapeHtml(o.pickupTime || '')}</td><td>${escapeHtml(o.name || '')}</td><td>${(o.items || []).filter(it => it && it.kind === 'berliner').map(it => `${parseInt(it.qty, 10) || 0}× ${escapeHtml(it.name || '')}`).join(', ')}</td><td>${o.status === 'done' ? 'erledigt' : (o.confirmedAt ? 'bestätigt' : 'neu')}</td></tr>`).join('');
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Backliste Berliner</title>
+<style>body{font:14px/1.45 -apple-system,Segoe UI,Arial,sans-serif;color:#222;margin:28px}h1{font-size:22px;margin:0 0 4px}p{margin:0 0 18px;color:#555}table{border-collapse:collapse;width:100%;margin-bottom:26px}th,td{border:1px solid #bbb;padding:7px 9px;text-align:left}th{background:#f3eee4}td:not(:first-child),th:not(:first-child){text-align:right}.is-sum td{font-weight:700;background:#faf6ef}.orders td:nth-child(3){text-align:left}.orders td:last-child{text-align:left}@media print{body{margin:12mm}}</style></head><body>
+<h1>Backliste Berliner</h1><p>Stand ${new Date().toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })} · ${orders} Bestellungen · ${total} Berliner${includeDone ? ' (inkl. erledigte)' : ''}</p>
+<table><tr><th>Abholtag</th>${sorts.map(s => `<th>${escapeHtml(s)}</th>`).join('')}<th>Gesamt</th></tr>
+${days.map(d => `<tr><td>${escapeHtml(d.date === 'ohne Datum' ? d.date : fmtIsoDe(d.date))}</td>${sorts.map(s => `<td>${d.by[s] || '–'}</td>`).join('')}<td>${d.total}</td></tr>`).join('')}
+<tr class="is-sum"><td>Gesamt</td>${sorts.map(s => `<td>${days.reduce((t, d) => t + (d.by[s] || 0), 0)}</td>`).join('')}<td>${total}</td></tr></table>
+<h1 style="font-size:17px">Einzelne Bestellungen</h1>
+<table class="orders"><tr><th>Abholung</th><th>Name</th><th>Bestellung</th><th>Status</th></tr>${orderRows}</table>
+<script>window.addEventListener('load',function(){setTimeout(function(){try{window.focus();window.print()}catch(e){}},200)})</script></body></html>`;
+  printHtmlDocument(html, bEl('berliner-items-status'));
 }
 
 function addBerlinerRow(item, skipStatus) {
@@ -3111,6 +3269,11 @@ async function onToggleBerliner() {
   const box = bEl('berliner-active');
   if (!box || berlinerToggling) return; // kein Doppelklick (an → sofort wieder aus)
   const next = !box.checked;
+  if (next) {
+    const items = window.alsterDb?.get('berliner-items');
+    const blocked = berlinerChecklist(window.alsterDb?.get('berliner-settings') || {}, Array.isArray(items) && items.length ? items : DEFAULT_BERLINER).some(x => !x.ok && !x.warn);
+    if (blocked) { showToast('Bitte zuerst die rot markierten Punkte beheben.', { tone: 'error' }); return; }
+  }
   if (next && !(await askConfirm('Dann erscheinen der Menüpunkt und der Hinweis auf der Startseite (im eingestellten Zeitraum).', { title: 'Berliner-Vorbestellung aktivieren?', ok: 'Aktivieren', danger: false }))) return;
   berlinerToggling = true;
   const sw = bEl('berliner-switch'); if (sw) sw.disabled = true;
@@ -3125,6 +3288,16 @@ async function onToggleBerliner() {
   updateBerlinerSwitch(box.checked);
 }
 
+function readBerlinerForm() {
+  return {
+    active:     !!bEl('berliner-active')?.checked,
+    orderFrom:  bEl('berliner-order-from')?.value || '', orderTo: bEl('berliner-order-to')?.value || '',
+    pickupFrom: bEl('berliner-pickup-from')?.value || '', pickupTo: bEl('berliner-pickup-to')?.value || '',
+    title: (bEl('berliner-title')?.value || '').trim(), text: (bEl('berliner-text')?.value || '').trim(),
+    leadDays: parseInt(bEl('berliner-lead')?.value, 10) || 0, minQty: (bEl('berliner-min')?.value || '').trim(),
+    pickupTimeFrom: bEl('berliner-time-from')?.value || '', pickupTimeTo: bEl('berliner-time-to')?.value || ''
+  };
+}
 async function onSaveBerlinerSettings(e) {
   e?.preventDefault();
   const st = {
@@ -3134,9 +3307,19 @@ async function onSaveBerlinerSettings(e) {
     pickupFrom: bEl('berliner-pickup-from')?.value || '',
     pickupTo:   bEl('berliner-pickup-to')?.value || '',
     title:      (bEl('berliner-title')?.value || '').trim().slice(0, 80),
-    text:       (bEl('berliner-text')?.value || '').trim().slice(0, 300)
+    text:       (bEl('berliner-text')?.value || '').trim().slice(0, 300),
+    leadDays:   Math.max(0, Math.min(7, parseInt(bEl('berliner-lead')?.value, 10) || 0)),
+    minQty:     (bEl('berliner-min')?.value || '').trim(),
+    pickupTimeFrom: bEl('berliner-time-from')?.value || '',
+    pickupTimeTo:   bEl('berliner-time-to')?.value || ''
   };
   const status = bEl('berliner-settings-status');
+  if (st.minQty && !/^\d{1,3}$/.test(st.minQty)) { setStatus(status, 'Mindestmenge: bitte eine ganze Zahl (z. B. 6) oder leer lassen.', 'error'); return false; }
+  if (st.minQty === '0') st.minQty = '';
+  if (st.pickupTimeFrom && st.pickupTimeTo && st.pickupTimeFrom >= st.pickupTimeTo) { setStatus(status, 'Abholzeit „von“ muss vor „bis“ liegen.', 'error'); return false; }
+  if (st.pickupTo && st.leadDays > 0 && addDaysIsoAdmin(todayIso(), st.leadDays) > st.pickupTo && (!st.orderFrom || st.orderFrom <= todayIso())) {
+    setStatus(status, `Mit ${st.leadDays} Tag${st.leadDays > 1 ? 'en' : ''} Vorlauf ist der letzte Abholtag (${fmtIsoDe(st.pickupTo)}) nicht mehr erreichbar.`, 'error'); return false;
+  }
   if (st.orderFrom && st.orderTo && st.orderFrom > st.orderTo) {
     setStatus(status, '„Bestellbar ab“ liegt nach „Bestellbar bis“.', 'error'); return false;
   }
@@ -3157,6 +3340,7 @@ async function onSaveBerlinerSettings(e) {
   const ok = await window.alsterDb?.set('berliner-settings', st);
   if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
   updateBerlinerLive(st);
+  renderBerlinerChecklist(st);
   setStatus(status, `Gespeichert · ${berlinerLiveState(st).msg}`, 'ok');
   if (typeof logActivity === 'function') logActivity(st.active ? 'Berliner-Vorbestellung eingeschaltet' : 'Berliner-Vorbestellung ausgeschaltet');
   return true;
@@ -3183,6 +3367,7 @@ async function onSaveBerlinerItems(e) {
   if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
   const noPrice = items.filter(it => !it.price).length;
   setStatus(status, `Gespeichert · ${items.length} Sorten${noPrice ? ` (${noPrice} ohne Preis — bitte Preise ergänzen)` : ''}`, noPrice ? '' : 'ok');
+  renderBerlinerChecklist(window.alsterDb?.get('berliner-settings') || {});
   if (typeof logActivity === 'function') logActivity('Berliner-Sorten aktualisiert');
   return true;
 }

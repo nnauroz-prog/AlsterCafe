@@ -114,7 +114,51 @@ function berlinerState() {
   if (!st.active) return { visible: false, reason: 'off', st };
   if (st.orderFrom && today < st.orderFrom) return { visible: false, reason: 'soon', st };
   if (st.orderTo && today > st.orderTo) return { visible: false, reason: 'over', st };
+  // Abholzeitraum vorbei → Aktion ist beendet, auch wenn „Bestellbar bis“ leer ist
+  if (st.pickupTo && today > st.pickupTo) return { visible: false, reason: 'over', st };
+  // Mit Vorlauf (z. B. 1 Tag vorher) ist nach dem letzten erreichbaren Abholtag Schluss
+  if (st.pickupTo && berlinerLead(st) > 0 && addDaysIso(today, berlinerLead(st)) > st.pickupTo) return { visible: false, reason: 'over', st };
   return { visible: true, st };
+}
+// Bestellvorlauf in Tagen (0 = am selben Tag möglich, Standard 1)
+function berlinerLead(st) {
+  const n = parseInt(st && st.leadDays, 10);
+  return Number.isFinite(n) && n >= 0 ? Math.min(n, 7) : 1;
+}
+function addDaysIso(iso, n) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]); d.setDate(d.getDate() + n);
+  return isoLocal(d);
+}
+// Frühester erlaubter Abholtag: heute + Vorlauf, nicht vor „Abholung von“, kein Schließtag
+function berlinerFirstPickup(st) {
+  let d = addDaysIso(isoLocal(new Date()), berlinerLead(st));
+  if (st.pickupFrom && d < st.pickupFrom) d = st.pickupFrom;
+  for (let i = 0; i < 31; i++) {
+    if (st.pickupTo && d > st.pickupTo) return null;
+    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const date = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (openingFor(date)) return d;
+    d = addDaysIso(d, 1);
+  }
+  return null;
+}
+// Kurzzeile mit den Regeln der Aktion (Abholung, Bestellschluss, Zeiten, Mindestmenge)
+function berlinerRulesText(st, en) {
+  const parts = [];
+  if (st.pickupFrom || st.pickupTo) {
+    const a = formatDateLong(st.pickupFrom || st.pickupTo, en), b = formatDateLong(st.pickupTo || st.pickupFrom, en);
+    parts.push(a === b ? (en ? `Pick-up on ${a}` : `Abholung am ${a}`) : (en ? `Pick-up ${a} – ${b}` : `Abholung ${a} bis ${b}`));
+  }
+  if (st.pickupTimeFrom || st.pickupTimeTo) {
+    parts.push(en ? `between ${st.pickupTimeFrom || ''}${st.pickupTimeFrom && st.pickupTimeTo ? ' and ' : ''}${st.pickupTimeTo || ''}` : `zwischen ${st.pickupTimeFrom || ''}${st.pickupTimeFrom && st.pickupTimeTo ? ' und ' : ''}${st.pickupTimeTo || ''} Uhr`);
+  }
+  const lead = berlinerLead(st);
+  if (lead > 0) parts.push(en ? `order at least ${lead} day${lead > 1 ? 's' : ''} ahead` : `bitte ${lead === 1 ? 'einen Tag' : lead + ' Tage'} vorher bestellen`);
+  const min = parseInt(st.minQty, 10);
+  if (min > 1) parts.push(en ? `minimum ${min} pieces` : `mindestens ${min} Stück`);
+  return parts.join(' · ');
 }
 function formatDateLong(iso, en) {
   const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -150,7 +194,8 @@ function initBerlinerPromo() {
   if (!visible || !hero) { promo?.remove(); return; }
   const title = (st.title || '').trim() || 'Berliner für Silvester vorbestellen';
   const text = (st.text || '').trim() || 'Frisch aus unserer Backstube — jetzt vorbestellen und zur Abholung bereitlegen lassen.';
-  const until = st.orderTo ? (en ? `Orders until ${formatDateLong(st.orderTo, true)}` : `Bestellbar bis ${formatDateLong(st.orderTo)}`) : '';
+  const rules = berlinerRulesText(st, en);
+  const until = [st.orderTo ? (en ? `Orders until ${formatDateLong(st.orderTo, true)}` : `Bestellbar bis ${formatDateLong(st.orderTo)}`) : '', rules].filter(Boolean).join(' · ');
   const html = `
     <div class="container berliner-promo-inner">
       <div>
@@ -193,20 +238,26 @@ function initBerlinerPage() {
   if (win) {
     const parts = [];
     if (visible && st.orderTo) parts.push(en ? `Orders until ${formatDateLong(st.orderTo, true)}` : `Bestellbar bis ${formatDateLong(st.orderTo)}`);
-    if (st.pickupFrom || st.pickupTo) {
-      const a = formatDateLong(st.pickupFrom || st.pickupTo, en), b = formatDateLong(st.pickupTo || st.pickupFrom, en);
-      parts.push(a === b ? (en ? `Pick-up on ${a}` : `Abholung am ${a}`) : (en ? `Pick-up ${a} – ${b}` : `Abholung ${a} bis ${b}`));
-    }
+    const rules = berlinerRulesText(st, en);
+    if (rules) parts.push(rules);
     win.textContent = parts.join(' · ');
     win.hidden = !parts.length;
   }
   const date = form.querySelector('input[name="Datum"]');
   if (date) {
-    const today = isoLocal(new Date());
-    const min = st.pickupFrom && st.pickupFrom > today ? st.pickupFrom : today;
+    const first = berlinerFirstPickup(st);
+    const min = first || addDaysIso(isoLocal(new Date()), berlinerLead(st));
     date.min = min;
     if (st.pickupTo) date.max = st.pickupTo; else date.removeAttribute('max');
     if (!date.value || date.value < min || (st.pickupTo && date.value > st.pickupTo)) date.value = min;
+    date.dataset.berlinerMin = min;
+  }
+  const time = form.querySelector('input[name="Uhrzeit"]');
+  if (time) {
+    if (st.pickupTimeFrom) time.min = st.pickupTimeFrom; else time.removeAttribute('min');
+    if (st.pickupTimeTo) time.max = st.pickupTimeTo; else time.removeAttribute('max');
+    if (st.pickupTimeFrom && time.value && time.value < st.pickupTimeFrom) time.value = st.pickupTimeFrom;
+    if (st.pickupTimeTo && time.value && time.value > st.pickupTimeTo) time.value = st.pickupTimeTo;
   }
 }
 
@@ -3028,8 +3079,12 @@ function initOrderForm() {
           + (priced.length ? `<li class="order-summary-total"><span>${sumLabel}${sumNote}</span><span class="order-summary-price">${formatEuro(sum)}</span></li>` : '')
         : '<li class="order-summary-empty">Noch nichts ausgewählt.</li>';
     }
-    const ok = total >= MIN_ORDER;
-    if (minNote) {
+    const bMin = isBerliner ? (parseInt(berlinerSettings().minQty, 10) || 0) : 0;
+    const ok = total >= MIN_ORDER && (!bMin || total >= bMin);
+    if (minNote && isBerliner && bMin > 1 && total > 0 && total < bMin) {
+      minNote.textContent = alsterLang() === 'en' ? `Minimum order: ${bMin} doughnuts (${bMin - total} more).` : `Mindestbestellung: ${bMin} Berliner (noch ${bMin - total}).`;
+      minNote.hidden = false; minNote.classList.remove('is-met'); minNote.classList.add('is-below');
+    } else if (minNote) {
       minNote.textContent = total === 0
         ? (alsterLang() === 'en'
             ? (isBerliner ? 'Choose your doughnuts above.' : 'Choose your rolls above.')
@@ -3117,14 +3172,27 @@ function initOrderForm() {
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
-    if (!form.checkValidity()) {
-      setFormStatus(status, invalidFieldMessage(form, en), 'error');
-      if (submitBtn) submitBtn.disabled = false;
-      return;
-    }
     if (isBerliner) {
       const { st } = berlinerState();
       const d = form.querySelector('input[name="Datum"]')?.value || '';
+      const t = form.querySelector('input[name="Uhrzeit"]')?.value || '';
+      const min = parseInt(st.minQty, 10);
+      if (min > 1 && total < min) {
+        setFormStatus(status, en ? `Please order at least ${min} doughnuts.` : `Bitte bestellen Sie mindestens ${min} Berliner.`, 'error');
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+      const lead = berlinerLead(st);
+      if (lead > 0 && d && d < addDaysIso(isoLocal(new Date()), lead)) {
+        setFormStatus(status, en ? `Please order at least ${lead} day${lead > 1 ? 's' : ''} before pick-up.` : `Bitte ${lead === 1 ? 'einen Tag' : lead + ' Tage'} vor der Abholung bestellen – der früheste Abholtag ist ${formatDateLong(berlinerFirstPickup(st) || addDaysIso(isoLocal(new Date()), lead))}.`, 'error');
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+      if (t && ((st.pickupTimeFrom && t < st.pickupTimeFrom) || (st.pickupTimeTo && t > st.pickupTimeTo))) {
+        setFormStatus(status, en ? `Pick-up is possible between ${st.pickupTimeFrom || ''} and ${st.pickupTimeTo || ''}.` : `Abholung ist zwischen ${st.pickupTimeFrom || '…'} und ${st.pickupTimeTo || '…'} Uhr möglich.`, 'error');
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
       if ((st.pickupFrom && d < st.pickupFrom) || (st.pickupTo && d > st.pickupTo)) {
         const a = formatDateLong(st.pickupFrom || st.pickupTo, en), b = formatDateLong(st.pickupTo || st.pickupFrom, en);
         const range = a === b ? a : `${a} – ${b}`;
@@ -3132,6 +3200,11 @@ function initOrderForm() {
         if (submitBtn) submitBtn.disabled = false;
         return;
       }
+    }
+    if (!form.checkValidity()) {
+      setFormStatus(status, invalidFieldMessage(form, en), 'error');
+      if (submitBtn) submitBtn.disabled = false;
+      return;
     }
     const slotErr = slotProblem(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
     if (slotErr) {

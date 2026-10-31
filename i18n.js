@@ -26,6 +26,7 @@
     'Mittagstisch': 'Lunch',
     'Speisekarte': 'Menu',
     'Saisonal': 'Seasonal',
+    'Alle': 'All',
     'Heute ist Croque-Tag!': "Today is Croque day!",
     'Morgen ist Croque-Tag!': "Tomorrow is Croque day!",
     'Zusätzlich zu unserem beliebten Frühstück verwöhnen wir euch heute mit unseren frisch zubereiteten, knusprigen Croques. Kommt vorbei und genießt eure Lieblingsvariante!': 'In addition to our popular breakfast, today we are treating you to our freshly made, crispy Croques. Come by and enjoy your favourite!',
