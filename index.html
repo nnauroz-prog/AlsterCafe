@@ -15,7 +15,7 @@
        holt es on-demand, fetchpriority=low am img-Tag. -->
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r214" />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r215" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r214" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r215" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r214';
+      var V='2026-05-10-r215';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -100,6 +100,7 @@
     "logo": "https://alstercafe.de/image.png",
     "servesCuisine": ["Frühstück", "Bäckerei", "Mittagstisch", "Kaffee"],
     "areaServed": { "@type": "Place", "name": "Hamburg-Hohenfelde" },
+    "subjectOf": { "@type": "WebSite", "url": "https://alstercafe.de/", "name": "Alstercafé", "creator": { "@type": "Organization", "name": "Sitalo", "url": "https://sitalo.de" } },
     "url": "https://alstercafe.de/",
     "telephone": "+49-40-22692891",
     "email": "info@alstercafe.de",
@@ -536,16 +537,16 @@
         <a href="admin.html">Mitgliederbereich</a>
       </nav>
       <p class="footer-meta">© <span id="year"></span> Alstercafé</p>
-      <p class="footer-maker">Erstellt durch <a href="https://sitalo.de" target="_blank" rel="noopener">Sitalo.de</a></p>
+      <p class="footer-maker">Erstellt durch <a href="https://sitalo.de" target="_blank" rel="noopener" title="Sitalo.de – Webdesign und Webseiten erstellen lassen">Sitalo.de</a></p>
     </div>
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r214" defer></script>
-  <script src="db.js?v=2026-05-10-r214" defer></script>
-  <script src="rules.js?v=2026-05-10-r214" defer></script>
-  <script src="menudata.js?v=2026-05-10-r214" defer></script>
-  <script src="script.js?v=2026-05-10-r214" defer></script>
-  <script src="i18n.js?v=2026-05-10-r214" defer></script>
+  <script src="config.js?v=2026-05-10-r215" defer></script>
+  <script src="db.js?v=2026-05-10-r215" defer></script>
+  <script src="rules.js?v=2026-05-10-r215" defer></script>
+  <script src="menudata.js?v=2026-05-10-r215" defer></script>
+  <script src="script.js?v=2026-05-10-r215" defer></script>
+  <script src="i18n.js?v=2026-05-10-r215" defer></script>
 </body>
 </html>

@@ -10920,7 +10920,7 @@ body:not(.admin-body) .reservation-form .form-row > label { margin-bottom: 0; }
 }
 .specials-group-title .ico { width: 18px; height: 18px; color: var(--gold); }
 .specials-foot { margin: 18px 0 0; padding-top: 14px; border-top: 1px dashed rgba(184, 137, 62, .4); font-size: .9rem; color: var(--coffee, #5B3A26); }
-.specials-foot::before { content: "♥"; color: #C0573F; margin-right: 8px; }
+.specials-foot::before { content: none; }
 @media (prefers-reduced-motion: no-preference) {
   .karte-block-specials .specials-sun { animation: sun-turn 60s linear infinite; }
 }
@@ -11377,3 +11377,28 @@ body:not(.admin-body) .about-text .features .ico {
   .admin-body .broetchen-edit-veg { text-transform: none !important; letter-spacing: 0 !important; font: 500 .84rem/1.3 'Inter', sans-serif !important; color: #6F5C4E !important; }
   .admin-body .staff-code-form .week-share-actions .btn-link { font-size: .8rem !important; line-height: 1.25; padding: 6px 8px !important; }
 }
+
+/* ============================================================
+   RUHIG & PROFESSIONELL · alle Bewegungs-/Funkel-Effekte aus
+   Zeichnungen bleiben als stille Illustration.
+   ============================================================ */
+.art-spark, .gold-dust, .summary-dust, .spot-light, .done-burst, .specials-sun { display: none !important; }
+:is(.hero-art, .page-art, .dark-art, .closer-art, .summary-art, .specials-art, .error-art, .map-art) *,
+:is(.hero-art, .page-art, .dark-art, .closer-art, .summary-art, .specials-art, .error-art, .map-art),
+:is(.hero-art, .page-art, .closer-art)::before, .map-art .map-pin {
+  animation: none !important; transition: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; transform: none !important;
+}
+:is(.hero-art, .page-art, .dark-art, .closer-art, .specials-art, .error-art) .art-fill,
+:is(.hero-art, .page-art) .art-grain, :is(.hero-art, .page-art) .art-sugar, .closer-art .art-fill { opacity: 1 !important; }
+:is(.hero-art, .page-art, .closer-art, .summary-art) .art-steam { opacity: .55 !important; }
+.hero-art::before, .page-art::before, .closer-art::before { opacity: .55 !important; filter: blur(8px); }
+.hero-cinematic > .hero-art { transform: none !important; }
+.anfrage-item.just-done, .anfrage-item.is-spotlit { animation: none !important; }
+.anfrage-item.is-spotlit { box-shadow: 0 0 0 3px rgba(184, 137, 62, .4) !important; }
+#order-count.is-pop { animation: none !important; }
+.save-tick.is-on { animation: none !important; opacity: 1; }
+.save-tick.is-on circle, .save-tick.is-on path { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
+.specials-teaser:hover, .overview-card:hover, .spread-card:hover, .reviews-card:hover { transform: none !important; }
+.faq-item[open] .faq-content { animation: none !important; }
+:is(.reservation-form, .order-form) .form-status.ok { animation: none !important; }
+.hero-art .art-flame, .page-art .art-flame { animation: none !important; }
