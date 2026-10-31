@@ -11326,3 +11326,54 @@ body:not(.admin-body) .about-text .features .ico {
   .admin-body .account-list dt { font-size: .66rem !important; margin-bottom: 4px !important; }
   .admin-body .account-list dd { font: 500 .98rem/1.45 'Inter', sans-serif !important; }
 }
+@media (max-width: 720px) {
+  /* Brötchen-/Berliner-Sorten: Name + Preis in einer Zeile, Beschreibung darunter, × oben rechts */
+  .admin-body .broetchen-edit-row { position: relative; align-items: flex-start !important; gap: 8px !important; padding: 10px 46px 10px 10px !important;
+    background: #FAF6EF !important; border: 0 !important; border-radius: 12px !important; }
+  .admin-body .broetchen-edit-fields { display: grid !important; grid-template-columns: minmax(0, 1fr) 92px !important; gap: 6px !important; }
+  .admin-body .broetchen-edit-fields .broetchen-edit-name { grid-column: 1; grid-row: 1; }
+  .admin-body .broetchen-edit-fields .broetchen-edit-price { grid-column: 2; grid-row: 1; }
+  .admin-body .broetchen-edit-fields .broetchen-edit-desc { grid-column: 1 / -1; grid-row: 2; }
+  .admin-body .broetchen-edit-fields .broetchen-edit-veg { grid-column: 1 / -1; grid-row: 3; font-size: .8rem; margin-top: 2px; }
+  .admin-body .broetchen-edit-fields input[type="text"] { padding: 9px 11px !important; font-size: .92rem !important; min-height: 42px !important; }
+  .admin-body .broetchen-edit-remove { position: absolute; top: 10px; right: 6px; }
+
+  /* Urlaub: Zeitraum-Kasten – Überschrift innen statt auf dem Rand, von/bis nebeneinander */
+  .admin-body .holiday-range { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; padding: 12px 12px 12px !important; border-radius: 14px !important; }
+  .admin-body .holiday-range legend { float: left; width: 100%; padding: 0 0 8px !important; margin: 0; font-size: .88rem !important; }
+  .admin-body .holiday-range label { font-size: .64rem !important; }
+  .admin-body .holiday-range input { min-height: 44px !important; }
+  .admin-body .holiday-range .btn { min-height: 40px; }
+  .admin-body .holiday-quick { gap: 4px 14px !important; }
+  .admin-body .holiday-quick .btn-link { font-size: .86rem !important; min-height: 36px !important; }
+
+  /* Kalender-Code: Knöpfe in einer Reihe */
+  .admin-body .staff-code-form .week-share-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+  .admin-body .staff-code-form .week-share-actions .btn-primary { grid-column: 1 / -1; }
+  .admin-body .staff-code-form .week-share-actions .btn-link { justify-content: center; border: 1px solid var(--soft-line-2) !important; border-radius: 12px !important; min-height: 42px !important; font-size: .84rem !important; background: #fff !important; }
+  .admin-body .staff-code-form .week-share-actions .btn-link::after { display: none !important; }
+
+  /* Wochenplan weitergeben: zwei Knöpfe nebeneinander */
+  .admin-body .week-share:not(.staff-access) .week-share-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+  .admin-body .week-share:not(.staff-access) .week-share-actions .btn { width: auto !important; min-height: 44px !important; padding: 0 10px !important; font-size: .86rem !important; justify-content: center; }
+  .admin-body .week-share { padding: 16px 14px !important; border-radius: 18px !important; }
+  .admin-body .week-share-title { font-size: 1.2rem !important; }
+
+  /* Bilder & Farben: Abschnittstitel leise, Vorschau nicht riesig */
+  .admin-body .panel-card h4 { font-size: .7rem !important; letter-spacing: .12em !important; margin: 0 0 8px !important; }
+  .admin-body .design-info { padding: 12px !important; border-radius: 14px !important; }
+  .admin-body .image-slot .image-preview { max-height: 220px; }
+  .admin-body .image-slot[data-aspect="1"] .image-preview { max-width: 180px; }
+
+  /* Berliner: Datum-Felder paarweise */
+  .admin-body #berliner-settings-form .berliner-dates, .admin-body .berliner-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; }
+
+  /* Dialoge: etwas weniger Rand, Knöpfe ausgewogen */
+  .admin-body .confirm-dialog { width: calc(100vw - 32px) !important; max-width: 420px !important; border-radius: 18px !important; }
+  .admin-body .confirm-dialog-actions .btn { min-height: 46px; }
+}
+@media (max-width: 720px) {
+  .admin-body .holiday-range legend { float: none; display: block; grid-column: 1 / -1; }
+  .admin-body .broetchen-edit-veg { text-transform: none !important; letter-spacing: 0 !important; font: 500 .84rem/1.3 'Inter', sans-serif !important; color: #6F5C4E !important; }
+  .admin-body .staff-code-form .week-share-actions .btn-link { font-size: .8rem !important; line-height: 1.25; padding: 6px 8px !important; }
+}
