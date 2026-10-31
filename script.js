@@ -1574,6 +1574,43 @@ function initLunchWeek() {
   renderWeekMeta(displayMonday);
   renderTodayLunch(todayWeekData, today);
   renderWeekList(displayWeekData, displayMonday, today);
+  injectLunchSchema(displayWeekData, displayMonday);
+}
+
+/* Google: die Wochenkarte als strukturierte Speisekarte (Menu → MenuSection je Tag → MenuItem).
+   Nur Tage mit eingetragenem Gericht; Schließtage/Leertage bleiben weg. Kein Preis (nicht gepflegt). */
+function injectLunchSchema(weekData, monday) {
+  if (!document.getElementById('lunch-week-list')) return;
+  try {
+    const names = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+    const sections = [];
+    DAY_KEYS.forEach((key, i) => {
+      const d = new Date(monday); d.setDate(d.getDate() + i);
+      const entry = lunchEntryFor(weekData?.days?.[key], d);
+      const dishes = dayDishes(entry);
+      if (!dishes.length) return;
+      sections.push({
+        '@type': 'MenuSection',
+        name: `${names[i]}, ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`,
+        hasMenuItem: dishes.map(x => {
+          const item = { '@type': 'MenuItem', name: x.dish };
+          if (x.side) item.description = x.side;
+          return item;
+        })
+      });
+    });
+    let el = document.getElementById('lunch-schema');
+    if (!sections.length) { el?.remove(); return; }
+    if (!el) { el = document.createElement('script'); el.type = 'application/ld+json'; el.id = 'lunch-schema'; document.head.appendChild(el); }
+    const lbl = typeof weekLabelFor === 'function' ? weekLabelFor(monday) : '';
+    el.textContent = JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'Menu',
+      name: 'Mittagstisch' + (lbl ? ' · ' + lbl : ''),
+      description: 'Werktags ab 12:00 Uhr – täglich wechselndes Gericht mit Beilage und Salat im Alstercafé, Hamburg-Hohenfelde.',
+      inLanguage: 'de', url: 'https://alstercafe.de/mittagstisch.html',
+      hasMenuSection: sections
+    });
+  } catch (e) { /* Schema ist optional */ }
 }
 
 /* Today-Feature-Block auf der Home-Page:
