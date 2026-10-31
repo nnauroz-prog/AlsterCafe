@@ -11446,3 +11446,53 @@ body:not(.admin-body) .about-text .features .ico {
 .filter-chip.is-active { background: var(--bean); color: #FFFCF4; border-color: var(--bean); }
 @media (max-width: 720px) { .admin-body .berliner-switch-row .berliner-switch { width: 100%; } .admin-body .berliner-bake-table { font-size: .84rem; } }
 @media (max-width: 720px) { .admin-body .berliner-bake-table th, .admin-body .berliner-bake-table td { padding: 7px 6px; white-space: normal; } .admin-body .berliner-bake-table th { font-size: .62rem; } }
+
+/* ============================================================
+   MITGLIEDERBEREICH · Facelift Desktop (≥ 981 px): Seitenleiste
+   Gleiche Bereiche, gleiche Reihenfolge – nur links statt oben.
+   ============================================================ */
+@media (min-width: 981px) {
+  .admin-body .admin-workspace { display: grid; grid-template-columns: 232px minmax(0, 1fr); column-gap: 32px; align-items: start; margin-top: 8px !important; }
+  .admin-body .admin-workspace > .back-to-overview { grid-column: 1; grid-row: 1; width: 100%; justify-content: flex-start; margin: 0 0 10px !important; }
+  .admin-body .admin-workspace > .admin-tabs { grid-column: 1; grid-row: 2; position: sticky; top: 92px; display: flex !important; flex-direction: column !important; flex-wrap: nowrap !important;
+    gap: 2px !important; padding: 8px !important; border-radius: 18px !important; margin: 0 !important; }
+  .admin-body .admin-workspace > .admin-panel { grid-column: 2; grid-row: 1 / span 2; min-width: 0; }
+  .admin-body .admin-tab { justify-content: flex-start; width: 100%; padding: 10px 12px !important; border-radius: 12px !important; font-size: .9rem !important; gap: 10px; }
+  .admin-body .admin-tab .ico { width: 16px; height: 16px; opacity: .8; }
+  .admin-body .admin-tab .tab-badge { margin-left: auto; }
+  /* Gruppen-Trenner in der Leiste (nach Kalender: täglich | selten) */
+  .admin-body .admin-tab[data-tab="berliner"] { margin-bottom: 8px; }
+  .admin-body .admin-tab[data-tab="menu"] { position: relative; margin-top: 8px; }
+  .admin-body .admin-tab[data-tab="menu"]::before { content: ""; position: absolute; left: 12px; right: 12px; top: -8px; height: 1px; background: var(--soft-line); display: block !important; }
+  /* Arbeitsflächen nutzen die Spalte voll */
+  .admin-body .admin-panel .panel-card { max-width: none !important; }
+  .admin-body .admin-panel .panel-card + .panel-card { margin-top: 18px; }
+  .admin-body .panel-title { margin-top: 2px !important; }
+  /* Begrüßung in der Arbeitsansicht nur als Zeile */
+  .admin-body .admin-dashboard.is-working .admin-welcome { margin-bottom: 6px !important; }
+  .admin-body .admin-dashboard.is-working .admin-welcome h1 { font-size: 1.3rem !important; }
+  .admin-body .admin-dashboard.is-working .admin-welcome .welcome-date { font-size: .84rem !important; }
+  /* Speichern-Leiste bündig mit der Inhaltsspalte */
+  .admin-body .admin-panel .save-bar:not(.inline) { left: auto !important; right: auto !important; width: 100%; }
+}
+@media (min-width: 1400px) { .admin-body .admin-workspace { grid-template-columns: 248px minmax(0, 1fr); column-gap: 40px; } }
+
+/* Login: ruhig, ohne Doppelrahmen */
+.admin-body .login-card { border: 1px solid var(--soft-line) !important; border-radius: 22px !important; box-shadow: var(--soft-shadow) !important; background: #FFFFFF !important; padding: 44px 40px 36px !important; }
+.admin-body .login-card::before, .admin-body .login-card::after { display: none !important; }
+.admin-body .admin-login { background: var(--soft-bg) !important; }
+.admin-body .admin-login::before, .admin-body .admin-login::after { display: none !important; }
+.admin-body .login-card input { background: #fff !important; border: 1px solid var(--soft-line-2) !important; border-radius: 12px !important; padding: 12px 14px !important; }
+.admin-body .login-card label > span { font: 600 .72rem/1 'Inter', sans-serif !important; letter-spacing: .1em !important; }
+.admin-body .login-card .form-submit { border-radius: 12px !important; }
+.admin-body .login-help { font-size: .84rem !important; color: #6F5C4E !important; }
+@media (max-width: 720px) { .admin-body .login-card { padding: 30px 20px 26px !important; border-radius: 18px !important; } }
+@media (min-width: 981px) {
+  .admin-body .admin-workspace > .admin-tabs { top: 84px; }
+  .admin-body .admin-workspace > .back-to-overview { margin: 0 0 8px !important; }
+  /* Leiste schließt direkt unter „Zurück“ an (kein Sprung durch sticky) */
+  .admin-body .admin-workspace { grid-template-rows: auto 1fr; }
+  .admin-body .save-bar.inline .btn-link { letter-spacing: .01em !important; text-transform: none !important; font-size: .9rem !important; }
+}
+.admin-body .login-card .login-stamp { position: static !important; display: block; margin-top: 22px; text-align: center; font-size: .78rem; color: #8A7768; }
+.admin-body .login-card .staff-login { margin-top: 18px; }
