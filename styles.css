@@ -9291,7 +9291,11 @@ html.has-js-scroll { scroll-behavior: auto; }
   .site-header .brand-name { white-space: nowrap; }
 }
 @media (min-width: 981px) and (max-width: 1079px) {
-  .site-header .brand-name { display: none; }
+  /* Name bleibt sichtbar, nur etwas kleiner (früher ausgeblendet) */
+  .site-header .brand-name { font-size: 1.12rem !important; }
+  .site-header .brand .brand-logo { width: 38px; height: 38px; }
+  .site-header .primary-nav { gap: 10px; }
+  .site-header .primary-nav > a { font-size: .8rem; }
 }
 
 /* ===============================================
