@@ -73,7 +73,7 @@ search.google.com/search-console → Property `alstercafe.de` (Domain) → Best�
 bei STRATO (TXT-Eintrag einfügen) → Sitemap `https://alstercafe.de/sitemap.xml` einreichen.
 Danach sieht man, für welche Suchbegriffe die Seite erscheint, und Google meldet Probleme.
 
-## E. Was die Webseite bereits erfüllt (technisch, von Sitalo umgesetzt)
+## E. Was die Webseite bereits erfüllt
 
 - Strukturierte Daten nach Google-Vorgabe: Café/Bäckerei mit Adresse, Koordinaten, Öffnungszeiten,
   Schließtagen (automatisch aus „Urlaub & Feiertage“), Speisekarten-Link, Reservierungs-Aktion,
