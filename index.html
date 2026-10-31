@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="color-scheme" content="light" />
-  <title>Alstercafé – Bäckerei, Café &amp; Mittagstisch in Hohenfelde</title>
-  <meta name="description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und ein wechselnder Mittagstisch — mitten in der Ifflandstraße 45 in Hamburg." />
+  <title>Alstercafé Hamburg-Hohenfelde – Café, Bäckerei &amp; Mittagstisch</title>
+  <meta name="description" content="Café und Bäckerei in Hamburg-Hohenfelde, Ifflandstraße 45: Frühstück, Franzbrötchen aus eigener Backstube, Croques und werktags wechselnder Mittagstisch." />
   <meta name="theme-color" content="#3D2415" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -15,7 +15,7 @@
        holt es on-demand, fetchpriority=low am img-Tag. -->
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r214" />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r216" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -36,14 +36,14 @@
     .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;max-width:1240px;margin:0 auto;padding:0 28px}
     [hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r214" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r216" />
 
   <!-- Auto-Migration: bei neuer Version werden veraltete Inhalts-
        Ueberschreibungen automatisch geloescht. So ist die Seite
        nach jedem Deploy garantiert konsistent. -->
   <script>
     (function(){
-      var V='2026-05-10-r214';
+      var V='2026-05-10-r216';
       try{
         if(localStorage.getItem('alstercafe.app-version')!==V){
           localStorage.removeItem('alstercafe.content');
@@ -70,11 +70,15 @@
 
   <!-- Canonical -->
   <link rel="canonical" href="https://alstercafe.de/" />
+  <meta name="geo.region" content="DE-HH" />
+  <meta name="geo.placename" content="Hamburg-Hohenfelde" />
+  <meta name="geo.position" content="53.5614;10.0245" />
+  <meta name="ICBM" content="53.5614, 10.0245" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Alstercafé – Bäckerei, Café &amp; Mittagstisch in Hohenfelde" />
-  <meta property="og:description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und wechselnder Mittagstisch in der Ifflandstraße 45." />
+  <meta property="og:title" content="Alstercafé Hamburg-Hohenfelde – Café, Bäckerei &amp; Mittagstisch" />
+  <meta property="og:description" content="Café und Bäckerei in Hamburg-Hohenfelde, Ifflandstraße 45: Frühstück, Franzbrötchen aus eigener Backstube, Croques und werktags wechselnder Mittagstisch." />
   <meta property="og:url" content="https://alstercafe.de/" />
   <meta property="og:site_name" content="Alstercafé" />
   <meta property="og:image" content="https://alstercafe.de/og-image.jpg" />
@@ -85,43 +89,135 @@
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Alstercafé – Café & Bäckerei in Hamburg" />
-  <meta name="twitter:description" content="Frisch gebrühter Kaffee, täglich selbstgebackene Brötchen und wechselnder Mittagstisch." />
+  <meta name="twitter:title" content="Alstercafé Hamburg-Hohenfelde – Café, Bäckerei &amp; Mittagstisch" />
+  <meta name="twitter:description" content="Café und Bäckerei in Hamburg-Hohenfelde, Ifflandstraße 45: Frühstück, Franzbrötchen aus eigener Backstube, Croques und werktags wechselnder Mittagstisch." />
   <meta name="twitter:image" content="https://alstercafe.de/og-image.jpg" />
 
   <!-- Strukturierte Daten -->
   <script type="application/ld+json" id="ld-business">
-  {
-    "@context": "https://schema.org",
-    "@type": ["CafeOrCoffeeShop", "Bakery"],
-    "name": "Alstercafé",
-    "description": "Familiengeführte Bäckerei und Café in Hamburg-Hohenfelde: Frühstück, belegte Brötchen, Croques und ein wechselnder Mittagstisch.",
-    "image": ["https://alstercafe.de/og-image.jpg", "https://alstercafe.de/image.png"],
-    "logo": "https://alstercafe.de/image.png",
-    "servesCuisine": ["Frühstück", "Bäckerei", "Mittagstisch", "Kaffee"],
-    "areaServed": { "@type": "Place", "name": "Hamburg-Hohenfelde" },
-    "url": "https://alstercafe.de/",
-    "telephone": "+49-40-22692891",
-    "email": "info@alstercafe.de",
-    "priceRange": "€",
-    "paymentAccepted": "Cash, Debit Card, Credit Card, American Express, Apple Pay, Google Pay",
-    "currenciesAccepted": "EUR",
-    "acceptsReservations": "https://alstercafe.de/reservierung.html",
-    "hasMenu": "https://alstercafe.de/speisekarte.html",
-    "hasMap": "https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg",
-    "foundingDate": "2004",
-    "address": { "@type": "PostalAddress", "streetAddress": "Ifflandstraße 45", "addressLocality": "Hamburg", "postalCode": "22087", "addressCountry": "DE" },
-    "geo": { "@type": "GeoCoordinates", "latitude": 53.5614, "longitude": 10.0245 },
-    "openingHoursSpecification": [
-      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "06:30", "closes": "15:00" },
-      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "07:30", "closes": "15:00" },
-      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday",   "opens": "07:30", "closes": "15:00" }
-    ],
-    "sameAs": [
-      "https://www.instagram.com/alstercafe/",
-      "https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html"
-    ]
-  }
+{
+  "@context": "https://schema.org",
+  "@type": [
+    "CafeOrCoffeeShop",
+    "Bakery"
+  ],
+  "name": "Alstercafé",
+  "description": "Familiengeführte Bäckerei und Café in Hamburg-Hohenfelde: Frühstück, belegte Brötchen, Croques und ein wechselnder Mittagstisch.",
+  "image": [
+    "https://alstercafe.de/og-image.jpg",
+    "https://alstercafe.de/og-image-4x3.jpg",
+    "https://alstercafe.de/og-image-1x1.jpg"
+  ],
+  "logo": "https://alstercafe.de/image.png",
+  "servesCuisine": [
+    "Frühstück",
+    "Bäckerei",
+    "Deutsche Küche",
+    "Mittagstisch",
+    "Kaffee"
+  ],
+  "areaServed": [
+    {
+      "@type": "Place",
+      "name": "Hamburg-Hohenfelde"
+    },
+    {
+      "@type": "City",
+      "name": "Hamburg"
+    }
+  ],
+  "url": "https://alstercafe.de/",
+  "telephone": "+49-40-22692891",
+  "email": "info@alstercafe.de",
+  "priceRange": "€",
+  "paymentAccepted": "Cash, Debit Card, Credit Card, American Express, Apple Pay, Google Pay",
+  "currenciesAccepted": "EUR",
+  "acceptsReservations": true,
+  "hasMap": "https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg",
+  "foundingDate": "2004",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Ifflandstraße 45",
+    "addressLocality": "Hamburg",
+    "postalCode": "22087",
+    "addressCountry": "DE",
+    "addressRegion": "HH"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 53.5614,
+    "longitude": 10.0245
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "opens": "06:30",
+      "closes": "15:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "opens": "07:30",
+      "closes": "15:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Sunday",
+      "opens": "07:30",
+      "closes": "15:00"
+    }
+  ],
+  "sameAs": [
+    "https://www.instagram.com/alstercafe/",
+    "https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html"
+  ],
+  "@id": "https://alstercafe.de/#cafe",
+  "menu": "https://alstercafe.de/speisekarte.html",
+  "potentialAction": {
+    "@type": "ReserveAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://alstercafe.de/reservierung.html",
+      "inLanguage": "de",
+      "actionPlatform": [
+        "http://schema.org/DesktopWebPlatform",
+        "http://schema.org/MobileWebPlatform"
+      ]
+    },
+    "result": {
+      "@type": "FoodEstablishmentReservation",
+      "name": "Tisch reservieren"
+    }
+  },
+  "keywords": "Café Hohenfelde, Bäckerei Hamburg, Frühstück Hamburg, Mittagstisch Hamburg, belegte Brötchen bestellen, Croques Hamburg",
+  "slogan": "Bäckerei · Café · Mittagstisch in Hamburg-Hohenfelde",
+  "publicAccess": true,
+  "smokingAllowed": false,
+  "amenityFeature": [
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "Freies WLAN",
+      "value": true
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "Außenplätze",
+      "value": true
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "Kartenzahlung",
+      "value": true
+    }
+  ]
+}
   </script>
 </head>
 <body>
@@ -541,11 +637,11 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r214" defer></script>
-  <script src="db.js?v=2026-05-10-r214" defer></script>
-  <script src="rules.js?v=2026-05-10-r214" defer></script>
-  <script src="menudata.js?v=2026-05-10-r214" defer></script>
-  <script src="script.js?v=2026-05-10-r214" defer></script>
-  <script src="i18n.js?v=2026-05-10-r214" defer></script>
+  <script src="config.js?v=2026-05-10-r216" defer></script>
+  <script src="db.js?v=2026-05-10-r216" defer></script>
+  <script src="rules.js?v=2026-05-10-r216" defer></script>
+  <script src="menudata.js?v=2026-05-10-r216" defer></script>
+  <script src="script.js?v=2026-05-10-r216" defer></script>
+  <script src="i18n.js?v=2026-05-10-r216" defer></script>
 </body>
 </html>

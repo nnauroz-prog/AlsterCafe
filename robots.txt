@@ -14,5 +14,7 @@ Disallow: /DEPLOYMENT.md
 Disallow: /MASTERPROMPT.md
 Disallow: /PROMPT.md
 Disallow: /setup.sql
+Disallow: /SEO-CHECKLISTE.md
+Disallow: /BENACHRICHTIGUNG.md
 
 Sitemap: https://alstercafe.de/sitemap.xml
