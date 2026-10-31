@@ -11402,3 +11402,10 @@ body:not(.admin-body) .about-text .features .ico {
 .faq-item[open] .faq-content { animation: none !important; }
 :is(.reservation-form, .order-form) .form-status.ok { animation: none !important; }
 .hero-art .art-flame, .page-art .art-flame { animation: none !important; }
+/* Tablet (721–980 px): Reiter-Leiste zweizeilig ohne Überlappung, Speichern-Leiste in Inhaltsbreite */
+@media (min-width: 721px) and (max-width: 980px) {
+  .admin-body .admin-tabs { row-gap: 6px !important; padding: 6px !important; }
+  .admin-body .admin-tab { padding: 7px 12px !important; font-size: .84rem !important; }
+  .admin-body .save-bar:not(.inline) { left: 24px !important; right: 24px !important; }
+  .admin-body .overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
