@@ -11023,3 +11023,39 @@ body:not(.admin-body) .about-text .features .ico {
 }
 .error-links a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px;
   border: 1px solid rgba(184, 137, 62, .35); text-decoration: none; }
+/* Konto: Anleitung für weitere Zugänge in Supabase */
+.supabase-steps { margin: 10px 0 14px; padding-left: 22px; display: grid; gap: 8px; line-height: 1.5; }
+.supabase-steps li::marker { color: var(--accent-text, #8A6420); font-weight: 700; }
+
+/* ============================================================
+   DESKTOP · große Bildschirme sauber ausrichten
+   ============================================================ */
+@media (min-width: 1680px) { :root { --max: 1360px; } }
+/* Zeichnungen bündig mit dem Inhalt statt am Bildschirmrand */
+@media (min-width: 1280px) {
+  .hero-cinematic > .hero-art { right: max(clamp(14px, 5vw, 90px), calc((100vw - var(--max)) / 2 + var(--gutter))); }
+  .page-hero-editorial > .page-art { right: max(clamp(12px, 7vw, 130px), calc((100vw - var(--max)) / 2 + var(--gutter) + 40px)); }
+}
+/* Fußzeilen-Linie so breit wie der Inhalt */
+.site-footer .footer-grid::before { left: var(--gutter); right: var(--gutter); }
+/* Untere Fußzeilen-Linie ebenfalls nur so breit wie der Inhalt */
+.site-footer .footer-bottom-strip.container { border-top: 0; }
+.site-footer .footer-bottom-strip.container::before { content: ""; position: absolute; top: 0; left: var(--gutter); right: var(--gutter); height: 1px; background: rgba(212, 179, 128, 0.16); }
+/* Kapitel-Ziffern (№ I, II …) auf großen Bildschirmen bündig mit dem Inhalt */
+@media (min-width: 1400px) {
+  .chapter-mark, .page-hero-editorial::after { right: max(clamp(20px, 4vw, 56px), calc((100vw - var(--max)) / 2 + var(--gutter))); }
+}
+/* Mittagstisch-Editor: Croque-Schalter nur bei „kein Mittagstisch“ */
+.day-card .day-toggle-croque { display: none; }
+.day-card.is-closed .day-toggle-croque { display: flex; margin-top: 10px; }
+.day-card.is-closed .day-toggle-croque .day-toggle-text { color: var(--accent-text, #8A6420); }
+/* Croques als Alternative (Startseite + Mittagstisch-Seite) */
+.croque-alt-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; min-height: 40px; padding: 0 16px; border-radius: 999px;
+  font: 600 .82rem/1 'Inter', sans-serif; letter-spacing: .04em; text-decoration: none;
+  color: var(--gold-soft, #D4B380); border: 1px solid rgba(212, 179, 128, .45); }
+.today-feature .croque-alt-link { margin-left: auto; margin-right: auto; }
+@media (hover: hover) { .croque-alt-link:hover { background: rgba(212, 179, 128, .12); } }
+.croque-alt-text { display: block; margin-top: 8px; }
+/* Kontakt: Karten-Fläche füllt immer die ganze Box (auch auf großen Bildschirmen) */
+.map-card { display: flex; flex-direction: column; }
+.map-card .map-placeholder { flex: 1 1 auto; }

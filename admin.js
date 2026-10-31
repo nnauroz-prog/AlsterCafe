@@ -203,7 +203,6 @@ async function init() {
   dom.resetAll.addEventListener('click', onResetAll);
   document.getElementById('reset-content')?.addEventListener('click', onResetContent);
   dom.passwordForm?.addEventListener('submit', onChangePassword);
-  dom.inviteForm?.addEventListener('submit', onInviteUser);
 
   // Design
   initDesignEditor();
@@ -272,11 +271,6 @@ function cacheDom() {
     newPassword:  document.getElementById('new-password'),
     newPasswordConfirm: document.getElementById('new-password-confirm'),
     passwordStatus: document.getElementById('password-status'),
-    inviteForm:   document.getElementById('invite-form'),
-    inviteEmail:  document.getElementById('invite-email'),
-    invitePassword: document.getElementById('invite-password'),
-    inviteStatus: document.getElementById('invite-status'),
-    userList:     document.getElementById('user-list'),
     year:         document.getElementById('year'),
     // Overview / Workspace
     overviewView: document.getElementById('overview-view'),
@@ -386,7 +380,6 @@ async function showDashboard() {
   const email = await (window.alsterDb?.auth.getEmail()) || DISPLAY_USER;
   if (dom.userBadge)    dom.userBadge.textContent = email;
   if (dom.accountEmail) dom.accountEmail.textContent = email;
-  await renderUserList();
   // Begrüßung: „Moin!“ + heutiges Datum (statt nur „Mitgliederbereich“)
   if (dom.welcome) {
     const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -948,7 +941,7 @@ function renderWeek() {
     }));
   });
 
-  dom.dayGrid.querySelectorAll('.day-toggle input').forEach(cb => {
+  dom.dayGrid.querySelectorAll('.day-toggle:not(.day-toggle-croque) input').forEach(cb => {
     const card = cb.closest('.day-card');
     cb.addEventListener('change', () => card.classList.toggle('is-closed', cb.checked));
   });
@@ -1017,7 +1010,12 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
     <label class="day-toggle">
       <input type="checkbox" name="${fieldPrefix}-closed" ${saved.closed ? 'checked' : ''} />
       <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
-      <span class="day-toggle-text">An diesem Tag geschlossen</span>
+      <span class="day-toggle-text">An diesem Tag kein Mittagstisch</span>
+    </label>
+    <label class="day-toggle day-toggle-croque">
+      <input type="checkbox" name="${fieldPrefix}-croque" ${saved.croque ? 'checked' : ''} />
+      <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
+      <span class="day-toggle-text">Croques als Alternative anbieten</span>
     </label>
   `;
   return card;
@@ -1032,8 +1030,10 @@ function readFormToWeek() {
     const dish2 = (data.get(`${day.key}-dish2`) || '').toString().trim();
     const side2 = (data.get(`${day.key}-side2`) || '').toString().trim();
     const closed = data.get(`${day.key}-closed`) === 'on';
+    const croque = closed && data.get(`${day.key}-croque`) === 'on';
     if (dish || side || dish2 || side2 || closed) {
       week[day.key] = { dish, side, closed };
+      if (croque) week[day.key].croque = true;
       // Zweites Gericht nur speichern, wenn eingetragen (ältere Einträge bleiben gleich)
       if (dish2 || side2) { week[day.key].dish2 = dish2; week[day.key].side2 = side2; }
     }
@@ -1361,7 +1361,7 @@ function weekShareData() {
     const dishes = [{ dish: e.dish, side: e.side }, { dish: e.dish2, side: e.side2 }]
       .map(x => ({ dish: String(x.dish || '').trim(), side: String(x.side || '').trim() }))
       .filter(x => x.dish);
-    return { label: d.label, date, closed: !!e.closed, dishes: e.closed ? [] : dishes, weekend: i >= 5 };
+    return { label: d.label, date, closed: !!e.closed, croque: !!(e.closed && e.croque), dishes: e.closed ? [] : dishes, weekend: i >= 5 };
   }).filter(d => !d.weekend || d.dishes.length);
   const sunday = new Date(currentMonday); sunday.setDate(sunday.getDate() + 6);
   const dm = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
@@ -1395,7 +1395,7 @@ function buildWeekPosterHtml(data) {
   const density = load > 16 ? 'dense xdense' : load > 11 ? 'dense' : '';
   const rows = data.days.map(d => {
     let body;
-    if (d.closed) body = '<p class="none">Kein Mittagstisch</p>';
+    if (d.closed) body = `<p class="none">Kein Mittagstisch${d.croque ? ' · Croques als Alternative' : ''}</p>`;
     else if (!d.dishes.length) body = '<p class="none">Folgt in Kürze</p>';
     else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}`)
       .join('<p class="or"><span>oder</span></p>');
@@ -1520,7 +1520,7 @@ function drawWeekImage(data, logo) {
   const measure = (d, k) => {
     const dishPx = Math.round(40 * k), sidePx = Math.round(25 * Math.max(k, 0.8)), orPx = 19;
     const parts = [];
-    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? 'Kein Mittagstisch' : 'Folgt in Kürze', h: 34 });
+    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? (d.croque ? 'Kein Mittagstisch · Croques als Alternative' : 'Kein Mittagstisch') : 'Folgt in Kürze', h: 34 });
     d.dishes.forEach((x, i) => {
       if (i) parts.push({ kind: 'or', h: orPx + 18 });
       spacing(0); ctx.font = `400 ${dishPx}px Fraunces, Georgia, serif`;
@@ -2307,59 +2307,6 @@ async function onChangePassword(e) {
   } else {
     setStatus(dom.passwordStatus, result.error || 'Speichern fehlgeschlagen.', 'error');
   }
-}
-
-async function onInviteUser(e) {
-  e.preventDefault();
-  const email = dom.inviteEmail.value.trim();
-  const password = dom.invitePassword.value;
-  if (!email || password.length < 8) {
-    setStatus(dom.inviteStatus, 'E-Mail und Passwort (mind. 8 Zeichen) erforderlich.', 'error');
-    return;
-  }
-  setStatus(dom.inviteStatus, 'Konto wird angelegt …');
-  const result = await window.alsterDb.auth.inviteUser(email, password);
-  if (result.ok) {
-    dom.inviteForm.reset();
-    setStatus(dom.inviteStatus,
-      `Zugang für ${email} wurde angelegt.`,
-      'ok');
-    await renderUserList();
-  } else {
-    setStatus(dom.inviteStatus, result.error || 'Anlegen fehlgeschlagen.', 'error');
-  }
-}
-
-async function renderUserList() {
-  if (!dom.userList) return;
-  const users = await (window.alsterDb?.auth.listUsers?.() || []);
-  const currentEmail = await window.alsterDb?.auth.getEmail();
-  if (!users.length) {
-    dom.userList.innerHTML = '';
-    return;
-  }
-  dom.userList.innerHTML = users.map(u => {
-    const isMe = u.email.toLowerCase() === (currentEmail || '').toLowerCase();
-    return `
-      <li class="user-list-item">
-        <div class="user-list-info">
-          <span class="user-list-email">${escapeHtml(u.email)}</span>
-          ${isMe ? '<span class="user-list-tag">Sie</span>' : ''}
-        </div>
-        ${isMe ? '' : `<button type="button" class="btn-icon user-remove" data-email="${escapeAttr(u.email)}" aria-label="Mitarbeiter entfernen" title="Mitarbeiter entfernen">
-          <svg class="ico ico-sm"><use href="#i-x"/></svg>
-        </button>`}
-      </li>
-    `;
-  }).join('');
-  dom.userList.querySelectorAll('.user-remove').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const email = btn.dataset.email;
-      if (!(await askConfirm(`${email} kann sich danach nicht mehr anmelden.`, { title: 'Zugang entfernen?', ok: 'Entfernen' }))) return;
-      await window.alsterDb.auth.removeUser(email);
-      await renderUserList();
-    });
-  });
 }
 
 /* ---------- Helpers ---------- */
