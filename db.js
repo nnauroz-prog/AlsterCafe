@@ -25,7 +25,7 @@
     : null;
 
   // Schlüssel die wir in beiden Modi unterstützen
-  const SYNCED_KEYS = ['weekly-menu', 'menu', 'specials', 'hours', 'notice', 'content', 'design', 'broetchen-items', 'holidays', 'berliner-items', 'berliner-settings'];
+  const SYNCED_KEYS = ['weekly-menu', 'menu', 'specials', 'hours', 'notice', 'content', 'design', 'broetchen-items', 'holidays', 'berliner-items', 'berliner-settings', 'jobs'];
   const PREFIX = 'alstercafe.';
 
   // Letzter Schreibfehler (Insert/Update/Delete gegen Supabase), damit der
