@@ -11496,6 +11496,3 @@ body:not(.admin-body) .about-text .features .ico {
 }
 .admin-body .login-card .login-stamp { position: static !important; display: block; margin-top: 22px; text-align: center; font-size: .78rem; color: #8A7768; }
 .admin-body .login-card .staff-login { margin-top: 18px; }
-/* Sicherung: Einspielen-Knopf gleichwertig neben Herunterladen */
-#backup-card .upload-btn { text-transform: none !important; letter-spacing: .01em !important; font-size: .95rem !important; border: 1px solid var(--soft-line-2, rgba(42,24,16,.12)) !important; border-radius: 999px !important; padding: 0 20px !important; min-height: 48px; display: inline-flex; align-items: center; gap: 8px; background: #fff !important; }
-#backup-card .upload-btn::after { display: none !important; }

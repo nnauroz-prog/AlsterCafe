@@ -228,13 +228,3 @@ Authenticator, Authy) — beim Login wird zusätzlich ein 6-stelliger Code
 abgefragt.
 
 Dringend empfohlen für die echte Inhaber-E-Mail.
-
-## Sicherung der Webseiten-Inhalte
-
-- **Automatisch:** `.github/workflows/backup.yml` sichert jeden Sonntag (03:41 UTC) alle Inhalte der
-  Tabelle `content` plus hochgeladene Bilder in den Zweig `backups` (`backups/JJJJ-MM-TT/`,
-  neueste immer in `backups/latest.json`). Keine Gästedaten. Leere/fehlerhafte Antworten brechen
-  ab, damit nie eine leere Sicherung entsteht. Manuell: GitHub → Actions → „Wöchentliche
-  Sicherung“ → „Run workflow“. Vercel baut den Zweig `backups` nicht (vercel.json).
-- **Von Hand:** Mitgliederbereich → Konto → Sicherung → „Sicherung jetzt herunterladen“ /
-  „Sicherung einspielen“ (gleiches Dateiformat).

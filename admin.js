@@ -204,8 +204,6 @@ async function init() {
   document.getElementById('berliner-items-form')?.addEventListener('submit', (e) => { e.preventDefault(); runSave('berliner-items-form', () => onSaveBerlinerItems(e)); });
   document.getElementById('berliner-add')?.addEventListener('click', () => addBerlinerRow());
   document.getElementById('berliner-print')?.addEventListener('click', printBerlinerBake);
-  document.getElementById('backup-download')?.addEventListener('click', downloadBackup);
-  document.getElementById('backup-file')?.addEventListener('change', (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) restoreBackup(f); });
   document.getElementById('berliner-include-done')?.addEventListener('change', renderBerlinerBake);
   // Live-Vorschau der Prüfliste beim Tippen (ohne zu speichern)
   document.getElementById('berliner-settings-form')?.addEventListener('input', () => renderBerlinerChecklist(readBerlinerForm()));
@@ -3514,52 +3512,4 @@ function sparkleCard(id) {
     card.appendChild(burst);
     setTimeout(() => { burst.remove(); card.classList.remove('just-done'); }, 1200);
   });
-}
-
-
-/* ---------- Sicherung: herunterladen / einspielen (nur Webseiten-Inhalte, keine Gästedaten) ---------- */
-const BACKUP_KEYS = {
-  'weekly-menu': 'Mittagstisch', 'menu': 'Speisekarte', 'specials': 'Sommer-Specials', 'hours': 'Öffnungszeiten',
-  'holidays': 'Schließtage', 'notice': 'Hinweis', 'content': 'Texte der Webseite', 'design': 'Bilder & Farben',
-  'broetchen-items': 'Brötchen-Sorten', 'berliner-items': 'Berliner-Sorten', 'berliner-settings': 'Berliner-Aktion'
-};
-function downloadBackup() {
-  const inhalte = {};
-  Object.keys(BACKUP_KEYS).forEach(k => { const v = window.alsterDb?.get(k); if (v !== null && v !== undefined) inhalte[k] = v; });
-  const doc = { format: 'alstercafe-sicherung', version: 1, erstellt: new Date().toISOString(), quelle: 'Mitgliederbereich', inhalte };
-  const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `alstercafe-sicherung-${todayIso()}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  setStatus(bEl('backup-status'), `Sicherung heruntergeladen · ${Object.keys(inhalte).length} ${Object.keys(inhalte).length === 1 ? 'Bereich' : 'Bereiche'}.`, 'ok');
-  logActivity('Sicherung heruntergeladen');
-}
-async function restoreBackup(file) {
-  const st = bEl('backup-status');
-  let doc;
-  try { doc = JSON.parse(await file.text()); } catch { setStatus(st, 'Die Datei ist keine gültige Sicherung (kein lesbares Format). Nichts geändert.', 'error'); return; }
-  const inhalte = doc && doc.format === 'alstercafe-sicherung' && doc.inhalte && typeof doc.inhalte === 'object' ? doc.inhalte : null;
-  if (!inhalte) { setStatus(st, 'Die Datei ist keine Alstercafé-Sicherung. Nichts geändert.', 'error'); return; }
-  const keys = Object.keys(inhalte).filter(k => BACKUP_KEYS[k] && inhalte[k] !== null && inhalte[k] !== undefined);
-  if (!keys.length) { setStatus(st, 'Die Sicherung enthält keine Inhalte. Nichts geändert.', 'error'); return; }
-  const when = doc.erstellt ? new Date(doc.erstellt) : null;
-  const whenTxt = when && !isNaN(when) ? when.toLocaleString('de-DE', { dateStyle: 'long', timeStyle: 'short' }) : 'unbekannt';
-  if (dirtyForms.size && !(await confirmLeave())) return;
-  const ok = await askConfirm(`Stand vom ${whenTxt}. Enthalten: ${keys.map(k => BACKUP_KEYS[k]).join(', ')}. Diese Bereiche werden durch die Sicherung ersetzt – andere bleiben unverändert. Reservierungen und Bestellungen sind nicht betroffen.`,
-    { title: 'Sicherung einspielen?', ok: 'Einspielen' });
-  if (!ok) return;
-  setStatus(st, 'Wird eingespielt …');
-  const results = [];
-  for (const k of keys) { results.push(await window.alsterDb.set(k, inhalte[k]).catch(() => false)); }
-  const failed = results.filter(x => x === false).length;
-  Object.keys(GUARDED_FORMS).forEach(markClean);
-  try {
-    renderWeek(); renderNotice(); renderMenuEditor(); renderSpecialsEditor(); renderHoursEditor(); renderHolidaysEditor();
-    renderDesignEditor(); renderBroetchenEditor(); renderBerlinerAdmin(); renderOverviewSummary(); renderOwnerCalendar();
-  } catch (e) { console.warn(e); }
-  if (failed) { setStatus(st, `${keys.length - failed} von ${keys.length} Bereichen eingespielt – ${failed} fehlgeschlagen. Bitte Verbindung prüfen und erneut versuchen.`, 'error'); warnWriteFailed(); return; }
-  setStatus(st, `Eingespielt · ${keys.length} ${keys.length === 1 ? 'Bereich' : 'Bereiche'} vom ${whenTxt} – jetzt auf der Webseite sichtbar.`, 'ok');
-  logActivity('Sicherung eingespielt');
 }
