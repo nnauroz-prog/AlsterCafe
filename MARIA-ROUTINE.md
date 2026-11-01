@@ -20,6 +20,8 @@
 3. **„Wochenplan speichern"** ganz unten (grüner Knopf)
 4. Auf der Startseite checken: erscheint das Gericht oben?
 
+**💶 Preis & „Mittagstisch bis" (freiwillig):** Über dem Tagesraster stehen zwei Felder. Leer lassen = auf der Webseite steht kein Preis und keine Uhrzeit. Eine neue Woche übernimmt die Angaben der zuletzt gespeicherten Woche.
+
 **🎯 Sonntag-Trick:** Am Sonntag-Abend gleich die GANZE neue Woche eintragen.
 Dann ist Mo–Fr morgens nur „Hauptgericht überprüfen".
 

@@ -7,3 +7,7 @@ tests/
 netlify.toml
 _headers
 node_modules/
+# Test-/Audit-Screenshots (gehören nicht ins Repo/Deploy)
+/*-1280.png
+/*-390.png
+/screenshots/

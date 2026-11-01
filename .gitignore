@@ -1,2 +1,6 @@
 node_modules
 .DS_Store
+# Test-/Audit-Screenshots (gehören nicht ins Repo/Deploy)
+/*-1280.png
+/*-390.png
+/screenshots/

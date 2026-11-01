@@ -11,9 +11,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r221" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r221" />
-  <script>(function(){var V='2026-05-10-r221';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r222" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r222" />
+  <script>(function(){var V='2026-05-10-r222';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -397,6 +399,18 @@
           </div>
 
           <form id="menu-form" class="menu-form">
+            <!-- Optionale Wochenangaben: leer lassen = auf der Webseite nicht zu sehen -->
+            <div class="week-facts" id="week-facts">
+              <label class="day-field week-facts-field">
+                <span class="day-field-label">Preis Mittagstisch (optional)</span>
+                <input type="text" name="week-price" id="week-price" inputmode="decimal" placeholder="z. B. 9,90" />
+              </label>
+              <label class="day-field week-facts-field">
+                <span class="day-field-label">Mittagstisch bis (optional)</span>
+                <input type="text" name="week-until" id="week-until" inputmode="numeric" placeholder="z. B. 14:30" />
+              </label>
+              <p class="week-facts-help">Leer lassen = wird nicht angezeigt. Der Preis gilt für alle Gerichte der Woche – bei einem einzelnen Gericht lässt sich in der Tageskarte ein abweichender Preis eintragen. Eine neue Woche übernimmt die Angaben der zuletzt gespeicherten Woche.</p>
+            </div>
             <div class="day-grid" id="day-grid"></div>
 
             <div class="save-bar">
@@ -501,6 +515,11 @@
                 <input type="text" id="specials-title" placeholder="Sommer-Specials" />
               </label>
             </p>
+            <!-- Optionaler Zeitraum: leer = immer sichtbar (wie bisher) -->
+            <div class="berliner-dates specials-dates">
+              <label><span>Zeigen ab (optional)</span><input type="date" id="specials-from" /></label>
+              <label><span>Zeigen bis (optional)</span><input type="date" id="specials-to" /></label>
+            </div>
             <div class="menu-sections" id="specials-sections"></div>
             <button type="button" class="btn btn-link menu-add-section" id="specials-add-section">
               <svg class="ico ico-sm"><use href="#i-plus"/></svg>
@@ -569,7 +588,7 @@
                 <ul>
                   <li>Tragen Sie je Zeile ein <strong>Datum</strong> ein, an dem geschlossen ist (z. B. Betriebsurlaub oder Feiertag). Rechts optional ein kurzer <strong>Grund</strong> („Betriebsurlaub“, „1. Weihnachtstag“).</li>
                   <li><strong>„+ Tag hinzufügen“</strong> für einen weiteren Eintrag, das Papierkorb-Symbol entfernt eine Zeile. Für mehrere Urlaubstage einfach mehrere Zeilen anlegen.</li>
-                  <li>An einem solchen Tag zeigt die Webseite automatisch <strong>„Heute geschlossen“</strong> (Banner + Status) — ganz ohne weiteres Zutun.</li>
+                  <li>An einem solchen Tag zeigt die Webseite automatisch <strong>„Heute geschlossen“</strong> (Banner + Status) — ganz ohne weiteres Zutun. Bis zu 3 Wochen vorher steht unter den Öffnungszeiten „Demnächst geschlossen“, ab 7 Tage vorher erscheint zusätzlich ein Hinweis oben auf der Seite (solange kein Hinweis-Banner aktiv ist). Die eingefügten Hamburger Feiertage deshalb nur behalten, wenn das Café wirklich zu hat.</li>
                   <li><strong>Mehrere Tage am Stück</strong> (z. B. Betriebsurlaub): oben bei „Zeitraum hinzufügen“ von–bis eintragen → für jeden Tag entsteht automatisch eine Zeile.</li>
                   <li><strong>„Feiertage Hamburg einfügen“</strong> trägt die gesetzlichen Feiertage der nächsten 12 Monate ein. Nur speichern, wenn das Café an diesen Tagen wirklich zu hat – sonst einzelne Zeilen wieder entfernen.</li>
                   <li>Unten auf <strong>„Schließtage speichern“</strong>. Vergangene Tage entfernt der Knopf „Vergangene Tage entfernen“.</li>
@@ -1146,11 +1165,11 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r221" defer></script>
-  <script src="db.js?v=2026-05-10-r221" defer></script>
-  <script src="menudata.js?v=2026-05-10-r221" defer></script>
-  <script src="calendar.js?v=2026-05-10-r221" defer></script>
-  <script src="rules.js?v=2026-05-10-r221" defer></script>
-  <script src="admin.js?v=2026-05-10-r221" defer></script>
+  <script src="config.js?v=2026-05-10-r222" defer></script>
+  <script src="db.js?v=2026-05-10-r222" defer></script>
+  <script src="menudata.js?v=2026-05-10-r222" defer></script>
+  <script src="calendar.js?v=2026-05-10-r222" defer></script>
+  <script src="rules.js?v=2026-05-10-r222" defer></script>
+  <script src="admin.js?v=2026-05-10-r222" defer></script>
 </body>
 </html>
