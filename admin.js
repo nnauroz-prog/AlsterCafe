@@ -3462,10 +3462,9 @@ function setBottomBadge(tab, n) {
 /* Zahl zählt sanft hoch (nur Anzeige) */
 function countTo(el, n) {
   if (!el) return;
-  el.textContent = String(n); return; // ohne Zähl-Animation
   const from = parseInt(el.textContent, 10) || 0;
   if (from === n || matchMedia('(prefers-reduced-motion: reduce)').matches || dom.overviewView?.hidden) { el.textContent = String(n); return; }
-  const t0 = performance.now(), dur = 650;
+  const t0 = performance.now(), dur = 450;
   cancelAnimationFrame(el._cnt);
   const step = (t) => {
     const k = Math.min(1, (t - t0) / dur);
@@ -3495,7 +3494,7 @@ function initOverviewArt() {
 }
 /* „Erledigt“: kurzer Gold-Funkenregen an der Karte */
 function sparkleCard(id) {
-  return; // Funkenregen entfernt (ruhige Darstellung)
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   requestAnimationFrame(() => {
     const card = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item');
     if (!card) return;

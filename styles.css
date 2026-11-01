@@ -11379,29 +11379,40 @@ body:not(.admin-body) .about-text .features .ico {
 }
 
 /* ============================================================
-   RUHIG & PROFESSIONELL · alle Bewegungs-/Funkel-Effekte aus
-   Zeichnungen bleiben als stille Illustration.
+   EFFEKTE · verfeinert (ruhiger, langsamer, weniger – aber da)
+   Alles nur ohne „Bewegung reduzieren“.
    ============================================================ */
-.art-spark, .gold-dust, .summary-dust, .spot-light, .done-burst, .specials-sun { display: none !important; }
-:is(.hero-art, .page-art, .dark-art, .closer-art, .summary-art, .specials-art, .error-art, .map-art) *,
-:is(.hero-art, .page-art, .dark-art, .closer-art, .summary-art, .specials-art, .error-art, .map-art),
-:is(.hero-art, .page-art, .closer-art)::before, .map-art .map-pin {
-  animation: none !important; transition: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; transform: none !important;
+@media (prefers-reduced-motion: no-preference) {
+  /* Zeichnungen: ein ruhiger, gleichmäßiger Strich statt gestaffeltem Flackern */
+  :is(.hero-art, .page-art) .art-line { animation-duration: 3.2s !important; animation-timing-function: cubic-bezier(.45, .05, .2, 1) !important; }
+  :is(.hero-art, .page-art) .art-line:nth-of-type(n) { animation-delay: .2s !important; }
+  /* Dampf: langsamer und leiser */
+  :is(.hero-art, .page-art, .closer-art, .summary-art) .art-steam { animation-duration: 6.5s !important; }
+  /* Funkeln: wenige, sanft atmend statt blinkend */
+  :is(.hero-art, .page-art) .art-spark * { animation: art-breathe 5.5s ease-in-out infinite !important; }
+  :is(.hero-art, .page-art) .art-spark *:nth-child(2) { animation-delay: -1.8s !important; }
+  :is(.hero-art, .page-art) .art-spark *:nth-child(3), :is(.hero-art, .page-art) .art-spark *:nth-child(4) { display: none; }
+  /* Morgenlicht: kaum merkliches Atmen */
+  .hero-art::before, .page-art::before { animation-duration: 12s !important; }
+  /* Goldstaub: wenige, kleine, langsame Punkte */
+  .gold-dust i { animation-duration: calc(var(--d) * 1.6) !important; max-width: 4px; max-height: 4px; }
+  .gold-dust i:nth-child(n+8) { display: none; }
+  /* Sommer-Sonne: sehr langsam */
+  .karte-block-specials .specials-sun { animation-duration: 140s !important; opacity: .7; }
+  /* Kerze: ruhiger */
+  :is(.hero-art, .page-art) .art-flame { animation-duration: 4s !important; }
 }
-:is(.hero-art, .page-art, .dark-art, .closer-art, .specials-art, .error-art) .art-fill,
-:is(.hero-art, .page-art) .art-grain, :is(.hero-art, .page-art) .art-sugar, .closer-art .art-fill { opacity: 1 !important; }
-:is(.hero-art, .page-art, .closer-art, .summary-art) .art-steam { opacity: .55 !important; }
-.hero-art::before, .page-art::before, .closer-art::before { opacity: .55 !important; filter: blur(8px); }
-.hero-cinematic > .hero-art { transform: none !important; }
-.anfrage-item.just-done, .anfrage-item.is-spotlit { animation: none !important; }
-.anfrage-item.is-spotlit { box-shadow: 0 0 0 3px rgba(184, 137, 62, .4) !important; }
-#order-count.is-pop { animation: none !important; }
-.save-tick.is-on { animation: none !important; opacity: 1; }
-.save-tick.is-on circle, .save-tick.is-on path { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
-.specials-teaser:hover, .overview-card:hover, .spread-card:hover, .reviews-card:hover { transform: none !important; }
-.faq-item[open] .faq-content { animation: none !important; }
-:is(.reservation-form, .order-form) .form-status.ok { animation: none !important; }
-.hero-art .art-flame, .page-art .art-flame { animation: none !important; }
+@keyframes art-breathe { 0%, 100% { opacity: .25; transform: scale(.85); } 50% { opacity: .6; transform: scale(1); } }
+/* Lichtkegel auf Karten: weicher */
+.spot-light { background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), rgba(214, 168, 92, .10), transparent 65%) !important; transition: opacity .5s ease !important; }
+/* Erledigt-Funken: wenige, klein, kurz */
+.done-burst i { width: 4px !important; height: 4px !important; margin: -2px !important; animation-duration: .7s !important; }
+.done-burst i:nth-child(n+7) { display: none; }
+/* Stückzahl: kleiner Sprung */
+@keyframes count-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); color: #F1D28E; } 100% { transform: scale(1); } }
+/* Specials-Hinweis: Herz in Gold statt Rot */
+.specials-foot::before { content: "♥" !important; color: var(--gold) !important; margin-right: 8px; }
+
 /* Tablet (721–980 px): Reiter-Leiste zweizeilig ohne Überlappung, Speichern-Leiste in Inhaltsbreite */
 @media (min-width: 721px) and (max-width: 980px) {
   .admin-body .admin-tabs { row-gap: 6px !important; padding: 6px !important; }

@@ -3431,10 +3431,80 @@ function escapeHtml(s) {
 function escapeAttr(s) { return escapeHtml(s); }
 
 /* Facelift 4: Lichtkegel auf Karten folgt der Maus (nur echte Maus, ohne reduzierte Bewegung) */
-/* initCardSpotlight: Effekt entfernt (ruhige, professionelle Darstellung) */
+(function initCardSpotlight() {
+  if (document.body && document.body.classList.contains('admin-body')) return;
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const run = () => {
+    document.querySelectorAll('.spread-card, .reviews-card').forEach(card => {
+      if (card.classList.contains('has-spot')) return;
+      const s = document.createElement('span');
+      s.className = 'spot-light'; s.setAttribute('aria-hidden', 'true');
+      card.prepend(s); card.classList.add('has-spot');
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      }, { passive: true });
+    });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 400));
+  else setTimeout(run, 400);
+})();
 
 /* Facelift 5: Goldstaub in dunklen Kapiteln + Tasse im Kopf folgt leicht der Maus */
-/* initGoldDustAndParallax: Effekt entfernt (ruhige, professionelle Darstellung) */
+(function initGoldDustAndParallax() {
+  if (document.body && document.body.classList.contains('admin-body')) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const run = () => {
+    // Goldstaub nur am Computer, wenige Punkte (ruhig)
+    if (matchMedia('(min-width: 981px)').matches) document.querySelectorAll('.chapter-dark').forEach(sec => {
+      if (sec.querySelector(':scope > .gold-dust')) return;
+      const box = document.createElement('div');
+      box.className = 'gold-dust'; box.setAttribute('aria-hidden', 'true');
+      for (let i = 0; i < 7; i++) {
+        const p = document.createElement('i');
+        p.style.setProperty('--x', (6 + Math.random() * 88).toFixed(1) + '%');
+        p.style.setProperty('--s', (2 + Math.random() * 2).toFixed(1) + 'px');
+        p.style.setProperty('--d', (16 + Math.random() * 10).toFixed(1) + 's');
+        p.style.setProperty('--dl', (-Math.random() * 26).toFixed(1) + 's');
+        box.appendChild(p);
+      }
+      sec.prepend(box);
+    });
+    const art = document.querySelector('.hero-cinematic > .hero-art');
+    if (!art || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    // Tasse folgt der Maus nur minimal und weich (Trägheit statt Ruckeln)
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const tick = () => {
+      cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08;
+      const lift = Math.min(window.scrollY, 600) * -0.04;
+      art.style.transform = `translate3d(${cx.toFixed(2)}px, ${(cy + lift).toFixed(2)}px, 0)`;
+      raf = (Math.abs(tx - cx) > 0.05 || Math.abs(ty - cy) > 0.05) ? requestAnimationFrame(tick) : 0;
+    };
+    const queue = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    window.addEventListener('pointermove', e => {
+      tx = (e.clientX / window.innerWidth - 0.5) * 8;
+      ty = (e.clientY / window.innerHeight - 0.5) * 6;
+      queue();
+    }, { passive: true });
+    window.addEventListener('scroll', queue, { passive: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 300));
+  else setTimeout(run, 300);
+})();
 
 /* Facelift 6: Stückzahl der Bestellung „springt“, wenn sie sich ändert */
-/* initOrderCountPop: Effekt entfernt (ruhige, professionelle Darstellung) */
+(function initOrderCountPop() {
+  const run = () => {
+    const el = document.getElementById('order-count');
+    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let last = el.textContent;
+    new MutationObserver(() => {
+      if (el.textContent === last) return;
+      last = el.textContent;
+      el.classList.remove('is-pop'); void el.offsetWidth; el.classList.add('is-pop');
+    }).observe(el, { childList: true, characterData: true, subtree: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+})();
