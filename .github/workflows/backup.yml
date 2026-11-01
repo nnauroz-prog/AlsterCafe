@@ -1,0 +1,66 @@
+name: Wöchentliche Sicherung
+
+# Sichert jeden Sonntag alle Webseiten-Inhalte (Mittagstisch, Speisekarte,
+# Sommer-Specials, Sorten, Berliner, Öffnungszeiten, Schließtage, Hinweis,
+# Texte, Bilder-Einstellungen + hochgeladene Bilder) in den Zweig `backups`.
+# KEINE Gästedaten: Reservierungen und Bestellungen werden nicht gelesen.
+#
+# Ablage: backups/JJJJ-MM-TT/sicherung.json  (+ images/)
+#         backups/latest.json                (immer die neueste)
+# Einspielen: Mitgliederbereich → Konto → Sicherung → „Sicherung einspielen“.
+#
+# Geplante Läufe starten nur vom Default-Branch (main). Manuell jederzeit
+# über „Run workflow“. Öffentliche Werte wie in keepalive.yml.
+
+on:
+  schedule:
+    - cron: "41 3 * * 0"   # sonntags 03:41 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "content-backup"
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    env:
+      SUPABASE_URL: "https://jsepktfpdlgezzncmbxz.supabase.co"
+      SUPABASE_ANON_KEY: "sb_publishable_a1vXLZgs185839v7G4XRaw_0TLnt7WH"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: Zweig „backups“ holen (oder neu anlegen)
+        run: |
+          git clone --quiet "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" store
+          cd store
+          if git ls-remote --exit-code --heads origin backups >/dev/null; then
+            git checkout --quiet backups
+          else
+            git checkout --quiet --orphan backups
+            git rm -rfq . || true
+            printf '# Sicherungen der Alstercafé-Webseite\n\nAutomatisch jeden Sonntag. Neueste: `backups/latest.json`.\nEinspielen im Mitgliederbereich unter Konto → Sicherung.\n' > README.md
+          fi
+
+      - name: Inhalte sichern
+        run: |
+          day=$(date -u +%F)
+          bash src/scripts/backup-content.sh "store/backups/$day"
+          cp "store/backups/$day/sicherung.json" store/backups/latest.json
+          rm -f "store/backups/$day/content.json"
+
+      - name: Speichern
+        run: |
+          cd store
+          git config user.name "Alstercafé Sicherung"
+          git config user.email "sicherung@alstercafe.de"
+          git add -A
+          if git diff --cached --quiet; then echo "Keine Änderungen."; exit 0; fi
+          git commit -qm "Sicherung $(date -u +%F)"
+          git push --quiet origin backups
+          echo "✅ Sicherung gespeichert."
