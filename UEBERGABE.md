@@ -174,6 +174,8 @@ Der gleiche Stempel steht zusätzlich in einem Inline-Script-Block, der bei Mism
 for f in *.html; do sed -i 's/2026-05-10-r81/2026-05-10-r82/g' "$f"; done
 ```
 
+**Vor jedem Push `npm test`.** Der erste Schritt (`tests/version-check.mjs`, auch einzeln per `npm run test:versions`) meldet uneinheitliche `?v=`-/`var V`-Stempel und lokale `.css`/`.js`-Einbindungen ohne `?v=` (Ausnahme `vendor/`, dort steckt die Version im Dateinamen). Hintergrund: `vercel.json` cacht `.css`/`.js` nur **mit** `?v=` ein Jahr lang („immutable“); ohne `?v=` gilt `must-revalidate`. Bilder (`png/webp/jpg`) werden einen Tag gecacht (`stale-while-revalidate` eine Woche), Schriften und `vendor/` ein Jahr. Zusätzlich misst `npm run test:cls` (`tests/cls-audit.mjs`, nicht Teil von `npm test`) die Layout-Sprünge beim Laden aller öffentlichen Seiten in drei Breiten und schlägt über 0,1 an.
+
 ### Branch- & Deploy-Policy
 - Entwickelt wird auf `claude/bakery-website-redesign-vyyXQ` (oder einem neuen Feature-Branch).
 - Push auf den Feature-Branch ⇒ GitHub Action baut automatisch den `gh-pages`-Branch und Live-Site ist binnen ~60 s aktuell.

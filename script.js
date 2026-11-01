@@ -69,9 +69,29 @@ function validateMenu(m) {
 const DAY_KEYS   = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_LABELS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 const DAY_LABELS_EN = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-/* Sprache aus localStorage (von i18n.js gesetzt). Bestimmt, in welcher
-   Sprache die dynamisch erzeugten Datums-/Status-Texte gerendert werden. */
-function alsterLang() { try { return localStorage.getItem('alstercafe.lang') === 'en' ? 'en' : 'de'; } catch (e) { return 'de'; } }
+/* Sprache: zuerst der Link-Parameter ?lang=en|de (teilbare englische Seite),
+   sonst localStorage (von i18n.js gesetzt). Bestimmt, in welcher Sprache die
+   dynamisch erzeugten Datums-/Status-Texte gerendert werden. */
+function alsterLang() {
+  try {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q === 'en' || q === 'de') return q;
+  } catch (e) {}
+  try { return localStorage.getItem('alstercafe.lang') === 'en' ? 'en' : 'de'; } catch (e) { return 'de'; }
+}
+/* Bekannte Schließtag-Namen (Vorschläge aus dem Mitgliederbereich) auf der
+   englischen Seite übersetzen. Frei eingegebene Gründe bleiben wie getippt. */
+const HOLIDAY_EN = {
+  'Neujahr': 'New Year’s Day', 'Karfreitag': 'Good Friday', 'Ostermontag': 'Easter Monday',
+  'Tag der Arbeit': 'Labour Day', 'Christi Himmelfahrt': 'Ascension Day', 'Pfingstmontag': 'Whit Monday',
+  'Tag der Deutschen Einheit': 'German Unity Day', 'Reformationstag': 'Reformation Day',
+  '1. Weihnachtstag': 'Christmas Day', '2. Weihnachtstag': 'Boxing Day',
+  'Betriebsurlaub': 'Annual holiday', 'Urlaub': 'Holiday', 'Feiertag': 'Public holiday'
+};
+function holidayLabel(label) {
+  const l = String(label || '').trim();
+  return alsterLang() === 'en' ? (HOLIDAY_EN[l] || l) : l;
+}
 function dateLocale() { return alsterLang() === 'en' ? 'en-GB' : 'de-DE'; }
 function dayLabels() { return alsterLang() === 'en' ? DAY_LABELS_EN : DAY_LABELS; }
 
@@ -309,6 +329,34 @@ function noteGermanOnlyLegal() {
   (h1 || art.firstChild) && art.insertBefore(p, h1 ? h1.nextSibling : art.firstChild);
 }
 
+/* Späte Backend-Daten (Antwort kam erst nach dem 2,5-s-Limit): nur die
+   idempotenten Render-Funktionen erneut aufrufen — dieselben wie im
+   subscribe-Switch unten. Bewusst NICHT erneut: initLiveStatus (Minuten-Timer),
+   attachDateHints (Listener), setInterval und subscribe — die liefen bereits.
+   Mengen und Eingaben in den Bestellformularen bleiben erhalten
+   (refreshOrderSorts übernimmt gewählte Mengen, Datumsfelder bleiben gesetzt). */
+function rerenderData() {
+  const run = (fn) => { try { fn(); } catch (e) { console.warn('rerender err:', e); } };
+  run(initDesign);
+  // Texte nicht überschreiben, während der Inhaber gerade ein Feld bearbeitet
+  run(() => { if (!document.activeElement?.closest?.('[data-editable]')) initContent(); });
+  run(initNotice);
+  run(initHolidays);
+  run(initMenu);
+  run(initSpecialsTeaser);
+  run(initHours);
+  run(updateLiveStatus);
+  run(initNavExtra);
+  run(initLunchWeek);
+  run(initLandingTeaser);
+  run(() => { if (refreshOrderSorts) refreshOrderSorts(); });
+  run(initBerlinerPromo);
+  run(initBerlinerPage);
+  run(syncBusinessSchema);
+  // Datumshinweise nur aktualisieren (Öffnungszeiten/Schließtage können neu sein)
+  run(() => document.querySelectorAll('input[name="Datum"]').forEach(i => i.__dateHintUpdate?.()));
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -343,9 +391,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 2) Erst jetzt aufs Backend warten — und nur die DATEN-abhängigen Teile
   //    danach rendern (Speisekarte, Öffnungszeiten, Mittagstisch, Hinweis,
   //    hochgeladene Bilder/Texte, Live-Status).
-  try {
-    if (window.alsterDb) await window.alsterDb.ready();
-  } catch (e) { console.warn('db ready err:', e); }
+  //    Höchstens 2,5 s warten: Hängt das Backend, zeigt die Seite den Stand aus
+  //    dem Browser-Cache bzw. die Standardwerte. Kommen die Daten später doch an,
+  //    baut rerenderData() die datenabhängigen Bereiche still neu auf.
+  let hydrated = false;
+  const readyP = (window.alsterDb
+    ? Promise.resolve().then(() => window.alsterDb.ready())
+    : Promise.resolve()
+  ).catch(e => { console.warn('db ready err:', e); }).then(() => { hydrated = true; });
+  await Promise.race([readyP, new Promise(r => setTimeout(r, 2500))]);
+  if (!hydrated) readyP.then(() => safeRun(rerenderData));
 
   safeRun(initDesign);
   safeRun(initContent);
@@ -368,8 +423,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(() => document.querySelectorAll('input[name="Datum"]').forEach(i => i.__dateHintUpdate?.()));
   // Bestellzeitraum kann um Mitternacht beginnen/enden
   setInterval(() => { safeRun(initBerlinerPromo); safeRun(initBerlinerPage); }, 5 * 60 * 1000);
-  // Startseite: um 15 Uhr von „Heute“ auf „Morgen“ wechseln, auch wenn die Seite offen bleibt
-  setInterval(() => { if (!document.hidden) safeRun(initLandingTeaser); }, 5 * 60 * 1000);
+  // Nach Ladenschluss von „Heute“ auf „Morgen“ wechseln (Startseite + Mittagstisch-Seite) und
+  // Schließtage-Hinweise nach Mitternacht nachziehen, auch wenn die Seite offen bleibt
+  setInterval(() => {
+    if (document.hidden) return;
+    safeRun(initLandingTeaser); safeRun(initLunchWeek); safeRun(initHolidays);
+  }, 5 * 60 * 1000);
 
   // Live-Sync: jede Aenderung im Backend (auch von einem anderen Geraet
   // des Inhabers) erscheint sofort auf dieser Seite
@@ -379,7 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     switch (key) {
       case 'design':      initDesign(); break;
       case 'content':     initContent(); break;
-      case 'notice':      initNotice(); break;
+      case 'notice':      initNotice(); initHolidays(); break; // Vorab-Hinweis weicht dem Hinweis-Banner
       case 'holidays':    initHolidays(); updateLiveStatus(); initLunchWeek(); initLandingTeaser(); syncBusinessSchema(); break;
       case 'menu':        initMenu(); break;
       case 'specials':    initMenu(); initSpecialsTeaser(); break;
@@ -407,6 +466,16 @@ function initContent() {
         && content[key].length < 5000) {
       el.innerHTML = content[key];
     }
+  });
+  // Hero-Eyebrow: Trenner „·“ hängen per geschütztem Leerzeichen am Wort davor,
+  // damit am Handy keine Zeile mit „·“ beginnt. Steht hier, weil hero.eyebrow
+  // editierbar ist und oben per innerHTML ersetzt wird (auch nach dem Supabase-
+  // Sync, case 'content'). Nur schreiben, wenn sich etwas ändert – sonst würde
+  // der bereits übersetzte Textknoten (i18n) unnötig ersetzt.
+  document.querySelectorAll('.hero-eyebrow').forEach(el => {
+    const html = el.innerHTML;
+    const fixed = html.replace(/\s+·\s+/g, '&nbsp;· ');
+    if (fixed !== html) el.innerHTML = fixed;
   });
 }
 
@@ -446,6 +515,67 @@ function todayIsoLocal() {
 function todayHoliday() {
   const iso = todayIsoLocal();
   return getHolidays().find(h => h && h.date === iso) || null;
+}
+/* Kommende Schließtage (gleicher Key 'holidays'): von morgen bis heute + days.
+   Direkt aufeinanderfolgende Tage mit gleichem Grund werden zu einem Zeitraum
+   {from, to, label} zusammengefasst (ISO-Datum, Grund wie eingetippt). */
+function upcomingClosures(days = 21) {
+  const today = isoLocal(new Date());
+  const min = addDaysIso(today, 1), max = addDaysIso(today, days);
+  const list = getHolidays()
+    .filter(h => h && /^\d{4}-\d{2}-\d{2}$/.test(String(h.date || '')) && h.date >= min && h.date <= max)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const blocks = [];
+  list.forEach(h => {
+    const label = String(h.label || '').trim();
+    const last = blocks[blocks.length - 1];
+    if (last && last.to === h.date) return; // doppelt eingetragener Tag
+    if (last && last.label === label && addDaysIso(last.to, 1) === h.date) { last.to = h.date; return; }
+    blocks.push({ from: h.date, to: h.date, label });
+  });
+  return blocks;
+}
+// Kurzes Datum für Schließtage: DE „Do, 24.12.“, EN „Thu 24 Dec“
+function closureDateText(iso, en) {
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  const wd = (en ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'])[(d.getDay() + 6) % 7];
+  return en ? `${wd} ${d.getDate()} ${d.toLocaleDateString('en-GB', { month: 'short' })}` : `${wd}, ${d.getDate()}.${d.getMonth() + 1}.`;
+}
+function closureRangeText(b, en) {
+  return b.from === b.to ? closureDateText(b.from, en) : `${closureDateText(b.from, en)} – ${closureDateText(b.to, en)}`;
+}
+/* „Demnächst geschlossen: …“ unter den Öffnungszeiten (Startseite, Kontakt) und im Footer.
+   Idempotent: vorhandene Zeilen werden entfernt und neu aufgebaut; ohne kommende
+   Schließtage bleibt nichts stehen. Der Grund ist Inhaber-Eingabe → nur per textContent. */
+function renderUpcomingClosures() {
+  if (document.body.classList.contains('admin-body')) return;
+  document.querySelectorAll('.hours-closures, .footer-closures').forEach(el => el.remove());
+  const blocks = upcomingClosures(21);
+  if (!blocks.length) return;
+  const en = alsterLang() === 'en';
+  const build = (tag, cls) => {
+    const el = document.createElement(tag);
+    el.className = cls;
+    el.setAttribute('data-no-i18n', '');
+    // Kein <span> als erstes Kind: die Punktlinie der Öffnungszeiten hängt an span:first-child
+    const label = document.createElement('b');
+    label.className = 'hours-closures-label';
+    label.textContent = en ? 'Closed soon:' : 'Demnächst geschlossen:';
+    el.appendChild(label);
+    blocks.slice(0, 2).forEach((b, i) => {
+      el.appendChild(document.createTextNode(i ? (en ? ' and ' : ' und ') : ' '));
+      const item = document.createElement('span');
+      item.className = 'hours-closures-item';
+      item.textContent = closureRangeText(b, en) + (b.label ? ' · ' + holidayLabel(b.label) : '');
+      el.appendChild(item);
+    });
+    if (blocks.length > 2) el.appendChild(document.createTextNode(en ? ' + more' : ' + weitere'));
+    return el;
+  };
+  document.querySelectorAll('#hours-list').forEach(list => list.appendChild(build('li', 'hours-closures')));
+  document.querySelectorAll('.footer-col-hours .footer-hours-lines').forEach(lines => lines.after(build('p', 'footer-closures')));
 }
 
 /* ---------- Live-Status-Pille ("Aktuell geöffnet") ---------- */
@@ -557,7 +687,7 @@ function nextLunchDay(from) {
    auch wenn im Wochenplan ein Gericht steht. */
 function lunchEntryFor(entry, d) {
   const h = d ? holidayOn(d) : null;
-  return h ? { closed: true, holiday: h.label || '' } : entry;
+  return h ? { closed: true, holiday: holidayLabel(h.label) } : entry;
 }
 function holidayOn(d) {
   const iso = isoLocal(d);
@@ -568,13 +698,29 @@ function openingFor(d) {
   if (holidayOn(d)) return null;
   return getWeekHours()[(d.getDay() + 6) % 7] || null;
 }
+/* Welchen Tag Startseite und Mittagstisch-Seite als Tagesgericht zeigen: bis zur
+   Schlusszeit (Öffnungszeiten des Tages, sonst 15:00) den heutigen Tag, danach den
+   nächsten Kalendertag – abends schauen die Gäste schon nach dem Mittag von morgen. */
+function lunchFocusDate(now = new Date()) {
+  const close = openingFor(now)?.closeMin ?? 15 * 60;
+  const m = now.getHours() * 60 + now.getMinutes();
+  if (m < close) return now;
+  const t = new Date(now); t.setDate(t.getDate() + 1);
+  return t;
+}
+// Nächster Tag mit Öffnungszeiten nach „from“ (überspringt Schließtage), sonst null
+function nextOpenDay(from) {
+  const d = new Date(from);
+  for (let i = 1; i <= 60; i++) { d.setDate(d.getDate() + 1); if (openingFor(d)) return new Date(d); }
+  return null;
+}
 
 function computeLiveStatus() {
   const en = alsterLang() === 'en';
   // Schließtag (Urlaub/Feiertag) hat Vorrang vor den regulären Zeiten
   const hol = todayHoliday();
   if (hol) {
-    const suffix = hol.label ? ' · ' + hol.label : '';
+    const suffix = hol.label ? ' · ' + holidayLabel(hol.label) : '';
     const st = { state: 'closed', text: (en ? 'Closed today' : 'Heute geschlossen') + suffix, holiday: true };
     const next = nextOpening(new Date(), en);
     if (next) st.next = next;
@@ -1180,9 +1326,9 @@ function initNotice() {
         <p id="notice-text"></p>
       </div>
     `;
-    // Direkt OBERHALB der Topbar einsetzen — entspricht der Position
-    // auf index.html (wo der Banner statisch im HTML sitzt).
-    const topbar = document.querySelector('.topbar');
+    // Direkt OBERHALB der Datumsleiste bzw. Topbar einsetzen — entspricht der
+    // Reihenfolge auf index.html: Hinweis, Datumsleiste, Topbar.
+    const topbar = document.querySelector('.edition-strip') || document.querySelector('.topbar');
     if (topbar && topbar.parentNode) {
       topbar.parentNode.insertBefore(banner, topbar);
     } else {
@@ -1218,26 +1364,45 @@ function initNotice() {
 function initHolidays() {
   if (document.body.classList.contains('admin-body')) return;
   let banner = document.getElementById('holiday-banner');
+  const en = alsterLang() === 'en';
   const hol = todayHoliday();
-  if (!hol) { if (banner) banner.hidden = true; return; }
+  // Vorab-Hinweis: beginnt in den nächsten 7 Tagen ein Schließtag, zeigt derselbe Banner
+  // das schon an – aber nur, wenn gerade kein Hinweis-Banner des Inhabers sichtbar ist
+  // (seine Notiz hat Vorrang, keine zwei Banner übereinander).
+  const notice = document.getElementById('notice-banner');
+  const soon = (!hol && (!notice || notice.hidden)) ? (upcomingClosures(7)[0] || null) : null;
+  if (!hol && !soon) { if (banner) banner.hidden = true; renderUpcomingClosures(); return; }
   if (!banner) {
     banner = document.createElement('div');
     banner.className = 'notice-banner holiday-banner';
     banner.id = 'holiday-banner';
     banner.hidden = true;
+    // Eigener Bereich für Hilfstechnik (sonst „Inhalt außerhalb eines Landmarks“)
+    banner.setAttribute('role', 'region');
+    banner.setAttribute('aria-label', en ? 'Closing days' : 'Schließtage');
     banner.innerHTML = `
       <div class="container notice-inner">
-        <span class="notice-tag">Geschlossen</span>
-        <p id="holiday-text"></p>
+        <span class="notice-tag" data-no-i18n>Geschlossen</span>
+        <p id="holiday-text" data-no-i18n></p>
       </div>`;
     const topbar = document.querySelector('.topbar');
     if (topbar && topbar.parentNode) topbar.parentNode.insertBefore(banner, topbar);
     else document.body.insertBefore(banner, document.body.firstChild);
   }
-  const en = alsterLang() === 'en';
+  const tag = banner.querySelector('.notice-tag');
+  if (tag) tag.textContent = hol ? (en ? 'Closed' : 'Geschlossen') : (en ? 'Notice' : 'Vorab');
   const txt = banner.querySelector('#holiday-text');
-  if (txt) txt.textContent = (en ? 'Closed today' : 'Heute geschlossen') + (hol.label ? ' — ' + hol.label : '');
+  if (txt) {
+    if (hol) txt.textContent = (en ? 'Closed today' : 'Heute geschlossen') + (hol.label ? ' — ' + holidayLabel(hol.label) : '');
+    else {
+      const lbl = soon.label ? ' · ' + holidayLabel(soon.label) : '';
+      txt.textContent = (soon.from === soon.to
+        ? (en ? `Closed on ${closureDateText(soon.from, en)}` : `Am ${closureDateText(soon.from, false)} geschlossen`)
+        : (en ? `Closed from ${closureDateText(soon.from, en)} to ${closureDateText(soon.to, en)}` : `Vom ${closureDateText(soon.from, false)} bis ${closureDateText(soon.to, false)} geschlossen`)) + lbl;
+    }
+  }
   banner.hidden = false;
+  renderUpcomingClosures();
 }
 
 /* ---------- Speisekarte ----------
@@ -1285,6 +1450,11 @@ function getSpecials() {
   if (!stored) { try { stored = JSON.parse(localStorage.getItem('alstercafe.specials') || 'null'); } catch {} }
   const data = (stored && Array.isArray(stored.sections)) ? stored : window.ALSTERCAFE_SPECIALS_DEFAULT;
   if (!data || data.visible === false) return null;
+  // Optionaler Zeitraum „Zeigen ab/bis“ (Mitgliederbereich): leer = immer, sonst nur innerhalb
+  const isoOk = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
+  const today = isoLocal(new Date());
+  if (isoOk(data.showFrom) && today < data.showFrom) return null;
+  if (isoOk(data.showTo) && today > data.showTo) return null;
   const sections = (data.sections || []).filter(s => s && Array.isArray(s.items) && s.items.some(it => it && it.name));
   return sections.length ? { ...data, sections } : null;
 }
@@ -1304,8 +1474,9 @@ function renderSpecialsBlock(mount) {
   const block = document.createElement('div');
   block.className = 'karte-block karte-block-specials reveal in';
   block.id = 'sommer';
+  // Sonnen-Deko nur, solange die Überschrift „Sommer“ enthält (sonst ruhig ohne)
   block.innerHTML = `
-    <span class="specials-sun" aria-hidden="true"></span>
+    ${/sommer/i.test(sp.title || 'Sommer-Specials') ? '<span class="specials-sun" aria-hidden="true"></span>' : ''}
     <div class="karte-block-head"><svg class="ico"><use href="#i-leaf"/></svg><h2>${escapeHtml(sp.title || 'Sommer-Specials')}</h2></div>
     <div class="specials-groups">${groups}</div>
     ${sp.footnote ? `<p class="specials-foot">${escapeHtml(sp.footnote)}</p>` : ''}`;
@@ -1320,6 +1491,9 @@ function initSpecialsTeaser() {
   if (!sp) return;
   const t = document.getElementById('specials-teaser-title');
   if (t) t.textContent = sp.title || 'Sommer-Specials';
+  // Eisgetränk-Zeichnung passt nur zu „Sommer“ – bei anderem Titel ohne Grafik
+  const art = wrap.querySelector('.specials-art');
+  if (art) art.hidden = !/sommer/i.test(sp.title || 'Sommer-Specials');
   const list = document.getElementById('specials-teaser-list');
   if (list) {
     const names = sp.sections.flatMap(s => s.items.filter(it => it && it.name).map(it => it.name));
@@ -1536,7 +1710,7 @@ function renderKarteHtml(data) {
 function markTodayInHours() {
   const today = (new Date().getDay() + 6) % 7;
   const en = alsterLang() === 'en';
-  document.querySelectorAll('#hours-list li, .landing-visit li, .footer-hours-lines .footer-line').forEach(row => {
+  document.querySelectorAll('#hours-list li:not(.hours-closures), .landing-visit li:not(.hours-closures), .footer-hours-lines .footer-line').forEach(row => {
     const label = row.querySelector('span')?.textContent || '';
     const days = parseDayLabel(label);
     const isToday = Array.isArray(days) && days.includes(today);
@@ -1572,7 +1746,7 @@ function attachDateHints() {
       const hol = holidayOn(d);
       const day = openingFor(d);
       if (hol || !day) {
-        hint.textContent = `${name} · ${en ? 'closed' : 'geschlossen'}${hol?.label ? ' (' + hol.label + ')' : ''}`;
+        hint.textContent = `${name} · ${en ? 'closed' : 'geschlossen'}${hol?.label ? ' (' + holidayLabel(hol.label) + ')' : ''}`;
         hint.className = 'date-hint is-closed';
       } else {
         hint.textContent = `${name} · ${en ? 'open' : 'geöffnet'} ${formatMin(day.openMin)} – ${formatMin(day.closeMin)}${en ? '' : ' Uhr'}`;
@@ -1590,7 +1764,7 @@ function attachDateHints() {
 function initHours() {
   renderFooterHours();
   const root = document.getElementById('hours-list');
-  if (!root) { markTodayInHours(); return; }
+  if (!root) { markTodayInHours(); renderUpcomingClosures(); return; }
   let hours = null;
   try {
     const raw = localStorage.getItem(STORAGE_HOURS);
@@ -1605,6 +1779,7 @@ function initHours() {
     `).join('');
   }
   markTodayInHours();
+  renderUpcomingClosures();
 }
 
 /* ---------- Mittagstisch (Wochenplan) ---------- */
@@ -1612,24 +1787,30 @@ function initLunchWeek() {
   // Nur auf Mittagstisch-Seite aktiv
   if (!document.getElementById('lunch-today') && !document.getElementById('lunch-week-list')) return;
   const today = new Date();
+  // Fokus-Tag: bis Ladenschluss heute, danach morgen (gleiche Regel wie die Startseite)
+  const focus = lunchFocusDate(today);
+  const isTomorrow = !isSameDay(focus, today);
   // Sunday-Spillover (spiegelt admin.js maybeEnableSundaySpillover):
   // Am Sonntag traegt der Inhaber die kommende Woche ein — die Wochenliste
-  // zeigt sie daher sonntags an. Das heutige Sonntags-Gericht wird weiterhin
-  // aus der laufenden Woche geladen (dort speichert admin den Spillover).
+  // zeigt sie daher sonntags an. Das Sonntags-Gericht selbst liegt weiterhin
+  // in der laufenden Woche (dort speichert admin den Spillover).
   const isSunday = today.getDay() === 0;
   const displayMonday = isSunday
     ? mondayOf(new Date(today.getTime() + 86400000))
     : mondayOf(today);
-  const todayWeekData   = loadCurrentWeek(mondayOf(today));
+  const focusWeekData   = loadCurrentWeek(mondayOf(focus));
   const displayWeekData = loadCurrentWeek(displayMonday);
   renderWeekMeta(displayMonday);
-  renderTodayLunch(todayWeekData, today);
-  renderWeekList(displayWeekData, displayMonday, today);
+  renderTodayLunch(focusWeekData, focus, isTomorrow);
+  // Markierung in der Liste wandert mit dem Fokus-Tag, sofern er in der gezeigten Woche liegt
+  const focusShown = isSameDay(mondayOf(focus), displayMonday);
+  renderWeekList(displayWeekData, displayMonday, focusShown ? focus : today);
   injectLunchSchema(displayWeekData, displayMonday);
 }
 
 /* Google: die Wochenkarte als strukturierte Speisekarte (Menu → MenuSection je Tag → MenuItem).
-   Nur Tage mit eingetragenem Gericht; Schließtage/Leertage bleiben weg. Kein Preis (nicht gepflegt). */
+   Nur Tage mit eingetragenem Gericht; Schließtage/Leertage bleiben weg. Ein Preis (offers)
+   steht nur dabei, wenn der Inhaber ihn im Wochenplan eingetragen hat. */
 function injectLunchSchema(weekData, monday) {
   if (!document.getElementById('lunch-week-list')) return;
   try {
@@ -1646,6 +1827,8 @@ function injectLunchSchema(weekData, monday) {
         hasMenuItem: dishes.map(x => {
           const item = { '@type': 'MenuItem', name: x.dish };
           if (x.side) item.description = x.side;
+          const price = lunchPriceFor(weekData, x);
+          if (price != null) item.offers = { '@type': 'Offer', price: price.toFixed(2), priceCurrency: 'EUR' };
           return item;
         })
       });
@@ -1671,9 +1854,70 @@ function injectLunchSchema(weekData, monday) {
    Gerichte als Liste [{ dish, side }] — leere werden ausgelassen. */
 function dayDishes(entry) {
   if (!entry || entry.closed) return [];
-  return [{ dish: entry.dish, side: entry.side }, { dish: entry.dish2, side: entry.side2 }]
-    .map(d => ({ dish: String(d.dish || '').trim(), side: String(d.side || '').trim() }))
+  // price = optionale Abweichung je Gericht (sonst gilt der Wochenpreis, siehe lunchPriceFor)
+  return [{ dish: entry.dish, side: entry.side, price: entry.price }, { dish: entry.dish2, side: entry.side2, price: entry.price2 }]
+    .map(d => ({ dish: String(d.dish || '').trim(), side: String(d.side || '').trim(), price: lunchPriceNum(d.price) }))
     .filter(d => d.dish);
+}
+
+/* ---------- Mittagstisch: optionaler Preis und Ausgabe-Ende (Mitgliederbereich) ----------
+   Gespeichert im Wochenplan ('weekly-menu'): je Woche price (Zahl) und until („14:30“),
+   je Gericht optional price/price2 als Abweichung. Ohne Eintrag erscheint nichts –
+   die Seite sieht dann aus wie bisher. */
+function lunchPriceNum(v) {
+  if (v == null || v === '') return null;
+  return window.AlsterRules?.parseEuro ? window.AlsterRules.parseEuro(v) : null;
+}
+// Preis eines Gerichts: eigener Preis, sonst Wochenpreis, sonst null
+function lunchPriceFor(weekData, dish) {
+  return (dish && dish.price != null) ? dish.price : lunchPriceNum(weekData?.price);
+}
+function lunchPriceText(n) { return n == null ? '' : window.AlsterRules.euroText(n) + ' €'; }
+// Ausgabe-Ende als „HH:MM“ (nur wenn gepflegt und lesbar)
+function lunchUntil(weekData) {
+  const m = String(weekData?.until || '').match(/^(\d{1,2})[:.](\d{2})$/);
+  return (m && +m[1] < 24 && +m[2] < 60) ? `${m[1].padStart(2, '0')}:${m[2]}` : '';
+}
+// Zeile unter dem Tagesgericht, z. B. „12:00 – 14:30 Uhr · 9,90 €“ (Preis nur, wenn er für alle Gerichte gilt)
+function lunchFactsText(weekData, dishes, en) {
+  const parts = [];
+  const until = lunchUntil(weekData);
+  if (until) parts.push(en ? `12:00 – ${until}` : `12:00 – ${until} Uhr`);
+  const prices = dishes.map(d => lunchPriceFor(weekData, d));
+  if (prices.length && prices.every(p => p != null && p === prices[0])) parts.push(lunchPriceText(prices[0]));
+  return parts.join(' · ');
+}
+// Preise einzeln je Gericht nur, wenn sie sich unterscheiden (sonst steht der Preis in der Zeile)
+function lunchPricesDiffer(weekData, dishes) {
+  const prices = dishes.map(d => lunchPriceFor(weekData, d));
+  return prices.some(p => p != null) && !prices.every(p => p === prices[0]);
+}
+// Kleines Info-Element (Preis / Zeile) als Geschwister hinter „anchor“ – ein Element je Klasse und Elternteil
+function setLunchInfo(host, anchor, cls, text) {
+  if (!host || !anchor) return;
+  let el = host.querySelector(`:scope > .${cls}`);
+  if (!text) { el?.remove(); return; }
+  if (!el) { el = document.createElement('p'); el.className = cls; el.setAttribute('data-no-i18n', ''); }
+  anchor.after(el);
+  el.textContent = text;
+}
+function clearLunchFacts(host) { host?.querySelectorAll(':scope > .lunch-facts, :scope > .lunch-price').forEach(el => el.remove()); }
+/* Preis(e) und Infozeile unter dem großen Tagesgericht (Startseite + Mittagstisch-Seite).
+   dishEl/sideEl = erstes Gericht; das zweite steht in .dish-alt (renderAltDish, vorher aufrufen). */
+function renderDishPrices(dishEl, sideEl, entry, weekData, en) {
+  const host = dishEl?.parentElement;
+  if (!host) return;
+  const dishes = dayDishes(entry);
+  const first = (sideEl && !sideEl.hidden) ? sideEl : dishEl;
+  const differ = dishes.length > 1 && lunchPricesDiffer(weekData, dishes);
+  setLunchInfo(host, first, 'lunch-price', differ ? lunchPriceText(lunchPriceFor(weekData, dishes[0])) : '');
+  const alt = host.querySelector(':scope > .dish-alt');
+  if (alt) {
+    const altAnchor = alt.querySelector('.dish-alt-side') || alt.querySelector('.dish-alt-name');
+    setLunchInfo(alt, altAnchor, 'lunch-price', differ ? lunchPriceText(lunchPriceFor(weekData, dishes[1])) : '');
+  }
+  const last = alt || host.querySelector(':scope > .lunch-price') || first;
+  setLunchInfo(host, last, 'lunch-facts', dishes.length ? lunchFactsText(weekData, dishes, en) : '');
 }
 // HTML-Trenner "oder" zwischen zwei Gerichten
 function orDividerHtml(en, cls = 'dish-or') {
@@ -1743,7 +1987,8 @@ async function shareLunch(btn) {
   const text = en
     ? `${when} at Alstercafé: ${names} – from 12:00, Ifflandstraße 45.`
     : `${when} im Alstercafé: ${names} – ab 12 Uhr, Ifflandstraße 45.`;
-  const url = 'https://alstercafe.de/mittagstisch.html';
+  // Auf Englisch geteilt → der Link öffnet beim Empfänger auch die englische Seite
+  const url = 'https://alstercafe.de/mittagstisch.html' + (en ? '?lang=en' : '');
   if (navigator.share) {
     try { await navigator.share({ title: en ? 'Lunch at Alstercafé' : 'Mittagstisch im Alstercafé', text, url }); } catch (e) { /* abgebrochen */ }
     return;
@@ -1781,6 +2026,7 @@ function openLunchSheet(refDate) {
     if (entry?.closed) body = `<span class="lunch-sheet-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch' : 'Kein Mittagstisch')}</span>`;
     else if (dayDishes(entry).length) body = dayDishes(entry).map(d =>
       `<span class="lunch-sheet-dish">${escapeHtml(d.dish)}</span>${d.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(d.side, en))}</span>` : ''}`
+      + (lunchPriceFor(week, d) != null ? `<span class="lunch-sheet-price">${lunchPriceText(lunchPriceFor(week, d))}</span>` : '')
     ).join(orDividerHtml(en, 'lunch-sheet-or'));
     else body = `<span class="lunch-sheet-pending">${en ? 'Coming soon' : 'Folgt in Kürze'}</span>`;
     return `
@@ -1813,6 +2059,7 @@ function openLunchSheet(refDate) {
       <p class="lunch-sheet-kicker">${en ? 'Lunch · from 12:00' : 'Mittagstisch · ab 12:00 Uhr'}</p>
       <h2 class="lunch-sheet-title">${en ? 'This week' : 'Diese Woche'}</h2>
       <p class="lunch-sheet-range">${(en ? 'Week ' : 'KW ') + isoWeek(monday)} · ${formatShort(monday)} – ${formatShort(sunday)}</p>
+      ${lunchUntil(week) ? `<p class="lunch-sheet-facts">${en ? `12:00 – ${lunchUntil(week)}` : `12:00 – ${lunchUntil(week)} Uhr`}</p>` : ''}
       <ul class="lunch-sheet-list">${rows}</ul>
       <div class="lunch-sheet-cta">
         <a class="btn btn-gold" href="reservierung.html">${en ? 'Book a table' : 'Tisch reservieren'}</a>
@@ -1844,9 +2091,9 @@ function initLandingTeaser() {
   if (!block || !dishEl) return;
 
   const now = new Date();
-  const showTomorrow = now.getHours() >= 15;
-  const targetDate = new Date(now);
-  if (showTomorrow) targetDate.setDate(targetDate.getDate() + 1);
+  // Gleiche Regel wie die Mittagstisch-Seite (lunchFocusDate): nach Ladenschluss morgen
+  const targetDate = lunchFocusDate(now);
+  const showTomorrow = !isSameDay(targetDate, now);
 
   const monday = mondayOf(targetDate);
   const weekData = loadCurrentWeek(monday);
@@ -1888,6 +2135,28 @@ function initLandingTeaser() {
       heroLunch.addEventListener('click', () => openLunchSheet(block._targetDate || new Date()));
     }
   }
+  // Hero: ruhige Textzeile „Heute mittag: …“ unter der Status-Pille (nicht klebend).
+  // Gleiche Daten und gleicher Takt wie die Info-Karte; ausgeblendet ohne Gericht
+  // (Schließtag, kein Mittagstisch, Karte folgt). Ein Tipp öffnet das Wochen-Fenster.
+  const liveLunch = document.getElementById('live-lunch');
+  if (liveLunch) {
+    const list = dayDishes(entry);
+    if (!list.length) liveLunch.hidden = true;
+    else {
+      const label = showTomorrow ? (en ? 'Tomorrow:' : 'Morgen mittag:') : (en ? 'Today:' : 'Heute mittag:');
+      const names = list.map(d => d.dish).join(en ? ' or ' : ' oder ');
+      const labelEl = liveLunch.querySelector('.live-lunch-label');
+      const dishEl2 = liveLunch.querySelector('.live-lunch-dish');
+      if (labelEl) labelEl.textContent = label;
+      if (dishEl2) dishEl2.textContent = names;
+      liveLunch.setAttribute('aria-label', `${label} ${names} – ${en ? 'open this week’s menu' : 'Wochenkarte öffnen'}`);
+      liveLunch.hidden = false;
+      if (!liveLunch.dataset.wired) {
+        liveLunch.dataset.wired = '1';
+        liveLunch.addEventListener('click', () => openLunchSheet(block._targetDate || new Date()));
+      }
+    }
+  }
   const hintEl = block.querySelector('.today-feature-week');
   if (hintEl) hintEl.textContent = en ? 'See the whole week ›' : 'Ganze Woche ansehen ›';
   if (prefixEl) prefixEl.textContent = showTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
@@ -1911,10 +2180,12 @@ function initLandingTeaser() {
       if (sideEl) { sideEl.textContent = only.side ? sideText(only.side, en) : ''; sideEl.hidden = !only.side; }
     }
     renderAltDish(sideEl || dishEl, entry, en, true);
+    renderDishPrices(dishEl, sideEl, entry, weekData, en);
   } else if (noLunchButOpen(entry, targetDate)) {
     // Café hat offen, nur kein Mittagstisch (z. B. Wochenende) – nicht „geschlossen“ sagen
     block.dataset.state = 'closed';
     renderAltDish(sideEl || dishEl, null, en);
+    clearLunchFacts(dishEl.parentElement);
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'No lunch menu tomorrow' : 'Morgen kein Mittagstisch')
       : (en ? 'No lunch menu today' : 'Heute kein Mittagstisch');
@@ -1925,15 +2196,14 @@ function initLandingTeaser() {
   } else if (entry?.closed || (!dayDishes(entry).length && !openingFor(targetDate))) {
     block.dataset.state = 'closed';
     renderAltDish(sideEl || dishEl, null, en);
+    clearLunchFacts(dishEl.parentElement);
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Closed tomorrow' : 'Morgen geschlossen')
       : (en ? 'Closed today' : 'Wir machen heute Pause');
     if (entry?.holiday !== undefined || !openingFor(targetDate)) {
       // Schließtag (Urlaub/Feiertag): nächsten Öffnungstag nennen statt pauschal „bis morgen“
       if (kickerEl) kickerEl.textContent = (showTomorrow ? (en ? 'Closed tomorrow' : 'Morgen geschlossen') : (en ? 'Closed today' : 'Heute geschlossen')) + (entry?.holiday ? ' · ' + entry.holiday : '');
-      const next = new Date(targetDate);
-      let found = null;
-      for (let i = 1; i <= 60; i++) { next.setDate(next.getDate() + 1); if (openingFor(next)) { found = new Date(next); break; } }
+      const found = nextOpenDay(targetDate);
       dishEl.textContent = found
         ? (en ? `We are back on ${found.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}.`
               : `Ab ${found.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })} sind wir wieder für Sie da.`)
@@ -1945,6 +2215,7 @@ function initLandingTeaser() {
   } else {
     block.dataset.state = 'empty';
     renderAltDish(sideEl || dishEl, null, en);
+    clearLunchFacts(dishEl.parentElement);
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Menu coming soon' : 'Karte folgt in Kürze')
       : (en ? 'Just drop by' : 'Schauen Sie einfach vorbei');
@@ -2878,58 +3149,95 @@ function renderWeekMeta(monday) {
   el.textContent = (alsterLang() === 'en' ? 'Week ' : 'KW ') + `${isoWeek(monday)} · ${formatShort(monday)} – ${formatShort(sunday)}`;
 }
 
-function renderTodayLunch(weekData, today) {
+function renderTodayLunch(weekData, today, isTomorrow = false) {
   const todayBox = document.getElementById('lunch-today');
   const emptyBox = document.getElementById('lunch-empty');
   if (!todayBox || !emptyBox) return;
+  const en = alsterLang() === 'en';
   const dayIdx = (today.getDay() + 6) % 7;
   const dayKey = DAY_KEYS[dayIdx];
   const dayLabel = dayLabels()[dayIdx];
   const entry = lunchEntryFor(weekData?.days?.[dayKey], today);
+  const dishes = dayDishes(entry);
 
+  // „Heute“ / „Morgen“ vor dem Wochentag – nach Ladenschluss zeigt die Seite morgen
+  const prefixEl = document.getElementById('today-prefix');
+  if (prefixEl) {
+    prefixEl.setAttribute('data-no-i18n', '');
+    prefixEl.textContent = isTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
+  }
   const nameEl = document.getElementById('today-name');
   if (nameEl) nameEl.textContent = dayLabel;
+  // Die Sätze unten bringen ihre englische Fassung selbst mit → nicht zusätzlich übersetzen
   const emptyText = document.querySelector('.lunch-empty-text');
+  if (emptyText) emptyText.setAttribute('data-no-i18n', '');
+  const longDay = d => d.toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 
   // Wenn die GANZE Woche leer ist: kein Today-Empty-State zeigen,
   // sonst kommt die Info zweimal (heute + Wochenkarte beide leer).
   const days = weekData?.days || {};
   const wholeWeekEmpty = !DAY_KEYS.some(k => dayDishes(days[k]).length || days[k]?.closed);
 
-  if (dayDishes(entry).length) {
+  if (dishes.length) {
     const dishEl = document.getElementById('today-dish');
     const sideEl = document.getElementById('today-side');
-    const first = dayDishes(entry)[0];
+    const first = dishes[0];
     if (dishEl) { dishEl.textContent = first.dish; sizeDishText(dishEl); }
     if (sideEl) {
       sideEl.textContent = first.side || '';
       sideEl.hidden = !first.side;
     }
-    renderAltDish(sideEl || dishEl, entry, alsterLang() === 'en', false);
+    renderAltDish(sideEl || dishEl, entry, en, false);
+    renderDishPrices(dishEl, sideEl, entry, weekData, en);
     let share = todayBox.querySelector('.lunch-share');
     if (!share) { share = lunchShareButton('light'); todayBox.appendChild(share); }
-    setLunchShare(share, dayDishes(entry), false, alsterLang() === 'en');
+    setLunchShare(share, dishes, isTomorrow, en);
     todayBox.hidden = false;
     emptyBox.hidden = true;
-  } else if (entry?.closed) {
-    // Explizit als geschlossen markiert — bewusste Pause
+  } else if (entry?.holiday !== undefined || !openingFor(today)) {
+    // Schließtag (Urlaub/Feiertag) oder Ruhetag laut Öffnungszeiten: Satz wie bisher,
+    // dazu der nächste Öffnungstag (gleiche Logik wie auf der Startseite)
     if (emptyText) {
-      if (entry.holiday !== undefined) emptyText.textContent = alsterLang() === 'en' ? `We are closed today${entry.holiday ? ' – ' + entry.holiday : ''}.` : `Heute ist das Café geschlossen${entry.holiday ? ' – ' + entry.holiday : ''}.`;
-      else emptyText.innerHTML = 'Heute servieren wir Frühstück &amp; Backwaren — kein Mittagstisch.';
+      const lbl = entry?.holiday ? ' – ' + entry.holiday : '';
+      let text = isTomorrow
+        ? (en ? `We are closed tomorrow${lbl}.` : `Morgen ist das Café geschlossen${lbl}.`)
+        : (en ? `We are closed today${lbl}.` : `Heute ist das Café geschlossen${lbl}.`);
+      const next = nextOpenDay(today);
+      if (next) text += en ? ` We are back on ${longDay(next)}.` : ` Ab ${longDay(next)} sind wir wieder für Sie da.`;
+      emptyText.textContent = text;
     }
+    clearLunchFacts(todayBox);
+    todayBox.hidden = true;
+    emptyBox.hidden = false;
+  } else if (noLunchButOpen(entry, today)) {
+    // Café geöffnet, aber kein Mittagstisch (Wochenende oder im Plan abgehakt) –
+    // der vorhandene Satz, ergänzt um den nächsten Tag mit Mittagstisch
+    if (emptyText) {
+      let text = isTomorrow
+        ? (en ? 'Tomorrow we serve breakfast & baked goods — no lunch.' : 'Morgen servieren wir Frühstück & Backwaren — kein Mittagstisch.')
+        : (en ? 'Today we serve breakfast & baked goods — no lunch.' : 'Heute servieren wir Frühstück & Backwaren — kein Mittagstisch.');
+      const nextLunch = nextLunchDay(today);
+      if (nextLunch) text += en
+        ? ` Lunch is back on ${nextLunch.toLocaleDateString('en-GB', { weekday: 'long' })}.`
+        : ` Mittagstisch wieder ab ${nextLunch.toLocaleDateString('de-DE', { weekday: 'long' })}.`;
+      emptyText.textContent = text;
+    }
+    clearLunchFacts(todayBox);
     todayBox.hidden = true;
     emptyBox.hidden = false;
   } else if (wholeWeekEmpty) {
     // Ganze Woche leer → renderWeekList zeigt schon eine Konsolidierte
     // Karte. Today-Section nicht doppelt zeigen.
+    clearLunchFacts(todayBox);
     todayBox.hidden = true;
     emptyBox.hidden = true;
   } else {
     // Heute nicht eingetragen, aber die Woche hat anderswo Eintraege —
     // ehrlich kommunizieren statt "kein Mittagstisch" zu behaupten.
-    if (emptyText) emptyText.innerHTML = (alsterLang() === 'en')
-      ? 'Today’s menu is being updated. <a href="tel:+494022692891">040 – 22 69 28 91</a> — we’ll gladly tell you today’s dish.'
-      : 'Die heutige Karte wird gerade aktualisiert. <a href="tel:+494022692891">040 – 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.';
+    if (emptyText) emptyText.innerHTML = en
+      ? `${isTomorrow ? 'Tomorrow’s' : 'Today’s'} menu is being updated. <a href="tel:+494022692891">040 – 22 69 28 91</a> — we’ll gladly tell you the dish of the day.`
+      : `Die ${isTomorrow ? 'Karte für morgen' : 'heutige Karte'} wird gerade aktualisiert. <a href="tel:+494022692891">040 – 22 69 28 91</a> — wir verraten Ihnen das Tagesgericht gern.`;
+    clearLunchFacts(todayBox);
     todayBox.hidden = true;
     emptyBox.hidden = false;
   }
@@ -2938,13 +3246,15 @@ function renderTodayLunch(weekData, today) {
 function renderWeekList(weekData, monday, today) {
   const list = document.getElementById('lunch-week-list');
   if (!list) return;
-  list.innerHTML = '';
+  list.innerHTML = ''; // entfernt auch den Platzhalter „Wochenkarte wird geladen …“
+  list.removeAttribute('aria-busy');
 
   // Wenn die gesamte Woche leer ist: konsolidierte Info statt 7x "folgt in Kürze"
   const days = weekData?.days || {};
   const hasAnyEntry = DAY_KEYS.some(k => dayDishes(days[k]).length || days[k]?.closed);
   if (!hasAnyEntry) {
     list.classList.add('lunch-week-empty');
+    list.classList.remove('lunch-week-compact-weekend');
     const li = document.createElement('li');
     li.className = 'lunch-week-empty-card';
     li.innerHTML = `
@@ -2956,20 +3266,38 @@ function renderWeekList(weekData, monday, today) {
   }
   list.classList.remove('lunch-week-empty');
 
+  const en = alsterLang() === 'en';
+  // „Vergangen“ meint den echten Kalendertag (nicht den Fokus-Tag „morgen“)
+  const todayIso = isoLocal(new Date());
   DAY_KEYS.forEach((key, idx) => {
     const date = new Date(monday); date.setDate(date.getDate() + idx);
     const entry = lunchEntryFor(weekData?.days?.[key], date);
+    const dishes = dayDishes(entry);
     const isToday = isSameDay(date, today);
+    const past = isoLocal(date) < todayIso;
     const li = document.createElement('li');
-    li.className = 'lunch-day' + (isToday ? ' is-today' : '');
-    const en = alsterLang() === 'en';
+    li.className = 'lunch-day'
+      + (isToday ? ' is-today' : '')
+      + (past ? ' is-past' : '')
+      + (idx >= 5 && !dishes.length ? ' is-off' : ''); // leerer Wochenendtag (für die schmale Spalte)
     let body;
     if (entry?.closed) {
       body = `<span class="lunch-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch today' : 'Kein Mittagstisch')}</span>`;
-    } else if (dayDishes(entry).length) {
-      body = dayDishes(entry).map(d =>
-        `<span class="lunch-day-dish">${escapeHtml(d.dish)}</span>` + (d.side ? `<span class="lunch-day-side">${escapeHtml(d.side)}</span>` : '')
+    } else if (dishes.length) {
+      body = dishes.map(d =>
+        `<span class="lunch-day-dish">${escapeHtml(d.dish)}</span>`
+        + (d.side ? `<span class="lunch-day-side">${escapeHtml(d.side)}</span>` : '')
+        + (lunchPriceFor(weekData, d) != null ? `<span class="lunch-day-price">${lunchPriceText(lunchPriceFor(weekData, d))}</span>` : '')
       ).join(orDividerHtml(en, 'lunch-day-or'));
+    } else if (!openingFor(date)) {
+      // Ruhetag laut Öffnungszeiten
+      body = `<span class="lunch-closed">${en ? 'Closed' : 'Geschlossen'}</span>`;
+    } else if (noLunchButOpen(entry, date)) {
+      // Café geöffnet, aber kein Mittagstisch (leeres Wochenende) – gleiches Label wie oben
+      body = `<span class="lunch-closed">${en ? 'No lunch today' : 'Kein Mittagstisch'}</span>`;
+    } else if (past) {
+      // Vergangener Werktag ohne Eintrag: nichts mehr ankündigen
+      body = `<span class="lunch-pending" aria-hidden="true">—</span><span class="sr-only">${en ? 'No entry' : 'Kein Eintrag'}</span>`;
     } else {
       body = `<span class="lunch-pending">${en ? '— coming soon —' : '— folgt in Kürze —'}</span>`;
     }
@@ -2982,6 +3310,9 @@ function renderWeekList(weekData, monday, today) {
     `;
     list.appendChild(li);
   });
+  // Desktop: Sa und So ohne Gericht stapeln sich schmal in einer sechsten Spalte (CSS)
+  list.classList.toggle('lunch-week-compact-weekend',
+    !!(list.children[5]?.classList.contains('is-off') && list.children[6]?.classList.contains('is-off')));
 }
 
 /* Preis-Helfer für den Brötchen-Service.
@@ -3129,15 +3460,21 @@ function initOrderForm() {
         if (sortListEl.dataset.sortsHtml !== html) {
           // Bereits gewählte Mengen beim Neuaufbau erhalten (z. B. wenn die Daten
           // vom Server erst nach dem ersten Antippen eintreffen).
-          const keep = {};
+          // Auch ohne Klammerzusatz zuordnen: die Zeilen im HTML heißen z. B.
+          // „Käse (Gouda & Bergkäse)“, die Liste des Inhabers nur „Käse“.
+          const baseName = (n) => String(n || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+          const keep = Object.create(null);
           getRows().forEach(row => {
             const q = parseInt(row.querySelector('.qty-value')?.textContent, 10) || 0;
-            if (q > 0) keep[row.dataset.name] = q;
+            if (q <= 0) return;
+            keep[row.dataset.name] = q;
+            const base = baseName(row.dataset.name);
+            if (!(base in keep)) keep[base] = q;
           });
           sortListEl.innerHTML = html;
           sortListEl.dataset.sortsHtml = html;
           getRows().forEach(row => {
-            const q = keep[row.dataset.name];
+            const q = keep[row.dataset.name] || keep[baseName(row.dataset.name)];
             if (!q) return;
             const v = row.querySelector('.qty-value');
             if (v) v.textContent = String(q);
@@ -3274,7 +3611,7 @@ function slotProblem(dateStr, timeStr, en) {
   }
   const hol = holidayOn(d);
   if (hol) {
-    const why = hol.label ? ` (${hol.label})` : '';
+    const why = hol.label ? ` (${holidayLabel(hol.label)})` : '';
     return en ? `We are closed on ${dateLabel}${why}. Please choose another day.`
               : `Am ${dateLabel} haben wir geschlossen${why}. Bitte wählen Sie einen anderen Tag.`;
   }
@@ -3492,6 +3829,26 @@ function escapeAttr(s) { return escapeHtml(s); }
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 300));
   else setTimeout(run, 300);
+})();
+
+/* Facelift 8: Dauer-Animationen (Dampf, Ticker, Goldstaub, Lichtschein …)
+   anhalten, solange ihr Abschnitt nicht zu sehen ist — spart Rechenzeit und
+   Akku am Handy. Sichtbar ändert sich nichts: 150 px vor dem Hereinscrollen
+   laufen sie wieder an. Die Pause setzt die Klasse .anim-paused (styles.css).
+   Hintergrund-Tabs halten Browser ohnehin selbst an. */
+(function initPauseOffscreenAnimations() {
+  if (document.body && document.body.classList.contains('admin-body')) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+  const run = () => {
+    const targets = document.querySelectorAll('.hero-cinematic, .landing-closer, .chapter-dark, .page-hero-editorial');
+    if (!targets.length) return;
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => e.target.classList.toggle('anim-paused', !e.isIntersecting));
+    }, { rootMargin: '150px 0px' });
+    targets.forEach(el => io.observe(el));
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
 })();
 
 /* Facelift 6: Stückzahl der Bestellung „springt“, wenn sie sich ändert */

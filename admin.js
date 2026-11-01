@@ -830,7 +830,10 @@ async function onCopyFromPrevious() {
   all[isoDate(currentMonday)] = {
     weekStart: isoDate(currentMonday),
     updatedAt: new Date().toISOString(),
-    days: JSON.parse(JSON.stringify(prev.days))
+    days: JSON.parse(JSON.stringify(prev.days)),
+    // Wochenangaben (Preis / Mittagstisch bis) wandern mit
+    ...(prev.price != null ? { price: prev.price } : {}),
+    ...(prev.until ? { until: prev.until } : {})
   };
   const ok = await saveAll(all);
   renderWeek();
@@ -855,6 +858,20 @@ async function onSaveWeek(e) {
   e.preventDefault();
   const all = loadAll();
 
+  // Preisfelder (Wochenpreis + Abweichungen) wie bei den Brötchen prüfen – ungültig = nicht speichern
+  const badPrices = checkLunchPriceFields();
+  if (badPrices) {
+    setStatus(dom.saveStatus, priceErrorText(badPrices), 'error');
+    dom.menuForm.querySelector('input.is-invalid')?.focus();
+    return false;
+  }
+  const facts = readWeekFacts();
+  if (facts.untilInvalid) {
+    setStatus(dom.saveStatus, 'Nicht gespeichert: „Mittagstisch bis“ bitte als Uhrzeit eintragen, z. B. 14:30 – oder leer lassen.', 'error');
+    document.getElementById('week-until')?.focus();
+    return false;
+  }
+
   // Aktuelle Woche aus den 7 Standard-Karten lesen
   const week = readFormToWeek();
   // Beilage ohne Gericht würde auf der Webseite nie erscheinen → vorher melden
@@ -863,11 +880,15 @@ async function onSaveWeek(e) {
     setStatus(dom.saveStatus, `Nicht gespeichert: Bei ${orphan.join(', ')} steht eine Beilage ohne Gericht. Bitte das Gericht ergänzen oder die Beilage löschen.`, 'error');
     return false;
   }
-  all[isoDate(currentMonday)] = {
+  const entry = {
     weekStart: isoDate(currentMonday),
     updatedAt: new Date().toISOString(),
     days: week
   };
+  // Optionale Wochenangaben nur speichern, wenn gepflegt (leer = auf der Webseite nicht zu sehen)
+  if (facts.price != null) entry.price = facts.price;
+  if (facts.until) entry.until = facts.until;
+  all[isoDate(currentMonday)] = entry;
 
   // Sonntag-Spillover: Sonntag-Karte gehoert zur Vorwoche
   if (sundaySpillover) {
@@ -877,6 +898,8 @@ async function onSaveWeek(e) {
     const dish2  = (data.get('spillover-sun-dish2')  || '').toString().trim();
     const side2  = (data.get('spillover-sun-side2')  || '').toString().trim();
     const closed = data.get('spillover-sun-closed') === 'on';
+    const price  = window.AlsterRules.parseEuro(data.get('spillover-sun-price')  || '');
+    const price2 = window.AlsterRules.parseEuro(data.get('spillover-sun-price2') || '');
     const today = new Date();
     // Woche, die den heutigen Sonntag enthaelt (mondayOf(heute)) — muss mit
     // dem Lade-Schluessel oben UND der Startseiten-Logik uebereinstimmen.
@@ -887,6 +910,8 @@ async function onSaveWeek(e) {
     if (dish || side || dish2 || side2 || closed) {
       prevWeek.days.sun = { dish, side, closed };
       if (dish2 || side2) { prevWeek.days.sun.dish2 = dish2; prevWeek.days.sun.side2 = side2; }
+      if (price != null) prevWeek.days.sun.price = price;
+      if (price2 != null) prevWeek.days.sun.price2 = price2;
     } else {
       // Karte geleert → Eintrag wirklich entfernen (sonst bliebe das alte Gericht online)
       delete prevWeek.days.sun;
@@ -911,6 +936,14 @@ function renderWeek() {
 
   const all = loadAll();
   const stored = all[isoDate(currentMonday)] || { days: {} };
+
+  // Wochenangaben (Preis / Mittagstisch bis): gespeicherter Stand – bei einer noch nicht
+  // gespeicherten Woche vorbelegt mit der zuletzt gespeicherten Woche davor
+  const facts = stored.updatedAt ? stored : (lastSavedWeekBefore(all, currentMonday) || {});
+  const priceEl = document.getElementById('week-price');
+  const untilEl = document.getElementById('week-until');
+  if (priceEl) { priceEl.value = priceInputText(facts.price); priceEl.classList.remove('is-invalid'); }
+  if (untilEl) untilEl.value = facts.until || '';
 
   dom.dayGrid.innerHTML = '';
 
@@ -1005,7 +1038,11 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
       <span class="day-field-label">Beilage</span>
       <input type="text" name="${fieldPrefix}-side" placeholder="z. B. Reis und Salat" value="${escapeAttr(saved.side || '')}" />
     </label>
-    <details class="day-alt"${saved.dish2 || saved.side2 ? ' open' : ''}>
+    <label class="day-field day-field-price">
+      <span class="day-field-label">Abweichender Preis (optional)</span>
+      <input type="text" name="${fieldPrefix}-price" inputmode="decimal" placeholder="z. B. 9,90" value="${escapeAttr(priceInputText(saved.price))}" />
+    </label>
+    <details class="day-alt"${saved.dish2 || saved.side2 || saved.price2 != null ? ' open' : ''}>
       <summary><span class="day-alt-or">oder</span> Zweites Gericht zur Wahl (optional)</summary>
       <label class="day-field">
         <span class="day-field-label">2. Gericht</span>
@@ -1014,6 +1051,10 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
       <label class="day-field">
         <span class="day-field-label">Beilage zum 2. Gericht</span>
         <input type="text" name="${fieldPrefix}-side2" placeholder="z. B. Basmatireis" value="${escapeAttr(saved.side2 || '')}" />
+      </label>
+      <label class="day-field day-field-price">
+        <span class="day-field-label">Abweichender Preis zum 2. Gericht (optional)</span>
+        <input type="text" name="${fieldPrefix}-price2" inputmode="decimal" placeholder="z. B. 11,90" value="${escapeAttr(priceInputText(saved.price2))}" />
       </label>
     </details>
     <label class="day-toggle">
@@ -1038,9 +1079,52 @@ function readFormToWeek() {
       week[day.key] = { dish, side, closed };
       // Zweites Gericht nur speichern, wenn eingetragen (ältere Einträge bleiben gleich)
       if (dish2 || side2) { week[day.key].dish2 = dish2; week[day.key].side2 = side2; }
+      // Abweichende Preise als Zahl, nur wenn eingetragen und gültig (Prüfung: checkLunchPriceFields)
+      const price  = window.AlsterRules.parseEuro(data.get(`${day.key}-price`)  || '');
+      const price2 = window.AlsterRules.parseEuro(data.get(`${day.key}-price2`) || '');
+      if (price != null) week[day.key].price = price;
+      if (price2 != null) week[day.key].price2 = price2;
     }
   });
   return week;
+}
+
+/* ---------- Mittagstisch: optionaler Preis / Ausgabe-Ende ----------
+   Wochenfeld price (Zahl) und until („14:30“) im Key 'weekly-menu', je Gericht optional
+   price/price2. Leer = auf der Webseite nicht zu sehen; ältere Wochen bleiben gültig. */
+// Zahl → Eingabetext „9,90“; alte Text-Einträge bleiben wie getippt
+function priceInputText(v) {
+  if (v == null || v === '') return '';
+  return typeof v === 'number' ? window.AlsterRules.euroText(v) : String(v);
+}
+// Wochenangaben aus den Feldern über dem Tagesraster
+function readWeekFacts() {
+  const rawPrice = (document.getElementById('week-price')?.value || '').trim();
+  const rawUntil = (document.getElementById('week-until')?.value || '').trim();
+  const m = rawUntil.match(/^(\d{1,2})[:.](\d{2})$/);
+  const untilOk = !!(m && +m[1] < 24 && +m[2] < 60);
+  return {
+    price: rawPrice ? window.AlsterRules.parseEuro(rawPrice) : null,
+    until: untilOk ? `${m[1].padStart(2, '0')}:${m[2]}` : '',
+    untilInvalid: !!rawUntil && !untilOk
+  };
+}
+// Alle Preisfelder des Wochenplans prüfen: ungültige rot markieren, Anzahl zurückgeben
+function checkLunchPriceFields() {
+  let bad = 0;
+  dom.menuForm.querySelectorAll('#week-price, input[name$="-price"], input[name$="-price2"]').forEach(inp => {
+    const raw = inp.value.trim();
+    const ok = !raw || window.AlsterRules.parseEuro(raw) != null;
+    inp.classList.toggle('is-invalid', !ok);
+    if (!ok) bad++;
+  });
+  return bad;
+}
+// Zuletzt gespeicherte Woche vor „monday“ (für die Vorbelegung einer neuen Woche)
+function lastSavedWeekBefore(all, monday) {
+  const key = isoDate(monday);
+  const prev = Object.keys(all || {}).filter(k => k < key && all[k] && all[k].updatedAt).sort();
+  return prev.length ? all[prev[prev.length - 1]] : null;
 }
 
 /* ---------- Notice ---------- */
@@ -1228,6 +1312,16 @@ function loadSpecialsData() {
   const base = (stored && Array.isArray(stored.sections)) ? stored : (window.ALSTERCAFE_SPECIALS_DEFAULT || { visible: true, title: 'Sommer-Specials', sections: [] });
   return JSON.parse(JSON.stringify(base));
 }
+const isoDateOk = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
+const isoToDe = iso => { const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}.${m[2]}.${m[1]}` : ''; };
+/* Statuszeile je nach Schalter und Zeitraum („Zeigen ab/bis“, leer = immer) */
+function specialsStateText(d) {
+  if (d.visible === false) return 'Ausgeblendet – auf der Webseite nicht zu sehen.';
+  const today = isoDate(new Date());
+  if (isoDateOk(d.showTo) && today > d.showTo) return 'Zeitraum ist abgelaufen – auf der Webseite nicht zu sehen. Datum anpassen oder Specials für die neue Saison überarbeiten.';
+  if (isoDateOk(d.showFrom) && today < d.showFrom) return `Erscheint ab ${isoToDe(d.showFrom)}.`;
+  return 'Sichtbar auf Speisekarte und Startseite' + (isoDateOk(d.showTo) ? ` – bis ${isoToDe(d.showTo)}.` : '.');
+}
 function renderSpecialsEditor() {
   markClean('specials-form');
   const box = document.getElementById('specials-sections');
@@ -1236,9 +1330,13 @@ function renderSpecialsEditor() {
   document.getElementById('specials-visible').checked = d.visible !== false;
   document.getElementById('specials-title').value = d.title || '';
   document.getElementById('specials-footnote').value = d.footnote || '';
+  // Optionaler Zeitraum (leer = immer sichtbar, wie bisher)
+  const fromEl = document.getElementById('specials-from'), toEl = document.getElementById('specials-to');
+  if (fromEl) fromEl.value = isoDateOk(d.showFrom) ? d.showFrom : '';
+  if (toEl) toEl.value = isoDateOk(d.showTo) ? d.showTo : '';
   box.innerHTML = '';
   (d.sections || []).forEach(sec => box.appendChild(buildMenuSection(sec)));
-  setStatus(document.getElementById('specials-status'), d.visible !== false ? 'Sichtbar auf Speisekarte und Startseite.' : 'Ausgeblendet – auf der Webseite nicht zu sehen.');
+  setStatus(document.getElementById('specials-status'), specialsStateText(d));
 }
 async function onSaveSpecials() {
   const box = document.getElementById('specials-sections');
@@ -1248,10 +1346,15 @@ async function onSaveSpecials() {
   if (nameless.length) { setStatus(st, 'Nicht gespeichert: Ein Eintrag hat Preis oder Beschreibung, aber keinen Namen (rot markiert).', 'error'); return false; }
   const visible = document.getElementById('specials-visible').checked;
   if (visible && !sections.some(sec => sec.items.some(it => it.name))) { setStatus(st, 'Nicht gespeichert: Bitte mindestens ein Getränk eintragen oder den Schalter ausschalten.', 'error'); return false; }
-  const data = { visible, title: (document.getElementById('specials-title').value || '').trim() || 'Sommer-Specials', sections, footnote: (document.getElementById('specials-footnote').value || '').trim() };
+  const showFrom = document.getElementById('specials-from')?.value || '';
+  const showTo = document.getElementById('specials-to')?.value || '';
+  if (showFrom && showTo && showFrom > showTo) { setStatus(st, 'Nicht gespeichert: „Zeigen ab“ liegt nach „Zeigen bis“.', 'error'); document.getElementById('specials-from')?.focus(); return false; }
+  const data = { visible, title: (document.getElementById('specials-title').value || '').trim() || 'Sommer-Specials', showFrom, showTo, sections, footnote: (document.getElementById('specials-footnote').value || '').trim() };
   const ok = await window.alsterDb.set('specials', data);
   if (!ok) { setStatus(st, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
-  setStatus(st, `Gespeichert · ${formatTime(new Date())} — ${visible ? 'auf der Webseite sichtbar' : 'auf der Webseite ausgeblendet'}.`, 'ok');
+  // Rückmeldung nennt den tatsächlichen Zustand (Schalter + Zeitraum)
+  const state = specialsStateText(data);
+  setStatus(st, `Gespeichert · ${formatTime(new Date())} — ${state.charAt(0).toLowerCase() + state.slice(1)}`, 'ok');
   logActivity(visible ? 'Sommer-Specials gespeichert' : 'Sommer-Specials ausgeblendet');
   return true;
 }
@@ -1357,11 +1460,14 @@ function printHtmlDocument(html, statusEl) {
    Beides nimmt den AKTUELLEN Formular-Stand (auch ungespeichert). */
 function weekShareData() {
   const week = readFormToWeek();
+  const facts = readWeekFacts();
+  // Preis je Gericht: Abweichung, sonst Wochenpreis, sonst null (dann steht keiner dabei)
+  const priceOf = (p) => (p != null ? p : facts.price);
   const days = DAYS.map((d, i) => {
     const date = new Date(currentMonday); date.setDate(date.getDate() + i);
     const e = week[d.key] || {};
-    const dishes = [{ dish: e.dish, side: e.side }, { dish: e.dish2, side: e.side2 }]
-      .map(x => ({ dish: String(x.dish || '').trim(), side: String(x.side || '').trim() }))
+    const dishes = [{ dish: e.dish, side: e.side, price: e.price }, { dish: e.dish2, side: e.side2, price: e.price2 }]
+      .map(x => ({ dish: String(x.dish || '').trim(), side: String(x.side || '').trim(), price: priceOf(x.price) }))
       .filter(x => x.dish);
     return { label: d.label, date, closed: !!e.closed, dishes: e.closed ? [] : dishes, weekend: i >= 5 };
   }).filter(d => !d.weekend || d.dishes.length);
@@ -1371,9 +1477,12 @@ function weekShareData() {
     days,
     kw: isoWeek(currentMonday),
     range: `${dm(currentMonday)} – ${dm(sunday)}`,
-    hasAny: days.some(d => d.dishes.length)
+    hasAny: days.some(d => d.dishes.length),
+    until: facts.until
   };
 }
+// „9,90 €“ für Aushang und Bild
+function sharePrice(p) { return p == null ? '' : window.AlsterRules.euroText(p) + ' €'; }
 // Beilage: „mit …“ nur voranstellen, wenn der Text nicht schon so anfängt
 function shareSide(side) {
   const t = String(side || '').trim();
@@ -1381,6 +1490,13 @@ function shareSide(side) {
   return /^(mit|serviert|dazu|und|inkl|wahlweise|oder)\b/i.test(t) ? t : `mit ${t}`;
 }
 function weekShareStatus(msg, kind) { setStatus(document.getElementById('week-share-status'), msg, kind); }
+
+// Schriften fürs Druckfenster: dieselbe fonts.css-Adresse wie diese Seite (inkl. ?v=),
+// damit nach einem Update keine veraltete, lange gecachte Fassung geladen wird.
+function pageFontsHref() {
+  const link = document.querySelector('link[rel="stylesheet"][href*="fonts.css"]');
+  return link ? link.href : `${location.origin}/fonts.css`;
+}
 
 function printWeekPoster() {
   const data = weekShareData();
@@ -1393,19 +1509,19 @@ function buildWeekPosterHtml(data) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const origin = location.origin;
   // Grobe Füllmenge: Gerichte, Beilagen und lange Namen (Zeilenumbrüche)
-  const load = data.days.reduce((a, d) => a + 1 + d.dishes.reduce((b, x) => b + 1 + (x.side ? .45 : 0) + (x.dish.length > 45 ? .8 : 0), 0) + Math.max(0, d.dishes.length - 1) * .4, 0);
+  const load = data.days.reduce((a, d) => a + 1 + d.dishes.reduce((b, x) => b + 1 + (x.side ? .45 : 0) + (x.price != null ? .3 : 0) + (x.dish.length > 45 ? .8 : 0), 0) + Math.max(0, d.dishes.length - 1) * .4, 0);
   const density = load > 16 ? 'dense xdense' : load > 11 ? 'dense' : '';
   const rows = data.days.map(d => {
     let body;
     if (d.closed) body = '<p class="none">Kein Mittagstisch</p>';
     else if (!d.dishes.length) body = '<p class="none">Folgt in Kürze</p>';
-    else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}`)
+    else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}${x.price != null ? `<p class="price">${esc(sharePrice(x.price))}</p>` : ''}`)
       .join('<p class="or"><span>oder</span></p>');
     return `<div class="day"><div class="when"><span class="name">${esc(d.label)}</span><span class="date">${d.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span></div><div class="what">${body}</div></div>`;
   }).join('');
   return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
 <title>Mittagstisch KW ${data.kw} · Alstercafé</title>
-<link rel="stylesheet" href="${origin}/fonts.css">
+<link rel="stylesheet" href="${esc(pageFontsHref())}">
 <style>
   @page { size: A4; margin: 14mm 16mm; }
   * { box-sizing: border-box; font-style: normal !important; }
@@ -1428,6 +1544,7 @@ function buildWeekPosterHtml(data) {
   .date { display: block; font-size: 9.5pt; color: #8a7a68; margin-top: 1mm; }
   .dish { font-family: 'Fraunces', Georgia, serif; font-size: 17pt; line-height: 1.2; margin: 0; color: #2A1810; }
   .side { font-size: 10.5pt; color: #6b5a4a; margin: 1mm 0 0; }
+  .price { font-size: 10.5pt; font-weight: 600; color: #8A6420; margin: 1mm 0 0; font-variant-numeric: tabular-nums; }
   .or { margin: 2.2mm 0; font-size: 8.5pt; font-weight: 600; letter-spacing: 2pt; text-transform: uppercase; color: #B8893E; }
   .none { margin: 0; font-size: 11pt; color: #8a7a68; padding-top: 1mm; }
   footer { text-align: center; margin-top: 6mm; padding-top: 5mm; border-top: 1pt solid #B8893E; font-size: 10.5pt; color: #3D2415; line-height: 1.6; }
@@ -1441,7 +1558,7 @@ function buildWeekPosterHtml(data) {
     <p class="range">${esc(data.range)}</p>
   </header>
   <div class="days">${rows}</div>
-  <footer><strong>Ab 12:00 Uhr</strong> · Beilage und Salat sind immer dabei<br>Ifflandstraße 45 · 040 – 22 69 28 91 · alstercafe.de</footer>
+  <footer><strong>${data.until ? `12:00 – ${esc(data.until)} Uhr` : 'Ab 12:00 Uhr'}</strong> · Beilage und Salat sind immer dabei<br>Ifflandstraße 45 · 040 – 22 69 28 91 · alstercafe.de</footer>
 </div>
 <script>
   /* Erst drucken, wenn Schriften und Logo geladen sind */
@@ -1533,6 +1650,7 @@ function drawWeekImage(data, logo) {
         const sl = wrap(shareSide(x.side), textW);
         parts.push({ kind: 'side', lines: sl, h: 8 + sl.length * sidePx * 1.3 });
       }
+      if (x.price != null) parts.push({ kind: 'price', text: sharePrice(x.price), h: 8 + sidePx * 1.3 });
     });
     return { d, parts, h: Math.max(cols === 2 ? 0 : 56, head + parts.reduce((a, p) => a + p.h, 0)) };
   };
@@ -1571,6 +1689,7 @@ function drawWeekImage(data, logo) {
         if (p.kind === 'or') { spacing(4); ctx.fillStyle = C.gold; ctx.font = `600 ${layout.orPx}px Inter, Arial, sans-serif`; ctx.fillText('ODER', tx, ty + layout.orPx + 6); spacing(0); }
         if (p.kind === 'dish') { ctx.fillStyle = '#FFFCF4'; ctx.font = `400 ${layout.dishPx}px Fraunces, Georgia, serif`; p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + layout.dishPx * (0.9 + k * 1.15))); }
         if (p.kind === 'side') { ctx.fillStyle = 'rgba(241,231,211,.75)'; ctx.font = `400 ${layout.sidePx}px Inter, Arial, sans-serif`; p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + 8 + layout.sidePx * (1 + k * 1.3))); }
+        if (p.kind === 'price') { ctx.fillStyle = C.goldSoft; ctx.font = `600 ${layout.sidePx}px Inter, Arial, sans-serif`; ctx.fillText(p.text, tx, ty + 8 + layout.sidePx); }
         ty += p.h;
       });
     });
@@ -1579,7 +1698,7 @@ function drawWeekImage(data, logo) {
 
   ctx.textAlign = 'center'; spacing(2);
   ctx.fillStyle = C.goldSoft; ctx.font = '600 25px Inter, Arial, sans-serif';
-  ctx.fillText('AB 12:00 UHR', W / 2, H - 100);
+  ctx.fillText(data.until ? `12:00 – ${data.until} UHR` : 'AB 12:00 UHR', W / 2, H - 100);
   spacing(0); ctx.fillStyle = 'rgba(241,231,211,.8)'; ctx.font = '400 23px Inter, Arial, sans-serif';
   ctx.fillText('Ifflandstraße 45 · Hamburg-Hohenfelde · alstercafe.de', W / 2, H - 66);
   return c;

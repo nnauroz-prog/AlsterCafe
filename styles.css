@@ -609,7 +609,7 @@ p  { margin: 0 0 1em; text-wrap: pretty; }
 }
 .page-breadcrumb a { color: var(--coffee); }
 .page-breadcrumb a:hover { color: var(--bean); }
-.page-breadcrumb span {
+.page-breadcrumb .crumb-sep { /* nur der Trenner „/“ – der Seitenname (aria-current) bleibt grau */
   display: inline-block;
   margin: 0 8px;
   color: var(--gold-soft);
@@ -5417,6 +5417,7 @@ html { background: var(--paper); }
 .page-hero-editorial { position: relative; }
 .page-hero-editorial::after {
   content: attr(data-page-num);
+  content: attr(data-page-num) / ""; /* Deko: wird nicht vorgelesen (Zeile darüber ist der Fallback) */
   position: absolute;
   top: clamp(40px, 6vw, 80px);
   right: clamp(20px, 4vw, 56px);
@@ -9746,7 +9747,6 @@ body.menu-open .to-top, body.sheet-open .to-top { opacity: 0; pointer-events: no
   .reviews-card-icon { width: 46px; height: 46px; grid-row: span 2; }
   .reviews-card-action { grid-column: 2; }
 }
-.landing-reviews .quotes-eyebrow { justify-content: flex-start; text-align: left; }
 
 /* ---------- Facelift: Kopfbereiche der Unterseiten am Computer straffer ----------
    Vorher begann der Inhalt erst bei ~760 px (fast ein ganzer Bildschirm Kopf). */
@@ -11507,3 +11507,283 @@ body:not(.admin-body) .about-text .features .ico {
 }
 .admin-body .login-card .login-stamp { position: static !important; display: block; margin-top: 22px; text-align: center; font-size: .78rem; color: #8A7768; }
 .admin-body .login-card .staff-login { margin-top: 18px; }
+
+/* ============================================================
+   FACELIFT 8 · Thema 1 – Technik & Geschwindigkeit
+   (Ladezustände, Layout-Sprünge, Ausfallsicherheit, Animations-Pause)
+   ============================================================ */
+/* Mittagstisch: Platzhalter, solange die Wochenkarte lädt (kein Spinner,
+   keine Animation). Die Mindesthöhe gilt nur im Ladezustand (aria-busy),
+   damit der Footer nicht kurz im ersten Bildschirm auftaucht. Die Werte
+   entsprechen ungefähr der fertigen Woche je Raster (7 / 4 / 2 Spalten),
+   damit beim Austausch nichts nachrutscht. */
+#lunch-week-list[aria-busy="true"] { min-height: 16rem; }
+@media (max-width: 1080px) { #lunch-week-list[aria-busy="true"] { min-height: 26rem; } }
+@media (max-width: 760px)  { #lunch-week-list[aria-busy="true"] { min-height: min(60vh, 34rem); } }
+.lunch-week-loading {
+  list-style: none; grid-column: 1 / -1;
+  color: rgba(241, 231, 211, .75);
+  font: 500 .95rem/1.5 'Inter', -apple-system, sans-serif; font-style: normal;
+  padding: 1.25rem 0;
+}
+
+/* Datumsleiste: feste Zeilenhöhe, bevor script.js das Datum einsetzt */
+.edition-date { min-height: 1.2em; white-space: nowrap; }
+
+/* Fallback, falls script.js nicht lädt: .reveal-Blöcke nach 3,5 s zeigen
+   (liegt bewusst über dem JS-Sicherheitsnetz von 2,5 s in initReveal; im
+   Normalbetrieb hat script.js bis dahin überall .in gesetzt, dann greift
+   das nicht mehr). Die Uhr läuft auf <body>, nicht auf dem Block selbst:
+   in Sektionen mit content-visibility:auto stehen Animationen still, bis
+   sie ins Bild scrollen — die Blöcke kämen dort erst 3,5 s NACH dem
+   Scrollen. Eine vererbte Zahl (0 → 1) schaltet deshalb Deckkraft und
+   Versatz um; die vorhandene .reveal-Transition macht daraus ein weiches
+   Einblenden. Reduced-Motion und Druck zeigen .reveal ohnehin sofort. */
+@property --reveal-failsafe { syntax: '<number>'; inherits: true; initial-value: 0; }
+@keyframes reveal-failsafe { to { --reveal-failsafe: 1; } }
+@media screen and (prefers-reduced-motion: no-preference) {
+  body:not(.admin-body) { --reveal-failsafe: 0; animation: reveal-failsafe 0s 3.5s forwards; }
+  .reveal:not(.in) {
+    opacity: var(--reveal-failsafe, 0);
+    transform: translateY(calc(12px * (1 - var(--reveal-failsafe, 0))));
+  }
+}
+
+/* 404: Knöpfe linksbündig zu Überschrift und Links; nie kursiv */
+.error-editorial .error-cta { justify-content: flex-start; }
+.error-headline em { font-style: normal; }
+
+/* Berliner-Seite geschlossen: weitere Wege als ruhige Textlinks */
+.berliner-closed-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 10px 0 0; }
+
+/* Dauer-Animationen außerhalb des Sichtfelds anhalten (Klasse setzt script.js).
+   .art-spark braucht die höhere Spezifität, weil dort die Animation mit !important gesetzt ist. */
+.anim-paused, .anim-paused *,
+.anim-paused::before, .anim-paused::after,
+.anim-paused *::before, .anim-paused *::after,
+.anim-paused .art-spark * { animation-play-state: paused !important; }
+
+/* ============================================================
+   FACELIFT 8 · Thema 2 – Mittagstisch & Öffnungszeiten
+   (Fokus-Tag nach Ladenschluss, ehrliche Wochenkarte, kommende
+   Schließtage, Specials-Zeitraum, optionaler Preis, Hero-Zeile)
+   ============================================================ */
+/* Nur für Screenreader (z. B. „Kein Eintrag“ hinter dem Gedankenstrich) */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Wochenkarte: vergangene Tage dezent zurücknehmen (kein Hover-Lift, Kontrast bleibt lesbar) */
+.lunch-day.is-past { opacity: .6; }
+.lunch-day.is-past:hover { transform: none; }
+/* Datum lesbar (Kleinste Beschriftungen nicht unter 11 px – gilt auch mobil) */
+.lunch-day-date { font-size: max(.6875rem, 11px); }
+
+/* Desktop ab 1200 px: Sa und So ohne Gericht stapeln sich schmal in einer sechsten Spalte.
+   Steht am Wochenende ein Gericht, bleiben die sieben gleichen Spalten. */
+@media (min-width: 1200px) {
+  .lunch-week.lunch-week-compact-weekend:not(.lunch-week-empty) { grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, .62fr); gap: 14px; }
+  .lunch-week-compact-weekend > .lunch-day:nth-child(-n+5) { grid-row: 1 / span 2; }
+  .lunch-week-compact-weekend > .lunch-day:nth-child(6) { grid-column: 6; grid-row: 1; }
+  .lunch-week-compact-weekend > .lunch-day:nth-child(7) { grid-column: 6; grid-row: 2; }
+  .lunch-week-compact-weekend > .lunch-day.is-off { min-height: 0; padding: 16px 14px; }
+  .lunch-week-compact-weekend > .lunch-day.is-off .lunch-day-head { margin-bottom: 10px; padding-bottom: 8px; }
+  .lunch-week-compact-weekend > .lunch-day.is-off .lunch-day-name { font-size: 1.2rem; }
+}
+
+/* Leere Wochenkarte: Telefonhinweis nur einmal, Karte wie die Tageskarten (kein Gold, nicht gestrichelt) */
+#lunch-week-list.lunch-week-empty + .lunch-note { display: none; }
+.lunch-week.lunch-week-empty { margin-bottom: 0; }
+.lunch-week-empty-card {
+  max-width: 720px;
+  margin-inline: auto;
+  padding: clamp(28px, 4vw, 44px) clamp(20px, 4vw, 40px);
+  border: 1px solid var(--hairline-on-dark);
+  border-radius: var(--r-md);
+  background: rgba(255, 252, 244, .035);
+}
+
+/* Mittagstisch-Preis / Ausgabe-Ende – nur sichtbar, wenn im Mitgliederbereich gepflegt */
+.lunch-facts, .lunch-price, .lunch-day-price, .lunch-sheet-price, .lunch-sheet-facts {
+  font-family: 'Inter', sans-serif; font-style: normal; font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums; letter-spacing: .02em;
+}
+.lunch-facts, .lunch-price { margin: 0; font-size: .95rem; color: var(--gold-soft); }
+.today-feature .lunch-facts, .today-feature .lunch-price { margin: -8px 0 22px; }
+.today-feature .dish-alt .lunch-price { margin: 8px 0 0; }
+/* Mittagstisch-Seite: Preis/Zeile direkt unter Gericht bzw. Beilage (deren Abstand nach unten entfällt dann) */
+.lunch-today > .lunch-today-side:has(+ .lunch-price), .lunch-today > .lunch-today-side:has(+ .lunch-facts),
+.lunch-today > .lunch-today-dish:has(+ .lunch-price), .lunch-today > .lunch-today-dish:has(+ .lunch-facts) { margin-bottom: 0; }
+.lunch-today .dish-alt .lunch-price { margin: 8px 0 0; }
+@media (min-width: 761px) {
+  .lunch-today > .lunch-facts, .lunch-today > .lunch-price { grid-column: 2; }
+  .lunch-today > .lunch-facts { margin: 0 0 6px; }
+}
+@media (max-width: 760px) { .lunch-today > .lunch-facts { margin: 0 0 8px; } }
+.lunch-day-price { display: block; margin: 2px 0 0 auto; font-size: .8rem; color: var(--gold-soft); }
+.lunch-sheet-price { display: block; font-size: .86rem; color: var(--accent-text); }
+.lunch-sheet-facts { margin: -12px 0 18px; font-size: .88rem; opacity: .85; }
+
+/* Hero: Tagesgericht als ruhige Textzeile unter der Status-Pille (nicht klebend) */
+.live-lunch {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  margin: 0 0 18px 10px; padding: 0; max-width: 100%;
+  background: none; border: 0; cursor: pointer; text-align: left;
+  font: 500 .82rem/1.35 'Inter', sans-serif; font-style: normal; color: var(--bean);
+  animation: fade-in var(--dur-base) var(--ease-out) .25s backwards;
+}
+.live-lunch-label { color: var(--accent-text); letter-spacing: .04em; flex-shrink: 0; }
+.live-lunch-dish {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+  text-decoration-color: rgba(184, 137, 62, .55);
+  transition: text-decoration-color var(--dur-fast) var(--ease-out);
+}
+.live-lunch-chev { color: var(--accent-text); flex-shrink: 0; }
+.live-lunch:hover .live-lunch-dish, .live-lunch:focus-visible .live-lunch-dish { text-decoration-color: var(--gold); }
+.live-lunch:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 4px; }
+@media (max-width: 760px) { .live-lunch { display: flex; margin: -8px 0 16px 2px; } }
+@media print { .live-lunch { display: none !important; } }
+@media (prefers-reduced-motion: reduce) { .live-lunch { animation: none !important; } }
+
+/* Kommende Schließtage unter den Öffnungszeiten (Startseite, Kontakt) und im Footer –
+   nur mit Einträgen im Mitgliederbereich (Urlaub & Feiertage) */
+.hours-list li.hours-closures {
+  display: block; margin-top: 4px; padding: 10px 0 0; border: 0;
+  font: 500 .85rem/1.5 'Inter', sans-serif; font-style: normal; letter-spacing: 0; text-transform: none;
+  color: var(--muted);
+}
+.hours-list li.hours-closures::after { display: none; }
+.hours-closures-label { font-weight: 600; color: var(--accent-text); }
+.landing-visit-dark .hours-list li.hours-closures { color: rgba(241, 231, 211, .78); }
+.landing-visit-dark .hours-closures-label { color: var(--gold-soft); }
+.hours-inline .hours-list li.hours-closures { font-size: .9rem; padding-top: 12px; }
+.footer-closures { margin: 10px 0 0; font: 500 .85rem/1.5 'Inter', sans-serif; font-style: normal; color: rgba(241, 231, 211, .78); }
+.footer-closures .hours-closures-label { color: var(--gold-soft); }
+
+/* Mitgliederbereich: Wochenangaben über dem Tagesraster, abweichender Preis je Gericht, Specials-Zeitraum */
+.admin-body .week-facts {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 12px 18px; align-items: end;
+  margin: 0 0 18px; padding: 16px 18px; border: 1px solid var(--soft-line); border-radius: 14px; background: var(--soft-card, #fff);
+}
+.admin-body .week-facts .day-field { margin: 0; }
+.admin-body .week-facts-help { grid-column: 1 / -1; margin: 0; font-size: .82rem; line-height: 1.5; color: #6F5C4E; }
+@media (max-width: 560px) { .admin-body .week-facts { grid-template-columns: 1fr; } }
+.admin-body .day-field-price { max-width: 200px; }
+.admin-body .specials-dates { margin: 0 0 16px; max-width: 480px; }
+
+/* ============================================================
+   FACELIFT 8 · Thema 3 – Visuelle Modellpflege
+   (Topbar-Höhe, Hero-Proportionen, ein Nummernsystem + Breadcrumb,
+   Abschnittsübergänge, Eyebrows, Überschriften-Skala, Kartensystem,
+   Croque-Block, Live-Status „geschlossen“, Formular-Beschriftungen)
+   ============================================================ */
+
+/* --- 1 · Topbar: Polsterung sitzt nur auf .topbar-inner (Startseite so hoch wie die Unterseiten) --- */
+.topbar { padding: 0; }
+
+/* --- 2 · Hero: Knöpfe und Heute-Karte früher im Bild – Texte, Schriften, Reihenfolge unverändert --- */
+/* Handy (≤ 420 px): Abstände leicht straffen */
+@media (max-width: 420px) {
+  .hero-cinematic .hero-masthead { padding-top: 24px; }
+  .hero-cinematic .hero-spread { padding-top: 20px; }
+  .hero-cinematic .hero-spread-text .lead { margin-bottom: 20px; }
+  .hero-cinematic .hero-cta { margin-top: 0; } /* fällt sonst mit dem Lead-Abstand zusammen */
+}
+/* Kurze Desktop-Fenster (1280×720, 1366×768 …): Kopfzeile in vh, H1 höchstens 16vh (≈ 20 % kleiner),
+   Tasse skaliert mit, damit sie nicht in „Kommen Sie vorbei.“ läuft. Ab 1920×1080 bleibt die H1 bei 160 px.
+   Der Breakpoint 921 px passt zur Grid-Umschaltung des Hero bei 920 px. */
+@media (min-width: 921px) and (max-height: 1100px) {
+  .hero-cinematic .hero-masthead { padding-top: clamp(40px, 6vh, 64px); }
+  .hero-cinema-h1 { font-size: min(clamp(3.8rem, 12vw, 10rem), 16vh); }
+  .hero-cinematic > .hero-art { width: min(clamp(108px, 29vw, 380px), 36vh); top: clamp(48px, 6vh, 80px); }
+}
+
+/* --- 3 · Ein Nummernsystem: das römische Eckzeichen ist das einzige Seitenzeichen --- */
+/* Unterseiten: keine zweite Zählung in den Kapiteln (Startseite I–V bleibt; Seitenkopf und Kapitel sind Geschwister in <main>) */
+.page-hero-editorial ~ .chapter .chapter-mark { display: none; }
+/* Speisekarte: „№ I“ / „№ II“ an Croque- und Brötchen-Block entfallen */
+.menu-croque::before, .menu-broetchen-cta::before { content: none; }
+/* Bestellschritte lesbar (gleiche Fraunces-Optik, kein Knopf-Look); Sortenzähler leiser, Einrückung bleibt */
+.order-legend .num { color: var(--gold-text); opacity: 1; font-size: 1.15rem; font-style: normal; }
+.broetchen-row::before { font-size: 1rem; color: var(--text-3); opacity: .4; top: 27px; font-style: normal; }
+@media (hover: hover) and (pointer: fine) { .broetchen-row:hover::before { opacity: .7; } }
+.broetchen-row.is-active::before { color: var(--gold); opacity: .9; }
+@media (max-width: 640px) { .broetchen-row::before { font-size: .92rem; top: 22px; } }
+
+/* --- 4 · Saubere Abschnittsübergänge (Startseite) --- */
+/* Ornament und Specials-Teaser lagen durchsichtig über der Körnung (body::before) – daher die grauen Streifen.
+   Jetzt der Ton der echten Nachbarn; das zweite Ornament geht nahtlos in den Cream-Abschied über. */
+.ornament, .specials-teaser-wrap { background: var(--paper); }
+.ornament:has(+ .landing-closer) { background: var(--cream); }
+/* Das Ornament ist schon die Pause – kein zweiter Goldstrich direkt darunter */
+.ornament + .chapter::before { display: none; }
+/* Kapitel-Strich auf hellen Kapiteln: 1 px, Inhaltsbreite wie .container, leiser. scaleX-Animation und
+   dunkle Kapitel bleiben unverändert. */
+.chapter:not(.chapter-dark)::before {
+  height: 1px;
+  left: max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));
+  right: max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));
+  width: auto;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  opacity: .55;
+}
+
+/* --- 5 · Eyebrows einheitlich --- */
+/* Kaskaden-Lecks: .menu-croque p / .menu-broetchen-cta p / .legal-article p setzten Serif bzw. 1 rem auf die Eyebrow */
+.menu-croque p.eyebrow, .menu-broetchen-cta p.eyebrow, .legal-article p.eyebrow {
+  font-family: 'Inter', sans-serif; font-size: .72rem; font-variation-settings: normal; line-height: 1.4;
+}
+.legal-article p.eyebrow { color: var(--coffee); }
+/* „Gut zu wissen“ (Reservierung): nicht unter 11 px, gleiche Laufweite wie die anderen Beschriftungen */
+.reservation-tips .reservation-tips-eyebrow {
+  font-family: 'Inter', sans-serif; font-size: .68rem; font-weight: 600; line-height: 1.4;
+  letter-spacing: var(--track-label); color: var(--gold-soft); font-variation-settings: normal;
+}
+.spread-card .spread-kicker, .spread-card-hero .spread-kicker { font-size: max(.6875rem, 11px); line-height: 1.4; }
+/* Bewertungskopf wie die anderen Abschnitte: Eyebrow, H2 und Lead stehen jetzt in .section-head (mittig) */
+.landing-reviews .section-head { margin-bottom: clamp(36px, 5vw, 56px); }
+.landing-reviews .section-head .reviews-lead { margin: 0 auto; max-width: 36em; }
+
+/* --- 6 · Überschriften-Skala: eine Größe für die großen H2 --- */
+/* today-feature-dish, Kategorie-H2 der Speisekarte und alle H1 bleiben ausdrücklich außen vor */
+body:not(.admin-body) main :is(.section-head h2, .reviews-h2, .landing-visit-inner h2, .menu-croque h2, .menu-broetchen-cta h2) {
+  font-size: clamp(2rem, 4.2vw, 3.6rem); font-weight: 400; line-height: 1.06;
+}
+/* Hero-Eyebrow: Trenner hängen per geschütztem Leerzeichen am Wort davor (script.js normalisiert) – ausgewogen umbrechen,
+   damit keine Zeile mit „·“ beginnt (main p { text-wrap: pretty } überstimmt sonst) */
+body:not(.admin-body) main p.hero-eyebrow { text-wrap: balance; }
+/* Abstand zur Status-Pille ohne Einrückung beim Umbruch (entspricht der gap der .eyebrow) */
+.hero-cinematic .hero-eyebrow { margin-right: 14px; }
+
+/* --- 7 · Ein Kartensystem: gleiche Radien, durchgezogene Rahmen --- */
+.menu-croque, .menu-broetchen-cta, .about-aside, .specials-teaser { border-radius: var(--r-lg); }
+/* Leerzustand, gesperrter Bestellknopf und Specials-Fußnote: durchgezogen statt gestrichelt (Farben bleiben) */
+.lunch-empty { border-style: solid; }
+.order-summary-card .order-submit:disabled { border-style: solid; }
+.specials-foot { border-top-style: solid; border-top-color: var(--hairline-gold); }
+/* FAQ: Haarlinien bleiben gerade, auch geöffnet (kein Radius, kein zusätzliches Padding) */
+.faq-item { border-radius: 0; }
+/* Croque-Block ohne leere Hälfte: einspaltig; ab 901 px Text links, Knopf unten rechts – wie beim Brötchen-Block.
+   DOM- und Tab-Reihenfolge bleiben (Eyebrow, H2, Absatz, Knopf). Unter 901 px alles wie bisher. */
+.menu-croque { grid-template-columns: 1fr; }
+@media (min-width: 901px) {
+  /* gleicher Innenabstand wie der Brötchen-Block (minus 1 px Rahmen): Knopf und Text auf derselben Kante */
+  .menu-croque { padding-inline: calc(clamp(36px, 5vw, 60px) - 1px); }
+  .menu-croque > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: clamp(28px, 4vw, 60px); align-items: end; }
+  .menu-croque > div > :not(.btn) { grid-column: 1; } /* kein max-width: die 36ch des Absatzes bleiben */
+  .menu-croque > div > .btn { grid-column: 2; grid-row: 1 / span 3; align-self: end; justify-self: end; white-space: nowrap; }
+  .menu-croque > div > p { margin-bottom: 0; } /* Knopf-Unterkante = letzte Textzeile; die Eyebrow behält ihre 24 px */
+}
+
+/* --- 8 · Live-Status „geschlossen“ ruhig statt rot (Gold steht auf der Seite für „geöffnet“; „open“ bleibt grün) --- */
+.live-status[data-state="closed"] { color: var(--text-2); background: rgba(255, 252, 244, .72); border-color: var(--hairline-strong); }
+.live-status[data-state="closed"] .live-status-dot { background: rgba(120, 97, 82, .5); box-shadow: none; animation: none; }
+@media (max-width: 760px) { .live-status[data-state="closed"] { background: rgba(255, 252, 244, .92); } } /* mobil ohne Blur: Deckkraft wie bisher */
+
+/* --- 9 · Formular-Beschriftungen (Reservierung, Brötchen, Berliner): Inter 13 px statt kleiner Serif --- */
+:is(.reservation-form, .order-form) label > span {
+  display: block; margin: 0 0 8px; padding-left: 2px;
+  font: 600 .8125rem/1.3 'Inter', system-ui, sans-serif;
+  font-variation-settings: normal; letter-spacing: .01em; text-transform: none;
+  color: var(--coffee, #5C3C20);
+}
+:is(.reservation-form, .order-form) label > span em { color: var(--accent-text, #8A6420); font-weight: 600; margin-left: 2px; } /* Pflicht-*: 5,2:1 */

@@ -112,6 +112,9 @@ window.ALSTERCAFE_MENU_DEFAULT = {
 window.ALSTERCAFE_SPECIALS_DEFAULT = {
   visible: true,
   title: 'Sommer-Specials',
+  // Optionaler Zeitraum (YYYY-MM-DD), gepflegt im Mitgliederbereich. Leer = immer sichtbar.
+  showFrom: '',
+  showTo: '',
   sections: [
     { title: 'Fruchtige Matcha-Highlights', icon: 'i-leaf', items: [
       { name: 'Iced Strawberry Matcha', price: '6,90 €' },

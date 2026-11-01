@@ -20,6 +20,41 @@
   'use strict';
   var LS_KEY = 'alstercafe.lang';
 
+  /* Teilbarer Link: ?lang=en bzw. ?lang=de gewinnt und wird gemerkt.
+     Bewusst synchron hier oben (nicht erst in init()), damit script.js beim
+     ersten Rendern (Datum, Wochentag, Öffnungsstatus) schon die richtige
+     Sprache liest. Ungültige Werte werden ignoriert. */
+  var urlLang = null;
+  try {
+    var q = new URLSearchParams(location.search).get('lang');
+    if (q === 'en' || q === 'de') urlLang = q;
+  } catch (e) {}
+  if (urlLang) { try { localStorage.setItem(LS_KEY, urlLang); } catch (e) {} }
+
+  /* Englische Tab-Titel. Schlüssel = deutscher <title>-Text (Entities
+     dekodiert, also '&' statt '&amp;'). Bewusst NICHT im Text-Wörterbuch,
+     damit sie nicht auf gleichlautende Textknoten treffen. Die <title>-Tags
+     im HTML bleiben deutsch (Suchmaschinen, Link-Vorschauen). */
+  var TITLE_EN = {
+    'Alstercafé Hamburg-Hohenfelde – Café, Bäckerei & Mittagstisch': 'Alstercafé Hamburg-Hohenfelde – Café, Bakery & Lunch',
+    'Mittagstisch Hamburg-Hohenfelde ab 12 Uhr | Alstercafé': 'Lunch in Hamburg-Hohenfelde from 12 noon | Alstercafé',
+    'Frühstück in Hohenfelde – Speisekarte | Alstercafé Hamburg': 'Breakfast in Hohenfelde – Menu | Alstercafé Hamburg',
+    'Belegte Brötchen bestellen Hamburg | Alstercafé Hohenfelde': 'Order filled rolls in Hamburg | Alstercafé Hohenfelde',
+    'Berliner vorbestellen | Alstercafé Hamburg-Hohenfelde': 'Pre-order doughnuts | Alstercafé Hamburg-Hohenfelde',
+    'Tisch reservieren | Alstercafé Hamburg-Hohenfelde': 'Book a table | Alstercafé Hamburg-Hohenfelde',
+    'Kontakt & Öffnungszeiten | Alstercafé Hamburg-Hohenfelde': 'Contact & opening hours | Alstercafé Hamburg-Hohenfelde',
+    'Über uns – Familienbäckerei seit 2004 | Alstercafé Hohenfelde': 'About us – family bakery since 2004 | Alstercafé Hohenfelde',
+    'Impressum · Alstercafé': 'Legal notice · Alstercafé',
+    'Datenschutzerklärung · Alstercafé': 'Privacy policy · Alstercafé',
+    'Seite nicht gefunden · Alstercafé': 'Page not found · Alstercafé'
+  };
+  var deTitle = null; // deutscher Titel, einmal gesichert
+  function applyTitle(toEN) {
+    if (deTitle === null) deTitle = document.title;
+    var en = TITLE_EN[String(deTitle).replace(/\s+/g, ' ').trim()];
+    document.title = (toEN && en) ? en : deTitle;
+  }
+
   /* -------- DE-Quelltext → Englisch -------- */
   var EN = {
     /* Navigation / Topbar / Chrome */
@@ -56,6 +91,7 @@
     'Zum Inhalt springen': 'Skip to content',
     'Alstercafé Startseite': 'Alstercafé home',
     'Start': 'Home',
+    'Brotkrümelnavigation': 'Breadcrumb', /* aria-label der Breadcrumb (nav) auf den Unterseiten */
     'Index': 'Index',
     'Besuch': 'Visit',
     'Geöffnet': 'Open',
@@ -76,6 +112,18 @@
     'Hohenfelde seit': 'Hohenfelde for',
     'Jahren': 'years',
     'Heute ·': 'Today ·',
+    /* Mittagstisch & Öffnungszeiten (Facelift 8, Thema 2) */
+    'Morgen': 'Tomorrow',
+    'Vorab': 'Notice',
+    'Demnächst geschlossen:': 'Closed soon:',
+    'Morgen servieren wir Frühstück & Backwaren — kein Mittagstisch.': 'Tomorrow we serve breakfast & baked goods — no lunch.',
+    'Kein Eintrag': 'No entry',
+    'Zeigen ab (optional)': 'Show from (optional)',
+    'Zeigen bis (optional)': 'Show until (optional)',
+    'Preis Mittagstisch (optional)': 'Lunch price (optional)',
+    'Mittagstisch bis (optional)': 'Lunch until (optional)',
+    'Abweichender Preis (optional)': 'Different price (optional)',
+    'Abweichender Preis zum 2. Gericht (optional)': 'Different price for the 2nd dish (optional)',
     'Tisch reservieren · ab 12:00': 'Book a table · from 12:00',
     'Wochenkarte': 'Weekly menu',
     'Karte Ifflandstraße 45 Hamburg': 'Map Ifflandstraße 45 Hamburg',
@@ -87,7 +135,9 @@
     'Mitgliederbereich': 'Members area',
 
     /* Hero (Startseite) */
-    'Bäckerei · Café · Mittagstisch · Hohenfelde': 'Bakery · Café · Lunch · Hohenfelde',
+    /* Hero-Eyebrow: Trenner hängen per geschütztem Leerzeichen am Wort davor (wie im DE-Quelltext),
+       damit am Handy keine Zeile mit „·“ beginnt. Der Schlüssel wird whitespace-normalisiert verglichen. */
+    'Bäckerei · Café · Mittagstisch · Hohenfelde': 'Bakery\u00A0· Café\u00A0· Lunch\u00A0· Hohenfelde',
     'Aktuell geöffnet · bis 15:00': 'Open now · until 15:00',
     'Schön, dass': 'So glad',
     'Sie da sind.': 'you’re here.',
@@ -116,6 +166,7 @@
     /* Heute-Feature */
     'Heute servieren wir Frühstück & Backwaren — kein Mittagstisch.': 'Today we serve breakfast & baked goods — no lunch.',
     'Die Wochenkarte wird gerade aktualisiert.': 'This week’s menu is being updated.',
+    'Wochenkarte wird geladen …': 'Loading this week’s menu …',
 
     /* Familie / Greeting */
     'Familienbetrieb': 'Family business',
@@ -619,6 +670,8 @@
     current = lang;
     withObserverPaused(function () { translate(lang === 'en'); });
     document.documentElement.lang = lang;
+    // Tab-Titel nur hier setzen (nicht im MutationObserver-Pfad → keine Schleife)
+    applyTitle(lang === 'en');
     updateToggle();
   }
 
@@ -627,7 +680,15 @@
     // Neu laden: so werden auch die dynamisch von script.js erzeugten
     // Inhalte (Datum, Wochentag, Öffnungsstatus) sauber in der neuen
     // Sprache gerendert — ohne fehleranfällige Einzel-Neurenderei.
-    try { location.reload(); } catch (e) { apply(lang); }
+    // Englisch → ?lang=en in der Adresse (teilbar); Deutsch → Parameter weg.
+    // Andere Parameter (edit=1, next) und der #Anker bleiben erhalten.
+    try {
+      var u = new URL(location.href);
+      if (lang === 'en') u.searchParams.set('lang', 'en'); else u.searchParams.delete('lang');
+      // Gleiche Adresse (z. B. nur #Anker) würde nicht neu laden → dann reload()
+      if (u.toString() === location.href) location.reload();
+      else location.replace(u.toString());
+    } catch (e) { apply(lang); }
   }
 
   function updateToggle() {
@@ -664,8 +725,8 @@
 
   function init() {
     injectToggles();
-    var saved = 'de';
-    try { saved = localStorage.getItem(LS_KEY) || 'de'; } catch (e) {}
+    var saved = urlLang || 'de';
+    if (!urlLang) { try { saved = localStorage.getItem(LS_KEY) || 'de'; } catch (e) {} }
     // MutationObserver für dynamisch nachgeladene Inhalte (Speisekarte usw.)
     observer = new MutationObserver(function () {
       if (current !== 'en') return;

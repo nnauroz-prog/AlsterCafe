@@ -27,15 +27,17 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r221" />
+  <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r222" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Alstercafé" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;color-scheme:only light;background:#FFFCF4;color:#1F140C;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}img{max-width:100%;display:block}[hidden]{display:none!important}</style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r221" />
-  <script>(function(){var V="2026-05-10-r221";try{if(localStorage.getItem("alstercafe.app-version")!==V){localStorage.removeItem("alstercafe.content");localStorage.removeItem("alstercafe.__hydrated_at");localStorage.setItem("alstercafe.app-version",V)}}catch(e){};try{if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r222" />
+  <script>(function(){var V="2026-05-10-r222";try{if(localStorage.getItem("alstercafe.app-version")!==V){localStorage.removeItem("alstercafe.content");localStorage.removeItem("alstercafe.__hydrated_at");localStorage.setItem("alstercafe.app-version",V)}}catch(e){};try{if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -48,6 +50,15 @@
       <symbol id="i-wifi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c5-5 13-5 18 0"/><path d="M6 12.5c3.5-3.5 8.5-3.5 12 0"/><path d="M9 16c1.5-1.5 4.5-1.5 6 0"/><circle cx="12" cy="19" r=".8" fill="currentColor"/></g></symbol>
     </defs>
   </svg>
+
+  <!-- Datumsleiste fest im HTML (wie index.html), damit beim Laden nichts nachrutscht.
+       Das Datum setzt script.js über #edition-date. -->
+  <aside class="edition-strip" aria-hidden="true">
+    <div class="container edition-inner">
+      <span class="edition-cell edition-date" id="edition-date"></span>
+      <span class="edition-cell edition-place">Ifflandstr. 45 &middot; Hamburg-Hohenfelde</span>
+    </div>
+  </aside>
 
   <div class="topbar" role="region" aria-label="Kurzinfo">
     <div class="container topbar-inner">
@@ -80,7 +91,7 @@
       <span class="page-hero-watermark" aria-hidden="true">Berliner</span>
       <div class="page-art" aria-hidden="true"><svg viewBox="0 0 240 220" focusable="false"><path class="art-line art-bg" pathLength="1" d="M42 146 C42 100 84 82 120 82 C156 82 198 100 198 146 C198 168 160 180 120 180 C80 180 42 168 42 146 Z"/><path class="art-line art-thin" pathLength="1" d="M46 136 C80 154 160 154 194 136"/><path class="art-fill" d="M120 82 C112 74 114 64 120 58 C126 64 128 74 120 82 Z"/><path class="art-line" pathLength="1" d="M120 82 C112 74 114 64 120 58 C126 64 128 74 120 82 Z"/><g class="art-sugar"><circle cx="86" cy="106" r="2"/><circle cx="104" cy="98" r="1.6"/><circle cx="140" cy="100" r="2"/><circle cx="160" cy="112" r="1.6"/><circle cx="72" cy="122" r="1.6"/><circle cx="170" cy="126" r="2"/><circle cx="122" cy="110" r="1.6"/></g><path class="art-line" pathLength="1" d="M34 198 C80 206 160 206 206 198"/><g class="art-spark"><path d="M36 64 l3 -9 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 z"/><path d="M204 44 l2 -6 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 z"/><circle cx="214" cy="150" r="2.2"/><circle cx="26" cy="168" r="1.8"/></g></svg></div>
       <div class="container">
-        <p class="page-breadcrumb"><a href="index.html">Start</a> <span>/</span> Berliner vorbestellen</p>
+        <nav class="page-breadcrumb" aria-label="Brotkrümelnavigation"><a href="index.html">Start</a> <span class="crumb-sep" aria-hidden="true">/</span> <span aria-current="page">Berliner vorbestellen</span></nav>
         <p class="eyebrow"><span class="num">·</span> Vorbestellen</p>
         <h1 id="berliner-headline">Berliner<br/><em>für Silvester.</em></h1>
         <p class="page-lead" id="berliner-lead">
@@ -96,6 +107,7 @@
         <p class="berliner-closed-title">Die Berliner-Vorbestellung ist gerade nicht geöffnet.</p>
         <p class="berliner-closed-text" id="berliner-closed-text">Schauen Sie bald wieder vorbei oder rufen Sie uns an.</p>
         <a class="btn btn-link" href="tel:+494022692891"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
+        <p class="berliner-closed-links"><a class="btn btn-link" href="broetchen.html">Brötchen-Service</a><a class="btn btn-link" href="speisekarte.html">Speisekarte</a></p>
       </div>
     </section>
 
@@ -160,10 +172,10 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r221" defer></script>
-  <script src="db.js?v=2026-05-10-r221" defer></script>
-  <script src="rules.js?v=2026-05-10-r221" defer></script>
-  <script src="script.js?v=2026-05-10-r221" defer></script>
-  <script src="i18n.js?v=2026-05-10-r221" defer></script>
+  <script src="config.js?v=2026-05-10-r222" defer></script>
+  <script src="db.js?v=2026-05-10-r222" defer></script>
+  <script src="rules.js?v=2026-05-10-r222" defer></script>
+  <script src="script.js?v=2026-05-10-r222" defer></script>
+  <script src="i18n.js?v=2026-05-10-r222" defer></script>
 </body>
 </html>
