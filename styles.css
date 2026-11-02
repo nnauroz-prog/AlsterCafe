@@ -11950,3 +11950,17 @@ body:not(.admin-body) main p.hero-eyebrow { text-wrap: balance; }
 .admin-body .review-link-actions { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; }
 .admin-body .review-link-actions .btn[disabled] { opacity: .45; cursor: not-allowed; }
 .admin-body .jobs-toggle { margin: 0 0 16px; }
+
+/* --- Fußzeile: „Webseite von Sitalo.de“ als Teil der ©-Zeile (keine eigene Zeile mehr) --- */
+.footer-bottom-strip .footer-made { white-space: nowrap; }
+.footer-bottom-strip .footer-made-sep { margin: 0 .55em; }
+.footer-bottom-strip .footer-made a {
+  color: inherit; text-decoration: none; letter-spacing: inherit;
+  border-bottom: 1px solid rgba(212, 179, 128, .35); padding-bottom: 1px;
+  transition: color .2s ease, border-color .2s ease;
+}
+.footer-bottom-strip .footer-made a:hover, .footer-bottom-strip .footer-made a:focus-visible { color: var(--gold-soft); border-bottom-color: var(--gold-soft); outline: none; }
+@media (max-width: 560px) {
+  .footer-bottom-strip .footer-made { display: block; white-space: normal; margin-top: 6px; }
+  .footer-bottom-strip .footer-made-sep { display: none; }
+}

@@ -2788,9 +2788,10 @@ function enhanceFooterEditorial() {
   const year = new Date().getFullYear();
   const strip = document.createElement('div');
   strip.className = 'footer-bottom-strip container';
-  strip.innerHTML = `<span>© ${year} <em>Alstercafé</em> · Croquenoah Cafe</span><nav class="footer-legal" aria-label="${alsterLang() === 'en' ? 'Legal' : 'Rechtliches'}"></nav>`;
+  // „Webseite von Sitalo.de“ gehört zur ©-Zeile – gleiche Schrift, gleiche Dämpfung, kein eigener Block
+  strip.innerHTML = `<span class="footer-bottom-meta">© ${year} <em>Alstercafé</em> · Croquenoah Cafe<span class="footer-made"><span class="footer-made-sep" aria-hidden="true">·</span><span class="footer-made-label">Webseite von</span> <a href="https://sitalo.de" target="_blank" rel="noopener">Sitalo.de</a></span></span><nav class="footer-legal" aria-label="${alsterLang() === 'en' ? 'Legal' : 'Rechtliches'}"></nav>`;
   footer.appendChild(strip);
-  if (maker) { maker.classList.add('container'); footer.appendChild(maker); }
+  maker?.remove();
   const legal = strip.querySelector('.footer-legal');
   const navEl = footer.querySelector('.footer-nav-wrap .footer-nav');
   ['impressum.html', 'datenschutz.html', '#cookie-reset', 'admin.html'].forEach(sel => {
