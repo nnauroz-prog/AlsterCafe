@@ -95,6 +95,7 @@
     'Brotkrümelnavigation': 'Breadcrumb', /* aria-label der Breadcrumb (nav) auf den Unterseiten */
     'Index': 'Index',
     'Seiten': 'Pages',
+    'Zum Formular': 'To the form',
     'Route planen': 'Get directions',
     'Berliner-Bestellservice': 'Doughnut pre-orders',
     'Karte drucken': 'Print menu',
@@ -730,6 +731,14 @@
       b.classList.add('lang-toggle-nav');
       nav.appendChild(b);
       toggleBtns.push(b);
+    }
+    // Am Handy zusätzlich direkt im Kopf vor dem Menü-Knopf (per CSS nur bis 980 px sichtbar)
+    var burger = document.querySelector('.site-header .nav-toggle');
+    if (burger && !document.querySelector('.lang-toggle-head')) {
+      var h = makeToggle();
+      h.classList.add('lang-toggle-head');
+      burger.before(h);
+      toggleBtns.push(h);
     }
     updateToggle();
   }

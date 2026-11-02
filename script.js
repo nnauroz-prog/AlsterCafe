@@ -370,7 +370,8 @@ function rerenderData() {
   run(initBerlinerPage);
   run(syncBusinessSchema);
   // Datumshinweise nur aktualisieren (Öffnungszeiten/Schließtage können neu sein)
-  run(() => document.querySelectorAll('input[name="Datum"]').forEach(i => i.__dateHintUpdate?.()));
+  run(() => document.querySelectorAll('input[name="Datum"]').forEach(i => { i.__dateHintUpdate?.(); i.__slotsUpdate?.(); }));
+  run(() => document.getElementById('order-form')?.__updateEarliest?.());
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -436,7 +437,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeRun(initNavExtra);
   safeRun(syncBusinessSchema);
   safeRun(attachDateHints);
-  safeRun(() => document.querySelectorAll('input[name="Datum"]').forEach(i => i.__dateHintUpdate?.()));
+  safeRun(() => document.querySelectorAll('input[name="Datum"]').forEach(i => { i.__dateHintUpdate?.(); i.__slotsUpdate?.(); }));
+  safeRun(() => document.getElementById('order-form')?.__updateEarliest?.());
   // Bestellzeitraum kann um Mitternacht beginnen/enden
   setInterval(() => { safeRun(initBerlinerPromo); safeRun(initBerlinerPage); }, 5 * 60 * 1000);
   // Nach Ladenschluss von „Heute“ auf „Morgen“ wechseln (Startseite + Mittagstisch-Seite) und
@@ -3550,16 +3552,41 @@ function initOrderForm() {
   const submitBtn = document.getElementById('order-submit');
   const status = document.getElementById('order-status');
 
-  // Abholdatum: frühestens heute wählbar, Vorschlag = morgen (Vorlauf für Bulk)
+  // Abholdatum: Brötchen frühestens morgen (Bestellschluss 18 Uhr am Vortag), Berliner laut Vorlauf
   const dateInput = form.querySelector('input[name="Datum"]');
+  const earliestHint = (() => {
+    if (!dateInput) return null;
+    const row = dateInput.closest('.form-row') || dateInput.closest('label');
+    let p = row?.parentElement?.querySelector(':scope > .order-earliest');
+    if (!p) { p = document.createElement('p'); p.className = 'order-earliest'; p.setAttribute('aria-live', 'polite'); p.setAttribute('data-no-i18n', ''); row?.before(p); }
+    return p;
+  })();
+  const updateEarliest = () => {
+    if (!earliestHint) return;
+    const en = alsterLang() === 'en';
+    const iso = isBerliner ? (berlinerFirstPickup(berlinerState().st) || '') : broetchenEarliestIso();
+    if (!iso) { earliestHint.textContent = ''; earliestHint.hidden = true; return; }
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    const day = openingFor(d);
+    const label = d.toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+    const st = isBerliner ? berlinerState().st : null;
+    const from = st?.pickupTimeFrom || (day ? formatMin(day.openMin) : '');
+    earliestHint.innerHTML = `<strong>${en ? 'Earliest pick-up' : 'Frühestens'}:</strong> ${escapeHtml(label)}${from ? (en ? `, from ${from}` : `, ab ${from} Uhr`) : ''}`
+      + (isBerliner ? '' : ` · ${en ? 'Same-day orders by phone only' : 'Für heute nur telefonisch'}: <a href="tel:+494022692891">040 – 22 69 28 91</a>`);
+    earliestHint.hidden = false;
+  };
   const setDefaultDate = () => {
     if (!dateInput) return;
-    const today = new Date();
-    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    if (!isBerliner) dateInput.dataset.earliest = broetchenEarliestIso();
     keepDateMinFresh(dateInput);
-    dateInput.value = isoDate(tomorrow);
+    if (!isBerliner) dateInput.value = dateInput.dataset.earliest;
+    else { const t = new Date(); t.setDate(t.getDate() + 1); dateInput.value = isoDate(t); }
+    dateInput.__dateHintUpdate?.();
+    updateEarliest();
   };
   setDefaultDate();
+  form.__updateEarliest = updateEarliest;
 
   // Zeilen immer frisch abfragen (die Sorten-Liste kann neu aufgebaut werden,
   // wenn der Inhaber die Sorten ändert) — so bleibt getItems korrekt.
@@ -3580,10 +3607,22 @@ function initOrderForm() {
     })
     .filter(it => it.qty > 0);
 
+  // Zwischensumme unter der Sorten-Liste (nur am Handy sichtbar, per CSS)
+  let tally = sortListEl?.parentElement?.querySelector(':scope > .order-tally');
+  if (sortListEl && !tally) { tally = document.createElement('p'); tally.className = 'order-tally'; tally.setAttribute('aria-hidden', 'true'); tally.setAttribute('data-no-i18n', ''); sortListEl.after(tally); }
+  // Beleg nach dem Absenden: solange er steht, überschreibt render() die Übersicht nicht
+  let receiptActive = false;
   const render = () => {
+    if (receiptActive) return;
     const items = getItems();
     const total = items.reduce((s, it) => s + it.qty, 0);
     if (countEl) countEl.textContent = String(total);
+    if (tally) {
+      const priced = items.filter(it => it.price);
+      const sum = priced.reduce((s, it) => s + Math.round(it.price * 100) * it.qty, 0) / 100;
+      tally.textContent = total ? `${total} ${unitWord(total, alsterLang() === 'en')}${priced.length ? ' · ' + formatEuro(sum) : ''}` : '';
+      tally.hidden = !total;
+    }
     if (listEl) {
       const priced = items.filter(it => it.price);
       const sum = priced.reduce((s, it) => s + Math.round(it.price * 100) * it.qty, 0) / 100;
@@ -3628,9 +3667,45 @@ function initOrderForm() {
       row.classList.toggle('is-active', next > 0);
       // Nach einer erfolgreichen Bestellung den Erfolgs-Zustand zuruecksetzen
       submitBtn?.classList.remove('is-success');
+      if (receiptActive) endReceipt();
       render();
     });
   }
+  /* Beleg: Auswahl, Summe und Abholzeit bleiben nach dem Absenden sichtbar */
+  const card = listEl?.closest('.order-summary-card');
+  const endReceipt = () => {
+    receiptActive = false;
+    card?.classList.remove('is-receipt');
+    card?.querySelector('.order-receipt-line')?.remove();
+    card?.querySelector('.order-new')?.remove();
+    if (status) setFormStatus(status, '');
+    form.querySelector('.form-summary')?.remove();
+    render();
+  };
+  const showReceipt = (items, total, pickupDate, pickupTime) => {
+    if (!listEl || !card) return;
+    const en = alsterLang() === 'en';
+    receiptActive = true;
+    card.classList.add('is-receipt');
+    const priced = items.filter(it => it.price);
+    const sum = priced.reduce((s, it) => s + Math.round(it.price * 100) * it.qty, 0) / 100;
+    if (countEl) countEl.textContent = String(total);
+    listEl.innerHTML = items.map(it => `<li><span>${escapeHtml(it.name)}</span><span class="order-summary-amount"><span class="order-summary-qty">${it.qty}×</span>${it.price ? `<span class="order-summary-price">${formatEuro(it.price * it.qty)}</span>` : ''}</span></li>`).join('')
+      + (priced.length ? `<li class="order-summary-total"><span>${en ? 'Total' : 'Summe'}</span><span class="order-summary-price">${formatEuro(sum)}</span></li>` : '');
+    const dm = String(pickupDate).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const when = dm ? new Date(+dm[1], +dm[2] - 1, +dm[3]).toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) : pickupDate;
+    const line = document.createElement('p');
+    line.className = 'order-receipt-line'; line.setAttribute('data-no-i18n', '');
+    line.textContent = `${en ? 'Pick-up' : 'Abholung'}: ${when}${pickupTime ? ` · ${pickupTime}${en ? '' : ' Uhr'}` : ''}`;
+    listEl.after(line);
+    if (minNote) { minNote.textContent = ''; minNote.hidden = true; }
+    if (submitBtn) submitBtn.disabled = true;
+    const again = document.createElement('button');
+    again.type = 'button'; again.className = 'order-new'; again.setAttribute('data-no-i18n', '');
+    again.textContent = en ? 'New order' : 'Neue Bestellung';
+    again.addEventListener('click', () => { endReceipt(); submitBtn?.classList.remove('is-success'); });
+    (submitBtn || line).after(again);
+  };
 
   // Sorten-Liste aus den (ggf. vom Inhaber gepflegten) Daten aufbauen.
   // Erneut aufrufbar: nach der Backend-Hydration und bei Live-Änderungen,
@@ -3683,17 +3758,33 @@ function initOrderForm() {
     const items = getItems();
     const total = items.reduce((s, it) => s + it.qty, 0);
     const en = alsterLang() === 'en';
-    if (isBerliner && !berlinerState().visible) {
-      setFormStatus(status, en ? 'Pre-orders are currently closed.' : 'Die Berliner-Vorbestellung ist gerade nicht geöffnet.', 'error');
+    clearFieldErrors(form);
+    // Fehler: Statuszeile füllen, Feld markieren, Statuszeile ins Bild holen
+    const fail = (msg, fieldName) => {
+      setFormStatus(status, msg, 'error');
+      if (fieldName) showFieldError(fieldFor(form, fieldName), msg);
+      revealStatus(status);
       if (submitBtn) submitBtn.disabled = false;
+    };
+    if (isBerliner && !berlinerState().visible) {
+      fail(en ? 'Pre-orders are currently closed.' : 'Die Berliner-Vorbestellung ist gerade nicht geöffnet.');
       return;
     }
     if (total < MIN_ORDER) {
-      setFormStatus(status, isBerliner
+      fail(isBerliner
         ? (en ? 'Please select at least one doughnut.' : 'Bitte wählen Sie mindestens einen Berliner.')
-        : (en ? 'Please select at least one roll.' : 'Bitte wählen Sie mindestens ein Brötchen.'), 'error');
-      if (submitBtn) submitBtn.disabled = false;
+        : (en ? 'Please select at least one roll.' : 'Bitte wählen Sie mindestens ein Brötchen.'));
       return;
+    }
+    if (!isBerliner) {
+      // Bestellschluss 18 Uhr am Vortag: frühester Abholtag laut broetchenEarliestIso()
+      const d = form.querySelector('input[name="Datum"]')?.value || '';
+      const earliest = broetchenEarliestIso();
+      if (d && d < earliest) {
+        fail(en ? `Online orders close at 6 pm the day before. The earliest pick-up day is ${formatDateLong(earliest, true)} – for today, please call us: 040 – 22 69 28 91.`
+                : `Online-Bestellungen bis 18 Uhr am Vortag – der früheste Abholtag ist ${formatDateLong(earliest)}. Für heute rufen Sie uns bitte an: 040 – 22 69 28 91.`, 'Datum');
+        return;
+      }
     }
     if (isBerliner) {
       const { st } = berlinerState();
@@ -3701,38 +3792,34 @@ function initOrderForm() {
       const t = form.querySelector('input[name="Uhrzeit"]')?.value || '';
       const min = parseInt(st.minQty, 10);
       if (min > 1 && total < min) {
-        setFormStatus(status, en ? `Please order at least ${min} doughnuts.` : `Bitte bestellen Sie mindestens ${min} Berliner.`, 'error');
-        if (submitBtn) submitBtn.disabled = false;
+        fail(en ? `Please order at least ${min} doughnuts.` : `Bitte bestellen Sie mindestens ${min} Berliner.`);
         return;
       }
       const lead = berlinerLead(st);
       if (lead > 0 && d && d < addDaysIso(isoLocal(new Date()), lead)) {
-        setFormStatus(status, en ? `Please order at least ${lead} day${lead > 1 ? 's' : ''} before pick-up.` : `Bitte ${lead === 1 ? 'einen Tag' : lead + ' Tage'} vor der Abholung bestellen – der früheste Abholtag ist ${formatDateLong(berlinerFirstPickup(st) || addDaysIso(isoLocal(new Date()), lead))}.`, 'error');
-        if (submitBtn) submitBtn.disabled = false;
+        fail(en ? `Please order at least ${lead} day${lead > 1 ? 's' : ''} before pick-up.` : `Bitte ${lead === 1 ? 'einen Tag' : lead + ' Tage'} vor der Abholung bestellen – der früheste Abholtag ist ${formatDateLong(berlinerFirstPickup(st) || addDaysIso(isoLocal(new Date()), lead))}.`, 'Datum');
         return;
       }
       if (t && ((st.pickupTimeFrom && t < st.pickupTimeFrom) || (st.pickupTimeTo && t > st.pickupTimeTo))) {
-        setFormStatus(status, en ? `Pick-up is possible between ${st.pickupTimeFrom || ''} and ${st.pickupTimeTo || ''}.` : `Abholung ist zwischen ${st.pickupTimeFrom || '…'} und ${st.pickupTimeTo || '…'} Uhr möglich.`, 'error');
-        if (submitBtn) submitBtn.disabled = false;
+        fail(en ? `Pick-up is possible between ${st.pickupTimeFrom || ''} and ${st.pickupTimeTo || ''}.` : `Abholung ist zwischen ${st.pickupTimeFrom || '…'} und ${st.pickupTimeTo || '…'} Uhr möglich.`, 'Uhrzeit');
         return;
       }
       if ((st.pickupFrom && d < st.pickupFrom) || (st.pickupTo && d > st.pickupTo)) {
         const a = formatDateLong(st.pickupFrom || st.pickupTo, en), b = formatDateLong(st.pickupTo || st.pickupFrom, en);
         const range = a === b ? a : `${a} – ${b}`;
-        setFormStatus(status, en ? `Pick-up is possible on ${range}.` : `Abholung ist möglich: ${range}.`, 'error');
-        if (submitBtn) submitBtn.disabled = false;
+        fail(en ? `Pick-up is possible on ${range}.` : `Abholung ist möglich: ${range}.`, 'Datum');
         return;
       }
     }
     if (!form.checkValidity()) {
-      setFormStatus(status, invalidFieldMessage(form, en), 'error');
+      const msg = invalidFieldMessage(form, en);
+      setFormStatus(status, msg, 'error'); showFieldError(form.__badField, msg);
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
-    const slotErr = slotProblem(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
-    if (slotErr) {
-      setFormStatus(status, slotErr, 'error');
-      if (submitBtn) submitBtn.disabled = false;
+    const slotInfo = slotProblemInfo(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
+    if (slotInfo) {
+      fail(slotInfo.msg, slotInfo.field);
       return;
     }
     const data = new FormData(form);
@@ -3758,11 +3845,15 @@ function initOrderForm() {
     if (saved) {
       if (submitBtn) submitBtn.classList.add('is-success');
       setFormStatus(status, en ? `Thank you! Your order of ${total} ${unitWord(total, true)} has reached us. We will confirm by phone or email.` : `Vielen Dank! Ihre Bestellung über ${total} ${unitWord(total, false)} ist bei uns eingegangen. Wir bestätigen telefonisch oder per E-Mail.`, 'ok');
+      // Beleg zuerst (Auswahl, Summe, Abholzeit bleiben sichtbar), dann das Formular leeren
+      const snapshot = items.map(it => ({ ...it }));
       try { form.reset(); } catch {}
       getRows().forEach(row => { const v = row.querySelector('.qty-value'); if (v) v.textContent = '0'; row.classList.remove('is-active'); });
       setDefaultDate();
       if (isBerliner) initBerlinerPage();
       render();
+      showReceipt(snapshot, total, entry.pickupDate, entry.pickupTime);
+      revealStatus(status);
     } else {
       // Fallback: Mail-Programm
       const lines = items.map(it => `${it.qty}× ${it.name}${it.price ? ` (${formatEuro(it.price * it.qty)})` : ''}`).join('\n');
@@ -3783,7 +3874,8 @@ function initOrderForm() {
 /* ---------- Reservierungs-Formular ---------- */
 /* Prüft Datum + Uhrzeit gegen Öffnungszeiten, Schließtage und "jetzt".
    Liefert eine verständliche Fehlermeldung (DE/EN) oder null, wenn alles passt. */
-function slotProblem(dateStr, timeStr, en) {
+function slotProblem(dateStr, timeStr, en) { return slotProblemInfo(dateStr, timeStr, en)?.msg || null; }
+function slotProblemInfo(dateStr, timeStr, en) {
   const dm = String(dateStr || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   const tm = String(timeStr || '').match(/^(\d{1,2}):(\d{2})/);
   if (!dm || !tm) return null; // Pflichtfeld-Prüfung übernimmt der Browser
@@ -3792,31 +3884,46 @@ function slotProblem(dateStr, timeStr, en) {
   const now = new Date();
   const dateLabel = d.toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
   if (isoLocal(d) < isoLocal(now) || (isoLocal(d) === isoLocal(now) && minutes <= now.getHours() * 60 + now.getMinutes())) {
-    return en ? 'This time is already in the past. Please choose a later time.'
-              : 'Diese Uhrzeit liegt schon in der Vergangenheit. Bitte wählen Sie eine spätere Zeit.';
+    return { field: isoLocal(d) < isoLocal(now) ? 'Datum' : 'Uhrzeit', msg: en ? 'This time is already in the past. Please choose a later time.'
+              : 'Diese Uhrzeit liegt schon in der Vergangenheit. Bitte wählen Sie eine spätere Zeit.' };
   }
   const hol = holidayOn(d);
   if (hol) {
     const why = hol.label ? ` (${holidayLabel(hol.label)})` : '';
-    return en ? `We are closed on ${dateLabel}${why}. Please choose another day.`
-              : `Am ${dateLabel} haben wir geschlossen${why}. Bitte wählen Sie einen anderen Tag.`;
+    return { field: 'Datum', msg: en ? `We are closed on ${dateLabel}${why}. Please choose another day.`
+              : `Am ${dateLabel} haben wir geschlossen${why}. Bitte wählen Sie einen anderen Tag.` };
   }
   const day = openingFor(d);
   if (!day) {
-    return en ? `We are closed on ${dateLabel}. Please choose another day.`
-              : `Am ${dateLabel} haben wir geschlossen. Bitte wählen Sie einen anderen Tag.`;
+    return { field: 'Datum', msg: en ? `We are closed on ${dateLabel}. Please choose another day.`
+              : `Am ${dateLabel} haben wir geschlossen. Bitte wählen Sie einen anderen Tag.` };
   }
   if (minutes < day.openMin || minutes >= day.closeMin) {
     const range = `${formatMin(day.openMin)} – ${formatMin(day.closeMin)}`;
-    return en ? `On ${dateLabel} we are open ${range}. Please choose a time within our opening hours.`
-              : `Am ${dateLabel} haben wir von ${formatMin(day.openMin)} bis ${formatMin(day.closeMin)} Uhr geöffnet. Bitte wählen Sie eine Uhrzeit in diesem Zeitraum.`;
+    return { field: 'Uhrzeit', msg: en ? `On ${dateLabel} we are open ${range}. Please choose a time within our opening hours.`
+              : `Am ${dateLabel} haben wir von ${formatMin(day.openMin)} bis ${formatMin(day.closeMin)} Uhr geöffnet. Bitte wählen Sie eine Uhrzeit in diesem Zeitraum.` };
   }
   return null;
+}
+/* Frühester Abholtag für den Brötchen-Service: Bestellschluss 18 Uhr am Vortag
+   (Entscheidung des Inhabers). Vor 18 Uhr = morgen, danach = übermorgen; Schließtage
+   werden übersprungen. */
+const BROETCHEN_CUTOFF_MIN = 18 * 60;
+function broetchenEarliestIso() {
+  const now = new Date();
+  let d = new Date(now); d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + ((now.getHours() * 60 + now.getMinutes()) >= BROETCHEN_CUTOFF_MIN ? 2 : 1));
+  for (let i = 0; i < 31; i++) {
+    if (!holidayOn(d) && openingFor(d)) return isoDate(d);
+    d.setDate(d.getDate() + 1);
+  }
+  return isoDate(d);
 }
 // Hält "frühestens heute" aktuell (Seite kann über Mitternacht offen sein).
 function keepDateMinFresh(input) {
   if (!input) return;
-  const refresh = () => { input.min = isoDate(new Date()); };
+  // Berliner-Seite: frühester Abholtag (Vorlauf) liegt in dataset.berlinerMin
+  const refresh = () => { input.min = input.dataset.berlinerMin || input.dataset.earliest || isoDate(new Date()); };
   refresh();
   input.addEventListener('focus', refresh);
 }
@@ -3826,11 +3933,24 @@ function initReservationForm() {
   if (!form) return;
   const status = form.querySelector('.form-status');
   const dateInput = form.querySelector('input[name="Datum"]');
-  if (dateInput) {
+  const timeSel = form.querySelector('select[name="Uhrzeit"]');
+  const setDefaultDate = () => {
+    if (!dateInput) return;
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
     keepDateMinFresh(dateInput);
     if (!dateInput.value) dateInput.value = isoDate(tomorrow);
+    dateInput.__dateHintUpdate?.();
+    buildTimeSlots(timeSel, dateInput.value);
+  };
+  setDefaultDate();
+  if (dateInput && timeSel) {
+    const rebuild = () => buildTimeSlots(timeSel, dateInput.value);
+    ['input', 'change'].forEach(ev => dateInput.addEventListener(ev, rebuild));
+    timeSel.addEventListener('focus', rebuild);
+    dateInput.__slotsUpdate = rebuild;
   }
+  // Erfolgs-Zustand und Zusammenfassung verschwinden bei der nächsten Eingabe
+  form.addEventListener('input', () => { form.querySelector('.form-submit')?.classList.remove('is-success'); form.querySelector('.form-summary')?.remove(); });
   const submitBtn = form.querySelector('.form-submit');
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -3839,14 +3959,26 @@ function initReservationForm() {
     if (submitBtn?.disabled) return;
     if (submitBtn) submitBtn.disabled = true;
     const en = alsterLang() === 'en';
-    if (!form.checkValidity()) {
-      setFormStatus(status, invalidFieldMessage(form, en), 'error');
+    clearFieldErrors(form);
+    form.querySelector('.form-summary')?.remove();
+    const dVal = form.querySelector('[name="Datum"]')?.value, tVal = form.querySelector('[name="Uhrzeit"]')?.value;
+    // Ohne wählbare Uhrzeit (Schließtag / Tag vorbei) zuerst die passende Datums-Meldung
+    const noSlots = timeSel && !timeSel.querySelector('option[value]:not([value=""])');
+    if (noSlots && dVal) {
+      const info = slotProblemInfo(dVal, '12:00', en) || { field: 'Datum', msg: en ? 'No times are available on this day. Please choose another day.' : 'An diesem Tag ist keine Uhrzeit mehr frei. Bitte wählen Sie einen anderen Tag.' };
+      setFormStatus(status, info.msg, 'error'); showFieldError(fieldFor(form, info.field), info.msg); revealStatus(status);
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
-    const slotErr = slotProblem(form.querySelector('input[name="Datum"]')?.value, form.querySelector('input[name="Uhrzeit"]')?.value, en);
-    if (slotErr) {
-      setFormStatus(status, slotErr, 'error');
+    if (!form.checkValidity()) {
+      const msg = invalidFieldMessage(form, en);
+      setFormStatus(status, msg, 'error'); showFieldError(form.__badField, msg);
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
+    const slotInfo = slotProblemInfo(dVal, tVal, en);
+    if (slotInfo) {
+      setFormStatus(status, slotInfo.msg, 'error'); showFieldError(fieldFor(form, slotInfo.field), slotInfo.msg); revealStatus(status);
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -3880,6 +4012,24 @@ function initReservationForm() {
       if (submitBtn) submitBtn.classList.add('is-success');
       setFormStatus(status, en ? 'Thank you! Your request has reached us. We will get back to you by phone or email.' : 'Vielen Dank! Ihre Anfrage ist bei uns eingegangen. Wir melden uns telefonisch oder per E-Mail.', 'ok');
       try { form.reset(); } catch {}
+      // Datum steht nach dem Zurücksetzen wieder auf morgen, Hinweis und Uhrzeiten passen dazu
+      setDefaultDate();
+      // Kurze Zusammenfassung der Anfrage unter der Erfolgsmeldung
+      const dm = entry.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (dm && status) {
+        const when = new Date(+dm[1], +dm[2] - 1, +dm[3]).toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+        const sum = document.createElement('p');
+        sum.className = 'form-summary';
+        sum.setAttribute('data-no-i18n', '');
+        const persons = en ? entry.persons.replace(/^(\d+) Person(en)?$/, (_, n) => `${n} ${n === '1' ? 'person' : 'people'}`).replace(/^mehr als 8 Personen$/, 'more than 8 people') : entry.persons;
+        sum.textContent = `${when} · ${entry.time}${en ? '' : ' Uhr'} · ${persons}`;
+        const route = document.createElement('a');
+        route.className = 'js-route'; route.href = routeHref(); route.target = '_blank'; route.rel = 'noopener';
+        route.textContent = en ? 'Get directions →' : 'Route planen →';
+        sum.append(' · ', route);
+        status.after(sum);
+      }
+      revealStatus(status);
     } else {
       // Fallback: Mail-Programm oeffnen
       const subject = `Reservierungsanfrage – ${entry.name}`;
@@ -3904,6 +4054,81 @@ function setFormStatus(el, msg, kind = '') {
   el.classList.remove('ok', 'error');
   if (kind) el.classList.add(kind);
 }
+/* Statuszeile ins Bild holen (am Handy liegt sie sonst unter dem Knopf außerhalb des Sichtfelds) */
+function revealStatus(el) {
+  if (!el) return;
+  try { el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' }); } catch (e) {}
+}
+/* Fehlermeldung zusätzlich direkt am Feld (gleicher Wortlaut wie in der Statuszeile).
+   Als <small> im Label, damit die label > span-Stile unberührt bleiben; verschwindet
+   bei der nächsten Eingabe. */
+function clearFieldErrors(form) {
+  if (!form) return;
+  form.querySelectorAll('.field-error').forEach(el => el.remove());
+  form.querySelectorAll('[aria-invalid="true"]').forEach(f => {
+    f.removeAttribute('aria-invalid');
+    const ids = (f.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && !id.startsWith('fe-'));
+    if (ids.length) f.setAttribute('aria-describedby', ids.join(' ')); else f.removeAttribute('aria-describedby');
+  });
+}
+let fieldErrorSeq = 0;
+function showFieldError(field, msg) {
+  if (!field || !msg) return;
+  const label = field.closest('label');
+  if (!label) return;
+  label.querySelector('.field-error')?.remove();
+  const small = document.createElement('small');
+  small.className = 'field-error';
+  small.id = 'fe-' + (++fieldErrorSeq);
+  small.setAttribute('aria-hidden', 'true'); // die Statuszeile (aria-live) liest die Meldung bereits vor
+  small.setAttribute('data-no-i18n', '');
+  small.textContent = msg;
+  label.appendChild(small);
+  field.setAttribute('aria-invalid', 'true');
+  const ids = (field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+  ids.push(small.id);
+  field.setAttribute('aria-describedby', ids.join(' '));
+  const clear = () => {
+    small.remove();
+    field.removeAttribute('aria-invalid');
+    const rest = (field.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== small.id);
+    if (rest.length) field.setAttribute('aria-describedby', rest.join(' ')); else field.removeAttribute('aria-describedby');
+  };
+  ['input', 'change'].forEach(ev => field.addEventListener(ev, clear, { once: true }));
+}
+/* Feld, das zu einer Datum/Uhrzeit-Meldung gehört (für die Meldung am Feld) */
+function fieldFor(form, name) { return form?.querySelector(`[name="${name}"]`) || null; }
+
+/* Reservierung: Uhrzeit als Auswahl aus den Öffnungszeiten des gewählten Tages
+   (15-Minuten-Schritte, letzter Platz 30 Minuten vor Ladenschluss, heute nur
+   Zeiten mindestens 30 Minuten in der Zukunft). Nichts ist vorbelegt. */
+const RES_LAST_SLOT_GAP = 30;
+function buildTimeSlots(select, dateStr) {
+  if (!select) return;
+  const en = alsterLang() === 'en';
+  const keep = select.value;
+  const m = String(dateStr || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const opts = [`<option value="">${en ? 'Please choose' : 'Bitte wählen'}</option>`];
+  let slots = [];
+  if (m) {
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    const day = holidayOn(d) ? null : openingFor(d);
+    if (day) {
+      const now = new Date();
+      const today = isoLocal(d) === isoLocal(now);
+      const minToday = now.getHours() * 60 + now.getMinutes() + 30;
+      for (let t = Math.ceil(day.openMin / 15) * 15; t <= day.closeMin - RES_LAST_SLOT_GAP; t += 15) {
+        if (today && t < minToday) continue;
+        slots.push(t);
+      }
+    }
+  }
+  if (m && !slots.length) opts.length = 0, opts.push(`<option value="">${en ? 'Closed' : 'Geschlossen'}</option>`);
+  slots.forEach(t => opts.push(`<option value="${formatMin(t)}">${formatMin(t)}${en ? '' : ' Uhr'}</option>`));
+  select.innerHTML = opts.join('');
+  select.setAttribute('data-no-i18n', '');
+  if (keep && slots.some(t => formatMin(t) === keep)) select.value = keep;
+}
 
 /* Benennt das erste ungültige Pflichtfeld, springt hin und liefert eine
    klare, sprachbewusste Meldung. Von beiden Formularen genutzt. Am Handy
@@ -3912,6 +4137,7 @@ function invalidFieldMessage(form, en) {
   // Nur echte Formularfelder — NICHT <form>/<fieldset>, die :invalid ebenfalls
   // matchen können (sonst landet man beim Fieldset statt beim leeren Feld).
   const bad = form.querySelector('input:invalid, select:invalid, textarea:invalid');
+  form.__badField = bad || null;
   if (!bad) return en ? 'Please check your entries.' : 'Bitte prüfen Sie Ihre Eingaben.';
   const lbl = (bad.closest('label')?.querySelector('span')?.textContent) || '';
   const feld = lbl.replace(/\*/g, '').trim() || bad.name || (en ? 'field' : 'Feld');
