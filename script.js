@@ -132,13 +132,23 @@ function berlinerState() {
   const st = berlinerSettings();
   const today = isoLocal(new Date());
   if (!st.active) return { visible: false, reason: 'off', st };
-  if (st.orderFrom && today < st.orderFrom) return { visible: false, reason: 'soon', st };
+  if (st.orderFrom && today < st.orderFrom) {
+    // Vorankündigung: ab N Tagen vor Bestellbeginn erscheint der Hinweis ohne Bestellknopf
+    const n = berlinerAnnounceDays(st);
+    const announce = n > 0 && addDaysIso(today, n) >= st.orderFrom;
+    return { visible: false, reason: 'soon', announce, st };
+  }
   if (st.orderTo && today > st.orderTo) return { visible: false, reason: 'over', st };
   // Abholzeitraum vorbei → Aktion ist beendet, auch wenn „Bestellbar bis“ leer ist
   if (st.pickupTo && today > st.pickupTo) return { visible: false, reason: 'over', st };
   // Mit Vorlauf (z. B. 1 Tag vorher) ist nach dem letzten erreichbaren Abholtag Schluss
   if (st.pickupTo && berlinerLead(st) > 0 && addDaysIso(today, berlinerLead(st)) > st.pickupTo) return { visible: false, reason: 'over', st };
   return { visible: true, st };
+}
+// Vorankündigung in Tagen vor Bestellbeginn (0 = keine, sonst 7 oder 14)
+function berlinerAnnounceDays(st) {
+  const n = parseInt(st && st.announceDays, 10);
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 30) : 0;
 }
 // Bestellvorlauf in Tagen (0 = am selben Tag möglich, Standard 1)
 function berlinerLead(st) {
@@ -188,7 +198,7 @@ function formatDateLong(iso, en) {
 
 /* Menüpunkt + Ankündigung auf der Startseite — nur solange die Aktion läuft. */
 function initBerlinerPromo() {
-  const { visible, st } = berlinerState();
+  const { visible, announce, st } = berlinerState();
   const en = alsterLang() === 'en';
   const onPage = /berliner\.html$/.test(location.pathname);
 
@@ -208,23 +218,26 @@ function initBerlinerPromo() {
     link.classList.toggle('is-active', onPage);
   });
 
-  // Ankündigung auf der Startseite (unter dem Hero)
+  // Ankündigung auf der Startseite (unter dem Hero) – während der Aktion mit Bestellknopf,
+  // in der Vorankündigung (announce) nur als Hinweis „Vorbestellbar ab …“
   const hero = document.querySelector('.hero-landing');
   let promo = document.getElementById('berliner-promo');
-  if (!visible || !hero) { promo?.remove(); return; }
+  if ((!visible && !announce) || !hero) { promo?.remove(); syncFooterExtras(); return; }
   const title = (st.title || '').trim() || 'Berliner für Silvester vorbestellen';
   const text = (st.text || '').trim() || 'Frisch aus unserer Backstube — jetzt vorbestellen und zur Abholung bereitlegen lassen.';
   const rules = berlinerRulesText(st, en);
+  const soon = !visible && announce;
+  const from = soon ? (en ? `Pre-orders open on ${formatDateLong(st.orderFrom, true)}` : `Vorbestellbar ab ${formatDateLong(st.orderFrom)}`) : '';
   const until = [st.orderTo ? (en ? `Orders until ${formatDateLong(st.orderTo, true)}` : `Bestellbar bis ${formatDateLong(st.orderTo)}`) : '', rules].filter(Boolean).join(' · ');
   const html = `
     <div class="container berliner-promo-inner">
       <div>
-        <p class="berliner-promo-kicker">${en ? 'Pre-order now' : 'Jetzt vorbestellen'}</p>
+        <p class="berliner-promo-kicker">${soon ? (en ? 'Coming up' : 'Bald') : (en ? 'Pre-order now' : 'Jetzt vorbestellen')}</p>
         <h2 class="berliner-promo-title">${escapeHtml(title)}</h2>
         <p class="berliner-promo-text">${escapeHtml(text)}</p>
-        ${until ? `<p class="berliner-promo-until">${escapeHtml(until)}</p>` : ''}
+        ${soon ? `<p class="berliner-promo-until">${escapeHtml([from, rules].filter(Boolean).join(' · '))}</p>` : (until ? `<p class="berliner-promo-until">${escapeHtml(until)}</p>` : '')}
       </div>
-      <a class="btn btn-gold" href="berliner.html">${en ? 'Pre-order doughnuts' : 'Berliner vorbestellen'} <svg class="ico ico-sm"><use href="#i-arrow"/></svg></a>
+      ${soon ? '' : `<a class="btn btn-gold" href="berliner.html">${en ? 'Pre-order doughnuts' : 'Berliner vorbestellen'} <svg class="ico ico-sm"><use href="#i-arrow"/></svg></a>`}
     </div>`;
   if (!promo) {
     promo = document.createElement('section');
@@ -233,7 +246,9 @@ function initBerlinerPromo() {
     promo.setAttribute('data-no-i18n', '');
     hero.after(promo);
   }
+  promo.classList.toggle('is-soon', soon);
   if (promo.dataset.html !== html) { promo.innerHTML = html; promo.dataset.html = html; }
+  syncFooterExtras();
 }
 
 /* Berliner-Seite: geschlossen/offen umschalten, Texte und Zeitraum anzeigen. */
@@ -347,6 +362,7 @@ function rerenderData() {
   run(initHours);
   run(updateLiveStatus);
   run(initNavExtra);
+  run(initJobs);
   run(initLunchWeek);
   run(initLandingTeaser);
   run(() => { if (refreshOrderSorts) refreshOrderSorts(); });
@@ -447,6 +463,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'broetchen-items':
       case 'berliner-items': if (refreshOrderSorts) refreshOrderSorts(); break;
       case 'berliner-settings': initBerlinerPromo(); initBerlinerPage(); break;
+      case 'jobs':        initJobs(); break;
     }
   }, ['content']);
 });
@@ -892,9 +909,50 @@ function setEditStatus(msg, kind = '') {
 }
 
 /* ---------- Design (Logo, Bilder, Galerie, Akzentfarbe) ---------- */
+/* Google-Bewertungslink aus „Bilder & Farben“ (Mitgliederbereich): nur mit gültigem Link erscheint
+   die Zeile unter den Bewertungskarten, der Link auf der Kontaktseite und in der Fußzeile. */
+function googleReviewUrl() {
+  let design = {};
+  try { design = JSON.parse(localStorage.getItem(STORAGE_DESIGN) || '{}'); } catch {}
+  const u = String(design.googleReviewUrl || '').trim();
+  return /^https:\/\/(g\.page\/|search\.google\.com\/|www\.google\.[a-z.]+\/|maps\.app\.goo\.gl\/|goo\.gl\/)/i.test(u) ? u : '';
+}
+function initGoogleReview() {
+  const url = googleReviewUrl();
+  const en = alsterLang() === 'en';
+  // Startseite: Zeile unter den Bewertungskarten
+  const grid = document.querySelector('.reviews-cta-grid');
+  if (grid) {
+    let line = document.getElementById('reviews-google');
+    if (!url) line?.remove();
+    else {
+      if (!line) {
+        line = document.createElement('p');
+        line.id = 'reviews-google'; line.className = 'reviews-google reveal in';
+        line.setAttribute('data-no-i18n', '');
+        grid.after(line);
+      }
+      line.innerHTML = `${en ? 'Enjoyed your visit?' : 'Hat es Ihnen bei uns gefallen?'} <a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${en ? 'Write a Google review' : 'Bewertung bei Google schreiben'} <svg class="ico ico-sm" aria-hidden="true"><use href="#i-ext"/></svg></a>`;
+    }
+  }
+  // Kontaktseite: Link neben Instagram/Tripadvisor
+  const social = document.querySelector('.contact .social');
+  if (social) {
+    let a = social.querySelector('.social-google');
+    if (!url) a?.remove();
+    else {
+      if (!a) { a = document.createElement('a'); a.className = 'social-google'; a.target = '_blank'; a.rel = 'noopener noreferrer'; social.appendChild(a); }
+      a.href = url; a.textContent = en ? 'Google review' : 'Google-Bewertung';
+    }
+  }
+  // Fußzeile („Folgen Sie uns“)
+  document.querySelectorAll('.footer-google-review').forEach(a => { a.hidden = !url; if (url) a.href = url; });
+}
+
 function initDesign() {
   let design = {};
   try { design = JSON.parse(localStorage.getItem(STORAGE_DESIGN) || '{}'); } catch {}
+  initGoogleReview();
 
   // Akzentfarbe
   if (design.accentColor) {
@@ -1093,14 +1151,18 @@ function openGalleryLightbox(images, start) {
   dlg.querySelector('.gallery-lightbox-close').focus({ preventScroll: true });
 }
 
-/* Kontakt „Route planen": auf iPhone/iPad/Mac direkt Apple Karten, sonst Google Maps */
-function initRouteLinks() {
+/* „Route planen“ (Startseite, Kopfzeilen-Menü, Kontakt, Fußzeile): auf iPhone/iPad/Mac
+   direkt Apple Karten, sonst Google Maps – jeweils die Navigation, nicht nur die Suche. */
+function routeHref() {
   const ua = navigator.userAgent || '';
   const apple = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && !/Chrome|Firefox|Edg/.test(ua));
-  if (!apple) return;
-  document.querySelectorAll('a.js-route').forEach(a => {
-    a.href = 'https://maps.apple.com/?daddr=Ifflandstra%C3%9Fe+45%2C+22087+Hamburg';
-  });
+  return apple
+    ? 'https://maps.apple.com/?daddr=Ifflandstra%C3%9Fe+45%2C+22087+Hamburg'
+    : 'https://www.google.com/maps/dir/?api=1&destination=Ifflandstra%C3%9Fe+45%2C+22087+Hamburg';
+}
+function initRouteLinks() {
+  const href = routeHref();
+  document.querySelectorAll('a.js-route').forEach(a => { a.href = href; });
 }
 
 /* ---------- Scroll-Aware Header ---------- */
@@ -1518,6 +1580,14 @@ function initKarteJump() {
     mount.before(nav);
   }
   nav.setAttribute('aria-label', alsterLang() === 'en' ? 'Menu sections' : 'Kategorien der Speisekarte');
+  // „Karte drucken“ (nur am Computer sichtbar, per CSS): druckt die Karte sauber auf A4
+  if (!document.getElementById('karte-print')) {
+    const pr = document.createElement('button');
+    pr.type = 'button'; pr.id = 'karte-print'; pr.className = 'karte-print';
+    pr.innerHTML = '<svg class="ico ico-sm" aria-hidden="true" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V4h10v4"/><rect x="4" y="8" width="16" height="9" rx="2"/><path d="M7 14h10v6H7z"/></g></svg><span>Karte drucken</span>';
+    pr.addEventListener('click', () => window.print());
+    nav.after(pr);
+  }
   nav.innerHTML = blocks.map((b, i) => {
     if (!b.id) b.id = 'karte-' + (i + 1);
     const label = b.querySelector('h2')?.textContent.trim() || '';
@@ -1615,7 +1685,7 @@ function initNavExtra() {
     <p class="nav-extra-status${st?.state === 'open' ? ' is-open' : ''}">${escapeHtml(st?.text || hoursText)}</p>
     <p class="nav-extra-hours">${escapeHtml(hoursText)}</p>
     <a class="nav-extra-call" href="tel:+494022692891"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
-    <a class="nav-extra-addr" href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener">Ifflandstraße 45 · 22087 Hamburg</a>`;
+    <a class="nav-extra-addr js-route" href="${routeHref()}" target="_blank" rel="noopener" title="${en ? 'Get directions' : 'Route planen'}">Ifflandstraße 45 · 22087 Hamburg</a>`;
 }
 
 /* „Nach oben“-Knopf auf langen Seiten (nur mobil sichtbar, per CSS) */
@@ -1663,6 +1733,7 @@ function injectMenuSchema(data) {
           const price = parsePrice(it.price);
           if (price) item.offers = { '@type': 'Offer', price, priceCurrency: 'EUR' };
           if (it.tag && /vegan/i.test(it.tag)) item.suitableForDiet = 'https://schema.org/VeganDiet';
+          else if (it.tag && /vegetarisch|vegetarian/i.test(it.tag)) item.suitableForDiet = 'https://schema.org/VegetarianDiet';
           return item;
         })
       }))
@@ -1827,6 +1898,7 @@ function injectLunchSchema(weekData, monday) {
         hasMenuItem: dishes.map(x => {
           const item = { '@type': 'MenuItem', name: x.dish };
           if (x.side) item.description = x.side;
+          if (x.veg) item.suitableForDiet = 'https://schema.org/VegetarianDiet';
           const price = lunchPriceFor(weekData, x);
           if (price != null) item.offers = { '@type': 'Offer', price: price.toFixed(2), priceCurrency: 'EUR' };
           return item;
@@ -1855,9 +1927,30 @@ function injectLunchSchema(weekData, monday) {
 function dayDishes(entry) {
   if (!entry || entry.closed) return [];
   // price = optionale Abweichung je Gericht (sonst gilt der Wochenpreis, siehe lunchPriceFor)
-  return [{ dish: entry.dish, side: entry.side, price: entry.price }, { dish: entry.dish2, side: entry.side2, price: entry.price2 }]
-    .map(d => ({ dish: String(d.dish || '').trim(), side: String(d.side || '').trim(), price: lunchPriceNum(d.price) }))
+  return [{ dish: entry.dish, side: entry.side, price: entry.price, veg: entry.veg }, { dish: entry.dish2, side: entry.side2, price: entry.price2, veg: entry.veg2 }]
+    .map(d => ({ dish: String(d.dish || '').trim(), side: String(d.side || '').trim(), price: lunchPriceNum(d.price), veg: !!d.veg }))
     .filter(d => d.dish);
+}
+/* „vegetarisch“-Kennzeichen (Häkchen im Wochenplan): als eigenes kleines Element neben dem
+   Gericht – nicht, wenn der Inhaber es schon in den Text geschrieben hat. */
+function dietLabel(d, en) {
+  if (!d || !d.veg) return '';
+  if (/vegetarisch|vegan|veggie|vegetarian|fleischlos/i.test(d.dish || '')) return '';
+  return en ? 'vegetarian' : 'vegetarisch';
+}
+function dietBadgeHtml(d, en) {
+  const t = dietLabel(d, en);
+  return t ? ` <span class="diet-badge" data-no-i18n="">${t}</span>` : '';
+}
+function setDishText(el, d, en) {
+  if (!el) return;
+  el.textContent = d.dish;
+  const t = dietLabel(d, en);
+  if (t) {
+    const b = document.createElement('span');
+    b.className = 'diet-badge'; b.setAttribute('data-no-i18n', ''); b.textContent = t;
+    el.append(' ', b);
+  }
 }
 
 /* ---------- Mittagstisch: optionaler Preis und Ausgabe-Ende (Mitgliederbereich) ----------
@@ -1949,7 +2042,7 @@ function renderAltDish(afterEl, entry, en, withMit) {
   // Gleiche Gestaltung wie das erste Gericht (beide Optionen auf Augenhöhe)
   const dishCls = (host.querySelector('[id$="-dish"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b|\bis-x?long\b/g, '').trim();
   const sideCls = (host.querySelector('[id$="-side"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b/g, '').trim();
-  alt.innerHTML = `${orDividerHtml(en)}<p class="dish-alt-name ${dishCls}">${escapeHtml(d.dish)}</p>${side ? `<p class="dish-alt-side ${sideCls}">${escapeHtml(side)}</p>` : ''}`;
+  alt.innerHTML = `${orDividerHtml(en)}<p class="dish-alt-name ${dishCls}">${escapeHtml(d.dish)}${dietBadgeHtml(d, en)}</p>${side ? `<p class="dish-alt-side ${sideCls}">${escapeHtml(side)}</p>` : ''}`;
   sizeDishText(alt.querySelector('.dish-alt-name'), d.dish);
 }
 
@@ -1982,7 +2075,7 @@ function setLunchShare(btn, dishes, isTomorrow, en) {
 async function shareLunch(btn) {
   const { dishes = [], isTomorrow, en } = btn._share || {};
   if (!dishes.length) return;
-  const names = dishes.map(d => d.dish).join(en ? ' or ' : ' oder ');
+  const names = dishes.map(d => d.dish + (dietLabel(d, en) ? ` (${dietLabel(d, en)})` : '')).join(en ? ' or ' : ' oder ');
   const when = isTomorrow ? (en ? 'Tomorrow' : 'Morgen') : (en ? 'Today' : 'Heute');
   const text = en
     ? `${when} at Alstercafé: ${names} – from 12:00, Ifflandstraße 45.`
@@ -2025,7 +2118,7 @@ function openLunchSheet(refDate) {
     let body;
     if (entry?.closed) body = `<span class="lunch-sheet-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch' : 'Kein Mittagstisch')}</span>`;
     else if (dayDishes(entry).length) body = dayDishes(entry).map(d =>
-      `<span class="lunch-sheet-dish">${escapeHtml(d.dish)}</span>${d.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(d.side, en))}</span>` : ''}`
+      `<span class="lunch-sheet-dish">${escapeHtml(d.dish)}${dietBadgeHtml(d, en)}</span>${d.side ? `<span class="lunch-sheet-side">${escapeHtml(sideText(d.side, en))}</span>` : ''}`
       + (lunchPriceFor(week, d) != null ? `<span class="lunch-sheet-price">${lunchPriceText(lunchPriceFor(week, d))}</span>` : '')
     ).join(orDividerHtml(en, 'lunch-sheet-or'));
     else body = `<span class="lunch-sheet-pending">${en ? 'Coming soon' : 'Folgt in Kürze'}</span>`;
@@ -2168,7 +2261,7 @@ function initLandingTeaser() {
     if (kickerEl) kickerEl.textContent = showTomorrow
       ? (en ? 'Tomorrow at midday' : 'Morgen mittag bei uns')
       : (en ? 'At midday today' : 'Heute mittag bei uns');
-    dishEl.textContent = entry.dish;
+    setDishText(dishEl, { dish: entry.dish, veg: entry.veg }, en);
     if (sideEl) {
       sideEl.textContent = entry.side ? sideText(entry.side, en) : '';
       sideEl.hidden = !entry.side;
@@ -2176,7 +2269,7 @@ function initLandingTeaser() {
     // Hauptgericht leer, nur 2. Gericht eingetragen → das 2. als Hauptgericht zeigen
     if (!String(entry.dish || '').trim()) {
       const only = dayDishes(entry)[0];
-      dishEl.textContent = only.dish;
+      setDishText(dishEl, only, en);
       if (sideEl) { sideEl.textContent = only.side ? sideText(only.side, en) : ''; sideEl.hidden = !only.side; }
     }
     renderAltDish(sideEl || dishEl, entry, en, true);
@@ -2348,6 +2441,8 @@ function initPremiumPolish() {
 
   // 15. Footer-Umbau zu 3-Spalten-Editorial-Standfuss
   enhanceFooterEditorial();
+  initJobs();
+  initGoogleReview();
 
   // 16. Splash-Screen-Markenstempel als SVG-Animation
   enhanceSplashMark();
@@ -2636,8 +2731,8 @@ function enhanceFooterEditorial() {
   adresseCol.className = 'footer-col footer-col-adresse';
   adresseCol.innerHTML = `
     <p class="footer-col-label">Besuch</p>
-    <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener">Ifflandstraße 45</a>
-    <a href="https://www.google.com/maps/search/?api=1&query=Ifflandstra%C3%9Fe+45+22087+Hamburg" target="_blank" rel="noopener">22087 Hamburg</a>
+    <a class="js-route" href="${routeHref()}" target="_blank" rel="noopener">Ifflandstraße 45</a>
+    <a class="js-route" href="${routeHref()}" target="_blank" rel="noopener">22087 Hamburg</a>
     <a href="tel:+494022692891">040 – 22 69 28 91</a>
     <a href="mailto:info@alstercafe.de">info@alstercafe.de</a>
   `;
@@ -2648,18 +2743,29 @@ function enhanceFooterEditorial() {
 
   renderFooterHours(hoursCol);
 
-  // Neue Reihenfolge: brand | adresse | hours
+  // „Folgen Sie uns“: dieselben Adressen wie auf der Kontaktseite, als schlichte Textlinks
+  const socialCol = document.createElement('div');
+  socialCol.className = 'footer-col footer-col-social';
+  socialCol.innerHTML = `
+    <p class="footer-col-label">Folgen Sie uns</p>
+    <a href="https://www.instagram.com/alstercafe/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    <a href="https://www.tripadvisor.de/Restaurant_Review-g187331-d5852030-Reviews-Alstercafe-Hamburg.html" target="_blank" rel="noopener noreferrer">Tripadvisor</a>
+    <a class="footer-google-review" href="#" target="_blank" rel="noopener noreferrer" hidden>Google-Bewertung</a>
+  `;
+
+  // Neue Reihenfolge: brand | adresse | hours | folgen
   grid.innerHTML = '';
   if (brand) grid.appendChild(brand);
   grid.appendChild(adresseCol);
   grid.appendChild(hoursCol);
+  grid.appendChild(socialCol);
 
   // Nav-Reihe wird unter dem Grid eingesetzt als eigener Block
   if (navHtml) {
     const navWrap = document.createElement('div');
     navWrap.className = 'footer-nav-wrap container';
     navWrap.innerHTML = `
-      <p class="footer-col-label" style="margin-bottom:14px">Index</p>
+      <p class="footer-col-label" style="margin-bottom:14px">Seiten</p>
       ${navHtml}
     `;
     // Footer-Credit (von injectFooterCredit) bleibt darunter
@@ -2691,10 +2797,89 @@ function enhanceFooterEditorial() {
     const a = sel.startsWith('#') ? navEl?.querySelector(sel) : navEl?.querySelector(`a[href="${sel}"]`);
     if (a) legal.appendChild(a);
   });
+  // Seitenliste vervollständigen: Häufig gefragt (FAQ), Webshop (extern); Berliner-Aktion und
+  // „Wir suchen Verstärkung“ hängen syncFooterExtras/initJobs nur an, solange sie gelten.
+  if (navEl && !navEl.querySelector('a[href="ueber-uns.html#faq"]')) {
+    const faq = document.createElement('a');
+    faq.href = 'ueber-uns.html#faq'; faq.textContent = 'Häufig gefragt';
+    const after = navEl.querySelector('a[href="ueber-uns.html"]');
+    after ? after.after(faq) : navEl.appendChild(faq);
+    const shop = document.createElement('a');
+    shop.href = 'https://croquenoah.simplywebshop.de/storedata/listStore';
+    shop.target = '_blank'; shop.rel = 'noopener noreferrer'; shop.className = 'footer-shop-link';
+    shop.textContent = 'Webshop';
+    navEl.appendChild(shop);
+  }
+  syncFooterExtras();
 
   // Marken-Block: statt der Adresse (steht direkt daneben unter „Besuch“) kurz, was wir sind
   const brandP = brand?.querySelector('p');
   if (brandP) brandP.innerHTML = '<strong>Alstercafé</strong><br/>Bäckerei · Café · Mittagstisch';
+}
+
+/* „Wir suchen Verstärkung“ (Mitgliederbereich → Hinweis): Schalter aus = nichts zu sehen.
+   An: Abschnitt auf „Über uns“ (nach den häufigen Fragen) und eine Zeile in der Fußzeile. */
+function jobsData() {
+  let j = null;
+  try { j = window.alsterDb?.get('jobs'); } catch {}
+  if (!j || typeof j !== 'object' || !j.active) return null;
+  const text = String(j.text || '').trim();
+  if (!text) return null;
+  return { title: String(j.title || '').trim() || 'Wir suchen Verstärkung', text };
+}
+function initJobs() {
+  const j = jobsData();
+  const en = alsterLang() === 'en';
+  // Fußzeile: Zeile in der Seitenliste
+  const navEl = document.querySelector('.site-footer .footer-nav-wrap .footer-nav');
+  if (navEl) {
+    let a = navEl.querySelector('a.footer-jobs');
+    if (!j) a?.remove();
+    else if (!a) {
+      a = document.createElement('a'); a.className = 'footer-jobs'; a.href = 'ueber-uns.html#jobs';
+      a.setAttribute('data-no-i18n', '');
+      navEl.appendChild(a);
+    }
+    if (j && a) a.textContent = j.title;
+  }
+  // „Über uns“: Abschnitt nach den häufigen Fragen
+  const faq = document.getElementById('faq');
+  if (!faq) return;
+  let sec = document.getElementById('jobs');
+  if (!j) { sec?.remove(); return; }
+  if (!sec) {
+    sec = document.createElement('section');
+    sec.id = 'jobs'; sec.className = 'section jobs chapter';
+    sec.setAttribute('data-chapter', 'III');
+    sec.setAttribute('data-no-i18n', '');
+    faq.after(sec);
+  }
+  const paras = j.text.split(/\n{2,}|\n/).map(t => t.trim()).filter(Boolean).map(t => `<p>${escapeHtml(t)}</p>`).join('');
+  sec.innerHTML = `
+    <span class="chapter-mark" aria-hidden="true">III</span>
+    <div class="container jobs-inner">
+      <div class="section-head">
+        <p class="eyebrow"><span class="num">·</span> ${en ? 'Join our team' : 'Mitarbeiten'}</p>
+        <h2>${escapeHtml(j.title)}</h2>
+      </div>
+      <div class="jobs-text">${paras}</div>
+      <p class="jobs-contact">${en ? 'Interested? Get in touch:' : 'Interesse? Sprechen Sie uns an:'} <a href="mailto:info@alstercafe.de">info@alstercafe.de</a> · <a href="tel:+494022692891">040 – 22 69 28 91</a></p>
+    </div>`;
+}
+
+/* Fußzeile: Link zur Berliner-Aktion nur, solange sie läuft (wird bei Live-Änderungen erneut geprüft) */
+function syncFooterExtras() {
+  const navEl = document.querySelector('.site-footer .footer-nav-wrap .footer-nav');
+  if (!navEl) return;
+  let link = navEl.querySelector('a[href="berliner.html"]');
+  const { visible } = berlinerState();
+  if (!visible) { link?.remove(); return; }
+  if (!link) {
+    link = document.createElement('a');
+    link.href = 'berliner.html'; link.textContent = 'Berliner-Bestellservice';
+    const after = navEl.querySelector('a[href="broetchen.html"]');
+    after ? after.after(link) : navEl.prepend(link);
+  }
 }
 
 function initH2LineReveal() {
@@ -3182,7 +3367,7 @@ function renderTodayLunch(weekData, today, isTomorrow = false) {
     const dishEl = document.getElementById('today-dish');
     const sideEl = document.getElementById('today-side');
     const first = dishes[0];
-    if (dishEl) { dishEl.textContent = first.dish; sizeDishText(dishEl); }
+    if (dishEl) { setDishText(dishEl, first, en); sizeDishText(dishEl, first.dish); }
     if (sideEl) {
       sideEl.textContent = first.side || '';
       sideEl.hidden = !first.side;
@@ -3285,7 +3470,7 @@ function renderWeekList(weekData, monday, today) {
       body = `<span class="lunch-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch today' : 'Kein Mittagstisch')}</span>`;
     } else if (dishes.length) {
       body = dishes.map(d =>
-        `<span class="lunch-day-dish">${escapeHtml(d.dish)}</span>`
+        `<span class="lunch-day-dish">${escapeHtml(d.dish)}${dietBadgeHtml(d, en)}</span>`
         + (d.side ? `<span class="lunch-day-side">${escapeHtml(d.side)}</span>` : '')
         + (lunchPriceFor(weekData, d) != null ? `<span class="lunch-day-price">${lunchPriceText(lunchPriceFor(weekData, d))}</span>` : '')
       ).join(orDividerHtml(en, 'lunch-day-or'));

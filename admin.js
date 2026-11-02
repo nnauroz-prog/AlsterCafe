@@ -163,6 +163,7 @@ async function init() {
   // Notice
   dom.noticeForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('notice-form', () => onSaveNotice(e)); });
   dom.noticeClear.addEventListener('click', onClearNotice);
+  document.getElementById('jobs-form')?.addEventListener('submit', (e) => { e.preventDefault(); runSave('jobs-form', () => onSaveJobs(e)); });
 
   // Speisekarte
   dom.menuCardsForm.addEventListener('submit', (e) => { e.preventDefault(); runSave('menu-cards-form', () => onSaveMenu(e)); });
@@ -399,6 +400,7 @@ async function showDashboard() {
   renderWeek();
   renderOverviewSummary();
   renderNotice();
+  renderJobs();
   renderMenuEditor();
   renderSpecialsEditor();
   renderHoursEditor();
@@ -424,6 +426,7 @@ async function showDashboard() {
         'hours': ['hours-form', () => renderHoursEditor()],
         'holidays': ['holidays-form', () => { renderHolidaysEditor(); renderOwnerCalendar(); }],
         'notice': ['notice-form', () => renderNotice()],
+        'jobs': ['jobs-form', () => renderJobs()],
         'broetchen-items': ['broetchen-form', () => renderBroetchenEditor()],
         'berliner-settings': ['berliner-settings-form', () => renderBerlinerAdmin()],
         'berliner-items': ['berliner-items-form', () => renderBerlinerAdmin()],
@@ -582,6 +585,7 @@ const GUARDED_FORMS = {
   'hours-form': 'Öffnungszeiten',
   'holidays-form': 'Schließtage',
   'notice-form': 'Hinweis-Banner',
+  'jobs-form': 'Wir suchen Verstärkung',
   'broetchen-form': 'Brötchen-Sorten',
   'berliner-settings-form': 'Berliner-Aktion',
   'berliner-items-form': 'Berliner-Sorten'
@@ -740,6 +744,7 @@ function rerenderForm(id) {
     'hours-form': () => renderHoursEditor(),
     'holidays-form': () => renderHolidaysEditor(),
     'notice-form': () => renderNotice(),
+    'jobs-form': () => renderJobs(),
     'broetchen-form': () => renderBroetchenEditor(),
     'berliner-settings-form': () => renderBerlinerAdmin(),
     'berliner-items-form': () => renderBerlinerAdmin()
@@ -900,6 +905,8 @@ async function onSaveWeek(e) {
     const closed = data.get('spillover-sun-closed') === 'on';
     const price  = window.AlsterRules.parseEuro(data.get('spillover-sun-price')  || '');
     const price2 = window.AlsterRules.parseEuro(data.get('spillover-sun-price2') || '');
+    const veg  = data.get('spillover-sun-veg') === 'on';
+    const veg2 = data.get('spillover-sun-veg2') === 'on';
     const today = new Date();
     // Woche, die den heutigen Sonntag enthaelt (mondayOf(heute)) — muss mit
     // dem Lade-Schluessel oben UND der Startseiten-Logik uebereinstimmen.
@@ -910,6 +917,8 @@ async function onSaveWeek(e) {
     if (dish || side || dish2 || side2 || closed) {
       prevWeek.days.sun = { dish, side, closed };
       if (dish2 || side2) { prevWeek.days.sun.dish2 = dish2; prevWeek.days.sun.side2 = side2; }
+      if (veg) prevWeek.days.sun.veg = true;
+      if (dish2 && veg2) prevWeek.days.sun.veg2 = true;
       if (price != null) prevWeek.days.sun.price = price;
       if (price2 != null) prevWeek.days.sun.price2 = price2;
     } else {
@@ -1042,6 +1051,10 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
       <span class="day-field-label">Abweichender Preis (optional)</span>
       <input type="text" name="${fieldPrefix}-price" inputmode="decimal" placeholder="z. B. 9,90" value="${escapeAttr(priceInputText(saved.price))}" />
     </label>
+    <label class="day-check">
+      <input type="checkbox" name="${fieldPrefix}-veg" ${saved.veg ? 'checked' : ''} />
+      <span>Vegetarisch (erscheint als kleines Kennzeichen neben dem Gericht)</span>
+    </label>
     <details class="day-alt"${saved.dish2 || saved.side2 || saved.price2 != null ? ' open' : ''}>
       <summary><span class="day-alt-or">oder</span> Zweites Gericht zur Wahl (optional)</summary>
       <label class="day-field">
@@ -1055,6 +1068,10 @@ function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }
       <label class="day-field day-field-price">
         <span class="day-field-label">Abweichender Preis zum 2. Gericht (optional)</span>
         <input type="text" name="${fieldPrefix}-price2" inputmode="decimal" placeholder="z. B. 11,90" value="${escapeAttr(priceInputText(saved.price2))}" />
+      </label>
+      <label class="day-check">
+        <input type="checkbox" name="${fieldPrefix}-veg2" ${saved.veg2 ? 'checked' : ''} />
+        <span>2. Gericht vegetarisch</span>
       </label>
     </details>
     <label class="day-toggle">
@@ -1084,6 +1101,9 @@ function readFormToWeek() {
       const price2 = window.AlsterRules.parseEuro(data.get(`${day.key}-price2`) || '');
       if (price != null) week[day.key].price = price;
       if (price2 != null) week[day.key].price2 = price2;
+      // Vegetarisch-Kennzeichen nur speichern, wenn gesetzt (ältere Einträge bleiben gleich)
+      if (data.get(`${day.key}-veg`) === 'on') week[day.key].veg = true;
+      if (dish2 && data.get(`${day.key}-veg2`) === 'on') week[day.key].veg2 = true;
     }
   });
   return week;
@@ -1142,6 +1162,33 @@ async function onSaveNotice(e) {
   const ok = await saveNotice(text);
   if (!ok) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
   setStatus(dom.noticeStatus, text ? 'Hinweis gespeichert. Banner ist sichtbar.' : 'Banner ausgeblendet.', 'ok');
+  return true;
+}
+
+/* „Wir suchen Verstärkung“ (Key jobs: { active, title, text }) – aus = auf der Webseite unsichtbar */
+function renderJobs() {
+  markClean('jobs-form');
+  const j = window.alsterDb?.get('jobs');
+  const d = (j && typeof j === 'object') ? j : {};
+  const act = document.getElementById('jobs-active'), title = document.getElementById('jobs-title'), text = document.getElementById('jobs-text');
+  if (act) act.checked = !!d.active;
+  if (title) title.value = d.title || '';
+  if (text) text.value = d.text || '';
+  setStatus(document.getElementById('jobs-status'), d.active && (d.text || '').trim() ? 'Wird auf der Webseite gezeigt.' : (d.active ? 'Eingeschaltet, aber ohne Text – auf der Webseite erscheint nichts.' : 'Ausgeschaltet – auf der Webseite nicht zu sehen.'));
+}
+async function onSaveJobs(e) {
+  e?.preventDefault();
+  const status = document.getElementById('jobs-status');
+  const j = {
+    active: !!document.getElementById('jobs-active')?.checked,
+    title: (document.getElementById('jobs-title')?.value || '').trim().slice(0, 60),
+    text: (document.getElementById('jobs-text')?.value || '').trim().slice(0, 600)
+  };
+  if (j.active && !j.text) { setStatus(status, 'Bitte einen Text eintragen – oder den Schalter ausschalten.', 'error'); return false; }
+  const ok = await window.alsterDb?.set('jobs', j);
+  if (ok === false) { setStatus(status, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
+  setStatus(status, j.active ? 'Gespeichert · wird auf der Webseite gezeigt.' : 'Gespeichert · ausgeschaltet.', 'ok');
+  logActivity(j.active ? '„Wir suchen Verstärkung“ eingeschaltet' : '„Wir suchen Verstärkung“ ausgeschaltet');
   return true;
 }
 
@@ -1209,15 +1256,22 @@ function buildMenuItemRow(item) {
   const row = document.createElement('div');
   row.className = 'menu-item-row';
   row.draggable = true;
-  // Tag (z. B. "vegan") transparent erhalten — kein eigenes Feld noetig,
-  // damit der Editor einfach bleibt (Name / Preis / Beschreibung).
+  // Kennzeichen: „vegetarisch“/„vegan“ per Auswahl; ein anderer vorhandener Tag bleibt
+  // unverändert erhalten (Auswahl „–“ zeigt ihn dann nur nicht an).
   if (item.tag) row.dataset.tag = item.tag;
+  const tagLc = String(item.tag || '').trim().toLowerCase();
+  const diet = tagLc === 'vegan' ? 'vegan' : tagLc === 'vegetarisch' ? 'vegetarisch' : '';
   row.innerHTML = `
     <span class="drag-handle" aria-label="Verschieben" title="Zum Sortieren ziehen">⠿</span>
     <div class="menu-item-fields">
       <input type="text" class="menu-item-name" value="${escapeAttr(item.name || '')}" placeholder="Gericht, z. B. Klassik" />
       <input type="text" class="menu-item-price" value="${escapeAttr(item.price || '')}" placeholder="Preis, z. B. 8,90 €" />
       <input type="text" class="menu-item-desc" value="${escapeAttr(item.desc || '')}" placeholder="Beschreibung (optional)" />
+      <select class="menu-item-diet" aria-label="Kennzeichen" title="Kennzeichen (vegetarisch / vegan)">
+        <option value=""${diet ? '' : ' selected'}>Kein Kennzeichen</option>
+        <option value="vegetarisch"${diet === 'vegetarisch' ? ' selected' : ''}>vegetarisch</option>
+        <option value="vegan"${diet === 'vegan' ? ' selected' : ''}>vegan</option>
+      </select>
     </div>
     <button type="button" class="btn-icon menu-item-remove" aria-label="Gericht entfernen" title="Gericht entfernen"><svg class="ico ico-sm"><use href="#i-x"/></svg></button>
   `;
@@ -1292,7 +1346,11 @@ function collectSectionsFrom(container) {
         const it = { name };
         if (price) it.price = price;
         if (desc)  it.desc  = desc;
-        if (row.dataset.tag) it.tag = row.dataset.tag;
+        const diet = row.querySelector('.menu-item-diet')?.value || '';
+        const oldTag = row.dataset.tag || '';
+        const oldIsDiet = /^(vegetarisch|vegan)$/i.test(oldTag);
+        // Auswahl gewinnt; „Kein Kennzeichen“ entfernt vegetarisch/vegan, lässt andere Tags stehen
+        if (diet) it.tag = diet; else if (oldTag && !oldIsDiet) it.tag = oldTag;
         items.push(it);
       }
     });
@@ -1466,7 +1524,8 @@ function weekShareData() {
   const days = DAYS.map((d, i) => {
     const date = new Date(currentMonday); date.setDate(date.getDate() + i);
     const e = week[d.key] || {};
-    const dishes = [{ dish: e.dish, side: e.side, price: e.price }, { dish: e.dish2, side: e.side2, price: e.price2 }]
+    const vegText = (dish, veg) => (veg && dish && !/vegetarisch|vegan|veggie|fleischlos/i.test(dish)) ? `${dish} (vegetarisch)` : dish;
+    const dishes = [{ dish: vegText(e.dish, e.veg), side: e.side, price: e.price }, { dish: vegText(e.dish2, e.veg2), side: e.side2, price: e.price2 }]
       .map(x => ({ dish: String(x.dish || '').trim(), side: String(x.side || '').trim(), price: priceOf(x.price) }))
       .filter(x => x.dish);
     return { label: d.label, date, closed: !!e.closed, dishes: e.closed ? [] : dishes, weekend: i >= 5 };
@@ -2172,6 +2231,7 @@ function renderDesignEditor() {
     renderImageSlot(slot, design[key] || null);
   });
   renderGalleryEdit();
+  renderGoogleReviewField(design);
   // Color
   const accent = design.accentColor || '#B8893E';
   const colorInput = document.getElementById('color-input');
@@ -2179,6 +2239,82 @@ function renderDesignEditor() {
   document.querySelectorAll('.color-chip').forEach(chip => {
     chip.classList.toggle('is-active', chip.dataset.color.toLowerCase() === accent.toLowerCase());
   });
+}
+
+/* Google-Bewertungslink: Feld, „Link testen“, A6-Aushang mit QR-Code (vendor/qrcode-generator) */
+function googleReviewOk(u) {
+  return /^https:\/\/(g\.page\/|search\.google\.com\/|www\.google\.[a-z.]+\/|maps\.app\.goo\.gl\/|goo\.gl\/)/i.test(u);
+}
+function renderGoogleReviewField(design) {
+  const input = document.getElementById('google-review-url');
+  if (!input) return;
+  const status = document.getElementById('google-review-status');
+  const test = document.getElementById('google-review-test');
+  const print = document.getElementById('google-review-print');
+  const current = String(design.googleReviewUrl || '').trim();
+  if (document.activeElement !== input) input.value = current;
+  const show = (u) => {
+    if (!u) { setStatus(status, 'Kein Link eingetragen – auf der Webseite erscheint nichts.'); }
+    else if (googleReviewOk(u)) { setStatus(status, 'Link gespeichert – Zeile auf Startseite und Kontaktseite ist sichtbar.', 'ok'); }
+    else { setStatus(status, 'Das sieht nicht wie ein Google-Bewertungslink aus (erwartet: https://g.page/… oder https://search.google.com/…). Nicht übernommen.', 'error'); }
+    if (test) test.disabled = !googleReviewOk(u);
+    if (print) print.disabled = !googleReviewOk(u);
+  };
+  show(current);
+  if (input.dataset.bound) return;
+  input.dataset.bound = '1';
+  input.addEventListener('change', () => {
+    const u = input.value.trim();
+    if (u && !googleReviewOk(u)) { show(u); return; }
+    const d = loadDesign();
+    if (u) d.googleReviewUrl = u; else delete d.googleReviewUrl;
+    saveDesign(d);
+    show(u);
+    flashDesignStatus(u ? 'Google-Bewertungslink übernommen.' : 'Google-Bewertungslink entfernt.');
+  });
+  test?.addEventListener('click', () => {
+    const u = input.value.trim();
+    if (googleReviewOk(u)) window.open(u, '_blank', 'noopener');
+  });
+  print?.addEventListener('click', () => printReviewPoster(input.value.trim(), status));
+}
+function printReviewPoster(url, statusEl) {
+  if (!googleReviewOk(url)) { setStatus(statusEl, 'Bitte zuerst einen gültigen Google-Bewertungslink eintragen.', 'error'); return; }
+  if (typeof qrcode !== 'function') { setStatus(statusEl, 'QR-Code-Modul nicht geladen – bitte Seite neu laden.', 'error'); return; }
+  let svg = '';
+  try {
+    const qr = qrcode(0, 'M'); qr.addData(url); qr.make();
+    svg = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  } catch (e) { setStatus(statusEl, 'QR-Code konnte nicht erzeugt werden.', 'error'); return; }
+  const logo = new URL('image.png', location.href).href;
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Bewertungs-Aushang · Alstercafé</title>
+<style>
+  @page { size: A6; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #3D2415; }
+  .card { box-sizing: border-box; width: 105mm; height: 148mm; padding: 12mm 10mm; display: flex; flex-direction: column; align-items: center; text-align: center; border: 0.6mm solid #B8893E; }
+  .logo { width: 16mm; height: 16mm; border-radius: 50%; object-fit: cover; margin-bottom: 4mm; }
+  .brand { font-size: 13pt; letter-spacing: .08em; text-transform: uppercase; color: #8A6420; margin: 0 0 2mm; }
+  h1 { font-size: 19pt; font-weight: 400; margin: 0 0 3mm; line-height: 1.15; }
+  p { font-size: 10pt; line-height: 1.45; margin: 0 0 4mm; color: #5C3C20; }
+  .qr { width: 46mm; height: 46mm; margin: 2mm auto 4mm; }
+  .qr svg { width: 100%; height: 100%; display: block; }
+  .foot { margin-top: auto; font-size: 8.5pt; color: #8A6420; letter-spacing: .04em; }
+  @media screen { body { background: #eee; padding: 20px; } .card { background: #fff; margin: 0 auto; box-shadow: 0 2px 14px rgba(0,0,0,.15); } }
+</style></head><body>
+<div class="card">
+  <img class="logo" src="${logo}" alt="">
+  <p class="brand">Alstercafé</p>
+  <h1>Hat es Ihnen bei uns gefallen?</h1>
+  <p>Eine Bewertung bei Google dauert eine Minute und hilft uns sehr. Einfach den Code mit der Handy-Kamera scannen.</p>
+  <div class="qr">${svg}</div>
+  <p>Vielen Dank – Ihr Alstercafé-Team</p>
+  <p class="foot">Ifflandstraße 45 · 22087 Hamburg · alstercafe.de</p>
+</div>
+<script>window.addEventListener('load', function () { if (!window.__alsterPrinted) { window.__alsterPrinted = true; setTimeout(function () { window.print(); }, 150); } });<\/script>
+</body></html>`;
+  printHtmlDocument(html, statusEl);
+  logActivity('Bewertungs-Aushang gedruckt');
 }
 
 function renderImageSlot(slot, dataUrl) {
@@ -2312,15 +2448,16 @@ async function onResetContent() {
 async function onResetAll() {
   const ok1 = await askChoice({
     title: 'Alle Inhalte zurücksetzen?',
-    text: 'Gelöscht werden: Mittagstisch (alle Wochen), Speisekarte, Öffnungszeiten, Schließtage, Hinweis-Banner, Bilder & Farben, Webseiten-Texte, Brötchen-Sorten und die Berliner-Aktion (wird ausgeschaltet). Reservierungen, Bestellungen und Ihr Konto bleiben erhalten. Das lässt sich nicht rückgängig machen.',
+    text: 'Gelöscht werden: Mittagstisch (alle Wochen), Speisekarte, Öffnungszeiten, Schließtage, Hinweis-Banner, „Wir suchen Verstärkung“, Bilder & Farben, Webseiten-Texte, Brötchen-Sorten und die Berliner-Aktion (wird ausgeschaltet). Reservierungen, Bestellungen und Ihr Konto bleiben erhalten. Das lässt sich nicht rückgängig machen.',
     actions: [{ label: 'Abbrechen', value: false }, { label: 'Alles zurücksetzen', value: true, kind: 'danger' }]
   });
   if (!ok1) return;
-  const keys = ['weekly-menu', 'notice', 'menu', 'specials', 'hours', 'holidays', 'design', 'content', 'broetchen-items', 'berliner-items', 'berliner-settings'];
+  const keys = ['weekly-menu', 'notice', 'jobs', 'menu', 'specials', 'hours', 'holidays', 'design', 'content', 'broetchen-items', 'berliner-items', 'berliner-settings'];
   const results = await Promise.all(keys.map(k => window.alsterDb.remove(k).catch(() => false)));
   Object.keys(GUARDED_FORMS).forEach(markClean);
   renderWeek();
   renderNotice();
+  renderJobs();
   renderMenuEditor();
   renderSpecialsEditor();
   renderHoursEditor();
@@ -3177,6 +3314,7 @@ function renderBerlinerAdmin() {
     if (bEl(id)) bEl(id).value = st[k] || '';
   });
   if (bEl('berliner-lead')) bEl('berliner-lead').value = String(berlinerLeadDays(st));
+  if (bEl('berliner-announce')) bEl('berliner-announce').value = String([7, 14].includes(parseInt(st.announceDays, 10)) ? parseInt(st.announceDays, 10) : 0);
   updateBerlinerLive(st);
   renderBerlinerChecklist(st);
   renderBerlinerBake();
@@ -3231,7 +3369,16 @@ function berlinerLiveState(st) {
   const lead = berlinerLeadDays(st);
   let msg, live = false, phase = 'off';
   if (!st.active) { msg = 'Aus — nur hier im Mitgliederbereich, auf der Webseite nicht sichtbar.'; }
-  else if (st.orderFrom && today < st.orderFrom) { phase = 'planned'; msg = `Geplant — erscheint ab ${fmtIsoDe(st.orderFrom)} auf der Webseite.`; }
+  else if (st.orderFrom && today < st.orderFrom) {
+    phase = 'planned';
+    const n = [7, 14].includes(parseInt(st.announceDays, 10)) ? parseInt(st.announceDays, 10) : 0;
+    const announceFrom = n ? addDaysIsoAdmin(st.orderFrom, -n) : '';
+    msg = n
+      ? (announceFrom <= today
+          ? `Geplant — Vorankündigung läuft auf der Startseite („Vorbestellbar ab ${fmtIsoDe(st.orderFrom)}“), bestellbar ab ${fmtIsoDe(st.orderFrom)}.`
+          : `Geplant — Vorankündigung ab ${fmtIsoDe(announceFrom)}, bestellbar ab ${fmtIsoDe(st.orderFrom)}.`)
+      : `Geplant — erscheint ab ${fmtIsoDe(st.orderFrom)} auf der Webseite.`;
+  }
   else if (st.orderTo && today > st.orderTo) { phase = 'over'; msg = `Beendet — Bestellzeitraum ist am ${fmtIsoDe(st.orderTo)} abgelaufen, nicht mehr sichtbar.`; }
   else if (st.pickupTo && today > st.pickupTo) { phase = 'over'; msg = `Beendet — letzter Abholtag war der ${fmtIsoDe(st.pickupTo)}, nicht mehr sichtbar.`; }
   else if (st.pickupTo && lead > 0 && addDaysIsoAdmin(today, lead) > st.pickupTo) { phase = 'over'; msg = `Beendet — mit ${lead} Tag${lead > 1 ? 'en' : ''} Vorlauf ist kein Abholtag mehr erreichbar (letzter: ${fmtIsoDe(st.pickupTo)}).`; }
@@ -3414,7 +3561,8 @@ function readBerlinerForm() {
     pickupFrom: bEl('berliner-pickup-from')?.value || '', pickupTo: bEl('berliner-pickup-to')?.value || '',
     title: (bEl('berliner-title')?.value || '').trim(), text: (bEl('berliner-text')?.value || '').trim(),
     leadDays: parseInt(bEl('berliner-lead')?.value, 10) || 0, minQty: (bEl('berliner-min')?.value || '').trim(),
-    pickupTimeFrom: bEl('berliner-time-from')?.value || '', pickupTimeTo: bEl('berliner-time-to')?.value || ''
+    pickupTimeFrom: bEl('berliner-time-from')?.value || '', pickupTimeTo: bEl('berliner-time-to')?.value || '',
+    announceDays: parseInt(bEl('berliner-announce')?.value, 10) || 0
   };
 }
 async function onSaveBerlinerSettings(e) {
@@ -3430,7 +3578,8 @@ async function onSaveBerlinerSettings(e) {
     leadDays:   Math.max(0, Math.min(7, parseInt(bEl('berliner-lead')?.value, 10) || 0)),
     minQty:     (bEl('berliner-min')?.value || '').trim(),
     pickupTimeFrom: bEl('berliner-time-from')?.value || '',
-    pickupTimeTo:   bEl('berliner-time-to')?.value || ''
+    pickupTimeTo:   bEl('berliner-time-to')?.value || '',
+    announceDays:   [7, 14].includes(parseInt(bEl('berliner-announce')?.value, 10)) ? parseInt(bEl('berliner-announce').value, 10) : 0
   };
   const status = bEl('berliner-settings-status');
   if (st.minQty && !/^\d{1,3}$/.test(st.minQty)) { setStatus(status, 'Mindestmenge: bitte eine ganze Zahl (z. B. 6) oder leer lassen.', 'error'); return false; }

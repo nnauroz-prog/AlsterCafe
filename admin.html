@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r222" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r222" />
-  <script>(function(){var V='2026-05-10-r222';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r223" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r223" />
+  <script>(function(){var V='2026-05-10-r223';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -708,6 +708,26 @@
               </div>
             </div>
 
+            <!-- Google-Bewertungslink: Zeile auf der Startseite/Kontakt + QR-Aushang -->
+            <div class="design-row">
+              <div class="design-info">
+                <h4>Google-Bewertungslink</h4>
+                <p>Den Link finden Sie im Google-Unternehmensprofil unter <strong>„Bewertungen erhalten“</strong>. Ist er eingetragen, erscheint auf der Startseite unter den Bewertungen die Zeile „Bewertung bei Google schreiben“ und auf der Kontaktseite der Link „Google-Bewertung“. Leer gelassen bleibt alles wie bisher.</p>
+              </div>
+              <div class="design-control">
+                <label class="review-link-field"><span>Link (beginnt mit https://g.page/… oder https://search.google.com/…)</span>
+                  <input type="url" id="google-review-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://g.page/r/…/review" /></label>
+                <p class="save-status review-link-status" id="google-review-status"></p>
+                <div class="review-link-actions">
+                  <button type="button" class="btn btn-link" id="google-review-test">Link testen</button>
+                  <button type="button" class="btn btn-link" id="google-review-print">
+                    <svg class="ico ico-sm"><use href="#i-print"/></svg>
+                    Bewertungs-Aushang drucken (A6)
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Akzentfarbe (eingeklappt, weil Maria fast nie aendert) -->
             <details class="design-collapsed">
               <summary>Akzentfarbe ändern (selten nötig)</summary>
@@ -772,6 +792,36 @@
                   <button type="submit" class="btn btn-primary">
                     <svg class="ico ico-sm"><use href="#i-check"/></svg>
                     Hinweis speichern
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel-card">
+            <h3>Wir suchen Verstärkung</h3>
+            <p class="panel-card-sub">Ausgeschaltet ist davon nichts zu sehen. Eingeschaltet erscheint der Text auf „Über uns“ unter den häufigen Fragen, dazu eine Zeile in der Fußzeile aller Seiten.</p>
+            <form id="jobs-form">
+              <label class="day-toggle jobs-toggle">
+                <input type="checkbox" id="jobs-active" />
+                <span class="day-toggle-track"><span class="day-toggle-thumb"></span></span>
+                <span class="day-toggle-text">Auf der Webseite zeigen</span>
+              </label>
+              <label>
+                <span>Überschrift</span>
+                <input type="text" id="jobs-title" maxlength="60" placeholder="Wir suchen Verstärkung" />
+              </label>
+              <label>
+                <span>Text</span>
+                <textarea id="jobs-text" rows="4" maxlength="600"
+                          placeholder="z. B. „Wir suchen ab sofort eine Servicekraft (m/w/d) in Teilzeit für Frühstück und Mittagstisch. Melden Sie sich gern bei uns im Café oder per E-Mail.“"></textarea>
+              </label>
+              <div class="save-bar inline">
+                <p class="save-status" id="jobs-status"></p>
+                <div class="save-actions">
+                  <button type="submit" class="btn btn-primary">
+                    <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                    Speichern
                   </button>
                 </div>
               </div>
@@ -1001,6 +1051,13 @@
                 <input type="text" id="berliner-title" maxlength="80" placeholder="Berliner für Silvester vorbestellen" /></label>
               <label class="berliner-field"><span>Kurzer Text</span>
                 <textarea id="berliner-text" rows="2" maxlength="300" placeholder="Frisch aus unserer Backstube — jetzt vorbestellen und zur Abholung bereitlegen lassen."></textarea></label>
+              <label class="berliner-field"><span>Vorankündigung</span>
+                <select id="berliner-announce">
+                  <option value="0" selected>Keine – Hinweis erst ab „Bestellbar ab“</option>
+                  <option value="7">7 Tage vor „Bestellbar ab“ ankündigen</option>
+                  <option value="14">14 Tage vor „Bestellbar ab“ ankündigen</option>
+                </select></label>
+              <p class="panel-help">Mit Vorankündigung steht der Hinweis schon vorher auf der Startseite – mit „Vorbestellbar ab …“ und ohne Bestellknopf. Bestellen geht erst ab „Bestellbar ab“.</p>
 
               <div class="save-bar inline">
                 <p class="save-status" id="berliner-settings-status"></p>
@@ -1165,11 +1222,12 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r222" defer></script>
-  <script src="db.js?v=2026-05-10-r222" defer></script>
-  <script src="menudata.js?v=2026-05-10-r222" defer></script>
-  <script src="calendar.js?v=2026-05-10-r222" defer></script>
-  <script src="rules.js?v=2026-05-10-r222" defer></script>
-  <script src="admin.js?v=2026-05-10-r222" defer></script>
+  <script src="vendor/qrcode-generator-1.4.4.js" defer></script>
+  <script src="config.js?v=2026-05-10-r223" defer></script>
+  <script src="db.js?v=2026-05-10-r223" defer></script>
+  <script src="menudata.js?v=2026-05-10-r223" defer></script>
+  <script src="calendar.js?v=2026-05-10-r223" defer></script>
+  <script src="rules.js?v=2026-05-10-r223" defer></script>
+  <script src="admin.js?v=2026-05-10-r223" defer></script>
 </body>
 </html>
