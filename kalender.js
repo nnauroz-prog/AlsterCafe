@@ -49,7 +49,10 @@
     const lbl = window.AlsterCalendar.weekLabel(monday);
     $('staff-kw').textContent = lbl.kw;
     $('staff-range').textContent = lbl.range;
-    window.AlsterCalendar.render($('staff-cal'), data, monday);
+    // Öffentliche Schließtage (Urlaub & Feiertage) zusätzlich anzeigen, falls geladen
+    let holidays = [];
+    try { const h = window.alsterDb && window.alsterDb.get('holidays'); if (Array.isArray(h)) holidays = h; } catch (e) {}
+    window.AlsterCalendar.render($('staff-cal'), Object.assign({}, data, { holidays }), monday);
     const t = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     setStatus($('staff-cal-status'), `Stand ${t} Uhr · aktualisiert sich jede Minute`);
   }

@@ -426,6 +426,7 @@ async function showDashboard() {
         'hours': ['hours-form', () => renderHoursEditor()],
         'holidays': ['holidays-form', () => { renderHolidaysEditor(); renderOwnerCalendar(); }],
         'notice': ['notice-form', () => renderNotice()],
+        'notice-until': ['notice-form', () => renderNotice()],
         'jobs': ['jobs-form', () => renderJobs()],
         'broetchen-items': ['broetchen-form', () => renderBroetchenEditor()],
         'berliner-settings': ['berliner-settings-form', () => renderBerlinerAdmin()],
@@ -492,6 +493,7 @@ function initCalendar() {
   on('cal-prev', 'click', () => shift(-7));
   on('cal-next', 'click', () => shift(7));
   on('cal-today', 'click', () => { calMonday = mondayOf(new Date()); renderOwnerCalendar(); });
+  on('cal-print', 'click', () => printDayList(calendarPrintDay(), document.getElementById('staff-code-status')));
   on('staff-code-form', 'submit', onSaveStaffCode);
   on('staff-code-off', 'click', async () => {
     if (!(await askConfirm('Der bisherige Code gilt dann nicht mehr. Mitarbeiter sehen den Kalender erst wieder mit einem neuen Code.', { title: 'Kalender-Code ausschalten?', ok: 'Ausschalten' }))) return;
@@ -538,7 +540,73 @@ function renderOwnerCalendar() {
   const range = document.getElementById('cal-range'); if (range) range.textContent = lbl.range;
   const res = window.alsterDb?.get('reservations') || [];
   const ord = window.alsterDb?.get('orders') || [];
-  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [] }, calMonday, { onOpen: openEntryCard });
+  const hol = window.alsterDb?.get('holidays');
+  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [], holidays: Array.isArray(hol) ? hol : [] }, calMonday, { onOpen: openEntryCard });
+}
+
+/* ---------- Tagesliste drucken (Reservierungen + Abholungen eines Tages, A4) ---------- */
+function dayEntries(iso) {
+  const res = (window.alsterDb?.get('reservations') || []).filter(r => r && r.date === iso).map(r => ({ kind: 'res', time: r.time || '', x: r }));
+  const ord = (window.alsterDb?.get('orders') || []).filter(o => o && o.pickupDate === iso).map(o => ({ kind: 'order', time: o.pickupTime || '', x: o }));
+  return [...res, ...ord].sort((a, b) => String(a.time).localeCompare(String(b.time)));
+}
+function orderLine(o) {
+  return (Array.isArray(o.items) ? o.items : []).filter(it => it && (parseInt(it.qty, 10) || 0) > 0).map(it => `${parseInt(it.qty, 10)}× ${it.name || ''}`).join(', ');
+}
+function printDayList(iso, statusEl) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  const label = d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const list = dayEntries(iso);
+  const hol = (window.alsterDb?.get('holidays') || []).find(h => h && h.date === iso);
+  const rows = list.map(e => {
+    const x = e.x;
+    const what = e.kind === 'res'
+      ? `Tisch · ${escapeHtml(x.persons || '')}`
+      : `${(x.items || []).some(it => it && it.kind === 'berliner') ? 'Berliner' : 'Abholung'} · ${escapeHtml(orderLine(x))}`;
+    const note = [x.message || x.notes || '', x.note ? 'Notiz: ' + x.note : ''].filter(Boolean).map(escapeHtml).join('<br>');
+    const st = entryStage(x) === 'done' ? 'erledigt' : entryStage(x) === 'confirmed' ? 'bestätigt' : 'neu';
+    return `<tr${entryStage(x) === 'done' ? ' class="done"' : ''}><td class="t">${escapeHtml(e.time || '–')}</td><td><strong>${escapeHtml(x.name || 'Ohne Namen')}</strong>${x.phone ? `<br><span class="ph">${escapeHtml(x.phone)}</span>` : ''}</td><td>${what}${note ? `<div class="note">${note}</div>` : ''}</td><td class="st">${st}</td></tr>`;
+  }).join('');
+  const nRes = list.filter(e => e.kind === 'res').length, nOrd = list.length - nRes;
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Tagesliste ${escapeHtml(label)} · Alstercafé</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #2a1810; margin: 0; }
+  .k { font: 600 9pt Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #8A6420; margin: 0 0 2mm; }
+  h1 { font-weight: 400; font-size: 20pt; margin: 0 0 1mm; }
+  .sum { font: 10pt Arial, sans-serif; color: #5C3C20; margin: 0 0 6mm; }
+  .closed { font: 600 10pt Arial, sans-serif; color: #b3382c; margin: 0 0 4mm; }
+  table { width: 100%; border-collapse: collapse; font: 10pt Arial, sans-serif; }
+  th { text-align: left; font-size: 8.5pt; letter-spacing: .08em; text-transform: uppercase; color: #8A6420; border-bottom: 1px solid #B8893E; padding: 2mm 2mm 2mm 0; }
+  td { vertical-align: top; border-bottom: 1px solid #e6dccb; padding: 2.5mm 2mm 2.5mm 0; }
+  td.t { width: 16mm; font-weight: 700; font-variant-numeric: tabular-nums; }
+  td.st { width: 18mm; color: #6F5C4E; font-size: 9pt; }
+  .ph { color: #6F5C4E; font-size: 9pt; }
+  .note { margin-top: 1mm; color: #5C3C20; font-size: 9pt; }
+  tr.done td { color: #8a7a6c; }
+  .empty { font: 11pt Arial, sans-serif; color: #6F5C4E; }
+  .foot { margin-top: 8mm; font: 8.5pt Arial, sans-serif; color: #8a7a6c; }
+</style></head><body>
+<p class="k">Alstercafé · Tagesliste</p>
+<h1>${escapeHtml(label)}</h1>
+<p class="sum">${nRes} ${nRes === 1 ? 'Reservierung' : 'Reservierungen'} · ${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}</p>
+${hol ? `<p class="closed">Schließtag${hol.label ? ' · ' + escapeHtml(hol.label) : ''}</p>` : ''}
+${list.length ? `<table><thead><tr><th>Uhrzeit</th><th>Name</th><th>Was</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="empty">Für diesen Tag ist nichts eingetragen.</p>'}
+<p class="foot">Gedruckt am ${new Date().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} Uhr</p>
+<script>window.addEventListener('load', function () { if (!window.__alsterPrinted) { window.__alsterPrinted = true; setTimeout(function () { window.print(); }, 150); } });<\/script>
+</body></html>`;
+  printHtmlDocument(html, statusEl);
+  logActivity('Tagesliste gedruckt');
+}
+/* Kalender: Tagesliste für heute (wenn die gezeigte Woche heute enthält), sonst den ersten Tag
+   der gezeigten Woche mit Einträgen bzw. den Montag */
+function calendarPrintDay() {
+  const today = isoDate(new Date());
+  const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(calMonday); d.setDate(d.getDate() + i); return isoDate(d); });
+  if (days.includes(today)) return today;
+  return days.find(iso => dayEntries(iso).length) || days[0];
 }
 
 async function renderStaffAccessState() {
@@ -981,7 +1049,7 @@ function renderWeek() {
     const date = new Date(currentMonday); date.setDate(date.getDate() + idx);
     const saved = stored.days[day.key] || {};
     const isToday = isSameDay(date, new Date());
-    dom.dayGrid.appendChild(buildDayCard({
+    const card = buildDayCard({
       label: day.label,
       key: day.key,
       date,
@@ -989,8 +1057,12 @@ function renderWeek() {
       isToday,
       weekKey: isoDate(currentMonday),
       isSpillover: false
-    }));
+    });
+    // Vergangene Tage der Woche ruhiger darstellen (bleiben bearbeitbar)
+    if (isoDate(date) < isoDate(new Date())) card.classList.add('is-past');
+    dom.dayGrid.appendChild(card);
   });
+  attachDishSuggestions();
 
   dom.dayGrid.querySelectorAll('.day-toggle input').forEach(cb => {
     const card = cb.closest('.day-card');
@@ -1018,6 +1090,48 @@ function renderWeek() {
     stored.updatedAt
       ? `Zuletzt gespeichert · ${formatDateTime(new Date(stored.updatedAt))}`
       : 'Noch nicht gespeichert.');
+}
+
+/* Frühere Gerichte/Beilagen als Vorschläge: Beilagen per <datalist>, Gerichte (mehrzeilig)
+   als kleine Vorschlagsliste unter dem Feld. Nur Anzeige, keine Datenänderung. */
+function pastDishStats() {
+  const count = { dish: new Map(), side: new Map() };
+  const add = (map, v) => { const t = String(v || '').trim(); if (t.length > 2) map.set(t, (map.get(t) || 0) + 1); };
+  Object.values(loadAll() || {}).forEach(w => Object.values((w && w.days) || {}).forEach(d => {
+    if (!d) return; add(count.dish, d.dish); add(count.dish, d.dish2); add(count.side, d.side); add(count.side, d.side2);
+  }));
+  const top = m => [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'de')).slice(0, 60).map(e => e[0]);
+  return { dishes: top(count.dish), sides: top(count.side) };
+}
+function attachDishSuggestions() {
+  const { dishes, sides } = pastDishStats();
+  const dl = document.getElementById('side-suggestions');
+  if (dl) dl.innerHTML = sides.map(v => `<option value="${escapeAttr(v)}"></option>`).join('');
+  dom.dayGrid?.querySelectorAll('input[name$="-side"], input[name$="-side2"]').forEach(i => i.setAttribute('list', 'side-suggestions'));
+  if (!dishes.length) return;
+  dom.dayGrid?.querySelectorAll('textarea[name$="-dish"], textarea[name$="-dish2"]').forEach(ta => {
+    if (ta.dataset.suggest) return;
+    ta.dataset.suggest = '1';
+    const box = document.createElement('ul');
+    box.className = 'dish-suggest'; box.hidden = true;
+    box.setAttribute('aria-label', 'Frühere Gerichte');
+    ta.after(box);
+    const show = () => {
+      const q = ta.value.trim().toLowerCase();
+      const hits = q.length < 2 ? [] : dishes.filter(d => d.toLowerCase().includes(q) && d.toLowerCase() !== q).slice(0, 5);
+      box.innerHTML = hits.map(h => `<li><button type="button" class="dish-suggest-item">${escapeHtml(h)}</button></li>`).join('');
+      box.hidden = !hits.length;
+    };
+    ta.addEventListener('input', show);
+    ta.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 150));
+    box.addEventListener('mousedown', e => e.preventDefault());
+    box.addEventListener('click', e => {
+      const b = e.target.closest('.dish-suggest-item'); if (!b) return;
+      ta.value = b.textContent; box.hidden = true;
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      box.hidden = true; ta.focus();
+    });
+  });
 }
 
 function buildDayCard({ label, key, date, saved, isToday, weekKey, isSpillover }) {
@@ -1149,19 +1263,34 @@ function lastSavedWeekBefore(all, monday) {
 
 /* ---------- Notice ---------- */
 
+function noticeUntil() {
+  const u = window.alsterDb?.get('notice-until');
+  return typeof u === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(u) ? u : '';
+}
+function noticeStateText(text, until) {
+  if (!text) return 'Kein Banner aktiv.';
+  if (!until) return 'Banner ist aktiv.';
+  return until < isoDate(new Date()) ? `Banner ist abgelaufen am ${fmtIsoDe(until)} – auf der Webseite nicht mehr sichtbar.` : `Banner ist aktiv – sichtbar bis ${fmtIsoDe(until)}.`;
+}
 function renderNotice() {
   markClean('notice-form');
   const text = loadNotice();
   if (dom.noticeInput) dom.noticeInput.value = text;
-  setStatus(dom.noticeStatus, text ? 'Banner ist aktiv.' : 'Kein Banner aktiv.');
+  const u = document.getElementById('notice-until');
+  if (u) { u.value = noticeUntil(); u.min = isoDate(new Date()); }
+  setStatus(dom.noticeStatus, noticeStateText(text, noticeUntil()));
 }
 
 async function onSaveNotice(e) {
   e.preventDefault();
   const text = (dom.noticeInput.value || '').trim();
+  const until = (document.getElementById('notice-until')?.value || '').trim();
+  if (until && until < isoDate(new Date())) { setStatus(dom.noticeStatus, '„Anzeigen bis“ liegt in der Vergangenheit – bitte ein heutiges oder späteres Datum wählen oder das Feld leeren.', 'error'); return false; }
   const ok = await saveNotice(text);
-  if (!ok) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
-  setStatus(dom.noticeStatus, text ? 'Hinweis gespeichert. Banner ist sichtbar.' : 'Banner ausgeblendet.', 'ok');
+  let okU = true;
+  try { okU = (text && until) ? await window.alsterDb?.set('notice-until', until) : await window.alsterDb?.remove('notice-until'); } catch (e) { okU = false; }
+  if (!ok || okU === false) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return false; }
+  setStatus(dom.noticeStatus, text ? (until ? `Hinweis gespeichert. Sichtbar bis ${fmtIsoDe(until)}.` : 'Hinweis gespeichert. Banner ist sichtbar.') : 'Banner ausgeblendet.', 'ok');
   return true;
 }
 
@@ -1194,6 +1323,8 @@ async function onSaveJobs(e) {
 
 async function onClearNotice() {
   dom.noticeInput.value = '';
+  const u = document.getElementById('notice-until'); if (u) u.value = '';
+  try { await window.alsterDb?.remove('notice-until'); } catch (e) {}
   const ok = await saveNotice('');
   if (!ok) { setStatus(dom.noticeStatus, 'Speichern fehlgeschlagen.', 'error'); warnWriteFailed(); return; }
   setStatus(dom.noticeStatus, 'Banner ausgeblendet.', 'ok');
@@ -1881,7 +2012,7 @@ function checkHourRows() {
     let hint = r.nextElementSibling && r.nextElementSibling.classList.contains('hours-hint') ? r.nextElementSibling : null;
     if (!hint) { hint = document.createElement('p'); hint.className = 'hours-hint'; r.after(hint); }
     hint.className = 'hours-hint' + (c.empty ? '' : c.ok ? (c.warn ? ' is-warn' : ' is-ok') : ' is-error');
-    hint.textContent = c.empty ? '' : c.ok ? (c.warn ? `⚠ ${c.warn}` : `✓ ${c.message}`) : `✗ ${c.message}`;
+    hint.textContent = c.empty ? '' : c.ok ? (c.warn ? `Hinweis: ${c.warn}` : c.message) : `Fehler: ${c.message}`;
     r.classList.toggle('is-invalid', !c.ok);
   });
   return res;
@@ -2452,7 +2583,7 @@ async function onResetAll() {
     actions: [{ label: 'Abbrechen', value: false }, { label: 'Alles zurücksetzen', value: true, kind: 'danger' }]
   });
   if (!ok1) return;
-  const keys = ['weekly-menu', 'notice', 'jobs', 'menu', 'specials', 'hours', 'holidays', 'design', 'content', 'broetchen-items', 'berliner-items', 'berliner-settings'];
+  const keys = ['weekly-menu', 'notice', 'notice-until', 'jobs', 'menu', 'specials', 'hours', 'holidays', 'design', 'content', 'broetchen-items', 'berliner-items', 'berliner-settings'];
   const results = await Promise.all(keys.map(k => window.alsterDb.remove(k).catch(() => false)));
   Object.keys(GUARDED_FORMS).forEach(markClean);
   renderWeek();
@@ -2468,7 +2599,7 @@ async function onResetAll() {
   renderOverviewSummary();
   if (results.some(r => r === false)) { warnWriteFailed(); return; }
   logActivity('Alle Inhalte zurückgesetzt');
-  showToast('✓ Alle Inhalte wurden auf Standard zurückgesetzt.');
+  showToast('Alle Inhalte wurden auf Standard zurückgesetzt.');
 }
 
 
@@ -2618,6 +2749,27 @@ function renderOverviewSummary() {
     todayText.textContent = (nRes || nOrd)
       ? `Heute: ${nRes} ${nRes === 1 ? 'Tisch' : 'Tische'} · ${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}`
       : 'Heute: keine Reservierungen oder Abholungen';
+    // Kurze Liste der heutigen Einträge (Uhrzeit · Name · Personen/Stück), antippbar
+    const wrap = document.getElementById('today-list-wrap'), ul = document.getElementById('today-list');
+    if (wrap && ul) {
+      const entries = dayEntries(t);
+      wrap.hidden = !entries.length;
+      ul.innerHTML = entries.map(e => {
+        const x = e.x;
+        const qty = e.kind === 'order' ? (x.totalCount || (x.items || []).reduce((n, it) => n + (parseInt(it?.qty, 10) || 0), 0)) : 0;
+        const what = e.kind === 'res' ? (x.persons || 'Tisch') : `${qty} ${(x.items || []).some(it => it && it.kind === 'berliner') ? 'Berliner' : 'Brötchen'}`;
+        return `<li><button type="button" class="today-item${entryStage(x) === 'done' ? ' is-done' : ''}" data-open-kind="${e.kind}" data-open-id="${escapeAttr(x.id || '')}">
+          <span class="today-time">${escapeHtml(e.time || '–')}</span>
+          <span class="today-main"><strong>${escapeHtml(x.name || 'Ohne Namen')}</strong> · ${escapeHtml(what)}</span>
+          ${statusTagHtml(x)}
+        </button></li>`;
+      }).join('');
+      if (!ul.dataset.bound) {
+        ul.dataset.bound = '1';
+        ul.addEventListener('click', ev => { const b = ev.target.closest('[data-open-id]'); if (b && b.dataset.openId) openEntryCard(b.dataset.openKind, b.dataset.openId); });
+        wrap.querySelector('[data-print-day]')?.addEventListener('click', () => printDayList(isoDate(new Date()), null));
+      }
+    }
   }
 
   // Naechste kommende, offene Reservierung
@@ -2684,11 +2836,20 @@ function renderAnfragen() {
   }
   const hasQuery = !!(dom.anfragenSearch && dom.anfragenSearch.value.trim());
   const { upcoming, past } = splitByDate(items, dom.anfragenSearch?.value, 'date');
-  let html = upcoming.length
-    ? upcoming.map(r => buildAnfrageItem(r)).join('')
-    : `<li class="anfragen-empty">${hasQuery ? 'Keine Treffer bei den kommenden Anfragen.' : 'Keine kommenden Anfragen.'}</li>`;
+  // Offene oben, erledigte kommende Einträge eingeklappt darunter
+  const openUp = upcoming.filter(r => r.status !== 'done'), doneUp = upcoming.filter(r => r.status === 'done');
+  let html = openUp.length
+    ? openUp.map(r => buildAnfrageItem(r)).join('')
+    : `<li class="anfragen-empty">${hasQuery ? 'Keine Treffer bei den kommenden Anfragen.' : (doneUp.length ? 'Alles erledigt – keine offenen Anfragen.' : 'Keine kommenden Anfragen.')}</li>`;
+  if (doneUp.length) {
+    const wasOpenDone = !!dom.anfragenList.querySelector('.anfragen-done details')?.open;
+    html += `<li class="anfragen-past anfragen-done"><details${hasQuery || wasOpenDone ? ' open' : ''}>
+      <summary>Erledigt (${doneUp.length})</summary>
+      <ul class="anfragen-sublist">${doneUp.map(r => buildAnfrageItem(r)).join('')}</ul>
+    </details></li>`;
+  }
   if (past.length) {
-    const wasOpen = !!dom.anfragenList.querySelector('.anfragen-past details')?.open;
+    const wasOpen = !!dom.anfragenList.querySelector('.anfragen-past:not(.anfragen-done) details')?.open;
     html += `<li class="anfragen-past"><details${hasQuery || wasOpen ? ' open' : ''}>
       <summary>Vergangene (${past.length})</summary>
       <ul class="anfragen-sublist">${past.map(r => buildAnfrageItem(r)).join('')}</ul>
@@ -2866,7 +3027,7 @@ async function onSendConfirmation(id, ctype) {
   if (res && res.ok) {
     await window.alsterDb?.markConfirmed?.(key, id);
     if (ctype === 'order') renderOrders(); else renderAnfragen();
-    showToast(`✓ Bestätigung an ${it.email} gesendet`);
+    showToast(`Bestätigung an ${it.email} gesendet`);
   } else {
     askNotice('Bestätigung nicht gesendet', 'Die E-Mail konnte nicht verschickt werden: ' + ((res && res.error) || 'unbekannter Fehler') +
       '. Bitte später erneut versuchen oder den Gast anrufen.');
@@ -2994,6 +3155,7 @@ function showToast(msg, opts = {}) {
     document.body.appendChild(el);
   }
   el.textContent = msg;
+  if (opts.icon === 'bell') el.insertAdjacentHTML('afterbegin', '<svg class="ico ico-sm toast-ico" aria-hidden="true"><use href="#i-bell"/></svg>');
   el.classList.toggle('is-error', opts.tone === 'error');
   el._onClick = opts.onClick || null;
   el.classList.toggle('is-clickable', !!opts.onClick);
@@ -3013,7 +3175,7 @@ function announceNewEntries(key, items) {
     const berliner = Array.isArray(it.items) && it.items.some(x => x && x.kind === 'berliner');
     msg = `Neue ${berliner ? 'Berliner-' : ''}Bestellung: ${it.name || 'ohne Namen'} · ${it.totalCount || 0} Stück${more} – antippen zum Ansehen`;
   }
-  showToast('🔔 ' + msg, { duration: 9000, onClick: () => switchTab(key === 'reservations' ? 'anfragen' : 'bestellungen') });
+  showToast(msg, { duration: 9000, icon: 'bell', onClick: () => switchTab(key === 'reservations' ? 'anfragen' : 'bestellungen') });
 }
 
 // Gemeinsame Fehlermeldung, wenn Supabase eine Aenderung ablehnt (z. B. wenn die
@@ -3065,11 +3227,19 @@ function renderOrders() {
   const isB = o => Array.isArray(o.items) && o.items.some(it => it && it.kind === 'berliner');
   const kindItems = kind === 'berliner' ? items.filter(isB) : kind === 'broetchen' ? items.filter(o => !isB(o)) : items;
   const { upcoming, past } = splitByDate(kindItems, dom.ordersSearch?.value, 'pickupDate');
-  let html = upcoming.length
-    ? upcoming.map(o => buildOrderItem(o)).join('')
-    : `<li class="orders-empty">${hasQuery ? 'Keine Treffer bei den kommenden Bestellungen.' : 'Keine kommenden Bestellungen.'}</li>`;
+  const openUp = upcoming.filter(o => o.status !== 'done'), doneUp = upcoming.filter(o => o.status === 'done');
+  let html = openUp.length
+    ? openUp.map(o => buildOrderItem(o)).join('')
+    : `<li class="orders-empty">${hasQuery ? 'Keine Treffer bei den kommenden Bestellungen.' : (doneUp.length ? 'Alles erledigt – keine offenen Bestellungen.' : 'Keine kommenden Bestellungen.')}</li>`;
+  if (doneUp.length) {
+    const wasOpenDone = !!dom.ordersList.querySelector('.anfragen-done details')?.open;
+    html += `<li class="anfragen-past anfragen-done"><details${hasQuery || wasOpenDone ? ' open' : ''}>
+      <summary>Erledigt (${doneUp.length})</summary>
+      <ul class="anfragen-sublist">${doneUp.map(o => buildOrderItem(o)).join('')}</ul>
+    </details></li>`;
+  }
   if (past.length) {
-    const wasOpen = !!dom.ordersList.querySelector('.anfragen-past details')?.open;
+    const wasOpen = !!dom.ordersList.querySelector('.anfragen-past:not(.anfragen-done) details')?.open;
     html += `<li class="anfragen-past"><details${hasQuery || wasOpen ? ' open' : ''}>
       <summary>Vergangene (${past.length})</summary>
       <ul class="anfragen-sublist">${past.map(o => buildOrderItem(o)).join('')}</ul>
@@ -3438,12 +3608,15 @@ function berlinerChecklist(st, items) {
   if (!(st.title || '').trim()) warn('Keine Überschrift – die Webseite nutzt „Berliner für Silvester vorbestellen“');
   return out;
 }
+const CHK_OK = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHK_WARN = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 6v8M12 18v.01" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+const CHK_FAIL = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
 function renderBerlinerChecklist(st) {
   const ul = bEl('berliner-checklist');
   if (!ul) return;
   const items = window.alsterDb?.get('berliner-items');
   const list = berlinerChecklist(st, Array.isArray(items) && items.length ? items : DEFAULT_BERLINER);
-  ul.innerHTML = list.map(x => `<li class="${x.ok ? 'is-ok' : x.warn ? 'is-warn' : 'is-fail'}"><span class="chk-ico" aria-hidden="true">${x.ok ? '✓' : x.warn ? '!' : '✕'}</span>${escapeHtml(x.text)}</li>`).join('');
+  ul.innerHTML = list.map(x => `<li class="${x.ok ? 'is-ok' : x.warn ? 'is-warn' : 'is-fail'}"><span class="chk-ico" aria-hidden="true">${x.ok ? CHK_OK : x.warn ? CHK_WARN : CHK_FAIL}</span>${escapeHtml(x.text)}</li>`).join('');
   const blocked = list.some(x => !x.ok && !x.warn);
   const sw = bEl('berliner-switch'), hint = bEl('berliner-switch-hint');
   if (sw && !st.active) sw.disabled = blocked;
