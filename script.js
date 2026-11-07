@@ -656,12 +656,13 @@ function parseHoursFromDom() { return getWeekHours(); }
 function isoLocal(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
-/* Croque-Tag (Mittagstisch-Plan, Schalter beim Tag): Text vom Inhaber, wörtlich */
-const CROQUE_DAY_TITLE = 'Heute ist Croque-Tag!';
-const CROQUE_ALT_TEXT = 'Zusätzlich zu unserem beliebten Frühstück verwöhnen wir euch heute mit unseren frisch zubereiteten, knusprigen Croques. Kommt vorbei und genießt eure Lieblingsvariante!';
 // Ab 15 Uhr zeigt die Startseite den nächsten Tag → „Morgen“ statt „Heute“
-const croqueTitle = (tomorrow) => tomorrow ? 'Morgen ist Croque-Tag!' : CROQUE_DAY_TITLE;
-const croqueText = (tomorrow) => tomorrow ? CROQUE_ALT_TEXT.replace(' heute ', ' morgen ') : CROQUE_ALT_TEXT;
+/* „Tisch reservieren“ aus dem Mittagstisch: Formular mit dem Tag des Gerichts und 12:00 Uhr
+   vorbelegen – nur wenn an dem Tag ein Gericht eingetragen ist (Inhaber-Entscheidung). */
+function setReserveLink(a, date, hasDish) {
+  if (!a) return;
+  a.href = (hasDish && date) ? `reservierung.html?datum=${isoLocal(date)}&zeit=12:00` : 'reservierung.html';
+}
 const CROQUE_SHOP_URL = 'https://croquenoah.simplywebshop.de/storedata/listStore';
 function setCroqueLink(after, on, en) {
   if (!after || !after.parentElement) return;
@@ -2186,7 +2187,7 @@ function openLunchSheet(refDate) {
       ${lunchUntil(week) ? `<p class="lunch-sheet-facts">${en ? `12:00 – ${lunchUntil(week)}` : `12:00 – ${lunchUntil(week)} Uhr`}</p>` : ''}
       <ul class="lunch-sheet-list">${rows}</ul>
       <div class="lunch-sheet-cta">
-        <a class="btn btn-gold" href="reservierung.html">${en ? 'Book a table' : 'Tisch reservieren'}</a>
+        <a class="btn btn-gold" href="${dayDishes(lunchEntryFor(week?.days?.[DAY_KEYS[(new Date(focusIso + 'T12:00:00').getDay() + 6) % 7]], new Date(focusIso + 'T12:00:00'))).length ? `reservierung.html?datum=${focusIso}&zeit=12:00` : 'reservierung.html'}">${en ? 'Book a table' : 'Tisch reservieren'}</a>
         <a class="btn btn-link" href="tel:+494022692891"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
       </div>
       <a class="lunch-sheet-more" href="mittagstisch.html">${en ? 'Go to the lunch page →' : 'Zur Mittagstisch-Seite →'}</a>
@@ -2227,6 +2228,7 @@ function initLandingTeaser() {
 
   const en = alsterLang() === 'en';
   block._targetDate = targetDate; // für Klicks nach dem 15-Uhr-Wechsel
+  setReserveLink(block.querySelector('.today-feature-cta .btn-gold'), targetDate, dayDishes(entry).length > 0);
   // Tipp aufs Gericht (oder auf "Ganze Woche ansehen") öffnet das Mittagsmenü
   if (!dishEl.dataset.sheetWired) {
     dishEl.dataset.sheetWired = '1';
@@ -2819,8 +2821,8 @@ function enhanceFooterEditorial() {
   const year = new Date().getFullYear();
   const strip = document.createElement('div');
   strip.className = 'footer-bottom-strip container';
-  // „Webseite von Sitalo.de“ gehört zur ©-Zeile – gleiche Schrift, gleiche Dämpfung, kein eigener Block
-  strip.innerHTML = `<span class="footer-bottom-meta">© ${year} <em>Alstercafé</em> · Croquenoah Cafe<span class="footer-made"><span class="footer-made-sep" aria-hidden="true">·</span><span class="footer-made-label">Webseite von</span> <a href="https://sitalo.de" target="_blank" rel="noopener">Sitalo.de</a></span></span><nav class="footer-legal" aria-label="${alsterLang() === 'en' ? 'Legal' : 'Rechtliches'}"></nav>`;
+  // „Erstellt durch Sitalo.de“ gehört zur ©-Zeile – gleiche Schrift, gleiche Dämpfung, kein eigener Block
+  strip.innerHTML = `<span class="footer-bottom-meta">© ${year} <em>Alstercafé</em> · Croquenoah Cafe<span class="footer-made"><span class="footer-made-sep" aria-hidden="true">·</span><span class="footer-made-label">Erstellt durch</span> <a href="https://sitalo.de" target="_blank" rel="noopener">Sitalo.de</a></span></span><nav class="footer-legal" aria-label="${alsterLang() === 'en' ? 'Legal' : 'Rechtliches'}"></nav>`;
   footer.appendChild(strip);
   maker?.remove();
   const legal = strip.querySelector('.footer-legal');
@@ -3409,6 +3411,7 @@ function renderTodayLunch(weekData, today, isTomorrow = false) {
     let share = todayBox.querySelector('.lunch-share');
     if (!share) { share = lunchShareButton('light'); todayBox.appendChild(share); }
     setLunchShare(share, dishes, isTomorrow, en);
+    setReserveLink(todayBox.querySelector('.btn-gold'), today, true);
     todayBox.hidden = false;
     emptyBox.hidden = true;
   } else if (entry?.holiday !== undefined || !openingFor(today)) {
@@ -3972,6 +3975,20 @@ function initReservationForm() {
     buildTimeSlots(timeSel, dateInput.value);
   };
   setDefaultDate();
+  // Vorbelegung aus dem Mittagstisch (?datum=JJJJ-MM-TT&zeit=12:00) – nur gültige, künftige Werte
+  try {
+    const q = new URLSearchParams(location.search);
+    const d = q.get('datum') || '', t = q.get('zeit') || '';
+    const dm = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const dt = dm ? new Date(+dm[1], +dm[2] - 1, +dm[3]) : null;
+    if (dateInput && dt && !isNaN(dt) && isoDate(dt) === d && d >= isoDate(new Date())) {
+      dateInput.value = d;
+      dateInput.__dateHintUpdate?.();
+      buildTimeSlots(timeSel, d);
+      // Uhrzeit nur wählen, wenn dieser Platz an dem Tag noch angeboten wird
+      if (timeSel && /^\d{2}:\d{2}$/.test(t) && timeSel.querySelector(`option[value="${t}"]`)) timeSel.value = t;
+    }
+  } catch (e) { /* ohne Vorbelegung weiter */ }
   if (dateInput && timeSel) {
     const rebuild = () => buildTimeSlots(timeSel, dateInput.value);
     ['input', 'change'].forEach(ev => dateInput.addEventListener(ev, rebuild));
@@ -4129,9 +4146,9 @@ function showFieldError(field, msg) {
 function fieldFor(form, name) { return form?.querySelector(`[name="${name}"]`) || null; }
 
 /* Reservierung: Uhrzeit als Auswahl aus den Öffnungszeiten des gewählten Tages
-   (15-Minuten-Schritte, letzter Platz 30 Minuten vor Ladenschluss, heute nur
+   (15-Minuten-Schritte, letzter Platz eine Stunde vor Ladenschluss, heute nur
    Zeiten mindestens 30 Minuten in der Zukunft). Nichts ist vorbelegt. */
-const RES_LAST_SLOT_GAP = 30;
+const RES_LAST_SLOT_GAP = 60; // letzte Online-Reservierung eine Stunde vor Ladenschluss (Inhaber: 14:00 bei Schluss 15:00)
 function buildTimeSlots(select, dateStr) {
   if (!select) return;
   const en = alsterLang() === 'en';

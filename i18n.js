@@ -77,7 +77,6 @@
     'Mit einem feinen Schuss Karamell': 'With a fine dash of caramel',
     'Für den perfekten Geschmack verwenden wir ausschließlich hochwertigen Bio-Matcha und standardmäßig cremige Hafermilch.': 'For the perfect taste we only use high-quality organic matcha and creamy oat milk by default.',
     'Erstellt durch': 'Made by',
-    'Webseite von': 'Website by',
     'Brötchen-Service': 'Sandwich Service',
     'Über uns': 'About',
     'Reservierung': 'Reservations',
