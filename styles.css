@@ -12108,3 +12108,89 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 @media (max-width: 760px) {
   .admin-dashboard.is-working .admin-welcome { display: block; position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; padding: 0; }
 }
+
+/* ============================================================
+   FACELIFT 8 · Thema 7 – Mitgliederbereich
+   (Heute-Liste, Tagesliste drucken, Schließtage im Kalender, Postfach mit
+   „Erledigt“, Löschen dezent, Gerichte-Vorschläge, vergangene Tage ruhiger,
+   „Anzeigen bis“, Urlaub-Zeile am Handy, Gefahrenzone, Symbole statt Emoji)
+   ============================================================ */
+
+/* --- 1 · Heute-Liste auf der Übersicht --- */
+.admin-body .today-list-wrap { grid-column: 1 / -1; margin: 10px 0 0; padding: 6px 4px 2px; }
+.admin-body .today-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.admin-body .today-item {
+  width: 100%; display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  min-height: 48px; padding: 8px 12px; text-align: left; cursor: pointer;
+  background: #fff; border: 1px solid var(--soft-line, #E6DCCB); border-radius: 12px;
+  font: 500 .92rem/1.35 'Inter', system-ui, sans-serif; color: var(--bean, #3D2415);
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.admin-body .today-item:hover, .admin-body .today-item:focus-visible { border-color: var(--gold, #B8893E); outline: none; background: #FFFCF4; }
+.admin-body .today-item.is-done { color: #7A6656; background: #FBF8F2; }
+.admin-body .today-time { font-weight: 700; font-variant-numeric: tabular-nums; color: #8A6420; }
+.admin-body .today-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-body .today-main strong { font-weight: 600; }
+.admin-body .today-item .anfrage-tag { margin: 0; }
+.admin-body .today-print { margin-top: 6px; }
+
+/* --- 3 · Kalender: Schließtage --- */
+.cal-day.is-closed { background: repeating-linear-gradient(135deg, rgba(42, 24, 16, .025) 0 8px, transparent 8px 16px); }
+.cal-closed {
+  display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px;
+  font: 600 .72rem/1.6 'Inter', system-ui, sans-serif; letter-spacing: .04em;
+  color: #8A2A20; background: rgba(179, 56, 44, .09);
+}
+
+/* --- 4 · Postfach: „Erledigt (n)“ wie „Vergangene“ --- */
+.admin-body .anfragen-done { margin-top: 4px; }
+
+/* --- 5 · Löschen als ruhiger Textlink rechts --- */
+.admin-body .anfrage-btn.anfrage-btn-del {
+  margin-left: auto; background: none !important; border-color: transparent !important; box-shadow: none !important;
+  color: #9A3328 !important; padding-inline: 8px !important;
+}
+.admin-body .anfrage-btn.anfrage-btn-del:hover, .admin-body .anfrage-btn.anfrage-btn-del:focus-visible { color: #7A231B !important; text-decoration: underline; text-underline-offset: 3px; }
+
+/* --- 6 · Gerichte-Vorschläge unter dem Feld --- */
+.admin-body .dish-suggest { list-style: none; margin: 6px 0 0; padding: 4px; border: 1px solid var(--soft-line, #E6DCCB); border-radius: 12px; background: #fff; box-shadow: 0 10px 24px -18px rgba(42, 24, 16, .4); }
+.admin-body .dish-suggest[hidden] { display: none; }
+.admin-body .dish-suggest-item {
+  display: block; width: 100%; min-height: 40px; padding: 8px 10px; text-align: left; border: 0; border-radius: 8px; background: none; cursor: pointer;
+  font: 500 .9rem/1.35 'Inter', system-ui, sans-serif; color: var(--bean, #3D2415);
+}
+.admin-body .dish-suggest-item:hover, .admin-body .dish-suggest-item:focus-visible { background: rgba(184, 137, 62, .1); outline: none; }
+
+/* --- 7 · Wochenplan: vergangene Tage ruhiger (bleiben bearbeitbar) --- */
+.admin-body .day-card.is-past:not(.is-today) { background: #F7F2EA !important; border-color: rgba(42, 24, 16, .08) !important; box-shadow: none !important; }
+.admin-body .day-card.is-past:not(.is-today) .day-name { color: #6F5C4E; }
+.admin-body .day-card.is-past:not(.is-today):focus-within { background: #fff !important; }
+
+/* --- 8 · Hinweis: „Anzeigen bis“ --- */
+.admin-body .notice-until-field { display: block; max-width: 260px; margin-top: 14px; }
+.admin-body .notice-until-help { margin-top: 8px; }
+
+/* --- 9 · Urlaub-Zeile am Handy: Datum + Wochentag + × in der ersten Reihe, Grund volle Breite darunter --- */
+@media (max-width: 560px) {
+  .admin-body .holiday-row { display: grid !important; grid-template-columns: minmax(0, 1fr) 2.4em 44px !important; grid-template-areas: "date wd del" "label label label" !important; align-items: center; gap: 8px !important; }
+  .admin-body .holiday-row .holiday-date { grid-area: date !important; min-width: 0; width: 100%; }
+  .admin-body .holiday-row .holiday-weekday { grid-area: wd !important; text-align: center; font-weight: 600; }
+  .admin-body .holiday-row .holiday-label { grid-area: label !important; min-width: 0; width: 100%; }
+  .admin-body .holiday-row .holiday-remove { grid-area: del !important; justify-self: end; }
+}
+
+/* Kalender-Leiste: „Tagesliste drucken“ am Handy in eigener Zeile */
+@media (max-width: 720px) {
+  .admin-body .cal-toolbar { flex-wrap: wrap; }
+  .admin-body #cal-print { flex-basis: 100%; justify-content: center; order: 9; }
+}
+
+/* --- 11 · Gefahrenzone deutlich abgesetzt --- */
+.admin-body .panel-card-danger { border: 1.5px solid rgba(179, 56, 44, .35) !important; background: #FFFBFA !important; }
+.admin-body .panel-card-danger .danger-title { display: flex; align-items: center; gap: 8px; color: #9A3328; }
+.admin-body .panel-card-danger .danger-title .ico { color: #B3382C; }
+
+/* --- 12 · Symbole statt Emoji --- */
+.admin-toast .toast-ico { flex: 0 0 auto; margin-right: 8px; vertical-align: -3px; color: var(--gold-soft, #E7CFA3); }
+.berliner-checklist .chk-ico svg { display: block; }
+.admin-tab .ico { flex: 0 0 auto; }

@@ -456,7 +456,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     switch (key) {
       case 'design':      initDesign(); break;
       case 'content':     initContent(); break;
-      case 'notice':      initNotice(); initHolidays(); break; // Vorab-Hinweis weicht dem Hinweis-Banner
+      case 'notice':
+      case 'notice-until': initNotice(); initHolidays(); break; // Vorab-Hinweis weicht dem Hinweis-Banner
       case 'holidays':    initHolidays(); updateLiveStatus(); initLunchWeek(); initLandingTeaser(); syncBusinessSchema(); break;
       case 'menu':        initMenu(); break;
       case 'specials':    initMenu(); initSpecialsTeaser(); break;
@@ -1438,6 +1439,9 @@ function initNotice() {
       try { const p = JSON.parse(raw); value = typeof p === 'string' ? p : raw; } catch { value = raw; }
     }
     value = String(value || '').trim();
+    // „Anzeigen bis“ (Mitgliederbereich → Hinweis): nach diesem Tag automatisch ausblenden
+    const until = window.alsterDb?.get?.('notice-until');
+    if (value && typeof until === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(until) && isoLocal(new Date()) > until) value = '';
   } catch {}
   if (value) {
     text.textContent = value;

@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r226" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r226" />
-  <script>(function(){var V='2026-05-10-r226';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r227" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r227" />
+  <script>(function(){var V='2026-05-10-r227';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -48,6 +48,11 @@
       <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
       <symbol id="i-arrow-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></g></symbol>
       <symbol id="i-arrow-right" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></g></symbol>
+      <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></g></symbol>
+      <symbol id="i-cal-off" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9.5 13.5l5 4M14.5 13.5l-5 4"/></g></symbol>
+      <symbol id="i-donut" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="13" rx="8.5" ry="6.5"/><path d="M4 11.5c2.5-3 13.5-3 16 0"/><path d="M8 9.6l.6-.9M12 9l.2-1M15.8 9.6l-.5-.9"/></g></symbol>
+      <symbol id="i-print" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V4h10v4"/><rect x="4" y="8" width="16" height="9" rx="2"/><path d="M7 14h10v6H7z"/></g></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.01"/></g></symbol>
     </defs>
   </svg>
 
@@ -180,6 +185,13 @@
               <span id="summary-today-text">Heute: —</span>
               <span class="summary-today-go" aria-hidden="true">Kalender →</span>
             </button>
+            <div class="today-list-wrap" id="today-list-wrap" hidden>
+              <ul class="today-list" id="today-list" aria-label="Heute"></ul>
+              <button type="button" class="btn btn-link today-print" data-print-day="today">
+                <svg class="ico ico-sm"><use href="#i-print"/></svg>
+                Tagesliste drucken
+              </button>
+            </div>
           </div>
 
           <p class="overview-group-label">Täglich</p>
@@ -214,7 +226,7 @@
             </button>
 
             <button class="overview-card" type="button" data-tab="kalender">
-              <span class="overview-card-icon"><svg class="ico"><use href="#i-clock"/></svg></span>
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-cal"/></svg></span>
               <span class="overview-card-body">
                 <span class="overview-card-title">Kalender</span>
                 <span class="overview-card-desc">Reservierungen und Abholungen nach Tagen · Kalender-Code für Mitarbeiter</span>
@@ -223,7 +235,7 @@
             </button>
 
             <button class="overview-card" type="button" data-tab="berliner">
-              <span class="overview-card-icon"><svg class="ico"><use href="#i-bag"/></svg></span>
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-donut"/></svg></span>
               <span class="overview-card-body">
                 <span class="overview-card-title">Berliner</span>
                 <span class="overview-card-desc" id="overview-berliner-desc">Aktion an/aus, Zeitraum und Sorten</span>
@@ -272,7 +284,7 @@
             </button>
 
             <button class="overview-card" type="button" data-tab="holidays">
-              <span class="overview-card-icon"><svg class="ico"><use href="#i-clock"/></svg></span>
+              <span class="overview-card-icon"><svg class="ico"><use href="#i-cal-off"/></svg></span>
               <span class="overview-card-body">
                 <span class="overview-card-title">Urlaub &amp; Feiertage</span>
                 <span class="overview-card-desc">Schließtage eintragen</span>
@@ -310,6 +322,7 @@
              (Taeglich zuerst, dann Pflege, dann Konto) -->
         <nav class="admin-tabs" role="tablist">
           <button class="admin-tab is-active" role="tab" aria-selected="true" data-tab="week">
+            <svg class="ico ico-sm"><use href="#i-fork"/></svg>
             Mittagstisch
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="anfragen">
@@ -323,12 +336,15 @@
             <span class="tab-badge" id="tab-orders-badge" hidden></span>
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="kalender">
+            <svg class="ico ico-sm"><use href="#i-cal"/></svg>
             Kalender
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="berliner">
+            <svg class="ico ico-sm"><use href="#i-donut"/></svg>
             Berliner
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="menu">
+            <svg class="ico ico-sm"><use href="#i-book"/></svg>
             Speisekarte
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="design">
@@ -340,9 +356,11 @@
             Hinweis
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="hours">
+            <svg class="ico ico-sm"><use href="#i-clock"/></svg>
             Öffnungszeiten
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="holidays">
+            <svg class="ico ico-sm"><use href="#i-cal-off"/></svg>
             Urlaub &amp; Feiertage
           </button>
           <button class="admin-tab" role="tab" aria-selected="false" data-tab="account">
@@ -398,6 +416,7 @@
             </div>
           </div>
 
+          <datalist id="dish-suggestions"></datalist><datalist id="side-suggestions"></datalist>
           <form id="menu-form" class="menu-form">
             <!-- Optionale Wochenangaben: leer lassen = auf der Webseite nicht zu sehen -->
             <div class="week-facts" id="week-facts">
@@ -785,6 +804,11 @@
                 <textarea name="notice" id="notice-input" rows="3" maxlength="300"
                           placeholder="z. B. „Wir haben am 1. Mai geschlossen. Ihr Alstercafé-Team“"></textarea>
               </label>
+              <label class="notice-until-field">
+                <span>Anzeigen bis (optional)</span>
+                <input type="date" id="notice-until" />
+              </label>
+              <p class="panel-help notice-until-help">Leer lassen = der Hinweis bleibt, bis Sie ihn ausblenden. Mit Datum verschwindet er nach diesem Tag von selbst.</p>
               <div class="save-bar inline">
                 <p class="save-status" id="notice-status"></p>
                 <div class="save-actions">
@@ -853,6 +877,10 @@
               <button type="button" class="week-nav" id="cal-next" aria-label="Nächste Woche">→</button>
               <button type="button" class="btn btn-link" id="cal-today">Heute</button>
             </div>
+            <button type="button" class="btn btn-link cal-print" id="cal-print">
+              <svg class="ico ico-sm"><use href="#i-print"/></svg>
+              Tagesliste drucken
+            </button>
           </div>
           <div class="cal-days" id="owner-cal"></div>
 
@@ -1195,11 +1223,12 @@
           </details>
 
           <div class="panel-card panel-card-danger">
-            <h3>Gefahrenzone</h3>
+            <h3 class="danger-title"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alert"/></svg> Gefahrenzone</h3>
             <p class="panel-card-sub">
-              Setzt alle Inhalte (Wochenplan, Speisekarte, Öffnungszeiten, Banner und
-              Design) auf den Standard zurück. Dieser Schritt kann nicht rückgängig
-              gemacht werden.
+              Setzt alle Inhalte der Webseite auf den Standard zurück: Mittagstisch, Speisekarte,
+              Öffnungszeiten, Schließtage, Hinweis, Bilder &amp; Farben, Texte, Sorten und die
+              Berliner-Aktion. Reservierungen, Bestellungen und Ihr Konto bleiben erhalten.
+              Das lässt sich nicht rückgängig machen – vorher wird noch einmal nachgefragt.
             </p>
             <div class="account-actions">
               <button type="button" class="btn btn-link danger" id="reset-all">
@@ -1223,11 +1252,11 @@
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
   <script src="vendor/qrcode-generator-1.4.4.js" defer></script>
-  <script src="config.js?v=2026-05-10-r226" defer></script>
-  <script src="db.js?v=2026-05-10-r226" defer></script>
-  <script src="menudata.js?v=2026-05-10-r226" defer></script>
-  <script src="calendar.js?v=2026-05-10-r226" defer></script>
-  <script src="rules.js?v=2026-05-10-r226" defer></script>
-  <script src="admin.js?v=2026-05-10-r226" defer></script>
+  <script src="config.js?v=2026-05-10-r227" defer></script>
+  <script src="db.js?v=2026-05-10-r227" defer></script>
+  <script src="menudata.js?v=2026-05-10-r227" defer></script>
+  <script src="calendar.js?v=2026-05-10-r227" defer></script>
+  <script src="rules.js?v=2026-05-10-r227" defer></script>
+  <script src="admin.js?v=2026-05-10-r227" defer></script>
 </body>
 </html>

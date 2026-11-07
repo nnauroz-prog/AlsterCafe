@@ -66,6 +66,9 @@
       ? ` data-kind="${kind}" data-id="${escapeHtml(id)}" tabindex="0" role="button" aria-label="${escapeHtml(label)} öffnen"`
       : '';
     const todayIso = isoDate(new Date());
+    // Schließtage (Urlaub & Feiertage): { 'YYYY-MM-DD': 'Grund' }
+    const closed = {};
+    (Array.isArray(data.holidays) ? data.holidays : []).forEach(h => { if (h && h.date) closed[h.date] = String(h.label || '').trim(); });
     const byDay = {};
     (data.reservations || []).forEach(r => { if (r.date) (byDay[r.date] = byDay[r.date] || []).push({ kind: 'res', time: r.time || '', r }); });
     (data.orders || []).forEach(o => { if (o.pickupDate) (byDay[o.pickupDate] = byDay[o.pickupDate] || []).push({ kind: 'order', time: o.pickupTime || '', o }); });
@@ -77,9 +80,10 @@
       total += items.length;
       const nRes = items.filter(x => x.kind === 'res').length;
       const nOrd = items.length - nRes;
+      const isClosed = Object.prototype.hasOwnProperty.call(closed, iso);
       const summary = items.length
         ? [nRes ? `${nRes} ${nRes === 1 ? 'Reservierung' : 'Reservierungen'}` : '', nOrd ? `${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}` : ''].filter(Boolean).join(' · ')
-        : 'Nichts eingetragen';
+        : (isClosed ? '' : 'Nichts eingetragen');
       const rows = items.map(x => {
         if (x.kind === 'res') {
           const r = x.r;
@@ -99,12 +103,13 @@
           ${pill(o)}
         </li>`;
       }).join('');
-      return `<section class="cal-day${iso === todayIso ? ' is-today' : ''}${iso < todayIso ? ' is-past' : ''}${items.length ? '' : ' is-empty'}">
+      return `<section class="cal-day${iso === todayIso ? ' is-today' : ''}${iso < todayIso ? ' is-past' : ''}${items.length ? '' : ' is-empty'}${isClosed ? ' is-closed' : ''}">
         <header class="cal-day-head">
           <span class="cal-day-name">${d.label}</span>
           <span class="cal-day-date">${date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
           ${iso === todayIso ? '<span class="day-pill">Heute</span>' : ''}
-          <span class="cal-day-sum">${summary}</span>
+          ${isClosed ? `<span class="cal-closed">Geschlossen${closed[iso] ? ' · ' + escapeHtml(closed[iso]) : ''}</span>` : ''}
+          ${summary ? `<span class="cal-day-sum">${summary}</span>` : ''}
         </header>
         ${rows ? `<ul class="cal-list">${rows}</ul>` : ''}
       </section>`;
