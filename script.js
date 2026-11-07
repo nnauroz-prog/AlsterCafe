@@ -1945,7 +1945,7 @@ function injectLunchSchema(weekData, monday) {
       '@context': 'https://schema.org', '@type': 'Menu',
       name: 'Mittagstisch' + (lbl ? ' · ' + lbl : ''),
       description: 'Werktags ab 12:00 Uhr – täglich wechselndes Gericht mit Beilage und Salat im Alstercafé, Hamburg-Hohenfelde.',
-      inLanguage: 'de', url: 'https://alstercafe.de/mittagstisch.html',
+      inLanguage: 'de', url: 'https://www.alstercafe.de/mittagstisch.html',
       hasMenuSection: sections
     });
   } catch (e) { /* Schema ist optional */ }
@@ -2113,7 +2113,7 @@ async function shareLunch(btn) {
     ? `${when} at Alstercafé: ${names} – from 12:00, Ifflandstraße 45.`
     : `${when} im Alstercafé: ${names} – ab 12 Uhr, Ifflandstraße 45.`;
   // Auf Englisch geteilt → der Link öffnet beim Empfänger auch die englische Seite
-  const url = 'https://alstercafe.de/mittagstisch.html' + (en ? '?lang=en' : '');
+  const url = 'https://www.alstercafe.de/mittagstisch.html' + (en ? '?lang=en' : '');
   if (navigator.share) {
     try { await navigator.share({ title: en ? 'Lunch at Alstercafé' : 'Mittagstisch im Alstercafé', text, url }); } catch (e) { /* abgebrochen */ }
     return;

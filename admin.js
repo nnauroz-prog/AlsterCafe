@@ -395,6 +395,9 @@ async function showDashboard() {
     const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
     dom.welcome.innerHTML = `Moin! <span class="welcome-date">${escapeHtml(today)}</span>`;
   }
+  // Einmal pro Sitzung: Überbleibsel früherer Versionen (Reservierungs-/Bestellkopien) aus der
+  // öffentlichen Inhalts-Tabelle entfernen – passiert still beim normalen Login.
+  try { if (!sessionStorage.getItem('alstercafe.legacy-clean')) { sessionStorage.setItem('alstercafe.legacy-clean', '1'); window.alsterDb?.removeLegacyContent?.(['reservations', 'orders']); } } catch (e) {}
   // Default-Landing: Overview. Tab-Inhalte werden lazy beim Klick aktiv.
   showOverview();
   renderWeek();
