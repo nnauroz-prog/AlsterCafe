@@ -209,7 +209,14 @@
     if (!useSupabase) return;
     const { data, error } = await sb.from('content').select('id,data');
     if (error) { console.warn('Hydratation fehlgeschlagen', error); return; }
-    (data || []).forEach(row => writeCache(row.id, row.data));
+    // Nur bekannte Inhalts-Schlüssel übernehmen. Fremde Zeilen der öffentlichen Tabelle
+    // (z. B. Überbleibsel früherer Versionen) landen so nie im Browser der Besucher.
+    (data || []).forEach(row => { if (SYNCED_KEYS.includes(row.id)) writeCache(row.id, row.data); });
+    // Auf öffentlichen Seiten haben Reservierungs- und Bestelldaten im Browser nichts zu suchen:
+    // früher dort abgelegte Kopien entfernen (Mitgliederbereich lädt sie geschützt selbst).
+    if (!/\/(admin|kalender)(\.html)?$/.test(location.pathname)) {
+      ['reservations', 'orders'].forEach(k => { try { localStorage.removeItem(PREFIX + k); } catch (e) {} delete cache[k]; });
+    }
     // Vom Inhaber gelöschte Einträge (Hinweis, Urlaub, Sorten …) auch aus dem
     // Browser-Cache entfernen, sonst sehen wiederkehrende Besucher sie weiter.
     const present = new Set((data || []).map(row => row.id));
