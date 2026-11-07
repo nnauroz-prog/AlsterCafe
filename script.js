@@ -1190,18 +1190,43 @@ function initNav() {
   const toggle = document.querySelector('.nav-toggle');
   const nav = document.getElementById('primary-nav');
   if (!toggle || !nav) return;
+  // Beim offenen Handy-Menü bleibt der Rest der Seite für Tastatur und Vorlesen unerreichbar
+  const outside = () => Array.from(document.querySelectorAll('body > :not(.site-header):not(script):not(style)'));
+  const focusables = () => Array.from(nav.querySelectorAll('a[href], button:not([disabled])')).filter(el => el.offsetParent !== null || getComputedStyle(el).position === 'fixed');
   const setOpen = (open) => {
+    const was = nav.classList.contains('open');
     nav.classList.toggle('open', open);
     document.body.classList.toggle('menu-open', open);
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute('aria-label', alsterLang() === 'en' ? (open ? 'Close menu' : 'Open menu') : (open ? 'Menü schließen' : 'Menü öffnen'));
+    // Nur auf Handy-Breite (dort ist das Menü ein Overlay): Seite dahinter sperren, Fokus führen
+    const mobile = matchMedia('(max-width: 980px)').matches;
+    outside().forEach(el => {
+      if (open && mobile) { el.setAttribute('inert', ''); el.setAttribute('aria-hidden', 'true'); }
+      else { el.removeAttribute('inert'); el.removeAttribute('aria-hidden'); }
+    });
+    if (open && mobile) {
+      const first = focusables()[0];
+      if (first) setTimeout(() => first.focus({ preventScroll: true }), 50);
+    } else if (was && !open && mobile) {
+      toggle.focus({ preventScroll: true });
+    }
   };
   toggle.addEventListener('click', () => setOpen(!nav.classList.contains('open')));
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setOpen(false)));
-  // ESC schließt das Menü
+  // ESC schließt das Menü; Tab bleibt im offenen Menü (Fokus-Falle zwischen Menü-Knopf und letztem Eintrag)
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && nav.classList.contains('open')) setOpen(false);
+    if (!nav.classList.contains('open')) return;
+    if (e.key === 'Escape') { setOpen(false); return; }
+    if (e.key !== 'Tab' || !matchMedia('(max-width: 980px)').matches) return;
+    const items = [toggle, ...focusables()];
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    else if (!items.includes(document.activeElement)) { e.preventDefault(); first.focus(); }
   });
+  // Menü schließt beim Wechsel auf Computer-Breite (sonst bliebe die Seite gesperrt)
+  matchMedia('(min-width: 981px)').addEventListener?.('change', ev => { if (ev.matches && nav.classList.contains('open')) setOpen(false); });
 }
 
 /* ---------- Reveal-on-Scroll ---------- */

@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r225" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r225" />
-  <script>(function(){var V='2026-05-10-r225';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r226" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r226" />
+  <script>(function(){var V='2026-05-10-r226';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -547,7 +547,7 @@
         <!-- TAB: ÖFFNUNGSZEITEN -->
         <div class="admin-panel" id="panel-hours" role="tabpanel" hidden>
           <div class="panel-card">
-            <h3>Öffnungszeiten</h3>
+            <h2 class="panel-card-title">Öffnungszeiten</h2>
             <details class="help-box">
               <summary>Hilfe: Öffnungszeiten ändern</summary>
               <div class="help-box-body">
@@ -580,7 +580,7 @@
         <!-- TAB: URLAUB & FEIERTAGE -->
         <div class="admin-panel" id="panel-holidays" role="tabpanel" hidden>
           <div class="panel-card">
-            <h3>Urlaub &amp; Feiertage</h3>
+            <h2 class="panel-card-title">Urlaub &amp; Feiertage</h2>
             <p class="panel-card-sub">Tage, an denen das Café geschlossen ist.</p>
             <details class="help-box">
               <summary>Hilfe: Schließtage eintragen</summary>
@@ -631,7 +631,7 @@
         <!-- TAB: DESIGN -->
         <div class="admin-panel" id="panel-design" role="tabpanel" hidden>
           <div class="panel-card wide">
-            <h3>Bilder &amp; Farben</h3>
+            <h2 class="panel-card-title">Bilder &amp; Farben</h2>
             <details class="help-box">
               <summary>Hilfe: Bilder hochladen</summary>
               <div class="help-box-body">
@@ -647,7 +647,7 @@
             <!-- Logo -->
             <div class="design-row">
               <div class="design-info">
-                <h4>Logo</h4>
+                <h3 class="design-info-title">Logo</h3>
                 <p>Quadratisches Bild — erscheint oben im Kopfbereich und unten im Footer, auf <strong>allen Seiten</strong>.</p>
               </div>
               <div class="design-control">
@@ -668,7 +668,7 @@
             <!-- Über-uns-Bild -->
             <div class="design-row">
               <div class="design-info">
-                <h4>Bild auf „Über uns“</h4>
+                <h3 class="design-info-title">Bild auf „Über uns“</h3>
                 <p>Erscheint <strong>nur auf der Seite „Über uns“</strong> (über dem Zitat) — nicht auf der Startseite. Querformat passt am besten, z. B. ein Foto aus der Backstube.</p>
               </div>
               <div class="design-control">
@@ -689,7 +689,7 @@
             <!-- Galerie -->
             <div class="design-row">
               <div class="design-info">
-                <h4>Galerie</h4>
+                <h3 class="design-info-title">Galerie</h3>
                 <p>Bis zu 6 Bilder. Mit dem Schalter legen Sie fest, ob die Fotos auf der <strong>Startseite</strong> erscheinen (unter dem Tagesgericht). Ausgeschaltet bleiben die Fotos gespeichert, sind aber für Gäste unsichtbar.</p>
               </div>
               <div class="design-control">
@@ -711,7 +711,7 @@
             <!-- Google-Bewertungslink: Zeile auf der Startseite/Kontakt + QR-Aushang -->
             <div class="design-row">
               <div class="design-info">
-                <h4>Google-Bewertungslink</h4>
+                <h3 class="design-info-title">Google-Bewertungslink</h3>
                 <p>Den Link finden Sie im Google-Unternehmensprofil unter <strong>„Bewertungen erhalten“</strong>. Ist er eingetragen, erscheint auf der Startseite unter den Bewertungen die Zeile „Bewertung bei Google schreiben“ und auf der Kontaktseite der Link „Google-Bewertung“. Leer gelassen bleibt alles wie bisher.</p>
               </div>
               <div class="design-control">
@@ -769,7 +769,7 @@
         <!-- TAB: NOTICE BANNER -->
         <div class="admin-panel" id="panel-notice" role="tabpanel" hidden>
           <div class="panel-card">
-            <h3>Aktueller Hinweis</h3>
+            <h2 class="panel-card-title">Aktueller Hinweis</h2>
             <details class="help-box">
               <summary>Hilfe: Hinweis-Banner</summary>
               <div class="help-box-body">
@@ -884,7 +884,7 @@
           <div class="panel-card wide">
             <div class="anfragen-head">
               <div>
-                <h3>Reservierungen</h3>
+                <h2 class="panel-card-title">Reservierungen</h2>
                 <p class="panel-card-sub">
                   Hier sehen Sie alle Anfragen, die über das Reservierungs-Formular auf
                   der Webseite eingehen — chronologisch sortiert.
@@ -918,7 +918,7 @@
           <div class="panel-card wide">
             <div class="anfragen-head">
               <div>
-                <h3>Bestellungen</h3>
+                <h2 class="panel-card-title">Bestellungen</h2>
                 <p class="panel-card-sub">
                   Vorbestellungen für belegte Brötchen, die über den
                   Brötchen-Service auf der Webseite eingehen — neueste zuerst.
@@ -1223,11 +1223,11 @@
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
   <script src="vendor/qrcode-generator-1.4.4.js" defer></script>
-  <script src="config.js?v=2026-05-10-r225" defer></script>
-  <script src="db.js?v=2026-05-10-r225" defer></script>
-  <script src="menudata.js?v=2026-05-10-r225" defer></script>
-  <script src="calendar.js?v=2026-05-10-r225" defer></script>
-  <script src="rules.js?v=2026-05-10-r225" defer></script>
-  <script src="admin.js?v=2026-05-10-r225" defer></script>
+  <script src="config.js?v=2026-05-10-r226" defer></script>
+  <script src="db.js?v=2026-05-10-r226" defer></script>
+  <script src="menudata.js?v=2026-05-10-r226" defer></script>
+  <script src="calendar.js?v=2026-05-10-r226" defer></script>
+  <script src="rules.js?v=2026-05-10-r226" defer></script>
+  <script src="admin.js?v=2026-05-10-r226" defer></script>
 </body>
 </html>

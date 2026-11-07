@@ -12058,3 +12058,53 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   .cookie-actions { gap: 10px; width: 100%; }
   .cookie-actions .btn.cookie-accept, .cookie-actions .btn.cookie-decline { flex: 1 1 0; min-height: 44px; padding: 10px 12px; font-size: .88rem; justify-content: center; }
 }
+
+
+/* ============================================================
+   FACELIFT 8 · Thema 6 – Barrierefreiheit
+   (Handy-Menü Fokus, Kontraste, Beschriftungen ≥ 11 px, Tippflächen ≥ 44 px,
+   Überschriften-Reihenfolge im Mitgliederbereich)
+   ============================================================ */
+
+/* --- 1 · Kontraste --- */
+.karte-allergene { color: #5C3C20; }
+.order-summary-card .karte-allergene { color: rgba(241, 231, 211, .8); }
+.error-meta { color: #5C3C20; opacity: 1; }
+.admin-body .admin-pill { color: #6F5C4E !important; }
+.admin-body .day-card-head .day-pill { color: var(--bean, #3D2415); } /* Bean auf Gold: 5,0:1 */
+.cal-day-head .day-pill { background: #8A6420; color: #FFFCF4; }  /* Weiß auf dunklem Gold: 5,4:1 */
+
+/* --- 2 · Beschriftungen mindestens 11 px (Abstände und Versalien bleiben) --- */
+.btn .btn-sub, .hero-partner, .hero-partner-text, .hero-coord-clock-label, .hero-coord-label,
+.today-feature-kicker, .footer-col-label, .broetchen-badge, .reservation-tips-eyebrow,
+.reservation-form-coupon-eyebrow, .reservation-form-coupon-stamp, .hero-scroll-label,
+.lunch-day-date, .col-label, .karte-tag, .diet-badge, .day-pill, .reservation-tips-list li::before,
+.dish-huge .diet-badge, .is-long .diet-badge, .is-xlong .diet-badge { font-size: .6875rem; }
+.admin-body .overview-summary .summary-stat-count .summary-stat-label,
+.admin-body .overview-summary .summary-stat-info .summary-stat-label,
+.admin-body .account-list dt, .admin-body .holiday-range label { font-size: .6875rem !important; }
+.bb-item { font-size: .6875rem !important; }
+.reservation-tips .reservation-tips-eyebrow { font-size: .6875rem; }
+/* Bilder & Farben: Zeilentitel als h3 (nach h2), Aussehen wie bisher */
+.design-info .design-info-title { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 500; color: var(--bean); margin: 0 0 6px; line-height: 1.2; letter-spacing: -0.012em; }
+.bb-label { letter-spacing: 0; }
+
+/* --- 3 · Tippflächen ≥ 44 px (ohne Layoutänderung: unsichtbare Fläche oder Mindesthöhe) --- */
+.skip-link { padding: 14px 18px; }
+/* Topbar-Links: unsichtbare Fläche gibt es bereits (.topbar a.topbar-link::after); die Leiste selbst ist 36 px hoch */
+.page-breadcrumb a { position: relative; }
+.page-breadcrumb a::before { content: ''; position: absolute; left: -8px; right: -8px; top: -15px; bottom: -15px; }
+.btn-link, .legal-revoke .btn { min-height: 44px; display: inline-flex; align-items: center; }
+.primary-nav .nav-shop { min-height: 44px; display: inline-flex; align-items: center; }
+.site-footer .footer-legal a { min-height: 44px; display: inline-flex; align-items: center; }
+.social a, .contact .social a { min-height: 44px; display: inline-flex; align-items: center; }
+.to-top { width: 44px; height: 44px; }
+.error-links a { min-height: 44px; }
+
+/* --- 4 · Mitgliederbereich: Überschriften in Reihenfolge (h1 → h2 → h3), Kartentitel sehen aus wie bisher --- */
+.panel-card .panel-card-title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 1.4rem; line-height: 1.06; margin: 0 0 8px; color: var(--bean); letter-spacing: -0.012em; font-variation-settings: "opsz" 96, "SOFT" 50; text-wrap: balance; }
+@media (max-width: 720px) { .admin-body .panel-card .panel-card-title { font-size: 1.25rem !important; } }
+/* Am Handy bleibt die Seiten-Überschrift für Vorleseprogramme erhalten (unsichtbar statt entfernt) */
+@media (max-width: 760px) {
+  .admin-dashboard.is-working .admin-welcome { display: block; position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; padding: 0; }
+}
