@@ -15,38 +15,30 @@ Drei Dokumente für drei Zwecke:
 
 ## Live-Adresse (Stand November 2026)
 ```
-https://alstercafe.de/
+https://www.alstercafe.de/
 ```
-Die Seite läuft bei **Vercel**, die Domain liegt bei STRATO. Derzeit leitet `alstercafe.de` auf
-`www.alstercafe.de` um; vorgesehen ist es umgekehrt (siehe „Offene Punkte“ unten).
-Das Vercel-Projekt ist zusätzlich unter `https://alster-cafe.vercel.app/` erreichbar.
+Die Seite läuft bei **Vercel**, die Domain liegt bei STRATO. `alstercafe.de` leitet auf
+`www.alstercafe.de` um; www ist die Hauptadresse, und Canonical, Sitemap, Social-Vorschau und
+Google-Daten nennen einheitlich `https://www.alstercafe.de/`. Wird die Umleitung in Vercel einmal
+umgedreht, müssen diese Adressen im Code wieder angepasst werden.
 
-Jede Änderung am Code geht nach dem Zusammenführen (Merge) in `main` innerhalb von etwa einer Minute
-automatisch live – kein manuelles Hochladen.
+Jede Änderung geht nach dem Merge in `main` in etwa einer Minute automatisch live.
 
-## Offene Punkte für den Inhaber (Stand November 2026)
+## Erledigt ohne Zutun des Inhabers (November 2026)
 
-Diese Schritte kann nur der Inhaber in seinen Konten erledigen. Die Webseite selbst ist fertig.
+- **Alte Zeile `reservations` in der Tabelle `content`:** Die Webseite lädt sie nicht mehr in
+  Besucher-Browser, und der Mitgliederbereich löscht solche Überbleibsel beim nächsten normalen Login
+  automatisch.
+- **Domain:** Code auf die tatsächliche Hauptadresse www.alstercafe.de umgestellt – keine
+  Vercel-Einstellung nötig.
 
-1. **Supabase: alte Zeile mit Kundendaten löschen (dringend).** In der öffentlich lesbaren Tabelle
-   `content` liegt aus einer früheren Version eine Zeile `reservations` mit einer Reservierung samt
-   Kontaktdaten. Die Webseite lädt sie seit November 2026 nicht mehr in Besucher-Browser, über die
-   Schnittstelle ist sie aber weiter abrufbar. Supabase → Projekt `jsepktfpdlgezzncmbxz` → SQL Editor →
-   New query → folgende Zeile einfügen → **Run** (unten muss „Success“ stehen):
-   ```sql
-   delete from public.content where id = 'reservations';
-   ```
-2. **Vercel: `alstercafe.de` als Hauptadresse.** Vercel → Projekt → Settings → Domains →
-   bei `alstercafe.de` auf **Edit** → „Redirect to …“ entfernen und `www.alstercafe.de` so einstellen,
-   dass er auf `alstercafe.de` umleitet. Grund: Canonical, Sitemap und Social-Vorschau der Seite nennen
-   `alstercafe.de` – Google soll keine widersprüchlichen Signale bekommen.
-3. **Google-Bewertungslink eintragen.** Google-Unternehmensprofil → „Bewertungen erhalten“ → Link kopieren
-   → Mitgliederbereich → Bilder & Farben → Google-Bewertungslink. Danach „Bewertungs-Aushang drucken (A6)“.
-4. **Google Search Console.** Property `alstercafe.de` (Domain) anlegen, per DNS-Eintrag bei STRATO
-   bestätigen, Sitemap `https://alstercafe.de/sitemap.xml` einreichen. Weitere Punkte: SEO-CHECKLISTE.md.
-5. **Supabase: Registrierung aus.** Authentication → Sign In / Providers → „Allow new users to sign up“
-   muss **aus** sein (jedes Konto hätte sonst vollen Zugriff auf den Mitgliederbereich).
-6. **Datenschutzerklärung** einmal von einer Anwältin oder einem Anwalt gegenlesen lassen.
+## Freiwillig (die Seite ist auch ohne diese Punkte vollständig)
+
+1. **Google-Bewertungslink** im Mitgliederbereich unter Bilder & Farben eintragen – dann erscheinen die
+   Bewertungs-Zeile und der QR-Aushang. Ohne Link bleibt beides unsichtbar.
+2. **Google Search Console** für `www.alstercafe.de` anlegen und die Sitemap
+   `https://www.alstercafe.de/sitemap.xml` einreichen (siehe SEO-CHECKLISTE.md).
+3. **Datenschutzerklärung** einmal anwaltlich gegenlesen lassen.
 
 ## 1. Was Sie als Inhaberin tun müssen (einmalig, ca. 30 Minuten)
 

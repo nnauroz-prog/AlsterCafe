@@ -235,6 +235,19 @@
     return true;
   }
 
+  /* Alte Zeilen aus früheren Versionen in der öffentlichen Tabelle löschen (nur angemeldet).
+     Fasst den Browser-Cache bewusst nicht an. */
+  async function removeLegacyContent(ids) {
+    if (!useSupabase || !Array.isArray(ids) || !ids.length) return false;
+    try {
+      const { data } = await sb.auth.getSession();
+      if (!data || !data.session) return false;
+      const { error } = await sb.from('content').delete().in('id', ids);
+      if (error) { console.warn('Altdaten nicht gelöscht', error); return false; }
+      return true;
+    } catch (e) { return false; }
+  }
+
   async function dbRemove(key) {
     writeCache(key, null);
     if (!useSupabase) return true;
@@ -649,6 +662,7 @@
     get: readCache,
     set: dbSet,
     remove: dbRemove,
+    removeLegacyContent,
     uploadImage,
     subscribe: subscribeChanges,
     onSyncStatus,

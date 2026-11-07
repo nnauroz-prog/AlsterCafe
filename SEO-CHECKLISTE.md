@@ -21,14 +21,14 @@ Aufrufen: google.com → „Alstercafé“ suchen → „Unternehmensprofil bear
 2. **Name exakt „Alstercafé“** – keine Zusätze wie „Café Hohenfelde“ im Namen (verstößt gegen Google-Regeln,
    kann zur Sperre führen).
 3. **Adresse, Telefon, Webseite** überall identisch schreiben:
-   `Ifflandstraße 45, 22087 Hamburg` · `040 22692891` · `https://alstercafe.de/`
+   `Ifflandstraße 45, 22087 Hamburg` · `040 22692891` · `https://www.alstercafe.de/`
    (immer „Ifflandstraße“ ausgeschrieben, nie „Ifflandstr.“ – auch bei allen Verzeichnissen unten).
 4. **Öffnungszeiten** pflegen, **Feiertage/Urlaub als „Besondere Öffnungszeiten“** eintragen.
    „Geöffnet zum Suchzeitpunkt“ ist ein Top-5-Faktor – falsche Zeiten kosten Sichtbarkeit.
 5. **Links setzen** (Abschnitt „Unternehmensinformationen“ → Links):
-   - Speisekarte: `https://alstercafe.de/speisekarte.html`
-   - Reservierung: `https://alstercafe.de/reservierung.html`
-   - Bestellung: `https://alstercafe.de/broetchen.html`
+   - Speisekarte: `https://www.alstercafe.de/speisekarte.html`
+   - Reservierung: `https://www.alstercafe.de/reservierung.html`
+   - Bestellung: `https://www.alstercafe.de/broetchen.html`
 6. **Speisekarte im Profil eintragen** (Menü → „Speisekarte“): die wichtigsten Gerichte mit Preis
    einzeln anlegen (Frühstück Klassik, Rührei, Croques, Franzbrötchen …). Ein Foto der Karte reicht
    nicht – Google kann Fotos nicht lesen.
@@ -70,7 +70,7 @@ Danach einmal jährlich prüfen. Widersprüchliche Angaben (z. B. alte Telefonnu
 ## D. Google Search Console (einmalig, 10 Minuten)
 
 search.google.com/search-console → Property `alstercafe.de` (Domain) → Bestätigung per DNS-Eintrag
-bei STRATO (TXT-Eintrag einfügen) → Sitemap `https://alstercafe.de/sitemap.xml` einreichen.
+bei STRATO (TXT-Eintrag einfügen) → Sitemap `https://www.alstercafe.de/sitemap.xml` einreichen.
 Danach sieht man, für welche Suchbegriffe die Seite erscheint, und Google meldet Probleme.
 
 ## E. Was die Webseite bereits erfüllt

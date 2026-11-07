@@ -6,7 +6,7 @@ https://alster-cafe.vercel.app
 ```
 Ziel: Die eigene Domain zeigt auf die neue Seite:
 ```
-https://alstercafe.de
+https://www.alstercafe.de
 ```
 
 **Ausgangslage:** `alstercafe.de` liegt bei **STRATO** und zeigt dort aktuell eine **alte
@@ -46,9 +46,9 @@ Falls es **E-Mail-Postfächer `@alstercafe.de`** bei STRATO gibt: **die `MX`-Ein
 Post mehr an. (Nur die Web-Einträge zeigen auf Vercel, die Mail-Einträge bleiben bei STRATO.)
 
 ## Schritt 3 — Warten & prüfen
-- Nach einigen Minuten bis max. 24 h: `https://alstercafe.de` zeigt die neue Seite.
+- Nach einigen Minuten bis max. 24 h: `https://www.alstercafe.de` zeigt die neue Seite.
 - In Vercel steht die Domain dann auf **„Valid Configuration"**, HTTPS ist automatisch aktiv.
-- `www.alstercafe.de` sollte auf `alstercafe.de` weiterleiten (in Vercel so einstellbar).
+- Hauptadresse ist `www.alstercafe.de`; `alstercafe.de` leitet dorthin um (so in Vercel eingestellt, im Code berücksichtigt).
 
 ## Rückfahrkarte
 Geht etwas schief, einfach bei STRATO die DNS-Änderung rückgängig machen bzw. die alte
