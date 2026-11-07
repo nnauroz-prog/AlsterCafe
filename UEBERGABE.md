@@ -2,7 +2,7 @@
 
 Diese Datei beschreibt, was vor dem produktiven Einsatz noch zu tun ist und wie der Mitgliederbereich genutzt wird.
 
-## 📋 Kurz-Übersicht
+## Kurz-Übersicht
 
 Drei Dokumente für drei Zwecke:
 
@@ -13,14 +13,40 @@ Drei Dokumente für drei Zwecke:
 | [**PHOTOS.md**](PHOTOS.md) | Maria | Welche Fotos sie knipsen und wie hochladen |
 | [**CUSTOM-DOMAIN.md**](CUSTOM-DOMAIN.md) | Dev | DNS-Konfiguration alstercafe.de |
 
-## Live-Adresse (Stand heute)
+## Live-Adresse (Stand November 2026)
 ```
 https://alstercafe.de/
 ```
-Die Seite ist live auf der eigenen Domain `alstercafe.de` (gehostet bei Vercel, Domain bei STRATO).
-Das Vercel-Projekt ist zusätzlich unter `https://alster-cafe.vercel.app/` erreichbar — Details in [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md).
+Die Seite läuft bei **Vercel**, die Domain liegt bei STRATO. Derzeit leitet `alstercafe.de` auf
+`www.alstercafe.de` um; vorgesehen ist es umgekehrt (siehe „Offene Punkte“ unten).
+Das Vercel-Projekt ist zusätzlich unter `https://alster-cafe.vercel.app/` erreichbar.
 
-Jede Änderung am Code geht automatisch innerhalb von ~1 Minute auf die Live-Adresse — kein manuelles Hochladen.
+Jede Änderung am Code geht nach dem Zusammenführen (Merge) in `main` innerhalb von etwa einer Minute
+automatisch live – kein manuelles Hochladen.
+
+## Offene Punkte für den Inhaber (Stand November 2026)
+
+Diese Schritte kann nur der Inhaber in seinen Konten erledigen. Die Webseite selbst ist fertig.
+
+1. **Supabase: alte Zeile mit Kundendaten löschen (dringend).** In der öffentlich lesbaren Tabelle
+   `content` liegt aus einer früheren Version eine Zeile `reservations` mit einer Reservierung samt
+   Kontaktdaten. Die Webseite lädt sie seit November 2026 nicht mehr in Besucher-Browser, über die
+   Schnittstelle ist sie aber weiter abrufbar. Supabase → Projekt `jsepktfpdlgezzncmbxz` → SQL Editor →
+   New query → folgende Zeile einfügen → **Run** (unten muss „Success“ stehen):
+   ```sql
+   delete from public.content where id = 'reservations';
+   ```
+2. **Vercel: `alstercafe.de` als Hauptadresse.** Vercel → Projekt → Settings → Domains →
+   bei `alstercafe.de` auf **Edit** → „Redirect to …“ entfernen und `www.alstercafe.de` so einstellen,
+   dass er auf `alstercafe.de` umleitet. Grund: Canonical, Sitemap und Social-Vorschau der Seite nennen
+   `alstercafe.de` – Google soll keine widersprüchlichen Signale bekommen.
+3. **Google-Bewertungslink eintragen.** Google-Unternehmensprofil → „Bewertungen erhalten“ → Link kopieren
+   → Mitgliederbereich → Bilder & Farben → Google-Bewertungslink. Danach „Bewertungs-Aushang drucken (A6)“.
+4. **Google Search Console.** Property `alstercafe.de` (Domain) anlegen, per DNS-Eintrag bei STRATO
+   bestätigen, Sitemap `https://alstercafe.de/sitemap.xml` einreichen. Weitere Punkte: SEO-CHECKLISTE.md.
+5. **Supabase: Registrierung aus.** Authentication → Sign In / Providers → „Allow new users to sign up“
+   muss **aus** sein (jedes Konto hätte sonst vollen Zugriff auf den Mitgliederbereich).
+6. **Datenschutzerklärung** einmal von einer Anwältin oder einem Anwalt gegenlesen lassen.
 
 ## 1. Was Sie als Inhaberin tun müssen (einmalig, ca. 30 Minuten)
 
@@ -40,18 +66,8 @@ In der Datei `config.js`:
 - `ownerEmail`: ist bereits auf `info@alstercafe.de` gesetzt. Nur ändern, falls ein anderes Login-Konto verwendet wird (muss dann exakt der in Supabase angelegten E-Mail entsprechen). Das Passwort gehört NICHT hierher — das lebt ausschließlich in Supabase.
 
 ### Schritt 3 – Hosting
-Die Seite läuft bereits auf **GitHub Pages** (kostenlos, automatisch).
-Der Branch `gh-pages` wird per GitHub Action automatisch aktualisiert
-sobald auf den Feature-Branch gepusht wird — Sie selbst müssen nichts
-deployen.
-
-**Eigene Domain `alstercafe.de` anbinden:**
-1. Bei Ihrem Domain-Anbieter (z. B. IONOS, Strato, GoDaddy) anmelden
-2. DNS-Einträge gemäß [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md) setzen
-3. HTTPS aktiviert sich automatisch via Let's Encrypt
-
-Alternative Hosts (Netlify, Vercel) sind möglich — `netlify.toml` und
-`_headers` sind im Repo, falls der Wechsel später gewünscht ist.
+Die Seite läuft bei **Vercel** (automatisches Ausrollen aus dem Branch `main`). Die Domain-Einstellungen
+stehen in [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md), HTTPS aktiviert Vercel automatisch.
 
 ### Schritt 4 – Test
 1. `https://alstercafe.de/admin.html` öffnen, mit Ihrer E-Mail + Passwort einloggen
@@ -67,53 +83,26 @@ Alternative Hosts (Netlify, Vercel) sind möglich — `netlify.toml` und
 ### Einloggen
 `alstercafe.de/admin.html` aufrufen, E-Mail und Passwort eingeben.
 
-### Übersicht
-Nach dem Login sehen Sie zwei Gruppen großer Karten:
+### Übersicht und tägliche Abläufe
+Die ausführliche, druckbare Anleitung steht in [**MARIA-ROUTINE.md**](MARIA-ROUTINE.md). Kurzfassung:
 
-**Täglich** (das, was Sie morgens nutzen):
-- **Mittagsmenü bearbeiten** — Tagesgerichte für die Woche
-- **Reservierungsanfragen** — wer möchte einen Tisch? (Karte hebt sich gold ab, wenn Neue da sind, mit Anzahl)
-- **Brötchen-Bestellungen** — Vorbestellungen für belegte Brötchen (gleicher Gold-Hinweis bei Neuen)
-
-**Selten ändern** (Pflege und Einrichtung):
-- **Speisekarte pflegen** — Frühstück, Backwaren, Getränke
-- **Bilder hochladen** — Logo, Hero-Bild, Über-uns-Bild, Galerie (Akzentfarbe unter „selten nötig" eingeklappt)
-- **Hinweisbanner aktivieren** — Brückentage, Sonderaktionen
-- **Öffnungszeiten ändern** — Tage und Zeiten
-
-Unter den Karten gibt es einen leisen Link „Texte direkt auf der Webseite ändern" — für den Fall, dass Sie Hero-Titel, „Über uns"-Absätze oder ähnliches anpassen möchten.
-
-Mit „Zurück zur Übersicht" oben links kommen Sie immer wieder zurück.
-Bei Bestellungen und Reservierungen zeigt eine Pille **„Heute"** oder **„Morgen"** an,
-was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten ist.
-
-**Live-Anzeige oben rechts:** Eine grüne Pille **„● Live verbunden"** bedeutet, dass Ihre Änderungen **sofort auf allen Geräten und der Webseite** erscheinen. Steht dort rot **„○ Nicht live"**, besteht gerade keine Live-Verbindung (z. B. kein Internet oder das Supabase-Projekt ist pausiert) — Ihre Eingaben werden dann erst nach dem Neuladen übernommen. In dem Fall kurz die Verbindung prüfen bzw. das Projekt im Supabase-Dashboard reaktivieren.
-
-### Wochenplan
-- Hauptgericht und Beilage je Tag eintragen
-- „An diesem Tag geschlossen" zeigt den Tag als geschlossen an
-- „Wochenplan speichern" ganz unten — wird automatisch auf alle Geräte synchronisiert
-- **Sonntags-Trick:** Am Sonntag sehen Sie automatisch die kommende Woche. Damit können Sie schon die neue Woche einplanen, während heute (Sonntag) noch läuft.
-
-### Anfragen
-- Neue Anfragen erscheinen automatisch oben in der Liste, mit goldenem „Neu"-Tag
-- Telefonnummer und E-Mail sind anklickbar — direkt anrufen oder antworten
-- Grüner Knopf **„Als erledigt markieren"** wenn Sie sich gekümmert haben; die Anfrage bleibt erhalten, aber zählt nicht mehr im Badge
-- Roter Knopf **„Löschen"** entfernt die Anfrage endgültig (mit Rückfrage)
-
-### Brötchen-Bestellungen
-- Kunden bestellen belegte Brötchen über die Seite **Brötchen-Service** (ab 10 Stück).
-- Oben im Bereich **„Bestellbare Brötchen-Sorten"** legen Sie selbst fest, welche
-  Sorten zur Auswahl stehen (Name, Beschreibung, „vegetarisch"). Speichern nicht vergessen.
-- Darunter unter **„Eingegangene Bestellungen"** sehen Sie jede Bestellung mit
-  allen Positionen (z. B. 5× Käse, 3× Lachs), Abholtermin, Telefon und E-Mail.
-- Wie bei den Anfragen: „Als erledigt markieren" und „Löschen".
+- **Übersicht:** „Heute auf einen Blick“ mit offenen Reservierungen und Bestellungen, heutigem
+  Mittagstisch, nächster Reservierung und der **Heute-Liste** (antippbar, „Tagesliste drucken“).
+- **Täglich:** Mittagstisch · Reservierungen · Bestellungen · Kalender · Berliner.
+  **Selten ändern:** Speisekarte · Bilder & Farben · Hinweis · Öffnungszeiten · Urlaub & Feiertage · Konto.
+- **Status jeder Anfrage:** Neu → Bestätigt („Bestätigung senden“, E-Mail an den Gast) → Erledigt
+  („Als erledigt markieren“). Erledigte stehen eingeklappt unter „Erledigt (Anzahl)“.
+- **Kalender:** Wochenansicht aller Reservierungen und Abholungen inkl. Schließtage; Kalender-Code für
+  Mitarbeiter (nur ansehen, ohne Kontaktdaten) unter alstercafe.de/kalender.html.
+- **Live-Anzeige oben rechts:** zeigt, ob Änderungen sofort auf allen Geräten und der Webseite erscheinen.
+- **Regeln für Gäste:** Reservierung online bis 14:00 Uhr; belegte Brötchen online bis 18 Uhr am Vortag;
+  Berliner nach den Regeln der Aktion (Vorlauf, Mindestmenge, Abholzeit).
 
 ---
 
 ## 3. Sicherheits-Hinweise
 
-- Das Passwort niemals weitergeben. Für Mitarbeiter im „Konto"-Tab eigene Zugänge anlegen.
+- Das Passwort niemals weitergeben. Mitarbeiter bekommen den Kalender-Code (nur ansehen); weitere Admin-Zugänge werden in Supabase angelegt.
 - Wenn Sie ein Passwort vergessen: Supabase-Dashboard → „Authentication" → „Users" → den Benutzer wählen → „..." → „Send password recovery"
 - Alle Anfragen werden in Deutschland gehostet (Supabase EU-Region). Datenschutzerklärung der Seite ist entsprechend formuliert.
 
@@ -126,7 +115,7 @@ was als nächstes ansteht — so sehen Sie auf einen Blick, was vorzubereiten is
 - **Inhalte ändern:** alles im Mitgliederbereich. Keine Programmierkenntnisse nötig.
 - **Technische Wartung:** nicht erforderlich. Die Seite ist statisch und läuft ohne Server-Wartung.
 - **Backups:** Der **Gratis-Tarif macht KEINE automatischen Backups** (das gibt es erst ab dem Pro-Tarif). Für die Datensicherung daher selbst sorgen — im Normalfall genügt das völlig:
-  - **Speisekarte & Wochenplan:** im jeweiligen Admin-Tab unter „Export" eine JSON-Datei herunterladen und aufbewahren.
+  - **Wochenplan:** im Bereich Mittagstisch unter „Sicherungskopie“ eine Datei herunterladen und aufbewahren.
   - **Verlustrisiko ist gering:** Menü, Öffnungszeiten und Texte haben ohnehin sichere Standardwerte im Code (`menudata.js` u. a.) und ließen sich im Ernstfall schnell neu eintippen. Reservierungen/Bestellungen sind kurzlebige Anfragen.
   - Wer es automatisiert mag: ein kostenloser wöchentlicher Export der **nicht-personenbezogenen** Inhalte (Karte, Zeiten, Design) ließe sich per GitHub-Action ins Repo sichern — Reservierungen/Bestellungen aber bewusst NICHT (Kundendaten gehören aus DSGVO-Gründen nicht in ein Code-Repo).
 
@@ -178,7 +167,8 @@ for f in *.html; do sed -i 's/2026-05-10-r81/2026-05-10-r82/g' "$f"; done
 
 ### Branch- & Deploy-Policy
 - Entwickelt wird auf `claude/bakery-website-redesign-vyyXQ` (oder einem neuen Feature-Branch).
-- Push auf den Feature-Branch ⇒ GitHub Action baut automatisch den `gh-pages`-Branch und Live-Site ist binnen ~60 s aktuell.
+- Änderungen kommen als Pull Request nach `main`; nach dem Merge rollt Vercel die Live-Seite in etwa einer Minute aus.
+- Zusätzlich spiegelt die GitHub Action (`deploy.yml`) den Stand nach `gh-pages` (Ersatz-Kopie), nur wenn `npm test` grün ist.
 - Niemals direkt auf `main` oder `gh-pages` committen.
 
 ### Speisekarte: geteilte Datenbasis + Editor + PDF
@@ -260,8 +250,8 @@ Maria hat gemeldet, dass die Formation des Admin-Bereichs „blöd" wirkte. Folg
 
 ### Security-Header
 - `Referrer-Policy: strict-origin-when-cross-origin` ist als `<meta name="referrer">` auf allen 11 Seiten gesetzt — wirkt unabhängig vom Host. Sorgt dafür, dass Maria's Kunden beim Anklicken externer Links (Tripadvisor, Google Maps, Croquenoah-Webshop) nicht den vollen Referrer leaken.
-- `_headers` und `netlify.toml` definieren zusätzlich HSTS, X-Frame-Options, CSP und Permissions-Policy. **Diese werden auf GitHub Pages NICHT angewendet** (nur auf Netlify). Falls die Seite irgendwann auf Netlify wechselt, sind sie automatisch aktiv. Auf GitHub Pages bleibt der Header-Schutz reduziert auf das, was per Meta möglich ist.
-- Konsequenz für Maria: Niedriges Risiko, weil keine sensiblen Kunden-Daten im Frontend liegen (Reservierungen + Bestellungen sind hinter Supabase-RLS authentifiziert). Aber: kein automatischer Schutz gegen Clickjacking via iFrame. Wenn das je akut wird → Hosting wechseln oder Cloudflare davorhängen.
+- Auf Vercel setzt `vercel.json` HSTS, X-Frame-Options, Content-Security-Policy, Permissions-Policy und Referrer-Policy (live geprüft im November 2026). `_headers` und `netlify.toml` gelten nur für den Fall eines Wechsels zu Netlify.
+- Reservierungen und Bestellungen liegen in eigenen Tabellen hinter Supabase-RLS (nur angemeldet lesbar); die öffentliche Tabelle `content` darf keine personenbezogenen Daten enthalten.
 
 ### Externe Profile pflegen
 Die Startseite verlinkt jetzt auf echte Bewertungsplattformen statt erfundene Zitate:
@@ -273,6 +263,14 @@ Die Startseite verlinkt jetzt auf echte Bewertungsplattformen statt erfundene Zi
 Diese drei sind ab jetzt Teil der Vitrine. Ein veraltetes Google-Profil schadet mehr als ein fehlendes Zitat auf der eigenen Seite. Faustregel: pro Quartal ein bis zwei neue Fotos auf Google + Instagram.
 
 ---
+
+### Inhalts-Schlüssel und Tests (Stand November 2026)
+- Alle Inhalte liegen in der Supabase-Tabelle `content` (öffentlich lesbar). `db.js` übernimmt beim Laden
+  **nur** die Schlüssel aus `SYNCED_KEYS`: weekly-menu, menu, specials, hours, notice, notice-until,
+  content, design, broetchen-items, holidays, berliner-items, berliner-settings, jobs. Neue Inhalte
+  immer dort ergänzen und in „Alle Inhalte zurücksetzen“ (admin.js `onResetAll`) aufnehmen.
+  **Nie personenbezogene Daten in `content` speichern.**
+- Tests: `npm test` (Versions-Check + Overflow-Audit, 924 Prüfungen), `npm run test:cls` (Layout-Sprünge).
 
 ## 7. Wichtige Quick-Links
 
