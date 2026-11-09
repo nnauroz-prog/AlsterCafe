@@ -12210,3 +12210,66 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 .today-feature .today-feature-side + .lunch-price { margin-top: 0; }
 .dish-alt .dish-alt-side + .lunch-price, .dish-alt .lunch-price { margin-top: 14px; }
 .lunch-today > .lunch-today-side + .lunch-price { margin-top: 0; }
+
+/* ============================================================
+   FACELIFT 9 · Art Direction – weniger Ornament-Ebenen, klarere Entscheidungen
+   Texte und Grundaufbau unverändert. Ziel: ein Nummernsystem (die Kapitelzahl),
+   ein Marker-Stil (Goldlinie), Höhe nur für Elemente, die wirklich darüber liegen.
+   ============================================================ */
+
+/* --- 1 · Überschriften-Marker: feine Goldlinie statt Kreis mit Punkt (gleiche Formsprache wie „Mit Espresso von“) --- */
+.eyebrow .num {
+  width: 26px; height: 1px; border: 0; border-radius: 0;
+  background: currentColor; font-size: 0; line-height: 0; opacity: .55; top: 0;
+}
+.reveal.in .eyebrow .num { opacity: .55; }
+.eyebrow .num.light { background: var(--gold-text); }
+.chapter-dark .eyebrow .num.light, .landing-visit-dark .eyebrow .num.light { background: var(--gold-soft); }
+.menu-broetchen-cta .eyebrow .num { background: var(--gold); }
+
+/* --- 2 · „Vier Gründe“: kleine Index-Ziffer statt riesiger zweiter Nummerierung --- */
+.spread-card .spread-num {
+  display: block; font-size: 1.05rem; line-height: 1; letter-spacing: .02em;
+  opacity: 1; color: var(--gold-text, #8A6420); margin: 0 0 14px;
+  font-variation-settings: "opsz" 24;
+}
+.spread-card:hover .spread-num { transform: none; }
+.spread-card-hero .spread-num { font-size: 1.15rem; }
+
+/* --- 3 · Bewertungen: typografische Quellen-Liste statt drei schwebender Symbol-Karten --- */
+.reviews-cta-grid {
+  grid-template-columns: 1fr; gap: 0; max-width: 880px; margin-inline: auto;
+  border-top: 1px solid var(--hairline-strong, rgba(42, 24, 16, .14));
+}
+.reviews-card {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 24px;
+  min-height: 0; padding: 26px 4px; background: none !important; border: 0; border-bottom: 1px solid var(--hairline-strong, rgba(42, 24, 16, .14));
+  border-radius: 0 !important; box-shadow: none !important; transform: none !important;
+}
+.reviews-card::after { top: auto; bottom: -1px; height: 1px; }
+.reviews-card:hover::after, .reviews-card:focus-visible::after { transform: scaleX(1); }
+.reviews-card .reviews-card-icon, .reviews-card .spot-light { display: none; }
+.reviews-card .reviews-card-text { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 18px; }
+.reviews-card .reviews-card-platform { font-size: clamp(1.35rem, 2.2vw, 1.7rem); }
+.reviews-card .reviews-card-action { margin: 0; justify-self: end; white-space: nowrap; }
+.reviews-card .reviews-card-action .ico { transition: transform var(--dur-base, .25s) var(--ease-out, ease); }
+.reviews-card:hover .reviews-card-action .ico, .reviews-card:focus-visible .reviews-card-action .ico { transform: translateX(4px); }
+.reviews-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+@media (max-width: 600px) {
+  .reviews-cta-grid .reviews-card { grid-template-columns: 1fr !important; padding: 20px 2px; }
+  .reviews-cta-grid .reviews-card .reviews-card-text { flex-direction: column; gap: 2px; }
+  .reviews-cta-grid .reviews-card .reviews-card-action { justify-self: start; margin-top: 8px; grid-column: 1 !important; grid-row: auto !important; }
+}
+
+/* --- 4 · Schatten-Disziplin: statische Karten liegen auf der Seite (Haarlinie), nicht darüber --- */
+.spread-card, .specials-teaser, .hero-coord, .map-card, .contact-info-block {
+  box-shadow: none !important;
+}
+.spread-card { border-color: var(--hairline-strong, rgba(42, 24, 16, .14)); }
+@media (hover: hover) and (pointer: fine) {
+  .spread-card:hover { transform: none; border-color: var(--gold); }
+}
+.hero-coord { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7) !important; }
+
+/* --- 5 · Tagesgericht-Zeile im Kopf: am Computer nicht über die ganze Breite laufen lassen --- */
+@media (min-width: 761px) { .live-lunch { max-width: min(860px, 100%); } .live-lunch-dish { -webkit-line-clamp: 1; } }
