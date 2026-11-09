@@ -2056,6 +2056,16 @@ function sizeDishText(el, text) {
   el.classList.toggle('is-long', n > 26 && n <= 60);
   el.classList.toggle('is-xlong', n > 60);
 }
+/* Zwei Gerichte am selben Tag stehen gleichwertig untereinander: beide bekommen die
+   Schriftgröße, die zum längeren Namen passt (Kennzeichen wie „vegetarisch“ zählen nicht). */
+function unifyDishSizes(dishEl) {
+  const host = dishEl?.parentElement;
+  const alt = host?.querySelector(':scope > .dish-alt .dish-alt-name');
+  if (!dishEl || !alt) return;
+  const len = el => Array.from(el.childNodes).filter(n => !(n.nodeType === 1 && n.classList.contains('diet-badge'))).map(n => n.textContent).join('').trim().length;
+  const n = Math.max(len(dishEl), len(alt));
+  [dishEl, alt].forEach(el => { el.classList.toggle('is-long', n > 26 && n <= 60); el.classList.toggle('is-xlong', n > 60); });
+}
 // Zweites Gericht unter einem großen Tagesgericht (Startseite / Mittagstisch-Seite)
 function renderAltDish(afterEl, entry, en, withMit) {
   if (!afterEl) return;
@@ -2072,7 +2082,7 @@ function renderAltDish(afterEl, entry, en, withMit) {
   const d = list[1];
   const side = d.side ? (withMit ? sideText(d.side, en) : d.side) : '';
   // Gleiche Gestaltung wie das erste Gericht (beide Optionen auf Augenhöhe)
-  const dishCls = (host.querySelector('[id$="-dish"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b|\bis-x?long\b/g, '').trim();
+  const dishCls = (host.querySelector('[id$="-dish"]')?.className || '').replace(/\bh2-reveal\b|\bis-tappable\b|\breveal\b|\bin\b|\bis-x?long\b/g, '').replace(/\s+/g, ' ').trim();
   const sideCls = (host.querySelector('[id$="-side"]')?.className || '').replace(/\bis-tappable\b|\breveal\b|\bin\b/g, '').trim();
   alt.innerHTML = `${orDividerHtml(en)}<p class="dish-alt-name ${dishCls}">${escapeHtml(d.dish)}${dietBadgeHtml(d, en)}</p>${side ? `<p class="dish-alt-side ${sideCls}">${escapeHtml(side)}</p>` : ''}`;
   sizeDishText(alt.querySelector('.dish-alt-name'), d.dish);
@@ -2351,6 +2361,7 @@ function initLandingTeaser() {
     if (sideEl) sideEl.hidden = true;
   }
   sizeDishText(dishEl);
+  unifyDishSizes(dishEl);
 }
 
 /* Magnetic Hover: Primary-CTAs ziehen den Mauspointer leicht an (Desktop) */
@@ -3407,6 +3418,7 @@ function renderTodayLunch(weekData, today, isTomorrow = false) {
       sideEl.hidden = !first.side;
     }
     renderAltDish(sideEl || dishEl, entry, en, false);
+    unifyDishSizes(dishEl);
     renderDishPrices(dishEl, sideEl, entry, weekData, en);
     let share = todayBox.querySelector('.lunch-share');
     if (!share) { share = lunchShareButton('light'); todayBox.appendChild(share); }

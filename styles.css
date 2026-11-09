@@ -12194,3 +12194,19 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 .admin-toast .toast-ico { flex: 0 0 auto; margin-right: 8px; vertical-align: -3px; color: var(--gold-soft, #E7CFA3); }
 .berliner-checklist .chk-ico svg { display: block; }
 .admin-tab .ico { flex: 0 0 auto; }
+
+/* Kontakt: Webshop-Link mit Zeichen für externe Seite (wie Kopfzeile und Fußzeile) */
+.contact .social a.social-ext::after {
+  content: ''; display: inline-block; width: .7em; height: .7em; margin-left: .4em; opacity: .7; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 5h5v5'/><path d='M19 5l-8 8'/><path d='M17 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 5h5v5'/><path d='M19 5l-8 8'/><path d='M17 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5'/></svg>") center / contain no-repeat;
+}
+
+/* Zweites Gericht: gleiche Mitte und gleiche Abstände wie das erste */
+.dish-alt .dish-alt-name { margin-left: auto; margin-right: auto; margin-bottom: 14px; }
+.dish-alt .dish-alt-side { margin-top: 0; }
+/* Preis unter beiden Gerichten mit gleichem Abstand zur Beilage */
+.today-feature .today-feature-side:has(+ .lunch-price) { margin-bottom: 14px; }
+.today-feature .today-feature-side + .lunch-price { margin-top: 0; }
+.dish-alt .dish-alt-side + .lunch-price, .dish-alt .lunch-price { margin-top: 14px; }
+.lunch-today > .lunch-today-side + .lunch-price { margin-top: 0; }
