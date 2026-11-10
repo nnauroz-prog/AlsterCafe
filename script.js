@@ -3540,11 +3540,17 @@ function renderWeekList(weekData, monday, today) {
       <div class="lunch-day-head">
         <span class="lunch-day-name">${dayLabels()[idx]}</span>
         <span class="lunch-day-date">${formatDay(date)}</span>
+        ${isToday ? `<span class="lunch-day-now" data-no-i18n="">${isoLocal(date) === todayIso ? (en ? 'Today' : 'Heute') : (en ? 'Tomorrow' : 'Morgen')}</span>` : ''}
       </div>
       <div class="lunch-day-body">${body}</div>
     `;
     list.appendChild(li);
   });
+  // Kopfzeile über der Liste: „Diese Woche“ + Kalenderwoche (nur am Computer sichtbar, per CSS)
+  let head = list.previousElementSibling?.classList.contains('lunch-week-head') ? list.previousElementSibling : null;
+  if (!head) { head = document.createElement('div'); head.className = 'lunch-week-head'; head.setAttribute('data-no-i18n', ''); head.setAttribute('aria-hidden', 'true'); list.before(head); }
+  const sundayH = new Date(monday); sundayH.setDate(sundayH.getDate() + 6);
+  head.innerHTML = `<span class="lunch-week-head-title">${en ? 'This week' : 'Diese Woche'}</span><span class="lunch-week-head-range">${(en ? 'Week ' : 'KW ') + isoWeek(monday)} · ${formatShort(monday)} – ${formatShort(sundayH)}</span>`;
   // Desktop: Sa und So ohne Gericht stapeln sich schmal in einer sechsten Spalte (CSS)
   list.classList.toggle('lunch-week-compact-weekend',
     !!(list.children[5]?.classList.contains('is-off') && list.children[6]?.classList.contains('is-off')));
