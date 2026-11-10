@@ -12301,3 +12301,42 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 @media (min-width: 761px) and (max-width: 1180px) {
   .lunch-today > .btn-gold { max-width: 100%; white-space: normal; text-align: center; padding-inline: 18px; }
 }
+
+/* ============================================================
+   Mittagstisch · Wochenübersicht am Computer als Liste
+   (je Tag eine Zeile, zwei Gerichte nebeneinander – statt sechs schmaler Spalten
+   mit langen Textsäulen). Handy/Tablet unverändert.
+   ============================================================ */
+.lunch-day-opt { display: block; }
+@media (min-width: 981px) {
+  .lunch-week:not(.lunch-week-empty), .lunch-week.lunch-week-compact-weekend:not(.lunch-week-empty) {
+    display: block !important; max-width: 1080px; margin-inline: auto;
+    border-top: 1px solid var(--hairline-on-dark, rgba(241, 231, 211, .14));
+  }
+  .lunch-week:not(.lunch-week-empty) > .lunch-day {
+    display: grid !important; grid-template-columns: 190px minmax(0, 1fr); column-gap: 40px; align-items: start;
+    width: auto !important; min-height: 0 !important; height: auto !important; margin: 0 !important;
+    padding: 26px 20px !important; background: none !important; box-shadow: none !important;
+    border: 0 !important; border-bottom: 1px solid var(--hairline-on-dark, rgba(241, 231, 211, .14)) !important;
+    border-radius: 0 !important; grid-column: auto !important; grid-row: auto !important; transform: none !important;
+  }
+  .lunch-week > .lunch-day .lunch-day-head { display: block; margin: 0; padding: 0; border: 0; }
+  .lunch-week > .lunch-day .lunch-day-name { font-size: 1.5rem; }
+  .lunch-week > .lunch-day .lunch-day-date { display: block; margin-top: 6px; }
+  .lunch-week > .lunch-day .lunch-day-body { display: block; font-size: 1.08rem; line-height: 1.45; }
+  .lunch-week > .lunch-day .lunch-day-dish { display: block; font-size: 1.12rem; line-height: 1.4; }
+  .lunch-week > .lunch-day .lunch-day-side { display: block; margin-top: 6px; font-size: .9rem; }
+  .lunch-week > .lunch-day .lunch-day-price { display: block; margin-top: 8px; text-align: left; }
+  /* zwei Gerichte: nebeneinander, „oder“ steht senkrecht dazwischen */
+  .lunch-week > .lunch-day.has-two .lunch-day-body { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); column-gap: 28px; align-items: start; }
+  .lunch-week > .lunch-day.has-two .lunch-day-or { align-self: stretch; display: flex; flex-direction: column; align-items: center; margin: 0; min-height: 100%; }
+  .lunch-week > .lunch-day.has-two .lunch-day-or::before, .lunch-week > .lunch-day.has-two .lunch-day-or::after { content: ''; flex: 1; width: 1px; height: auto; min-height: 10px; background: var(--hairline-on-dark, rgba(241, 231, 211, .18)); }
+  .lunch-week > .lunch-day.has-two .lunch-day-or > span { margin: 6px 0; }
+  /* heute: goldene Kante links und zarter Grund statt Rahmen */
+  .lunch-week > .lunch-day.is-today { background: linear-gradient(90deg, rgba(184, 137, 62, .13), rgba(184, 137, 62, 0) 70%) !important; box-shadow: inset 3px 0 0 var(--gold) !important; }
+  /* Tage ohne Mittagstisch: flache, ruhige Zeile */
+  .lunch-week > .lunch-day.is-off, .lunch-week > .lunch-day:has(.lunch-closed) { padding-block: 16px !important; align-items: center; }
+  .lunch-week > .lunch-day.is-off .lunch-day-name, .lunch-week > .lunch-day:has(.lunch-closed) .lunch-day-name { font-size: 1.15rem; }
+  .lunch-week > .lunch-day.is-off .lunch-day-date, .lunch-week > .lunch-day:has(.lunch-closed) .lunch-day-date { display: inline; margin: 0 0 0 10px; }
+  @media (hover: hover) { .lunch-week > .lunch-day:hover { background: rgba(255, 252, 244, .03) !important; } .lunch-week > .lunch-day.is-today:hover { background: linear-gradient(90deg, rgba(184, 137, 62, .16), rgba(184, 137, 62, 0) 70%) !important; } }
+}
