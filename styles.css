@@ -12273,3 +12273,31 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 
 /* --- 5 · Tagesgericht-Zeile im Kopf: am Computer nicht über die ganze Breite laufen lassen --- */
 @media (min-width: 761px) { .live-lunch { max-width: min(860px, 100%); } .live-lunch-dish { -webkit-line-clamp: 1; } }
+
+/* ============================================================
+   FACELIFT 9 · Feinschliff Unterseiten – nur Ausrichtung, Abstände, Zustände
+   (kein Umbau, keine Textänderung)
+   ============================================================ */
+
+/* Reservierung: „Zum Formular“ nur dort, wo das Formular unter dem Text steht (war am Computer sichtbar) */
+@media (min-width: 1081px) { .reservation-intro .form-jump { display: none !important; } }
+/* Leere Statuszeile nimmt keinen Platz weg – gleicher Abstand unter dem Knopf wie über dem Formular */
+:is(.reservation-form, .order-form) .form-status:empty { min-height: 0; margin-top: 0; }
+
+/* Mittagstisch (Computer): Reservieren-Knopf direkt unter dem Tages-Schild statt weit unten links;
+   Telefon und Teilen auf derselben linken Kante wie die Gerichte */
+@media (min-width: 761px) {
+  .lunch-today > .btn-gold { grid-row: 2 / span 6; align-self: start; justify-self: start; margin-top: 6px; }
+  .lunch-today > .btn-link, .lunch-today > .lunch-share, .lunch-today .btn-gold + .btn-link { margin-left: 0; }
+}
+
+/* Über uns: Merkmal-Kacheln liegen wie die übrigen Karten auf der Seite (Haarlinie statt Schwebeschatten) */
+.features li { box-shadow: none !important; }
+
+/* Ruhigere Zeilenenden in Fließtexten und Gerichten (keine einzelnen Wörter in der letzten Zeile) */
+.lunch-day-dish, .lunch-day-side, .lunch-sheet-dish, .karte-desc, .lead-soft, .reservation-info li, .faq-content p,
+.page-lead, .landing-visit-tag, .spread-card p, .reviews-lead { text-wrap: pretty; }
+/* Schmale Computer-/Tablet-Breiten: Knopf bleibt in seiner Spalte */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .lunch-today > .btn-gold { max-width: 100%; white-space: normal; text-align: center; padding-inline: 18px; }
+}
