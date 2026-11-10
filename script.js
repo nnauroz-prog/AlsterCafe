@@ -3516,11 +3516,14 @@ function renderWeekList(weekData, monday, today) {
     if (entry?.closed) {
       body = `<span class="lunch-closed">${entry.holiday !== undefined ? (en ? 'Closed' : 'Geschlossen') + (entry.holiday ? ' · ' + escapeHtml(entry.holiday) : '') : (en ? 'No lunch today' : 'Kein Mittagstisch')}</span>`;
     } else if (dishes.length) {
+      // Jedes Gericht als eigene Gruppe – am Computer stehen zwei Gerichte nebeneinander
       body = dishes.map(d =>
-        `<span class="lunch-day-dish">${escapeHtml(d.dish)}${dietBadgeHtml(d, en)}</span>`
+        `<span class="lunch-day-opt"><span class="lunch-day-dish">${escapeHtml(d.dish)}${dietBadgeHtml(d, en)}</span>`
         + (d.side ? `<span class="lunch-day-side">${escapeHtml(d.side)}</span>` : '')
         + (lunchPriceFor(weekData, d) != null ? `<span class="lunch-day-price">${lunchPriceText(lunchPriceFor(weekData, d))}</span>` : '')
+        + '</span>'
       ).join(orDividerHtml(en, 'lunch-day-or'));
+      if (dishes.length > 1) li.classList.add('has-two');
     } else if (!openingFor(date)) {
       // Ruhetag laut Öffnungszeiten
       body = `<span class="lunch-closed">${en ? 'Closed' : 'Geschlossen'}</span>`;
