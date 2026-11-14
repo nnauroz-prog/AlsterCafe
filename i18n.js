@@ -227,6 +227,7 @@
     'Karte entdecken': 'Explore the menu',
     'Platz sichern': 'Reserve a spot',
     'Reservieren.': 'Reserve.',
+    'Reservieren': 'Reserve',
     'Tisch zum Mittag oder einer für den Sonntagvormittag. Online oder kurz anrufen — wir melden uns am gleichen Tag zurück.':
       'A table for lunch or one for Sunday morning. Online or a quick call — we’ll get back to you the same day.',
 

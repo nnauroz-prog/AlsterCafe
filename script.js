@@ -5189,9 +5189,9 @@ function escapeAttr(s) { return escapeHtml(s); }
       var p = { z: z, x: rnd() * f.w, y: rnd() * f.h, vx: 0, vy: 0, glow: 0,
         t: rnd() < 0.45 ? 0 : rnd() < 0.55 ? 1 : 2,
         ws: 0.25 + rnd() * 0.5, wp: rnd() * TAU, tw: 0.7 + rnd() * 0.9, tp: rnd() * TAU, sw: (rnd() - 0.5) * 1.4 };
-      if (z === 0) { p.d = 1.6 + rnd() * 1.9; p.a = 0.34 + rnd() * 0.32; p.rise = 5 + rnd() * 6; p.wa = 4 + rnd() * 5; }
-      else if (z === 1) { p.d = 3 + rnd() * 3.6; p.a = 0.6 + rnd() * 0.4; p.rise = 9 + rnd() * 10; p.wa = 6 + rnd() * 9; }
-      else { p.d = 14 + rnd() * 20; p.a = 0.09 + rnd() * 0.1; p.rise = 12 + rnd() * 12; p.wa = 8 + rnd() * 10; }
+      if (z === 0) { p.d = 1.6 + rnd() * 1.9; p.a = 0.34 + rnd() * 0.32; p.rise = 3 + rnd() * 3.6; p.wa = 4 + rnd() * 5; }
+      else if (z === 1) { p.d = 3 + rnd() * 3.6; p.a = 0.35 + rnd() * 0.25; p.rise = 5.4 + rnd() * 6; p.wa = 6 + rnd() * 9; }
+      else { p.d = 10 + rnd() * 10; p.a = 0.05 + rnd() * 0.05; p.rise = 7 + rnd() * 7; p.wa = 8 + rnd() * 10; }
       p.s = z === 2 ? p.d * 1.12 : p.d * 3.2;   // gezeichnete Kantenlänge
       return p;
     }
@@ -5212,9 +5212,10 @@ function escapeAttr(s) { return escapeHtml(s); }
       f.L = w * Math.abs(BSIN) + h * Math.abs(BCOS);
       f.cv.style.height = h + 'px';
       f.cv.width = Math.round(w * dpr); f.cv.height = Math.round(h * dpr);
-      var n = f.phone ? clamp(Math.round(w * h / 6000), 44, 60) : clamp(Math.round(w * h / 11000), 70, 130);
+      // ruhiges Staubfeld: etwa ein Drittel der früheren Menge
+      var n = f.phone ? clamp(Math.round(w * h / 15000), 16, 24) : clamp(Math.round(w * h / 22000), 36, 64);
       if (n !== f.parts.length) {
-        var near = Math.round(n * 0.14), mid = Math.round(n * 0.36), far = n - near - mid, i;
+        var near = Math.round(n * 0.06), mid = Math.round(n * 0.36), far = n - near - mid, i;
         f.parts = [];
         for (i = 0; i < far; i++) f.parts.push(makeParticle(f, 0));
         for (i = 0; i < mid; i++) f.parts.push(makeParticle(f, 1));
@@ -5444,4 +5445,22 @@ function escapeAttr(s) { return escapeHtml(s); }
     update();
   }
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+})();
+
+/* Kopfzeile: „Reservieren“ ist auf jeder Seite mit einem Tipp erreichbar. Am Handy steht der Knopf
+   zwischen Schriftzug und Menü; am Computer ist der Menüpunkt „Reservierung“ selbst als Knopf gesetzt (CSS). */
+(function () {
+  function start() {
+    if (!document.body || document.body.classList.contains('admin-body')) return;
+    var bar = document.querySelector('.site-header .nav-container');
+    var toggle = bar && bar.querySelector('.nav-toggle');
+    if (!bar || !toggle || bar.querySelector('.header-reserve')) return;
+    var a = document.createElement('a');
+    a.className = 'header-reserve';
+    a.href = 'reservierung.html';
+    a.textContent = 'Reservieren';
+    if (/reservierung\.html$/.test(location.pathname)) a.setAttribute('aria-current', 'page');
+    toggle.before(a);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
 })();
