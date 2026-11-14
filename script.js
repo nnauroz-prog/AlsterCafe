@@ -4435,6 +4435,19 @@ function escapeAttr(s) { return escapeHtml(s); }
         el.classList.add('fx-row'); rowIO.observe(el);
       });
     }
+    // Karten wachsen beim Hereinscrollen an ihren Platz – nur, was beim Laden noch unter dem Bildschirm liegt
+    document.querySelectorAll('.spread-card, .reviews-cta-grid, .karte-block, .contact-info-block, .map-card, .home-broetchen-wrap .container, .landing-greeting .container').forEach(el => {
+      if (el.dataset.fxGrow) return;
+      el.dataset.fxGrow = '1';
+      if (el.getBoundingClientRect().top > window.innerHeight * 1.02) el.classList.add('fx-grow');
+    });
+    // Ofenwärme in den dunklen Kapiteln
+    document.querySelectorAll('.chapter-dark').forEach(sec => {
+      if (sec.querySelector(':scope > .fx-ember')) return;
+      const ember = document.createElement('span');
+      ember.className = 'fx-ember'; ember.setAttribute('aria-hidden', 'true');
+      sec.prepend(ember);
+    });
     if (finePointer) document.querySelectorAll('.spread-card-hero, .hero-coord').forEach(card => {
       if (card.classList.contains('fx-tilt')) return;
       card.classList.add('fx-tilt');
@@ -4490,4 +4503,1055 @@ function escapeAttr(s) { return escapeHtml(s); }
   const run = () => { scan(); initTicker(); [900, 2200, 4000].forEach(t => setTimeout(scan, t)); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 350));
   else setTimeout(run, 350);
+})();
+
+/* FX · Dampf: echter, langsam aufsteigender Dampf (kleiner WebGL-Shader) über den gezeichneten Tassen.
+   Ersetzt dort die gestrichelten Dampflinien – aber nur, wenn er wirklich läuft. Ohne WebGL, bei
+   „Bewegung reduzieren“, im Datensparmodus und im Adminbereich bleibt alles exakt wie bisher.
+   Sparsam: kleine Zeichenfläche, höchstens ~30 Bilder/s, nur solange sichtbar und der Tab offen ist. */
+(function fxDampf() {
+  'use strict';
+  if (!window.matchMedia || !window.requestAnimationFrame || !('IntersectionObserver' in window)) return;
+  var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (mqReduce.matches) return;
+  var net = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (net && net.saveData) return;
+  if (navigator.deviceMemory && navigator.deviceMemory < 2) return;
+
+  // Wo Dampf aufsteigt. „drop“: wie weit (in Zeichnungs-Einheiten) unter dem Anfang der
+  // gezeichneten Dampflinien der Dampf entsteht (bei der Tasse: an der Kaffee-Oberfläche).
+  var TARGETS = [
+    { sel: '.hero-cinematic > .hero-art', drop: 19, delay: 1.1 },
+    { sel: '.landing-closer .closer-art', drop: 19, delay: 0.7 },
+    { sel: '.page-hero-editorial > .page-art', drop: 7, delay: 1.1, soft: 0.86 }
+  ];
+  var MAX_CANVAS = 2, MAX_PIXELS = 70000, frameMs = 31;
+
+  var VERT = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
+  var FRAG = [
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+    'precision highp float;',
+    '#else',
+    'precision mediump float;',
+    '#endif',
+    'uniform sampler2D uN;',
+    'uniform vec2 uRes;',
+    'uniform vec4 uGeo;',   // Ursprung x/y (px), Höhe der Fahne (px), halbe Breite am Fuß (Anteil der Höhe)
+    'uniform vec4 uPh;',    // zwei Schwingphasen, zwei Aufstiegs-Versätze
+    'uniform vec4 uDyn;',   // dritter Versatz, Neigung, Stärke (0..1), größte Deckkraft
+    'uniform vec3 uCa;',
+    'uniform vec3 uCb;',
+    'vec2 n2(vec2 p){',
+    '  vec2 i=floor(p),f=fract(p);',
+    '  f=f*f*(3.0-2.0*f);',
+    '  return texture2D(uN,(i+f+0.5)/64.0).rg;',
+    '}',
+    'void main(){',
+    '  vec2 uv=gl_FragCoord.xy/uRes;',
+    '  vec2 s=(gl_FragCoord.xy-uGeo.xy)/uGeo.z;',
+    '  float h=s.y;',
+    '  float gain=uDyn.z;',
+    '  float hh=clamp(h,0.0,1.0);',
+    '  float hn=clamp(h/mix(0.36,1.0,gain),0.0,1.0);',
+    // Mittellinie: neigt sich mit der Höhe, schwingt sacht wie eine aufsteigende Welle
+    '  float cx=uDyn.y*hh*hh*0.40',
+    '    +sin(h*3.4-uPh.x)*0.036*hh',
+    '    +sin(h*7.1-uPh.y+1.7)*0.014*hh;',
+    '  vec2 q=vec2(s.x-cx,h);',
+    // unten ruhig (laminar), nach oben zunehmend verwirbelt
+    '  float turb=smoothstep(0.03,0.78,hh);',
+    '  vec2 w1=n2(q*vec2(3.1,2.3)+vec2(1.7,-uPh.z))-0.5;',
+    '  vec2 w2=n2(q*vec2(7.3,5.1)+vec2(8.2,-uPh.w)+w1*0.9)-0.5;',
+    '  vec2 r=q+(w1*0.21+w2*0.08)*(0.16+turb);',
+    // Fahne: am Rand der Tasse schmal, wird nach oben breiter
+    '  float wd=uGeo.w*(1.0-0.2*smoothstep(0.0,0.22,hh))+0.165*pow(hh,1.25);',
+    '  float x2=r.x*r.x;',
+    '  float env=exp(-x2/(wd*wd));',
+    '  float envR=exp(-x2/(wd*wd*1.8));',
+    // Rauschfeld: in Strömungsrichtung gestreckt, wandert mit nach oben (zwei unabhängige Kanäle)
+    '  vec2 u=r*vec2(5.3,2.05)+vec2(0.0,-uDyn.x);',
+    '  vec2 nn=n2(u)*0.6+n2(u*2.0+vec2(13.3,7.7))*0.28+n2(u*4.0+vec2(5.1,21.9))*0.12;',
+    // feine Dampffäden entlang der Höhenlinien des Feldes + ein zarter Schleier als Körper
+    '  vec2 rb=smoothstep(vec2(0.066),vec2(0.0),abs(nn-vec2(0.61,0.40)));',
+    '  float rib=(rb.x*rb.x+rb.y*rb.y*0.55)*envR;',
+    '  float veil=env*mix(1.0,smoothstep(0.3,0.72,nn.x*0.6+nn.y*0.4),0.25+0.75*turb);',
+    '  float rise=smoothstep(0.0,0.09,h);',
+    '  float thin=pow(1.0-hn,1.2);',
+    '  float sp=pow(uGeo.w/wd,0.45);',
+    '  float d=(veil*0.44+rib*0.7)*rise*thin*sp;',
+    // weiches Auslaufen an allen Kanten der Zeichenfläche – nie ein Rechteck
+    '  float edge=smoothstep(0.0,0.17,uv.x)*smoothstep(0.0,0.17,1.0-uv.x)',
+    '    *smoothstep(0.0,0.22,1.0-uv.y)*smoothstep(0.0,0.035,uv.y);',
+    '  float a=(1.0-exp(-d*1.9))*uDyn.w*gain*edge;',
+    '  a+=(texture2D(uN,gl_FragCoord.xy/64.0).b-0.5)*(1.4/255.0)*step(0.006,a);',
+    '  a=clamp(a,0.0,1.0);',
+    '  vec3 col=mix(uCa,uCb,smoothstep(0.04,0.8,d));',
+    '  gl_FragColor=vec4(col*a,a);',
+    '}'
+  ].join('\n');
+
+  var list = [], raf = 0, lastT = 0, T = 0, off = false, io = null;
+  var quality = 1, ema = 0, slowFrames = 0;
+  var ptrX = 0, ptrY = 0, hasPtr = false, scrY = 0, scrT = 0, gust = 0, gustTo = 0;
+  var TAU = 6.283185307179586;
+
+  // Dunkler oder heller Untergrund? (bestimmt die Farbe des Dampfs)
+  function onDark(el) {
+    if (el.closest && el.closest('.chapter-dark')) return true;
+    for (var n = el; n && n !== document.documentElement; n = n.parentElement) {
+      var c = getComputedStyle(n).backgroundColor || '';
+      var m = c.match(/-?[\d.]+/g);
+      if (!m || m.length < 3) continue;
+      var k = c.indexOf('rgb') === 0 ? 1 : 255;
+      if (m.length > 3 && parseFloat(m[3]) < 0.5) continue;
+      return (0.2126 * m[0] * k + 0.7152 * m[1] * k + 0.0722 * m[2] * k) < 118;
+    }
+    return false;
+  }
+
+  function noiseTex(gl) {
+    var data = new Uint8Array(64 * 64 * 4), s = 0x9E3779B9 | 0, i, t;
+    for (i = 0; i < data.length; i++) {
+      s = (s + 0x6D2B79F5) | 0; t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      data[i] = ((t ^ (t >>> 14)) >>> 0) & 255;
+    }
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    return tex;
+  }
+
+  function initGL(o) {
+    var gl = null, opts = { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'low-power' };
+    try { gl = o.cv.getContext('webgl', opts) || o.cv.getContext('experimental-webgl', opts); } catch (e) { gl = null; }
+    if (!gl) return false;
+    try {
+      var mk = function (type, src) {
+        var sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh);
+        return gl.getShaderParameter(sh, gl.COMPILE_STATUS) ? sh : null;
+      };
+      var vs = mk(gl.VERTEX_SHADER, VERT), fs = mk(gl.FRAGMENT_SHADER, FRAG);
+      if (!vs || !fs) return false;
+      var pr = gl.createProgram();
+      gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.bindAttribLocation(pr, 0, 'a'); gl.linkProgram(pr);
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return false;
+      gl.useProgram(pr);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      noiseTex(gl);
+      gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+      gl.clearColor(0, 0, 0, 0);
+      o.u = {
+        res: gl.getUniformLocation(pr, 'uRes'), geo: gl.getUniformLocation(pr, 'uGeo'),
+        ph: gl.getUniformLocation(pr, 'uPh'), dyn: gl.getUniformLocation(pr, 'uDyn'),
+        ca: gl.getUniformLocation(pr, 'uCa'), cb: gl.getUniformLocation(pr, 'uCb')
+      };
+      gl.uniform1i(gl.getUniformLocation(pr, 'uN'), 0);
+      if (o.dark) { gl.uniform3f(o.u.ca, 0.886, 0.737, 0.478); gl.uniform3f(o.u.cb, 1.0, 0.975, 0.925); }
+      else { gl.uniform3f(o.u.ca, 0.84, 0.71, 0.50); gl.uniform3f(o.u.cb, 0.70, 0.52, 0.24); }
+      o.gl = gl;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // Lage und Größe der Zeichenfläche (nur bei Größenänderung / beim Hereinscrollen, nie pro Bild)
+  function layout(o) {
+    var el = o.el, cv = o.cv, W = el.offsetWidth, was = o.ok;
+    o.ok = false;
+    if (W && o.gl && !o.lost) {
+      var unit = W / o.vbW, iconH = unit * o.vbH;
+      var r = el.getBoundingClientRect();
+      var docW = document.documentElement.clientWidth;
+      var cxp = o.cx * unit, basep = o.base * unit;
+      var top = -0.9 * iconH, bottom = basep + 0.04 * W;
+      var b = o.bound ? o.bound.getBoundingClientRect() : null;
+      // nie über den eigenen Abschnitt und nie über den Bildschirmrand hinaus
+      if (b) top = Math.max(top, b.top - r.top);
+      var half = Math.min(0.75 * W, 0.72 * (basep - top));
+      var left = cxp - half, right = cxp + half;
+      left = Math.max(left, 6 - r.left); right = Math.min(right, W + docW - r.right - 6);
+      if (b) { left = Math.max(left, b.left - r.left); right = Math.min(right, W + b.right - r.right); }
+      left = Math.ceil(left); top = Math.ceil(top); right = Math.floor(right); bottom = Math.floor(bottom);
+      var cssW = right - left, cssH = bottom - top, plume = basep - top;
+      if (cssW >= 48 && cssH >= 48 && plume >= iconH * 0.45 && cxp - left > cssW * 0.22 && right - cxp > cssW * 0.22) {
+        var dpr = Math.min(window.devicePixelRatio || 1, 1.5) * quality;
+        var cw = Math.round(cssW * dpr), ch = Math.round(cssH * dpr), cap = MAX_PIXELS * quality * quality;
+        if (cw * ch > cap) { var k = Math.sqrt(cap / (cw * ch)); cw = Math.round(cw * k); ch = Math.round(ch * k); }
+        cw = Math.max(24, cw); ch = Math.max(24, ch);
+        if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+        cv.style.left = left + 'px'; cv.style.top = top + 'px';
+        cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
+        var sx = cw / cssW, sy = ch / cssH;
+        o.gl.viewport(0, 0, cw, ch);
+        o.gl.uniform2f(o.u.res, cw, ch);
+        o.gl.uniform4f(o.u.geo, (cxp - left) * sx, (bottom - basep) * sy, plume * sy, (o.w0 * unit) / plume);
+        o.pcx = r.left + cxp; o.pcy = r.top + (window.pageYOffset || 0) + (top + basep) * 0.5; o.pH = plume;
+        o.ok = true;
+      }
+    }
+    if (o.ok) { if (o.vis) { draw(o, 0); kick(); } }
+    else if (was || o.on) { o.on = false; el.classList.remove('fx-dampf-on'); }
+  }
+
+  function draw(o, dt) {
+    var gl = o.gl;
+    o.age += dt;
+    var g = (o.age - o.delay) / 3.6; g = g < 0 ? 0 : g > 1 ? 1 : g; g = g * g * (3 - 2 * g);
+    var to = gust * 0.5;
+    if (hasPtr) {
+      var dx = (ptrX - o.pcx) / o.pH, dy = (ptrY - (o.pcy - scrY)) / o.pH;
+      to -= Math.max(-1, Math.min(1, dx * 2.4)) * Math.exp(-(dx * dx + dy * dy) * 1.2) * 0.85;
+    }
+    o.lean += (to - o.lean) * Math.min(1, dt * 1.8);
+    var t = T + o.seed;
+    gl.uniform4f(o.u.ph, (t * 0.46) % TAU, (t * 0.71) % TAU, (t * 0.21) % 64, (t * 0.5) % 64);
+    gl.uniform4f(o.u.dyn, (t * 0.34) % 64, o.lean, g, o.alpha);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (!o.on && g > 0) { o.on = true; o.el.classList.add('fx-dampf-on'); }
+  }
+
+  // Blendet sich die Zeichnung beim Hereinscrollen noch ein (leicht versetzt), kurz danach nachmessen
+  function settle(o) {
+    if (o.tm) clearTimeout(o.tm);
+    o.tm = setTimeout(function () { o.tm = 0; if (!off && o.vis && list.indexOf(o) >= 0) layout(o); }, 1500);
+  }
+
+  function live(o) { return o.ok && o.vis && !o.lost; }
+
+  function frame(now) {
+    raf = 0;
+    if (off || document.hidden) return;
+    var i, any = false;
+    for (i = 0; i < list.length; i++) if (live(list[i])) { any = true; break; }
+    if (!any) return;
+    raf = requestAnimationFrame(frame);
+    if (!lastT) lastT = now - 33;
+    var el = now - lastT;
+    if (el < frameMs) return;
+    lastT = now;
+    var dt = Math.min(0.1, el / 1000);
+    T += dt;
+    gust += (gustTo - gust) * Math.min(1, dt * 3.5);
+    gustTo *= Math.pow(0.03, dt);
+    for (i = 0; i < list.length; i++) if (live(list[i])) draw(list[i], dt);
+    // Kommt das Gerät dauerhaft nicht hinterher: gröber und seltener rechnen (zwei Stufen)
+    if (T > 4 && quality > 0.5) {
+      ema = ema ? ema + (el - ema) * 0.06 : el;
+      if (++slowFrames > 70 && ema > 60) {
+        slowFrames = 0; ema = 0; quality = quality > 0.75 ? 0.7 : 0.5;
+        if (quality <= 0.5) frameMs = 47;
+        for (i = 0; i < list.length; i++) layout(list[i]);
+      }
+    }
+  }
+
+  function kick() {
+    if (raf || off || document.hidden) return;
+    lastT = 0; ema = 0; slowFrames = 0;
+    raf = requestAnimationFrame(frame);
+  }
+
+  function drop(o) {
+    o.ok = false; o.lost = true;
+    o.el.classList.remove('fx-dampf-on');
+    if (io) { try { io.unobserve(o.cv); } catch (e) {} }
+    if (o.cv.parentNode) o.cv.parentNode.removeChild(o.cv);
+    var i = list.indexOf(o); if (i >= 0) list.splice(i, 1);
+  }
+
+  function shutdown() {
+    off = true;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    list.slice().forEach(function (o) {
+      try { var x = o.gl && o.gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) {}
+      drop(o);
+    });
+  }
+
+  function build(el, cfg) {
+    var svg = el.querySelector('svg'), paths = el.querySelectorAll('.art-steam');
+    if (!svg || !paths.length) return null;
+    var xs = [], ys = [], i, m;
+    for (i = 0; i < paths.length; i++) {
+      m = /M\s*(-?[\d.]+)[\s,]+(-?[\d.]+)/i.exec(paths[i].getAttribute('d') || '');
+      if (m) { xs.push(parseFloat(m[1])); ys.push(parseFloat(m[2])); }
+    }
+    if (!xs.length) return null;
+    var vb = (svg.getAttribute('viewBox') || '').split(/[\s,]+/).map(parseFloat);
+    if (vb.length !== 4 || !(vb[2] > 0) || !(vb[3] > 0)) vb = [0, 0, 240, 220];
+    var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+    var cv = document.createElement('canvas');
+    cv.className = 'fx-dampf';
+    cv.setAttribute('aria-hidden', 'true');
+    cv.width = 24; cv.height = 24;
+    var dark = onDark(el);
+    var o = {
+      el: el, cv: cv, gl: null, u: null, dark: dark, alpha: (dark ? 0.62 : 0.74) * (cfg.soft || 1),
+      vbW: vb[2], vbH: vb[3],
+      cx: (minX + maxX) / 2 - vb[0], base: Math.max.apply(null, ys) - vb[1] + cfg.drop, w0: (maxX - minX) / 2 + 7,
+      bound: el.closest ? el.closest('section, header, main') : null,
+      delay: cfg.delay, seed: list.length * 37.3, age: 0, lean: 0,
+      ok: false, vis: false, lost: false, on: false, pcx: 0, pcy: 0, pH: 1, tm: 0
+    };
+    if (!initGL(o)) return null;
+    cv.addEventListener('webglcontextlost', function (e) {
+      e.preventDefault(); o.lost = true; o.ok = false; o.on = false; el.classList.remove('fx-dampf-on');
+    }, false);
+    cv.addEventListener('webglcontextrestored', function () {
+      if (off) return;
+      if (initGL(o)) { o.lost = false; o.age = 0; layout(o); kick(); } else drop(o);
+    }, false);
+    el.insertBefore(cv, el.firstChild);
+    return o;
+  }
+
+  function start() {
+    if (!document.body || document.body.classList.contains('admin-body')) return;
+    if (mqReduce.matches) return;
+    var i, j, els, o;
+    for (i = 0; i < TARGETS.length && list.length < MAX_CANVAS; i++) {
+      els = document.querySelectorAll(TARGETS[i].sel);
+      for (j = 0; j < els.length && list.length < MAX_CANVAS; j++) {
+        if (els[j].querySelector('.fx-dampf')) continue;
+        o = build(els[j], TARGETS[i]);
+        if (!o) { if (!list.length && els[j].querySelector('.art-steam')) return; continue; }
+        list.push(o);
+      }
+    }
+    if (!list.length) return;
+
+    io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        for (var k = 0; k < list.length; k++) if (list[k].cv === en.target) {
+          var o = list[k], was = o.vis; o.vis = en.isIntersecting;
+          if (en.isIntersecting && !was) { layout(o); settle(o); }
+        }
+      });
+      kick();
+    }, { rootMargin: '40px 0px' });
+    list.forEach(function (x) { layout(x); io.observe(x.cv); });
+
+    var rz = 0, relayout = function () { rz = 0; if (!off) list.forEach(layout); };
+    var onResize = function () { if (rz) clearTimeout(rz); rz = setTimeout(relayout, 160); };
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('orientationchange', onResize, { passive: true });
+    if (document.readyState !== 'complete') window.addEventListener('load', onResize, { once: true });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) kick(); });
+
+    scrY = window.pageYOffset || 0;
+    window.addEventListener('scroll', function () {
+      var y = window.pageYOffset || 0, now = performance.now();
+      var v = (y - scrY) / Math.max(16, now - scrT);
+      scrY = y; scrT = now;
+      gustTo = Math.max(-1, Math.min(1, v * 0.3));
+    }, { passive: true });
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      window.addEventListener('pointermove', function (e) {
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+        ptrX = e.clientX; ptrY = e.clientY; hasPtr = true;
+      }, { passive: true });
+      document.addEventListener('mouseleave', function () { hasPtr = false; });
+    }
+    var onMq = function () { if (mqReduce.matches) shutdown(); };
+    if (mqReduce.addEventListener) mqReduce.addEventListener('change', onMq);
+    else if (mqReduce.addListener) mqReduce.addListener(onMq);
+  }
+
+  // Dampf ist nur Zierde – im Zweifel bleibt alles, wie es war
+  var safeStart = function () { try { start(); } catch (e) { try { shutdown(); } catch (e2) {} } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', safeStart);
+  else safeStart();
+})();
+
+/* Fensterlicht: weicher Lichtwurf eines Sprossenfensters hinter dem Startseiten-Kopf – Richtung, Länge und Farbe folgen der echten Uhrzeit, abends bleibt nur ein leiser Lampenschein. */
+(function () {
+  'use strict';
+  var doc = document;
+  if (!window.matchMedia || !window.requestAnimationFrame || !('IntersectionObserver' in window)) return;
+  var mqReduce = matchMedia('(prefers-reduced-motion: reduce)');
+  if (mqReduce.matches) return;
+  var conn = navigator.connection;
+  if (conn && conn.saveData) return;
+
+  var VERT = 'attribute vec2 aPos;varying vec2 vUv;void main(){vUv=vec2(aPos.x*.5+.5,.5-aPos.y*.5);gl_Position=vec4(aPos,0.,1.);}';
+  var FRAG = [
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+    'precision highp float;',
+    '#else',
+    'precision mediump float;',
+    '#endif',
+    'varying vec2 vUv;',
+    'uniform vec2 uSc;',      // Fläche in Bezugseinheiten (Bezug = sichtbare Kopfhöhe)
+    'uniform float uT;',      // Sekunden
+    'uniform vec4 uWin;',     // Fenster: Mitte x, y · Breite · Höhe
+    'uniform vec4 uSun;',     // Scherung · Halbschatten · Lichtstärke · Schattenstärke
+    'uniform vec3 uTint;',    // Lichtfarbe
+    'uniform vec4 uLamp;',    // Lampe: Mitte x, y · Radius x, y
+    'uniform float uLampS;',  // Lampenstärke
+    'uniform vec3 uShift;',   // Zeiger x, y · Scroll
+    'float h12(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}',
+    'float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);',
+    '  return mix(mix(h12(i),h12(i+vec2(1.,0.)),f.x),mix(h12(i+vec2(0.,1.)),h12(i+vec2(1.,1.)),f.x),f.y);}',
+    'float sm(float d,float s){return smoothstep(-s,s,d);}',
+    'void main(){',
+    '  vec2 P=vUv*uSc;',
+    '  vec2 off=vec2(uShift.x,uShift.y+uShift.z);',
+    '  vec2 q=P-uWin.xy-off;',
+    '  float sh=uSun.x;',
+    '  float an=sh*.11-.06,ca=cos(an),sa=sin(an);',          // leichte Schräge, auch mittags nie ganz gerade
+    '  q=vec2(ca*q.x-sa*q.y,sa*q.x+ca*q.y);',
+    '  q.x-=sh*q.y;',
+    '  vec2 n=q/(.5*uWin.zw);',
+    '  n.x/=mix(.93,1.1,clamp(n.y*.5+.5,0.,1.));',      // Lichtwurf weitet sich zum fernen Ende
+    '  float far=clamp(n.y*.5+.5,0.,1.);',               // 0 = nah am Fenster, 1 = fernes Ende
+    '  float sx=uSun.y*mix(.5,1.75,far);',               // Halbschatten wächst mit der Entfernung
+    '  float sy=sx*uWin.z/uWin.w;',
+    '  float ax=abs(n.x);',
+    '  float cols=min(1.,sm(.292-ax,sx)+sm(.292-abs(ax-.708),sx));',   // drei Fensterflügel
+    '  float rows=sm(1.-abs(n.y),sy);',
+    '  float bd=n.y+.34;',                               // Quersprosse im oberen Drittel
+    '  float bs=.026+sy*.6;',
+    '  float bar=min(.7,exp(-bd*bd/(2.*bs*bs))*(.026/bs)*1.6);',
+    '  float light=cols*rows*(1.-bar)*mix(1.,.8,far);',
+    '#ifdef FX_LEAF',
+    '  vec2 lp=(P-off*1.6)*5.2;',
+    '  vec2 sw=vec2(sin(uT*.13)*.10+sin(uT*.05+1.7)*.16,cos(uT*.11)*.06)+uT*vec2(.006,.0025);',
+    '  float f=vn(lp+sw)*.62+vn(lp*2.1-sw*1.3+7.3)*.38;',
+    '  float leaf=smoothstep(.41,.64,f)*(.4+.6*smoothstep(-.6,.8,n.x));',
+    '  light*=1.-.7*leaf;',
+    '#endif',
+    '  float inside=sm(1.-ax,sx*1.6)*sm(1.-abs(n.y),sy*1.6);',
+    '  float halo=1.-smoothstep(.55,1.75,length(vec2(n.x*.62,n.y*.72)));',   // weicher, runder Schattenhof
+    '  float aL=uSun.z*light;',
+    '  float aS=uSun.w*(1.-light)*(mix(.24,.38,smoothstep(.5,1.5,uSc.x))*halo+.6*inside);',
+    '  vec2 ld=(P-uLamp.xy-off*.6)/uLamp.zw;',
+    '  float lg=exp(-dot(ld,ld)*1.5)*uLampS*(1.+.035*sin(uT*.37));',
+    '  float edge=smoothstep(0.,.13,vUv.x)*smoothstep(0.,.13,1.-vUv.x)*smoothstep(0.,.07,vUv.y)*smoothstep(0.,.17,1.-vUv.y);',
+    '  gl_FragColor=vec4(uTint*aL+vec3(.72,.60,.42)*aS+vec3(1.,.82,.55)*lg,aL+aS+lg)*edge;',
+    '}'
+  ].join('\n');
+
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function mix(a, b, t) { return a + (b - a) * t; }
+  function smooth(a, b, v) { var t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+
+  function boot() {
+    var body = doc.body;
+    if (!body || body.classList.contains('admin-body')) return;
+    var hero = doc.querySelector('.hero-cinematic, .page-hero-editorial');   // Startseite und die Köpfe der Unterseiten
+    if (!hero) return;
+    var ticker = hero.querySelector('.hero-ticker');
+
+    var canvas = doc.createElement('canvas');
+    canvas.className = 'fx-licht';
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.width = 2; canvas.height = 2;
+
+    var gl = null, U = null;
+    var attrs = { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'low-power' };
+    try { gl = canvas.getContext('webgl', attrs) || canvas.getContext('experimental-webgl', attrs); } catch (e) { gl = null; }
+    if (!gl) return;
+
+    function compile(type, src) {
+      var s = gl.createShader(type);
+      if (!s) return null;
+      gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { gl.deleteShader(s); return null; }
+      return s;
+    }
+    // Programm bauen – auch nach einem wiederhergestellten Grafik-Kontext
+    function setup() {
+      try {
+        var hp = gl.getShaderPrecisionFormat && gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+        var leaf = hp && hp.precision > 0 ? '#define FX_LEAF\n' : '';   // Blattschatten nur mit genauer Rechnung
+        var vs = compile(gl.VERTEX_SHADER, VERT), fs = compile(gl.FRAGMENT_SHADER, leaf + FRAG);
+        if (!vs || !fs) return false;
+        var pr = gl.createProgram();
+        gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.linkProgram(pr);
+        if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return false;
+        gl.useProgram(pr);
+        var buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        var loc = gl.getAttribLocation(pr, 'aPos');
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+        gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+        gl.clearColor(0, 0, 0, 0);
+        U = {};
+        ['uSc', 'uT', 'uWin', 'uSun', 'uTint', 'uLamp', 'uLampS', 'uShift'].forEach(function (k) { U[k] = gl.getUniformLocation(pr, k); });
+        return true;
+      } catch (e) { return false; }
+    }
+    if (!setup()) return;
+
+    hero.insertBefore(canvas, hero.firstChild);
+
+    var cssW = 0, cssH = 0, ref = 1, aspect = 1;
+    var vw = window.innerWidth || 1, vh = window.innerHeight || 1;
+    var running = false, raf = 0, onScreen = false, lost = false, dead = false, shown = false;
+    var last = 0, t0 = 0, clockAt = -1e9, activeUntil = 0;
+    var scrollPx = 0, scrollDirty = true;
+    var tx = 0, ty = 0, cx = 0, cy = 0;
+    var fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    // Größe: höchstens ein Drittel der Bildschirmpunkte und höchstens 520 breit – das Hochrechnen macht es weich
+    function measure() {
+      if (dead || lost) return;
+      var w = hero.clientWidth;
+      var h = ticker ? ticker.offsetTop : hero.clientHeight;
+      vw = window.innerWidth || 1; vh = window.innerHeight || 1;
+      if (w < 2 || h < 2 || (w === cssW && h === cssH)) return;
+      cssW = w; cssH = h;
+      ref = Math.min(h, Math.max(380, vh * 0.86));   // Bezug: der Teil des Kopfes, der beim Laden zu sehen ist
+      aspect = w / ref;
+      canvas.style.height = h + 'px';
+      var sc = Math.min(1 / 3, 520 / w, 640 / h);
+      canvas.width = Math.max(2, Math.round(w * sc));
+      canvas.height = Math.max(2, Math.round(h * sc));
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform2f(U.uSc, aspect, h / ref);
+      clockAt = -1e9; last = 0;
+      start();
+    }
+
+    // Sonnenstand aus der Uhrzeit: morgens flach, lang und golden von rechts, mittags steil und blass, nachmittags bernsteinfarben von links
+    function sky() {
+      var d = new Date();
+      var h = d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+      var day = smooth(5.7, 6.7, h) * (1 - smooth(17.8, 19.1, h));
+      var s = clamp((h - 12.4) / 5.9, -1, 1);
+      var e = Math.cos(s * Math.PI / 2);          // 0 = tief stehende Sonne, 1 = Mittag
+      var low = (1 - e) * (1 - e);
+      var wide = smooth(0.5, 1.5, aspect);        // 0 = Handy hochkant, 1 = breiter Bildschirm
+      var shear = (s < 0 ? -1 : 1) * Math.pow(Math.abs(s), 0.85) * 1.05 * mix(0.5, 1, wide);
+      var warm = s < 0 ? [1, 0.957, 0.824] : [1, 0.937, 0.79];
+      var noon = [1, 0.98, 0.91], deep = [1, 0.925, 0.75];
+      var tint = [0, 0, 0];
+      for (var i = 0; i < 3; i++) tint[i] = mix(mix(noon[i], warm[i], 1 - e), deep[i], low * 0.5);
+      gl.uniform4f(U.uWin, mix(0.55, 0.66, e) * aspect, mix(0.47, 0.35, e), mix(0.27, 0.46, wide) * mix(1.04, 0.92, e), mix(0.78, 0.5, e));
+      gl.uniform4f(U.uSun, shear, mix(0.085, 0.06, e), 0.62 * day, 0.25 * day);
+      gl.uniform3f(U.uTint, tint[0], tint[1], tint[2]);
+      gl.uniform4f(U.uLamp, mix(0.56, 0.66, wide) * aspect, mix(0.34, 0.42, wide), mix(0.3, 0.52, wide), mix(0.27, 0.42, wide));
+      gl.uniform1f(U.uLampS, (1 - day) * 0.2);
+    }
+
+    function frame(now) {
+      raf = 0;
+      if (!running) return;
+      raf = requestAnimationFrame(frame);
+      if (now - last < (now < activeUntil ? 31 : 48)) return;      // rund 30 Bilder/s bei Bewegung, sonst rund 20
+      var dt = last ? Math.min(now - last, 200) : 33;
+      last = now;
+      if (!t0) t0 = now;
+      if (now - clockAt > 20000) { clockAt = now; sky(); }
+      if (scrollDirty) { scrollDirty = false; scrollPx = window.pageYOffset || 0; }
+      var k = 1 - Math.exp(-dt / 280);
+      cx += (tx - cx) * k; cy += (ty - cy) * k;
+      if (Math.abs(tx - cx) > 0.0008 || Math.abs(ty - cy) > 0.0008) activeUntil = now + 200;
+      gl.uniform3f(U.uShift, -cx * 0.018 * aspect, -cy * 0.018, clamp(scrollPx, 0, cssH) * 0.12 / ref);
+      gl.uniform1f(U.uT, (now - t0) / 1000);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      if (!shown) { shown = true; canvas.classList.add('fx-licht-on'); }
+    }
+    function start() {
+      if (running || dead || lost || !onScreen || doc.hidden || !cssW) return;
+      running = true; last = 0;
+      raf = requestAnimationFrame(frame);
+    }
+    function stop() {
+      running = false;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      onScreen = entries[entries.length - 1].isIntersecting;
+      if (onScreen) start(); else stop();
+    }, { rootMargin: '80px 0px' });
+    io.observe(hero);
+
+    function onVis() { if (doc.hidden) stop(); else { clockAt = -1e9; start(); } }
+    function onScroll() { scrollDirty = true; activeUntil = performance.now() + 250; }
+    function onMove(e) {
+      tx = e.clientX / vw - 0.5; ty = e.clientY / vh - 0.5;
+      activeUntil = performance.now() + 250;
+    }
+    var rzRaf = 0;
+    function onResize() { if (!rzRaf) rzRaf = requestAnimationFrame(function () { rzRaf = 0; measure(); }); }
+
+    doc.addEventListener('visibilitychange', onVis);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (fine) window.addEventListener('pointermove', onMove, { passive: true });
+    var ro = null;
+    if ('ResizeObserver' in window) { ro = new ResizeObserver(onResize); ro.observe(hero); }
+    window.addEventListener('resize', onResize, { passive: true });
+
+    canvas.addEventListener('webglcontextlost', function (e) {
+      e.preventDefault();
+      lost = true; stop();
+      shown = false; canvas.classList.remove('fx-licht-on');
+    }, false);
+    canvas.addEventListener('webglcontextrestored', function () {
+      if (dead || !setup()) return;
+      lost = false; cssW = 0; cssH = 0;
+      measure();
+    }, false);
+
+    // Wird später „Bewegung reduzieren“ eingeschaltet, räumt sich der Effekt vollständig weg
+    function destroy() {
+      if (dead) return;
+      dead = true; stop();
+      io.disconnect(); if (ro) ro.disconnect();
+      doc.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('resize', onResize);
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    }
+    var onReduce = function () { if (mqReduce.matches) destroy(); };
+    if (mqReduce.addEventListener) mqReduce.addEventListener('change', onReduce);
+    else if (mqReduce.addListener) mqReduce.addListener(onReduce);
+
+    measure();
+  }
+
+  if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+
+/* FX „Wechsel“: Seitenwechsel als Kreisblende – die nächste Seite öffnet sich vom angetippten Punkt aus (mit feinem Goldring). */
+(function () {
+  'use strict';
+  try {
+    if (!window.matchMedia || !document.body || !document.documentElement) return;
+    if (document.body.classList.contains('admin-body')) return;
+    var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches) return;
+    /* Datensparmodus: keine Kreisblende, nur der ruhige Wechsel (ohne Wartezeit) */
+    var lite = !!(navigator.connection && navigator.connection.saveData);
+    /* Nur Browser, die Seitenwechsel zwischen zwei Dokumenten animieren können */
+    if (!('onpagereveal' in window)) return;
+
+    var KEY = 'alstercafe.fx-wechsel';
+    var FRESH = 6000;
+    var root = document.documentElement;
+    var clearTimer = 0;
+
+    /* Echte Uhr, die auf beiden Seiten gleich läuft */
+    function now() {
+      try {
+        if (window.performance && performance.timeOrigin) return performance.timeOrigin + performance.now();
+      } catch (e) {}
+      return Date.now();
+    }
+    function clamp01(n) { return n < 0 ? 0 : n > 1 ? 1 : n; }
+
+    /* ---------- Zielseite: Tipp-Punkt lesen und die Kreisblende scharf schalten ---------- */
+    function takePoint() {
+      var raw = null;
+      try { raw = sessionStorage.getItem(KEY); sessionStorage.removeItem(KEY); } catch (e) { return null; }
+      if (!raw) return null;
+      var p = null;
+      try { p = JSON.parse(raw); } catch (e) { return null; }
+      if (!p || typeof p.x !== 'number' || typeof p.y !== 'number' || typeof p.t !== 'number') return null;
+      var age = now() - p.t;
+      if (!(age > -1000 && age < FRESH)) return null;
+      return { x: clamp01(p.x), y: clamp01(p.y) };
+    }
+    function disarm() {
+      clearTimeout(clearTimer);
+      root.classList.remove('fx-iris-on');
+      root.classList.remove('fx-ruhig-on');
+      root.style.removeProperty('--fx-x');
+      root.style.removeProperty('--fx-y');
+      root.style.removeProperty('--fx-r');
+    }
+    function arm(vt) {
+      var p = takePoint();
+      clearTimeout(clearTimer);
+      if (vt && vt.finished && typeof vt.finished.then === 'function') vt.finished.then(disarm, disarm);
+      /* Sicherheitsnetz: aufräumen, sobald kein Seitenwechsel mehr läuft */
+      clearTimer = setTimeout(tidy, 1500);
+      if (!p || mq.matches || lite) {
+        /* Kein Tipp-Punkt (z. B. Zurück-Taste): ruhiger Wechsel, sofort */
+        root.classList.add('fx-ruhig-on');
+        return;
+      }
+      var w = window.innerWidth || root.clientWidth || 1;
+      var h = window.innerHeight || root.clientHeight || 1;
+      var dx = Math.max(p.x, 1 - p.x) * w;
+      var dy = Math.max(p.y, 1 - p.y) * h;
+      /* Radius bis zur fernsten Ecke, mit etwas Reserve für Adressleisten am Handy */
+      var r = Math.ceil(Math.sqrt(dx * dx + dy * dy) * 1.06) + 12;
+      root.style.setProperty('--fx-x', (p.x * 100).toFixed(2) + '%');
+      root.style.setProperty('--fx-y', (p.y * 100).toFixed(2) + '%');
+      root.style.setProperty('--fx-r', r + 'px');
+      root.classList.add('fx-iris-on');
+    }
+    function tidy() {
+      var busy = false;
+      try {
+        var list = document.getAnimations();
+        for (var i = 0; i < list.length; i++) {
+          var ps = list[i] && list[i].effect && list[i].effect.pseudoElement;
+          if (ps && ps.indexOf('::view-transition') === 0) { busy = true; break; }
+        }
+      } catch (e) {}
+      if (busy) clearTimer = setTimeout(tidy, 500);
+      else disarm();
+    }
+
+    /* „pagereveal“ kommt vor dem ersten Bild der neuen Seite – erreicht dieses Skript aber nur,
+       wenn es schon geladen ist (z. B. zurück aus dem Seiten-Zwischenspeicher) */
+    window.addEventListener('pagereveal', function (e) {
+      try {
+        if (e && e.viewTransition) arm(e.viewTransition);
+      } catch (err) {}
+    }, { passive: true });
+
+    /* Regelfall: das Skript steht am Seitenende, „pagereveal“ ist dann schon vorbei.
+       Solange hält das Stylesheet die alte Seite fest (höchstens 0,45 s) – in dieser Zeit
+       wird hier nahtlos die Kreisblende (oder der ruhige Wechsel) gestartet.
+       Kommt das Skript später, läuft der ruhige Wechsel von allein. */
+    try {
+      if (typeof document.getAnimations === 'function') {
+        var running = document.getAnimations();
+        for (var i = 0; i < running.length; i++) {
+          var fx = running[i] && running[i].effect;
+          if (!fx || fx.target !== root || fx.pseudoElement !== '::view-transition-new(root)') continue;
+          var t = running[i].currentTime;
+          if (typeof t === 'number' && t < 420) arm(document.activeViewTransition || null);
+          else { try { sessionStorage.removeItem(KEY); } catch (e2) {} }
+          break;
+        }
+      }
+    } catch (err) {}
+
+    /* ---------- Startseite des Wechsels: Tipp-Punkt merken ---------- */
+    var mark = null;
+    var markTimer = 0;
+    function dropMark() {
+      clearTimeout(markTimer);
+      if (mark && mark.parentNode) mark.parentNode.removeChild(mark);
+      mark = null;
+    }
+
+    document.addEventListener('click', function (e) {
+      try {
+        if (lite || mq.matches || e.defaultPrevented) return;
+        if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (!a || a.hasAttribute('download')) return;
+        var target = (a.getAttribute('target') || '').toLowerCase();
+        if (target && target !== '_self') return;
+        var href = a.getAttribute('href') || '';
+        if (!href || href.charAt(0) === '#') return;
+        var u = new URL(a.href, location.href);
+        if (u.protocol !== location.protocol || u.origin !== location.origin) return;   /* tel:, mailto:, fremde Seiten */
+        if (u.pathname === location.pathname && u.search === location.search) return;   /* Sprungmarke auf derselben Seite */
+        if (/\.(pdf|jpe?g|png|webp|avif|gif|svg|ics|vcf|zip)$/i.test(u.pathname)) return;
+
+        var w = window.innerWidth || root.clientWidth || 1;
+        var h = window.innerHeight || root.clientHeight || 1;
+        var x = e.clientX, y = e.clientY;
+        /* Tastatur (Enter): Mitte des Links nehmen */
+        if (!e.detail || (!x && !y)) {
+          var box = a.getBoundingClientRect();
+          x = box.left + box.width / 2;
+          y = box.top + box.height / 2;
+        }
+        x = Math.min(Math.max(x, 0), w);
+        y = Math.min(Math.max(y, 0), h);
+        sessionStorage.setItem(KEY, JSON.stringify({ x: x / w, y: y / h, t: now() }));
+
+        /* Unsichtbarer Merkpunkt: gibt dem Goldring auf der nächsten Seite seinen Mittelpunkt */
+        dropMark();
+        mark = document.createElement('div');
+        mark.className = 'fx-wechsel-punkt';
+        mark.setAttribute('aria-hidden', 'true');
+        mark.style.left = (x - 1) + 'px';
+        mark.style.top = (y - 1) + 'px';
+        document.body.appendChild(mark);
+        markTimer = setTimeout(dropMark, FRESH);
+      } catch (err) {}
+    }, { passive: true });
+
+    /* Zurück aus dem Seiten-Zwischenspeicher: alten Merkpunkt entfernen */
+    window.addEventListener('pageshow', function (e) {
+      if (e && e.persisted) dropMark();
+    }, { passive: true });
+  } catch (err) {}
+})();
+
+/* fx-staub: Goldstaub mit Tiefe in den dunklen Kapiteln – schwebt durch einen Lichtstrahl, wirbelt beim Scrollen auf, weicht der Maus aus und stiebt beim Fingertipp auseinander */
+(function fxStaub() {
+  'use strict';
+  var W = window, D = document;
+
+  function start() {
+    try {
+      if (!D.body || D.body.classList.contains('admin-body')) return;
+      if (!W.matchMedia || W.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (navigator.connection && navigator.connection.saveData) return;
+      if (!W.requestAnimationFrame || !W.IntersectionObserver) return;
+      var probe = D.createElement('canvas');
+      if (!probe.getContext || !probe.getContext('2d')) return;
+      var secs = D.querySelectorAll('.chapter-dark');
+      if (!secs.length) return;
+      run(secs);
+    } catch (e) { /* ohne Staub geht es auch */ }
+  }
+
+  function run(secs) {
+    var PASSIVE = { passive: true };
+    var TAU = Math.PI * 2;
+    var clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
+    var rnd = Math.random;
+
+    /* Lichtstrahl: gleicher Winkel wie der Verlauf in fx.css (112 Grad) */
+    var BEAM = 112 * Math.PI / 180, BSIN = Math.sin(BEAM), BCOS = Math.cos(BEAM), BMID = 0.46, BWID = 0.17;
+
+    /* weiche Staubkörner und unscharfe Lichtscheiben einmal vorzeichnen */
+    var TINTS = [[226, 188, 122], [212, 179, 128], [243, 227, 191]];
+    var MOTE = [[0, 1], [0.16, 0.9], [0.42, 0.26], [0.7, 0.06], [1, 0]];
+    var BOKEH = [[0, 0.44], [0.58, 0.42], [0.8, 0.64], [0.9, 0.3], [1, 0]];
+    function sprite(size, stops, rgb) {
+      var c = D.createElement('canvas'); c.width = c.height = size;
+      var g = c.getContext('2d'), h = size / 2, gr = g.createRadialGradient(h, h, 0, h, h, h);
+      for (var i = 0; i < stops.length; i++) gr.addColorStop(stops[i][0], 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + stops[i][1] + ')');
+      g.fillStyle = gr; g.fillRect(0, 0, size, size);
+      return c;
+    }
+    var motes = TINTS.map(function (t) { return sprite(64, MOTE, t); });
+    var bokehs = TINTS.map(function (t) { return sprite(128, BOKEH, t); });
+
+    /* drei Tiefen: fern, mittel, nah */
+    var PAR = [0.55, 0.85, 1.3];   // wie stark die Ebene mit dem Scrollen mitzieht
+    var DK = [0.6, 1, 1.35];       // wie stark sie auf Wirbel reagiert
+    var phoneMq = W.matchMedia('(max-width: 760px)');
+    var fineMq = W.matchMedia('(hover: hover) and (pointer: fine)');
+
+    function makeParticle(f, z) {
+      var p = { z: z, x: rnd() * f.w, y: rnd() * f.h, vx: 0, vy: 0, glow: 0,
+        t: rnd() < 0.45 ? 0 : rnd() < 0.55 ? 1 : 2,
+        ws: 0.25 + rnd() * 0.5, wp: rnd() * TAU, tw: 0.7 + rnd() * 0.9, tp: rnd() * TAU, sw: (rnd() - 0.5) * 1.4 };
+      if (z === 0) { p.d = 1.6 + rnd() * 1.9; p.a = 0.34 + rnd() * 0.32; p.rise = 5 + rnd() * 6; p.wa = 4 + rnd() * 5; }
+      else if (z === 1) { p.d = 3 + rnd() * 3.6; p.a = 0.6 + rnd() * 0.4; p.rise = 9 + rnd() * 10; p.wa = 6 + rnd() * 9; }
+      else { p.d = 14 + rnd() * 20; p.a = 0.09 + rnd() * 0.1; p.rise = 12 + rnd() * 12; p.wa = 8 + rnd() * 10; }
+      p.s = z === 2 ? p.d * 1.12 : p.d * 3.2;   // gezeichnete Kantenlänge
+      return p;
+    }
+
+    function layout(f) {
+      f.dirty = false;
+      var w = f.sec.offsetWidth, secH = f.sec.offsetHeight;
+      var vh = W.innerHeight || D.documentElement.clientHeight || 800;
+      var h = Math.min(secH, vh + 160);
+      if (w < 40 || h < 40) { f.w = 0; return; }
+      // Adressleiste am Handy blendet ein/aus: kleine Höhenänderungen nicht neu aufbauen
+      if (w === f.w && secH === f.secH && h <= f.h && h >= f.h - 150) return;
+      var ow = f.w, oh = f.h;
+      f.phone = phoneMq.matches;
+      var dpr = Math.min(W.devicePixelRatio || 1, f.phone ? 1.5 : 2);
+      dpr = Math.min(dpr, Math.sqrt(3.2e6 / (w * h)));
+      f.w = w; f.h = h; f.secH = secH; f.dpr = dpr;
+      f.L = w * Math.abs(BSIN) + h * Math.abs(BCOS);
+      f.cv.style.height = h + 'px';
+      f.cv.width = Math.round(w * dpr); f.cv.height = Math.round(h * dpr);
+      var n = f.phone ? clamp(Math.round(w * h / 6000), 44, 60) : clamp(Math.round(w * h / 11000), 70, 130);
+      if (n !== f.parts.length) {
+        var near = Math.round(n * 0.14), mid = Math.round(n * 0.36), far = n - near - mid, i;
+        f.parts = [];
+        for (i = 0; i < far; i++) f.parts.push(makeParticle(f, 0));
+        for (i = 0; i < mid; i++) f.parts.push(makeParticle(f, 1));
+        for (i = 0; i < near; i++) f.parts.push(makeParticle(f, 2));
+      } else if (ow && oh) {
+        for (var k = 0; k < f.parts.length; k++) { f.parts[k].x *= w / ow; f.parts[k].y *= h / oh; }
+      }
+      f.lastTop = null;
+    }
+
+    /* Fingertipp oder Klick: Staub stiebt weich nach außen */
+    function puff(f, cx, cy) {
+      if (!f.on || !f.w || f.lastTop === null) return;
+      var x = cx - f.left, y = cy - f.lastTop, R = f.phone ? 170 : 210, i, p, dx, dy, d, q;
+      for (i = 0; i < f.parts.length; i++) {
+        p = f.parts[i]; dx = p.x - x; dy = p.y - y; d = Math.sqrt(dx * dx + dy * dy);
+        if (d < R) {
+          q = 1 - d / R; d = d || 1;
+          p.vx += dx / d * q * 250 * DK[p.z]; p.vy += dy / d * q * 250 * DK[p.z];
+          if (q > p.glow) p.glow = q;
+        }
+      }
+      if (f.puffs.length > 40) return;
+      for (i = 0; i < 10; i++) {
+        var ang = rnd() * TAU, sp = 50 + rnd() * 150, life = 1 + rnd() * 0.9;
+        f.puffs.push({ x: x, y: y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 14, life: life, max: life, d: 2 + rnd() * 2.6, t: (rnd() * 3) | 0, ring: false });
+      }
+      f.puffs.push({ x: x, y: y, vx: 0, vy: 0, life: 0.75, max: 0.75, d: 0, t: 2, ring: true });
+    }
+
+    function step(f, dt, t, dS, jump) {
+      if (f.dirty) layout(f);
+      if (!f.w) return;
+      var r = f.sec.getBoundingClientRect();
+      var off = f.secH > f.h ? Math.round(clamp(-r.top - 80, 0, f.secH - f.h)) : 0;
+      if (off !== f.off) { f.off = off; f.cv.style.transform = off ? 'translate3d(0,' + off + 'px,0)' : ''; }
+      var top = r.top + off;
+      var dC = (f.lastTop === null || jump) ? 0 : top - f.lastTop;
+      f.lastTop = top; f.left = r.left;
+      if (jump) dS = 0;
+
+      var w = f.w, h = f.h, dpr = f.dpr, ctx = f.ctx, secH = f.secH, L = f.L;
+      f.energy = f.energy * Math.exp(-dt / 0.8) + Math.abs(dS);
+      var boost = 1 + Math.min(f.energy / 1500, 1) * 0.3;
+      var damp = Math.exp(-dt / 0.9), gdamp = Math.exp(-dt / 0.7);
+      var hov = f.hov, hx = f.hx - r.left, hy = f.hy - top, HR = 170;
+      var sh0 = -dS * PAR[0] - dC, sh1 = -dS * PAR[1] - dC, sh2 = -dS * PAR[2] - dC;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, f.cv.width, f.cv.height);
+      ctx.globalCompositeOperation = 'lighter';
+
+      var i, p, k, th, dx, dy, d, q, g, sp, mx, m, span, a, b, e, s, parts = f.parts;
+      for (i = 0; i < parts.length; i++) {
+        p = parts[i]; k = DK[p.z]; g = 0;
+        if (dS) { // Wirbel: benachbarte Körner drehen gemeinsam, Stärke folgt dem Scrolltempo
+          th = 2.2 * Math.sin(p.x * 0.0085 + t * 0.33 + f.seed) + 2.2 * Math.cos(p.y * 0.0105 - t * 0.29) + p.sw;
+          p.vx += Math.cos(th) * dS * 0.5 * k;
+          p.vy += Math.sin(th) * dS * 0.5 * k - dS * 0.2 * k;
+        }
+        if (hov) { // Maus: heller und sanft zur Seite
+          dx = p.x - hx; dy = p.y - hy; d = dx * dx + dy * dy;
+          if (d < HR * HR) {
+            d = Math.sqrt(d) || 1; q = 1 - d / HR; q *= q; g = q;
+            p.vx += dx / d * q * 150 * k * dt; p.vy += dy / d * q * 150 * k * dt;
+          }
+        }
+        sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy); mx = 200 * k;
+        if (sp > mx) { p.vx *= mx / sp; p.vy *= mx / sp; }
+        p.x += (Math.sin(t * p.ws + p.wp) * p.wa + p.vx) * dt;
+        p.y += (-p.rise + Math.cos(t * p.ws * 0.8 + p.wp * 1.7) * p.wa * 0.4 + p.vy) * dt + (p.z === 0 ? sh0 : p.z === 1 ? sh1 : sh2);
+        p.vx *= damp; p.vy *= damp; p.glow *= gdamp;
+        m = p.s * 0.5 + 2;
+        span = w + 2 * m; p.x = ((p.x + m) % span + span) % span - m;
+        span = h + 2 * m; p.y = ((p.y + m) % span + span) % span - m;
+
+        b = (0.5 + ((p.x - w / 2) * BSIN - (p.y - h / 2) * BCOS) / L - BMID) / BWID; b = Math.exp(-b * b);
+        if (p.glow > g) g = p.glow;
+        a = p.a * (0.72 + 0.28 * Math.sin(t * p.tw + p.tp)) * (0.6 + 0.62 * b) * boost * (1 + (p.z === 2 ? 0.7 : 1.5) * g);
+        e = p.y + off; if (secH - e < e) e = secH - e;      // Abstand zum Kapitelrand
+        if (e < 40) a *= e <= 0 ? 0 : e / 40;
+        if (a > 0.004) {
+          ctx.globalAlpha = a > 1 ? 1 : a; s = p.s * dpr;
+          ctx.drawImage(p.z === 2 ? bokehs[p.t] : motes[p.t], p.x * dpr - s / 2, p.y * dpr - s / 2, s, s);
+        }
+      }
+
+      for (i = f.puffs.length - 1; i >= 0; i--) {
+        p = f.puffs[i]; p.life -= dt;
+        if (p.life <= 0) { f.puffs.splice(i, 1); continue; }
+        q = p.life / p.max; p.y += sh1;
+        if (p.ring) { // weicher Lichtfleck, der sich ausdehnt und vergeht
+          s = (30 + (1 - q) * (1 - q * 0.4) * 190) * dpr; ctx.globalAlpha = 0.2 * q * q;
+          ctx.drawImage(bokehs[2], p.x * dpr - s / 2, p.y * dpr - s / 2, s, s);
+        } else {
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= damp * damp; p.vy *= damp * damp;
+          s = p.d * 3.2 * dpr; ctx.globalAlpha = Math.min(1, 0.85 * q * Math.sqrt(q));
+          ctx.drawImage(motes[p.t], p.x * dpr - s / 2, p.y * dpr - s / 2, s, s);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    /* ein Staubfeld pro dunklem Kapitel */
+    var fields = [];
+    Array.prototype.forEach.call(secs, function (sec) {
+      var cv = D.createElement('canvas'), ctx = cv.getContext('2d');
+      if (!ctx) return;
+      cv.className = 'fx-dust'; cv.setAttribute('aria-hidden', 'true');
+      sec.insertBefore(cv, sec.firstChild);
+      sec.classList.add('fx-has-dust');
+      var f = { sec: sec, cv: cv, ctx: ctx, w: 0, h: 0, secH: 0, dpr: 1, L: 1, off: 0, left: 0, lastTop: null, parts: [], puffs: [],
+        on: false, dirty: true, energy: 0, hov: false, hx: 0, hy: 0, dn: null, phone: false, seed: rnd() * 10 };
+      fields.push(f);
+
+      if (W.PointerEvent) {
+        sec.addEventListener('pointerdown', function (ev) {
+          if (ev.isPrimary === false) return;
+          f.dn = { x: ev.clientX, y: ev.clientY, t: ev.timeStamp, id: ev.pointerId };
+        }, PASSIVE);
+        sec.addEventListener('pointerup', function (ev) {
+          var d = f.dn; f.dn = null;
+          if (!d || d.id !== ev.pointerId || ev.timeStamp - d.t > 600) return;
+          if (Math.abs(ev.clientX - d.x) > 12 || Math.abs(ev.clientY - d.y) > 12) return;   // das war ein Wischen, kein Tipp
+          var tg = ev.target;
+          if (tg && tg.closest && tg.closest('a,button,input,select,textarea,label,summary,[role="button"]')) return;
+          puff(f, ev.clientX, ev.clientY);
+        }, PASSIVE);
+        sec.addEventListener('pointercancel', function () { f.dn = null; }, PASSIVE);
+        if (fineMq.matches) {
+          sec.addEventListener('pointermove', function (ev) {
+            if (ev.pointerType && ev.pointerType !== 'mouse') return;
+            f.hx = ev.clientX; f.hy = ev.clientY; f.hov = true;
+          }, PASSIVE);
+          sec.addEventListener('pointerleave', function () { f.hov = false; }, PASSIVE);
+        }
+      }
+    });
+    if (!fields.length) return;
+
+    /* gezeichnet wird nur, solange ein Kapitel im Bild und der Tab sichtbar ist */
+    var raf = 0, last = 0, lastSy = 0;
+    function active() { if (D.hidden) return false; for (var i = 0; i < fields.length; i++) if (fields[i].on) return true; return false; }
+    function frame(now) {
+      raf = 0;
+      if (!active()) return;
+      raf = W.requestAnimationFrame(frame);
+      if (last && now - last < 14) return;                      // höchstens rund 60 Bilder pro Sekunde
+      var dt = last ? Math.min((now - last) / 1000, 0.05) : 0.016; last = now;
+      var sy = W.pageYOffset || 0, dS = sy - lastSy; lastSy = sy;
+      var jump = Math.abs(dS) > 1400;                           // Sprung (Anker, Seitenanfang): kein Wirbelsturm
+      dS = clamp(dS, -160, 160);
+      for (var i = 0; i < fields.length; i++) if (fields[i].on) step(fields[i], dt, now / 1000, dS, jump);
+    }
+    function kick() {
+      if (raf || !active()) return;
+      last = 0; lastSy = W.pageYOffset || 0;
+      raf = W.requestAnimationFrame(frame);
+    }
+
+    var io = new W.IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        for (var i = 0; i < fields.length; i++) {
+          if (fields[i].sec !== en.target) continue;
+          fields[i].on = en.isIntersecting;
+          if (en.isIntersecting) { fields[i].lastTop = null; fields[i].sec.classList.add('fx-dust-on'); }
+        }
+      });
+      kick();
+    }, { rootMargin: '80px 0px' });
+    fields.forEach(function (f) { io.observe(f.sec); });
+
+    function markDirty() { for (var i = 0; i < fields.length; i++) fields[i].dirty = true; }
+    W.addEventListener('resize', markDirty, PASSIVE);
+    W.addEventListener('orientationchange', markDirty, PASSIVE);
+    if (W.ResizeObserver) {
+      var ro = new W.ResizeObserver(function (entries) {
+        entries.forEach(function (en) { for (var i = 0; i < fields.length; i++) if (fields[i].sec === en.target) fields[i].dirty = true; });
+      });
+      fields.forEach(function (f) { ro.observe(f.sec); });
+    }
+    D.addEventListener('visibilitychange', kick, PASSIVE);
+  }
+
+  if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', start, { passive: true, once: true });
+  else start();
 })();

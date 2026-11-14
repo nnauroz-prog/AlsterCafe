@@ -12576,3 +12576,239 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
     }
   }
 }
+
+/* --- Teil B: kräftigere Bewegung (auch am Handy deutlich sichtbar) --- */
+@keyframes fx-grow-in { from { scale: .86; translate: 0 90px; } to { scale: 1; translate: 0 0; } }
+@keyframes fx-chapter-open-m { from { clip-path: inset(0 6.5% 0 6.5% round 36px); } to { clip-path: inset(0 0 0 0 round 0); } }
+@keyframes shout-drift { from { translate: -15% 0; } to { translate: 15% 0; } }
+@keyframes fx-ember-a { from { translate: -14% 8%; scale: 1; } to { translate: 16% -10%; scale: 1.28; } }
+@keyframes fx-ember-b { from { translate: 12% -8%; scale: 1.18; } to { translate: -16% 10%; scale: .94; } }
+/* Ofenwärme: zwei große, warme Lichtflächen wandern langsam durch die dunklen Kapitel */
+.fx-ember { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.fx-ember::before, .fx-ember::after { content: ''; position: absolute; width: 92vmax; height: 92vmax; max-width: 1150px; max-height: 1150px; border-radius: 50%; opacity: 0; will-change: translate; }
+.fx-ember::before { left: -34%; bottom: -46%; background: radial-gradient(circle, rgba(222, 140, 60, .36), rgba(222, 140, 60, .13) 38%, rgba(222, 140, 60, 0) 68%); }
+.fx-ember::after { right: -34%; top: -48%; background: radial-gradient(circle, rgba(232, 196, 130, .24), rgba(232, 196, 130, .08) 40%, rgba(232, 196, 130, 0) 68%); }
+@media (prefers-reduced-motion: no-preference) {
+  .fx-ember::before { opacity: 1; animation: fx-ember-a 15s ease-in-out infinite alternate; }
+  .fx-ember::after { opacity: 1; animation: fx-ember-b 20s ease-in-out infinite alternate; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Karten wachsen unter dem Finger an ihren Platz (Klasse setzt script.js nur unterhalb des ersten Bildschirms) */
+    .fx-grow { animation: fx-grow-in linear both; animation-timeline: view(); animation-range: entry 0% entry 64%; }
+    /* Dunkle Kapitel öffnen sich jetzt auch am Handy von der runden Karte zur vollen Breite */
+    @media (max-width: 760px) {
+      .chapter.landing-visit-dark, .lunch-page.chapter-dark, .reservation-page.chapter-dark {
+        animation: fx-chapter-open-m linear both; animation-timeline: view(); animation-range: entry 0% entry 72%;
+      }
+    }
+  }
+}
+@media print { .fx-ember { display: none !important; } .fx-grow { scale: 1 !important; translate: none !important; } }
+
+/* ============================================================
+   FX · Dampf — echter, langsam aufsteigender Dampf über den
+   gezeichneten Tassen (WebGL, siehe „fxDampf“ in script.js).
+   Die Zeichenfläche liegt als Kind in der Zeichnung (hinter den
+   Linien), fängt keine Klicks ab und verschiebt nichts.
+   Erst wenn der Dampf wirklich läuft (.fx-dampf-on), weichen die
+   gestrichelten Dampflinien. Ohne WebGL, bei „Bewegung reduzieren“,
+   im Druck: alles wie bisher.
+   ============================================================ */
+.fx-dampf {
+  position: absolute; left: 0; top: 0; width: 0; height: 0;
+  max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+  display: block; pointer-events: none; user-select: none; -webkit-user-select: none;
+  opacity: 0; transition: opacity 2s ease;
+}
+.fx-dampf-on > .fx-dampf { opacity: 1; }
+.fx-dampf-on .art-steam { animation: none !important; opacity: 0 !important; transition: opacity 1.6s ease; }
+
+@media (prefers-reduced-motion: reduce), (forced-colors: active), print {
+  .fx-dampf { display: none !important; }
+  .fx-dampf-on .art-steam { opacity: .75 !important; transition: none; }
+}
+
+/* ============================================================
+   FX · Fensterlicht — weiches Tageslicht auf dem Startseiten-Kopf
+   Eine Zeichenfläche (per script.js eingefügt) liegt als erstes Kind
+   hinter allem Inhalt von .hero-cinematic und zeigt den Lichtwurf eines
+   Sprossenfensters, passend zur echten Uhrzeit. Reine Dekoration:
+   aria-hidden, nicht anklickbar, kein Einfluss auf das Layout.
+   Ohne WebGL, bei „Bewegung reduzieren“ oder im Datensparmodus
+   bleibt alles, wie es war.
+   ============================================================ */
+.fx-licht {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;            /* script.js kürzt die Höhe bis zur Oberkante des Laufbands */
+  z-index: 0;              /* unter Überschrift, Text, Karte (z-index 1) und Laufband (3) */
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 2.6s cubic-bezier(.22, .61, .36, 1);
+}
+.fx-licht.fx-licht-on { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-licht { display: none; }
+}
+@media (forced-colors: active) {
+  .fx-licht { display: none; }
+}
+@media print {
+  .fx-licht { display: none !important; }
+}
+/* Fensterlicht auch in den Köpfen der Unterseiten: Inhalt bleibt über dem Licht */
+.page-hero-editorial { position: relative; }
+.page-hero-editorial > .container { position: relative; z-index: 1; }
+
+/* ==========================================================================
+   FX „Wechsel“ — Seitenwechsel als Kreisblende
+   Die nächste Seite öffnet sich in einem Kreis, der genau dort beginnt, wo getippt
+   oder geklickt wurde; ein feiner Goldring läuft auf der Kante mit. Die alte Seite
+   bleibt darunter stehen, wird etwas dunkler und rückt leicht zurück.
+   Ohne Tipp-Punkt (Zurück-Taste, direkt aufgerufene Adresse) gibt es einen ruhigen
+   Wechsel: die neue Seite steigt 24px auf und blendet ein.
+   Ablauf: Das Stylesheet hält die alte Seite kurz fest (höchstens 0,32 s), bis script.js
+   geladen ist und .fx-iris-on (Kreisblende) oder .fx-ruhig-on (ruhig) setzt.
+   Überschreibt die Regeln aus „1 · Weicher Seitenwechsel“ weiter oben.
+   Nur ohne „Bewegung reduzieren“, nie im Verwaltungsbereich (admin-body).
+   ========================================================================== */
+
+/* Unsichtbarer Merkpunkt an der Tipp-Stelle (setzt script.js beim Klick auf einen Link).
+   Er gibt dem Goldring auf der nächsten Seite seine Position. */
+.fx-wechsel-punkt {
+  position: fixed;
+  z-index: 1;
+  width: 2px;
+  height: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+@media print { .fx-wechsel-punkt { display: none !important; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .fx-wechsel-punkt { view-transition-name: fx-ring; }
+
+  /* Dunkler Grund hinter der zurückweichenden alten Seite */
+  :root:not(:has(body.admin-body))::view-transition { background: #2A1810; }
+
+  /* Reihenfolge: Seite unten, Goldring darüber, Kopfzeile ganz oben und unberührt */
+  :root:not(:has(body.admin-body))::view-transition-group(fx-ring) { z-index: 2; }
+  :root:not(:has(body.admin-body))::view-transition-group(site-header) { z-index: 3; }
+
+  /* Alte Seite: bleibt voll deckend liegen, dunkelt ab und rückt leicht zurück */
+  :root:not(:has(body.admin-body))::view-transition-old(root) {
+    animation: fx-alt .75s cubic-bezier(.4, 0, .2, 1) both;
+    mix-blend-mode: normal;
+    transform-origin: 50% 50%;
+  }
+
+  /* Neue Seite – solange script.js noch nicht entschieden hat: kurz warten, dann ruhig einblenden */
+  :root:not(:has(body.admin-body))::view-transition-new(root) {
+    animation: fx-steigen .45s cubic-bezier(.2, .7, .2, 1) .32s both;
+    mix-blend-mode: normal;
+  }
+
+  /* Neue Seite – ohne Tipp-Punkt: steigt sofort auf und blendet ein */
+  :root.fx-ruhig-on:not(:has(body.admin-body))::view-transition-new(root) {
+    animation: fx-steigen-jetzt .45s cubic-bezier(.2, .7, .2, 1) both;
+  }
+
+  /* Neue Seite – mit Tipp-Punkt: Kreisblende vom angetippten Punkt aus */
+  :root.fx-iris-on:not(:has(body.admin-body))::view-transition-new(root) {
+    animation: fx-iris .75s cubic-bezier(.65, 0, .2, 1) both;
+  }
+
+  /* Goldring auf der Kante des Kreises (Position kommt vom Merkpunkt der alten Seite) */
+  :root:not(:has(body.admin-body))::view-transition-old(fx-ring) {
+    inset: auto;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    inline-size: 0;
+    block-size: 0;
+    max-width: none;
+    box-sizing: content-box;
+    translate: -50% -50%;
+    border: 2px solid #D4B380;
+    border-radius: 50%;
+    outline: 1px solid rgba(243, 227, 191, .5);
+    outline-offset: 7px;
+    mix-blend-mode: normal;
+    opacity: 0;
+    animation: none;
+  }
+  :root.fx-iris-on:not(:has(body.admin-body))::view-transition-old(fx-ring) {
+    animation: fx-ring .75s cubic-bezier(.65, 0, .2, 1) both;
+  }
+}
+
+@keyframes fx-alt {
+  to { opacity: .68; transform: scale(.965); }
+}
+@keyframes fx-steigen {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fx-steigen-jetzt {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fx-iris {
+  from { clip-path: circle(0 at var(--fx-x, 50%) var(--fx-y, 50%)); }
+  to   { clip-path: circle(var(--fx-r, 150vmax) at var(--fx-x, 50%) var(--fx-y, 50%)); }
+}
+@keyframes fx-ring {
+  from { width: 0; height: 0; inline-size: 0; block-size: 0; opacity: 1; }
+  72%  { opacity: 1; }
+  to   {
+    width: calc(2 * var(--fx-r, 150vmax));
+    height: calc(2 * var(--fx-r, 150vmax));
+    inline-size: calc(2 * var(--fx-r, 150vmax));
+    block-size: calc(2 * var(--fx-r, 150vmax));
+    opacity: 0;
+  }
+}
+
+/* =====================================================================
+   fx-staub · Goldstaub mit Tiefe in den dunklen Kapiteln
+   Eine Zeichenfläche (Canvas) liegt hinter dem Inhalt jedes dunklen
+   Kapitels. Darin schweben Mehl- und Goldstaub in drei Tiefen durch
+   einen weichen Lichtstrahl. Der Staub wirbelt beim Scrollen auf,
+   weicht der Maus aus und stiebt bei einem Fingertipp sanft auseinander.
+   Die alten vier bis sieben Punkte (.gold-dust) werden dafür versteckt.
+   Ohne Bewegung (Systemeinstellung), im Druck und im Admin: nichts.
+   ===================================================================== */
+.chapter-dark > .fx-dust {
+  position: absolute; top: 0; left: 0; z-index: 0;
+  display: block; width: 100%; height: 100%; max-height: calc(100vh + 160px);
+  pointer-events: none; -webkit-user-select: none; user-select: none;
+  /* der Lichtstrahl: schräg von oben rechts, sehr weich */
+  background: linear-gradient(112deg,
+    rgba(226, 188, 122, 0) 20%,
+    rgba(226, 188, 122, .06) 35%,
+    rgba(243, 227, 191, .105) 46%,
+    rgba(226, 188, 122, .055) 58%,
+    rgba(226, 188, 122, 0) 74%);
+  opacity: 0; transition: opacity 1.4s ease;
+}
+.chapter-dark.fx-dust-on > .fx-dust { opacity: 1; }
+
+/* die bisherigen Einzelpunkte weichen dem Staubfeld */
+.chapter-dark.fx-has-dust > .gold-dust { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-dust { display: none !important; }
+}
+@media print {
+  .fx-dust { display: none !important; }
+}
