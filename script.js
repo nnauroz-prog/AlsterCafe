@@ -5415,62 +5415,6 @@ function escapeAttr(s) { return escapeHtml(s); }
   else start();
 })();
 
-/* Gleiten · Blätter: Jeder Abschnitt der Seite bleibt stehen, während sich der nächste wie ein Blatt
-   darüberschiebt. Ganz überdeckte Abschnitte werden wieder losgelassen, damit ihre Effekte
-   (Dampf, Licht, Staub) pausieren. Nur bei erlaubter Bewegung, nie im Mitgliederbereich. */
-(function () {
-  var D = document, W = window;
-  function start() {
-    if (!D.body || D.body.classList.contains('admin-body')) return;
-    if (!W.matchMedia || W.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!(W.CSS && CSS.supports && CSS.supports('position', 'sticky')) || !W.requestAnimationFrame) return;
-    var main = D.querySelector('main');
-    if (!main) return;
-    var secs = [].slice.call(main.children).filter(function (el) { return el.tagName === 'SECTION'; });
-    if (secs.length < 2) return;
-    var state = secs.map(function () { return { off: false, c: -1 }; });
-    var setH = function (s) { s.style.setProperty('--fx-h', s.offsetHeight + 'px'); };
-    secs.forEach(function (s, i) {
-      setH(s);
-      if (i < secs.length - 1 && !s.querySelector(':scope > .fx-veil')) {
-        var v = D.createElement('span');
-        v.className = 'fx-veil'; v.setAttribute('aria-hidden', 'true');
-        s.appendChild(v);
-      }
-    });
-    var raf = 0;
-    function update() {
-      raf = 0;
-      var vh = W.innerHeight, tops = [], i;
-      // erst alles lesen …
-      for (i = 0; i < secs.length - 1; i++) {
-        var nx = secs[i].nextElementSibling;
-        while (nx && nx.offsetHeight === 0) nx = nx.nextElementSibling;
-        tops.push(nx ? nx.getBoundingClientRect().top : vh);
-      }
-      // … dann schreiben
-      for (i = 0; i < secs.length - 1; i++) {
-        var st = state[i], t = tops[i];
-        var off = t < -320;
-        if (off !== st.off) { st.off = off; secs[i].classList.toggle('fx-off', off); }
-        var c = off ? 1 : Math.max(0, Math.min(1, (vh - t) / vh));
-        c = Math.round(c * 40) / 40;
-        if (c !== st.c) { st.c = c; secs[i].style.setProperty('--fx-cover', c); }
-      }
-    }
-    function queue() { if (!raf) raf = W.requestAnimationFrame(update); }
-    if (W.ResizeObserver) {
-      var ro = new W.ResizeObserver(function (entries) { entries.forEach(function (e) { setH(e.target); }); queue(); });
-      secs.forEach(function (s) { ro.observe(s); });
-    }
-    W.addEventListener('resize', function () { secs.forEach(setH); queue(); }, { passive: true });
-    W.addEventListener('scroll', queue, { passive: true });
-    D.documentElement.classList.add('fx-deck');
-    update();
-  }
-  if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', start, { once: true }); else start();
-})();
-
 /* Startseite · „Vier Gründe“ am Handy: Der Streifen wird seitlich gewischt; darunter läuft eine
    schmale Goldlinie mit und zeigt „2 / 4“. Reine Anzeige – der Streifen selbst ist normales Scrollen. */
 (function () {
