@@ -12666,118 +12666,6 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 .page-hero-editorial { position: relative; }
 .page-hero-editorial > .container { position: relative; z-index: 1; }
 
-/* ==========================================================================
-   FX „Wechsel“ — Seitenwechsel als Kreisblende
-   Die nächste Seite öffnet sich in einem Kreis, der genau dort beginnt, wo getippt
-   oder geklickt wurde; ein feiner Goldring läuft auf der Kante mit. Die alte Seite
-   bleibt darunter stehen, wird etwas dunkler und rückt leicht zurück.
-   Ohne Tipp-Punkt (Zurück-Taste, direkt aufgerufene Adresse) gibt es einen ruhigen
-   Wechsel: die neue Seite steigt 24px auf und blendet ein.
-   Ablauf: Das Stylesheet hält die alte Seite kurz fest (höchstens 0,32 s), bis script.js
-   geladen ist und .fx-iris-on (Kreisblende) oder .fx-ruhig-on (ruhig) setzt.
-   Überschreibt die Regeln aus „1 · Weicher Seitenwechsel“ weiter oben.
-   Nur ohne „Bewegung reduzieren“, nie im Verwaltungsbereich (admin-body).
-   ========================================================================== */
-
-/* Unsichtbarer Merkpunkt an der Tipp-Stelle (setzt script.js beim Klick auf einen Link).
-   Er gibt dem Goldring auf der nächsten Seite seine Position. */
-.fx-wechsel-punkt {
-  position: fixed;
-  z-index: 1;
-  width: 2px;
-  height: 2px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  pointer-events: none;
-}
-@media print { .fx-wechsel-punkt { display: none !important; } }
-
-@media (prefers-reduced-motion: no-preference) {
-  .fx-wechsel-punkt { view-transition-name: fx-ring; }
-
-  /* Dunkler Grund hinter der zurückweichenden alten Seite */
-  :root:not(:has(body.admin-body))::view-transition { background: #2A1810; }
-
-  /* Reihenfolge: Seite unten, Goldring darüber, Kopfzeile ganz oben und unberührt */
-  :root:not(:has(body.admin-body))::view-transition-group(fx-ring) { z-index: 2; }
-  :root:not(:has(body.admin-body))::view-transition-group(site-header) { z-index: 3; }
-
-  /* Alte Seite: bleibt voll deckend liegen, dunkelt ab und rückt leicht zurück */
-  :root:not(:has(body.admin-body))::view-transition-old(root) {
-    animation: fx-alt .75s cubic-bezier(.4, 0, .2, 1) both;
-    mix-blend-mode: normal;
-    transform-origin: 50% 50%;
-  }
-
-  /* Neue Seite – solange script.js noch nicht entschieden hat: kurz warten, dann ruhig einblenden */
-  :root:not(:has(body.admin-body))::view-transition-new(root) {
-    animation: fx-steigen .45s cubic-bezier(.2, .7, .2, 1) .32s both;
-    mix-blend-mode: normal;
-  }
-
-  /* Neue Seite – ohne Tipp-Punkt: steigt sofort auf und blendet ein */
-  :root.fx-ruhig-on:not(:has(body.admin-body))::view-transition-new(root) {
-    animation: fx-steigen-jetzt .45s cubic-bezier(.2, .7, .2, 1) both;
-  }
-
-  /* Neue Seite – mit Tipp-Punkt: Kreisblende vom angetippten Punkt aus */
-  :root.fx-iris-on:not(:has(body.admin-body))::view-transition-new(root) {
-    animation: fx-iris .75s cubic-bezier(.65, 0, .2, 1) both;
-  }
-
-  /* Goldring auf der Kante des Kreises (Position kommt vom Merkpunkt der alten Seite) */
-  :root:not(:has(body.admin-body))::view-transition-old(fx-ring) {
-    inset: auto;
-    left: 50%;
-    top: 50%;
-    width: 0;
-    height: 0;
-    inline-size: 0;
-    block-size: 0;
-    max-width: none;
-    box-sizing: content-box;
-    translate: -50% -50%;
-    border: 2px solid #D4B380;
-    border-radius: 50%;
-    outline: 1px solid rgba(243, 227, 191, .5);
-    outline-offset: 7px;
-    mix-blend-mode: normal;
-    opacity: 0;
-    animation: none;
-  }
-  :root.fx-iris-on:not(:has(body.admin-body))::view-transition-old(fx-ring) {
-    animation: fx-ring .75s cubic-bezier(.65, 0, .2, 1) both;
-  }
-}
-
-@keyframes fx-alt {
-  to { opacity: .68; transform: scale(.965); }
-}
-@keyframes fx-steigen {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: none; }
-}
-@keyframes fx-steigen-jetzt {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: none; }
-}
-@keyframes fx-iris {
-  from { clip-path: circle(0 at var(--fx-x, 50%) var(--fx-y, 50%)); }
-  to   { clip-path: circle(var(--fx-r, 150vmax) at var(--fx-x, 50%) var(--fx-y, 50%)); }
-}
-@keyframes fx-ring {
-  from { width: 0; height: 0; inline-size: 0; block-size: 0; opacity: 1; }
-  72%  { opacity: 1; }
-  to   {
-    width: calc(2 * var(--fx-r, 150vmax));
-    height: calc(2 * var(--fx-r, 150vmax));
-    inline-size: calc(2 * var(--fx-r, 150vmax));
-    block-size: calc(2 * var(--fx-r, 150vmax));
-    opacity: 0;
-  }
-}
 
 /* =====================================================================
    fx-staub · Goldstaub mit Tiefe in den dunklen Kapiteln
@@ -12932,4 +12820,589 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   .reservation-page .reservation-intro > .btn-link { margin-top: 30px; }
   /* Am Computer steht die Telefonnummer schon direkt unter dem Knopf des Formulars */
   @media (min-width: 981px) { .reservation-page .reservation-intro > .btn-link { display: none; } }
+}
+
+/* ==========================================================================
+   GLEITEN (November 2026) — Bewegung, die wirklich schiebt statt einblendet
+   1 · Blätter: jeder Abschnitt bleibt stehen, der nächste schiebt sich wie ein
+       Blatt Papier darüber (Klasse .fx-deck und die Höhen setzt script.js).
+   2 · Inhalte gleiten seitlich herein (Karten, Listenzeilen, Kopf der Seite).
+   3 · Seitenwechsel: die nächste Seite schiebt sich von rechts herein, zurück
+       zur Startseite von links. Reines CSS – braucht kein Skript.
+   Alles nur bei erlaubter Bewegung und nie im Mitgliederbereich.
+   ========================================================================== */
+@media screen {
+  /* Nichts, das seitlich hereingleitet, darf die Seite verbreitern */
+  body:not(.admin-body) main > section, body:not(.admin-body) .site-footer { overflow-x: clip; }
+
+  /* --- 1 · Blätter --- */
+  html.fx-deck main > section { position: sticky !important; top: min(0px, calc(100vh - var(--fx-h, 100vh))); }
+  @supports (height: 100svh) {
+    html.fx-deck main > section { top: min(0px, calc(100svh - var(--fx-h, 100svh))); }
+  }
+  html.fx-deck main > section.fx-off { position: relative !important; top: auto; }
+  html.fx-deck main > .home-broetchen-wrap, html.fx-deck main > .order-section { background-color: var(--paper, #FFFCF4); }
+  /* Kante des aufliegenden Blatts */
+  html.fx-deck main > * + section, html.fx-deck main > * + .ornament { box-shadow: 0 -26px 48px -30px rgba(42, 24, 16, .42); }
+  html.fx-deck main > * + section.chapter-dark { box-shadow: inset 0 1px 0 var(--hairline-gold, rgba(212, 179, 128, .4)), 0 -26px 52px -28px rgba(20, 10, 6, .6); }
+  html.fx-deck main > .ornament + section { box-shadow: none; }
+  html.fx-deck main > .ornament { position: relative; z-index: 0; }
+  /* Das überdeckte Blatt dunkelt leicht ab (Wert setzt script.js) */
+  .fx-veil { position: absolute; inset: 0; z-index: 30; pointer-events: none; background: #2A1810; opacity: calc(var(--fx-cover, 0) * .32); }
+  .chapter-dark > .fx-veil { background: #0E0704; opacity: calc(var(--fx-cover, 0) * .42); }
+}
+@media print { .fx-veil { display: none !important; } }
+
+/* --- 2 · Seitlich hereingleiten --- */
+@keyframes fx-grow-in { from { translate: -76px 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes fx-slide-r { from { translate: 76px 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes fx-in-l { from { translate: -64px 0; opacity: 0; } }
+@keyframes fx-in-r { from { translate: 64px 0; opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* Listenzeilen kommen von rechts statt von unten */
+  .fx-row { opacity: 0; translate: 46px 0; }
+  .fx-row.fx-row-in { opacity: 1; translate: 0 0; transition: opacity .6s ease var(--fx-d, 0ms), translate .8s cubic-bezier(.16, 1, .3, 1) var(--fx-d, 0ms); }
+  /* Kopf der Seiten: Text von links, Zeichnung und Infospalte von rechts */
+  .hero-cinematic .hero-spread-text { animation: fx-in-l .95s cubic-bezier(.16, 1, .3, 1) .45s both; }
+  .hero-cinematic .hero-coord { animation: fx-in-r .95s cubic-bezier(.16, 1, .3, 1) .6s both; }
+  .page-hero-editorial > .container { animation: fx-in-l .9s cubic-bezier(.16, 1, .3, 1) .15s both; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fx-grow { animation-range: entry 0% entry 60%; }
+    .fx-grow.fx-from-r { animation-name: fx-slide-r; }
+  }
+}
+
+/* --- 3 · Seitenwechsel als Schieben --- */
+@keyframes fx-page-out { to { transform: translateX(-26%); opacity: .5; } }
+@keyframes fx-page-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes fx-page-out-back { to { transform: translateX(26%); opacity: .5; } }
+@keyframes fx-page-in-back { from { transform: translateX(-100%); } to { transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not(:has(body.admin-body))::view-transition { background: #2A1810; }
+  :root:not(:has(body.admin-body))::view-transition-group(site-header) { z-index: 3; }
+  :root:not(:has(body.admin-body))::view-transition-old(root) { animation: fx-page-out .62s cubic-bezier(.65, 0, .2, 1) both; mix-blend-mode: normal; }
+  :root:not(:has(body.admin-body))::view-transition-new(root) { animation: fx-page-in .62s cubic-bezier(.65, 0, .2, 1) both; mix-blend-mode: normal; box-shadow: -34px 0 70px rgba(20, 10, 6, .45); }
+  /* Zurück zur Startseite: Gegenrichtung */
+  :root:has(.hero-cinematic):not(:has(body.admin-body))::view-transition-old(root) { animation-name: fx-page-out-back; }
+  :root:has(.hero-cinematic):not(:has(body.admin-body))::view-transition-new(root) { animation-name: fx-page-in-back; box-shadow: 34px 0 70px rgba(20, 10, 6, .45); }
+}
+
+/* ============================================================
+   FX4 · SPEISEKARTE + MITTAGSTISCH — offener Satz statt Kästen
+   Wie eine gedruckte Karte: Schrift, Weißraum und Haarlinien tragen
+   die Ordnung. Nur Bildschirm – das Druckbild der Karte bleibt unberührt.
+   ============================================================ */
+@media screen {
+
+  /* ---------------------------------------------------------
+     SPEISEKARTE
+     --------------------------------------------------------- */
+  body:not(.admin-body) main .section.menu {
+    --fx-lab: clamp(180px, 22vw, 300px);
+    --fx-gap: clamp(32px, 4vw, 56px);
+    counter-reset: fx-kat;
+  }
+
+  /* Kategorien-Leiste: schlichte Text-Reiter, eine Goldlinie gleitet unter den aktiven */
+  body:not(.admin-body) .karte-jump {
+    --fx-tab-h: 46px;
+    gap: 0 clamp(18px, 2.4vw, 34px);
+    padding-block: 0 !important;
+    border-radius: 0;
+    background: var(--paper, #FFFCF4) !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    box-shadow: inset 0 -1px 0 var(--hairline, rgba(61, 36, 21, .14)) !important;
+  }
+  @media (min-width: 981px) {
+    body:not(.admin-body) .karte-jump { justify-content: flex-start; padding-inline: 0; }
+  }
+  body:not(.admin-body) .karte-jump .karte-jump-link {
+    display: inline-flex; align-items: center;
+    height: var(--fx-tab-h); min-height: 44px;
+    padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important;
+    font: 600 .72rem/1 'Inter', system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--text-3, #786152);
+  }
+  body:not(.admin-body) .karte-jump .karte-jump-link:hover,
+  body:not(.admin-body) .karte-jump .karte-jump-link.is-active { color: var(--bean, #3D2415) !important; }
+  body:not(.admin-body) .karte-jump .karte-jump-link:focus-visible {
+    outline: 2px solid var(--gold, #B8893E); outline-offset: -2px; box-shadow: none;
+  }
+  /* zwei aktive Kategorien (Computer): feste Goldlinie */
+  body:not(.admin-body) .karte-jump:not(.has-pill) .karte-jump-link.is-active { box-shadow: inset 0 -2px 0 var(--gold, #B8893E); }
+  /* eine aktive Kategorie: die gleitende Markierung wird zur 2-px-Linie am Fuß des Reiters */
+  body:not(.admin-body) .karte-jump.has-pill .karte-jump-pill {
+    top: calc(var(--fx-tab-h) - 2px) !important; height: 2px !important;
+    border-radius: 0 !important; background: var(--gold, #B8893E) !important;
+  }
+
+  /* „Karte drucken“ steht rechts in einer eigenen Zeile; die Karte nutzt wieder die volle Breite */
+  body:not(.admin-body) .karte-jump + .karte-print { margin: 0 0 6px; }
+  body:not(.admin-body) #karte-mount { clear: both; }
+
+  /* Zwei offene Spalten mit breitem Steg */
+  body:not(.admin-body) main .karte-grid { gap: clamp(52px, 6vw, 88px) clamp(48px, 8vw, 120px); }
+
+  /* Kategorie: kein Kasten mehr */
+  body:not(.admin-body) main .karte-block {
+    counter-increment: fx-kat;
+    padding: 0 !important; overflow: visible;
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+  }
+  body:not(.admin-body) main .karte-block::before { content: none !important; }
+
+  /* Überschrift hängt über einer Haarlinie, rechts eine feine Ziffer */
+  body:not(.admin-body) main .karte-block .karte-block-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 0 0 clamp(14px, 1.6vw, 20px); margin: 0 0 2px;
+    border-bottom: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22));
+  }
+  body:not(.admin-body) main .karte-block .karte-block-head .ico { display: none; }
+  body:not(.admin-body) main .karte-block .karte-block-head h2 {
+    font-size: clamp(2rem, 3.3vw, 2.75rem); font-weight: 400; font-style: normal;
+    line-height: 1.05; letter-spacing: -.022em; font-variation-settings: "opsz" 144;
+  }
+  body:not(.admin-body) main .karte-block .karte-block-head::after {
+    content: counter(fx-kat, decimal-leading-zero);
+    content: counter(fx-kat, decimal-leading-zero) / "";
+    flex: none;
+    font: 600 .72rem/1 'Inter', system-ui, sans-serif; letter-spacing: .18em;
+    font-variant-numeric: tabular-nums lining-nums; color: var(--accent-text, #8A6420);
+  }
+  body:not(.admin-body) main .karte-block .karte-block-note { font-style: normal; margin: 14px 0 6px; }
+
+  /* Gerichte: linierte Zeilen */
+  body:not(.admin-body) main .karte-block .karte-list > li {
+    padding: 16px 0; border-radius: 0 !important;
+    border-bottom: 1px solid var(--hairline, rgba(61, 36, 21, .14));
+  }
+  body:not(.admin-body) main .karte-block .karte-list > li:last-child { border-bottom: 0; padding-bottom: 0; }
+  body:not(.admin-body) main .karte-block .karte-list-compact > li { padding: 11px 0; }
+  body:not(.admin-body) main .karte-block .karte-list > li:hover { background: none !important; box-shadow: none !important; }
+
+  /* „vegan“: kleines Wort statt Pille */
+  body:not(.admin-body) main .karte-block .karte-tag {
+    padding: 0 !important; margin-left: 8px; border-radius: 0 !important; background: none !important;
+    letter-spacing: .16em;
+  }
+
+  /* Specials: offenes Band zwischen zwei Doppellinien, Titel hängt links */
+  body:not(.admin-body) main .karte-block.karte-block-specials {
+    isolation: auto; overflow: visible;
+    padding: clamp(30px, 4vw, 52px) 0 !important;
+    background: none !important;
+    border-top: 3px double rgba(184, 137, 62, .6) !important;
+    border-bottom: 3px double rgba(184, 137, 62, .6) !important;
+  }
+  body:not(.admin-body) main .karte-block-specials .specials-sun { display: none !important; }
+  body:not(.admin-body) main .karte-block-specials .specials-group-title { margin: 0 0 2px; }
+  body:not(.admin-body) main .karte-block-specials .specials-group-title .ico { display: none; }
+  body:not(.admin-body) main .karte-block-specials .specials-groups { gap: 30px clamp(28px, 3vw, 44px); }
+  body:not(.admin-body) main .karte-block-specials .specials-foot {
+    margin: 26px 0 0; padding-top: 16px;
+    border-top: 1px solid var(--hairline, rgba(61, 36, 21, .14));
+  }
+  @media (min-width: 981px) {
+    body:not(.admin-body) main .karte-block.karte-block-specials {
+      display: grid; grid-template-columns: var(--fx-lab) minmax(0, 1fr);
+      column-gap: var(--fx-gap); align-items: start;
+    }
+    body:not(.admin-body) main .karte-block-specials > .karte-block-head {
+      grid-column: 1; grid-row: 1 / span 2;
+      flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 18px;
+      padding: 0; margin: 0; border-bottom: 0;
+    }
+    body:not(.admin-body) main .karte-block-specials > .karte-block-head::after { order: -1; }
+    body:not(.admin-body) main .karte-block-specials > .karte-block-head h2 { font-size: clamp(2rem, 3vw, 2.6rem); }
+    body:not(.admin-body) main .karte-block-specials > .specials-groups,
+    body:not(.admin-body) main .karte-block-specials > .specials-foot { grid-column: 2; }
+    body:not(.admin-body) main .karte-block-specials .specials-groups { margin-top: 4px; }
+  }
+  @media (max-width: 980px) {
+    body:not(.admin-body) main .karte-block-specials .specials-groups { margin-top: 22px; }
+  }
+
+  /* Croques + Brötchen-Service: zwei offene Bänder unter Haarlinien */
+  body:not(.admin-body) main .menu-croque,
+  body:not(.admin-body) main .menu-broetchen-cta {
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
+    padding: clamp(36px, 4.6vw, 64px) 0 !important; margin-top: 0 !important;
+    overflow: visible; text-align: left;
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    border-top: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)) !important;
+    color: var(--ink, #1F140C);
+  }
+  body:not(.admin-body) main .menu-croque { margin-top: clamp(20px, 3vw, 44px) !important; }
+  body:not(.admin-body) main .menu-broetchen-cta {
+    border-bottom: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)) !important;
+  }
+  body:not(.admin-body) main .menu-croque::before,
+  body:not(.admin-body) main .menu-croque::after,
+  body:not(.admin-body) main .menu-broetchen-cta::before,
+  body:not(.admin-body) main .menu-broetchen-cta::after { content: none !important; }
+  /* das dunkle Feld ist weg – Schrift wieder dunkel auf Papier */
+  body:not(.admin-body) main .menu-broetchen-cta h2 { color: var(--bean, #3D2415) !important; }
+  body:not(.admin-body) main .menu-broetchen-cta p:not(.eyebrow) { color: var(--coffee, #5C3C20) !important; }
+  body:not(.admin-body) main .menu-broetchen-cta .eyebrow { color: var(--accent-text, #8A6420) !important; }
+  body:not(.admin-body) main .menu-croque h2,
+  body:not(.admin-body) main .menu-broetchen-cta h2,
+  body:not(.admin-body) main .menu-croque p,
+  body:not(.admin-body) main .menu-broetchen-cta p { font-style: normal; }
+  body:not(.admin-body) main .menu-croque > div > .btn,
+  body:not(.admin-body) main .menu-broetchen-cta > .btn { margin-top: 28px; justify-self: start; align-self: start; }
+  body:not(.admin-body) main .menu-croque > div > p:not(.eyebrow) { margin-bottom: 0; }
+  @media (min-width: 981px) {
+    /* schmale Etikett-Spalte links, Inhalt hängt rechts daneben */
+    body:not(.admin-body) main .menu-croque > div,
+    body:not(.admin-body) main .menu-broetchen-cta > div {
+      display: grid !important; grid-template-columns: var(--fx-lab) minmax(0, 1fr);
+      column-gap: var(--fx-gap); align-items: baseline; max-width: none;
+    }
+    body:not(.admin-body) main .menu-croque > div > .eyebrow,
+    body:not(.admin-body) main .menu-broetchen-cta > div > .eyebrow {
+      grid-column: 1; grid-row: 1; margin: 0; align-self: baseline;
+    }
+    body:not(.admin-body) main .menu-croque > div > h2,
+    body:not(.admin-body) main .menu-broetchen-cta > div > h2 { grid-column: 2; grid-row: 1; align-self: baseline; }
+    body:not(.admin-body) main .menu-croque > div > p:not(.eyebrow),
+    body:not(.admin-body) main .menu-broetchen-cta > div > p:not(.eyebrow) { grid-column: 2; grid-row: 2; }
+    body:not(.admin-body) main .menu-croque > div > .btn {
+      grid-column: 2; grid-row: 3; justify-self: start; align-self: start; white-space: nowrap;
+    }
+    body:not(.admin-body) main .menu-broetchen-cta > .btn {
+      width: auto; margin-left: calc(var(--fx-lab) + var(--fx-gap));
+    }
+  }
+
+  /* ---------------------------------------------------------
+     MITTAGSTISCH
+     --------------------------------------------------------- */
+  body:not(.admin-body) main .lunch-page { --fx-lab: 200px; --fx-gap: 40px; --fx-rule: rgba(241, 231, 211, .16); }
+  @media (max-width: 1180px) { body:not(.admin-body) main .lunch-page { --fx-lab: 140px; --fx-gap: 26px; } }
+  @media (max-width: 980px)  { body:not(.admin-body) main .lunch-page { --fx-lab: 132px; --fx-gap: 24px; } }
+
+  /* Heute: offenes Schriftbild auf dem dunklen Band */
+  body:not(.admin-body) main .lunch-page .lunch-today {
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px var(--fx-gap);
+    justify-items: start; text-align: left !important;
+    max-width: 1080px; margin: 0 auto clamp(56px, 7vw, 96px) !important;
+    padding: clamp(26px, 3.2vw, 40px) 0 0 !important;
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    border-top: 1px solid rgba(212, 179, 128, .45) !important;
+  }
+  body:not(.admin-body) main .lunch-page .lunch-today::before,
+  body:not(.admin-body) main .lunch-page .lunch-today::after { content: none !important; animation: none !important; }
+  body:not(.admin-body) main .lunch-page .lunch-today > * { grid-column: 1 / -1; }
+  body:not(.admin-body) main .lunch-page .lunch-today .lunch-today-tag {
+    display: block; width: auto; margin: 0 0 6px; padding: 0 !important;
+    border: 0 !important; border-radius: 0 !important; background: none !important;
+    font: 600 .72rem/1.5 'Inter', system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--gold-soft, #D4B380);
+  }
+  body:not(.admin-body) main .lunch-page .lunch-today .lunch-today-tag::before { content: none !important; }
+  body:not(.admin-body) main .lunch-page .lunch-today .lunch-today-dish,
+  body:not(.admin-body) main .lunch-page .lunch-today .lunch-today-side,
+  body:not(.admin-body) main .lunch-page .lunch-today .lunch-price,
+  body:not(.admin-body) main .lunch-page .lunch-today .lunch-facts { text-align: left !important; font-style: normal; }
+  body:not(.admin-body) main .lunch-page .lunch-today .dish-alt { margin-left: 0; margin-right: 0; justify-self: stretch; }
+  body:not(.admin-body) main .lunch-page .lunch-today .dish-alt .dish-or { max-width: none; margin: 10px 0 24px; }
+  body:not(.admin-body) main .lunch-page .lunch-today > .btn-gold { grid-row: auto !important; justify-self: start; align-self: center; margin: 18px 0 0; }
+  body:not(.admin-body) main .lunch-page .lunch-today > .btn-link { justify-self: start; align-self: center; margin: 0 !important; }
+  @media (min-width: 600px) {
+    body:not(.admin-body) main .lunch-page .lunch-today { grid-template-columns: var(--fx-lab) minmax(0, 1fr); }
+    body:not(.admin-body) main .lunch-page .lunch-today > * { grid-column: 2 / -1; }
+    body:not(.admin-body) main .lunch-page .lunch-today > .lunch-today-tag { grid-column: 1; grid-row: 1; align-self: baseline; margin: 0; }
+    body:not(.admin-body) main .lunch-page .lunch-today > .lunch-today-dish { align-self: baseline; }
+    body:not(.admin-body) main .lunch-page .lunch-today > .btn-gold { max-width: 100%; }
+  }
+  @media (min-width: 1100px) {
+    /* Knopf, Telefon und Teilen in einer Zeile unter den Gerichten */
+    body:not(.admin-body) main .lunch-page .lunch-today { grid-template-columns: var(--fx-lab) max-content max-content minmax(0, 1fr); }
+    body:not(.admin-body) main .lunch-page .lunch-today > .btn-gold { grid-column: 2; }
+    body:not(.admin-body) main .lunch-page .lunch-today > .btn-link { grid-column: 3; margin-top: 18px !important; }
+    body:not(.admin-body) main .lunch-page .lunch-today > .lunch-share { grid-column: 4; }
+  }
+
+  /* „oder“: kleines Wort mit Haarlinie statt Pille */
+  body:not(.admin-body) main .lunch-page .dish-or,
+  body:not(.admin-body) main .lunch-page .lunch-day-or {
+    font: 600 .6875rem/1 'Inter', system-ui, sans-serif; font-style: normal;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--gold-soft, #D4B380);
+  }
+  body:not(.admin-body) main .lunch-page .dish-or > span,
+  body:not(.admin-body) main .lunch-page .lunch-day-or > span {
+    padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important;
+    font-size: inherit !important; line-height: 1; letter-spacing: inherit !important;
+  }
+  body:not(.admin-body) main .lunch-page .dish-or::before { display: none; }
+  body:not(.admin-body) main .lunch-page .dish-or::after { background: var(--fx-rule); }
+
+  /* „vegetarisch“: kleines Wort statt Pille */
+  body:not(.admin-body) main .lunch-page .diet-badge {
+    padding: 0 !important; margin-left: 10px; border: 0 !important; border-radius: 0 !important; background: none !important;
+    letter-spacing: .16em;
+  }
+
+  /* Kein Mittagstisch / Karte in Arbeit: Satz zwischen zwei Haarlinien */
+  body:not(.admin-body) main .lunch-page .lunch-empty,
+  body:not(.admin-body) main .lunch-page .lunch-week-empty-card {
+    max-width: 1080px; margin-inline: auto; padding: 28px 0; text-align: left;
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    border-top: 1px solid var(--fx-rule) !important; border-bottom: 1px solid var(--fx-rule) !important;
+  }
+  body:not(.admin-body) main .lunch-page .lunch-empty-text { font-style: normal; }
+
+  /* Wochenkarte: Kopfzeile in jeder Breite */
+  body:not(.admin-body) main .lunch-page .lunch-week-head {
+    display: flex !important; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px;
+    max-width: 1080px; margin: 0 auto 16px !important; padding: 0 !important;
+  }
+  body:not(.admin-body) main .lunch-page .lunch-week-head-title {
+    font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(1.75rem, 2.6vw, 2.4rem); line-height: 1.1;
+    letter-spacing: -.02em; color: var(--paper, #FFFCF4); font-variation-settings: "opsz" 144;
+  }
+  body:not(.admin-body) main .lunch-page .lunch-week-head-range {
+    font: 600 .72rem/1.3 'Inter', system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--gold-soft, #D4B380); font-variant-numeric: tabular-nums;
+  }
+
+  /* Wochenkarte: linierte Zeilen in jeder Breite */
+  body:not(.admin-body) main .lunch-page .lunch-week:not(.lunch-week-empty) {
+    display: block !important; max-width: 1080px; margin-inline: auto; padding: 0 !important;
+    border-top: 1px solid rgba(212, 179, 128, .45) !important;
+  }
+  body:not(.admin-body) main .lunch-page .lunch-week:not(.lunch-week-empty) > .lunch-day {
+    display: grid !important; grid-template-columns: minmax(0, 1fr); gap: 12px var(--fx-gap); align-items: baseline;
+    width: auto !important; min-height: 0 !important; height: auto !important; margin: 0 !important;
+    padding: 22px 0 !important;
+    background: none !important; box-shadow: none !important; border-radius: 0 !important;
+    border: 0 !important; border-bottom: 1px solid var(--fx-rule) !important;
+    grid-column: auto !important; grid-row: auto !important; transform: none !important;
+  }
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day:hover { background: none !important; }
+  @media (min-width: 600px) {
+    body:not(.admin-body) main .lunch-page .lunch-week:not(.lunch-week-empty) > .lunch-day {
+      grid-template-columns: var(--fx-lab) minmax(0, 1fr); padding: 28px 0 !important;
+    }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-off,
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day:has(.lunch-closed) { padding-block: 18px !important; }
+  }
+  /* heute: nur eine feine Goldlinie und der Wochentag in Gold */
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-today {
+    background: none !important; box-shadow: 0 -1px 0 0 var(--gold, #B8893E) !important;
+  }
+
+  /* Tagesspalte: Wochentag als Kapitälchen, Datum, „Heute“ */
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-head {
+    display: flex; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
+    width: auto; margin: 0; padding: 0; border: 0;
+  }
+  @media (min-width: 600px) {
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-head { flex-direction: column; flex-wrap: nowrap; align-items: flex-start; gap: 6px; }
+  }
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-name {
+    display: block; padding: 0; background: none;
+    font: 600 .74rem/1.35 'Inter', system-ui, sans-serif; letter-spacing: .18em; text-transform: uppercase;
+    color: rgba(241, 231, 211, .82);
+  }
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-name::after { content: none !important; display: none !important; }
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-past .lunch-day-name { color: rgba(241, 231, 211, .6); }
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-today .lunch-day-name { color: var(--gold-soft, #D4B380); }
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-date {
+    display: block; margin: 0 !important;
+    font: 500 .74rem/1.35 'Inter', system-ui, sans-serif; letter-spacing: .12em;
+    font-variant-numeric: tabular-nums; color: rgba(241, 231, 211, .62);
+  }
+  body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-now {
+    display: block !important; margin: 0 0 0 auto !important; padding: 0 !important;
+    border: 0 !important; border-radius: 0 !important; background: none !important;
+    font: 600 .6875rem/1.35 'Inter', system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--gold-soft, #D4B380) !important;
+  }
+  @media (min-width: 600px) {
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-now { margin: 4px 0 0 !important; }
+  }
+  /* kleiner Reservieren-Verweis in der Zeile: unterstrichener Textlink */
+  body:not(.admin-body) main .lunch-page .lunch-day-reserve {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 !important;
+    border: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important;
+    font: 600 .72rem/1.3 'Inter', system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--gold-soft, #D4B380); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px;
+  }
+
+  /* Gericht links, Preis rechts auf einer Linie – auch auf Handy und Tablet */
+  @media (max-width: 980px) {
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-body {
+      display: block; flex: none; width: auto; min-width: 0; font-size: 1rem; line-height: 1.45;
+    }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-opt {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; align-items: baseline;
+    }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-dish {
+      display: block; grid-column: 1; grid-row: 1; font-size: 1.1rem; line-height: 1.4; color: var(--paper, #FFFCF4);
+    }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-price {
+      display: block; grid-column: 2; grid-row: 1; margin: 0 !important; text-align: right; white-space: nowrap;
+      font: 600 .92rem/1.4 'Inter', system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--gold-soft, #D4B380);
+    }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-side {
+      display: block; grid-column: 1 / -1; grid-row: 2; margin: 0 !important;
+      font-size: .9rem; line-height: 1.5; color: rgba(241, 231, 211, .68);
+    }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-or { display: flex; flex-direction: row; margin: 16px 0; }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-or::before { display: none; }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-day-or::after { background: var(--fx-rule); }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-past:not(.fx-row) { opacity: 1; }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-past .lunch-day-dish { color: rgba(241, 231, 211, .7); }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-past .lunch-day-price { color: rgba(212, 179, 128, .75); }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-closed,
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day .lunch-pending { font-size: .95rem; color: rgba(241, 231, 211, .68); font-style: normal; }
+  }
+  @media (min-width: 981px) {
+    body:not(.admin-body) main .lunch-page .lunch-week:not(.lunch-week-empty) > .lunch-day { padding: 30px 0 !important; }
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day.is-off,
+    body:not(.admin-body) main .lunch-page .lunch-week > .lunch-day:has(.lunch-closed) { padding-block: 18px !important; }
+  }
+
+  /* Hinweis unter der Liste: linksbündig in der Gerichte-Spalte */
+  body:not(.admin-body) main .lunch-page .lunch-note {
+    max-width: 1080px; margin: 26px auto 0; text-align: left;
+  }
+  @media (min-width: 600px) {
+    body:not(.admin-body) main .lunch-page .lunch-note { padding-left: calc(var(--fx-lab) + var(--fx-gap)); }
+  }
+}
+
+/* ==========================================================================
+   ENTKASTEN (November 2026) — Startseite, Kontakt, Über uns, Brötchen
+   Keine Kästen mehr: keine Rahmen, Flächen, runden Ecken und Schatten um
+   Inhalte. Ordnung durch Haarlinien, Weißraum und Schrift. Knöpfe und
+   Eingabefelder bleiben. Speisekarte und Mittagstisch stehen im Block davor.
+   ========================================================================== */
+@media screen {
+  /* Brötchen-Band der Startseite: gleiche Maße wie auf der Speisekarte */
+  body:not(.admin-body) main .home-broetchen-wrap { --fx-lab: clamp(180px, 22vw, 300px); --fx-gap: clamp(24px, 4vw, 64px); }
+  body:not(.admin-body) main .home-broetchen .home-broetchen-art { display: none; }
+
+  /* --- Etiketten statt Pillen (überall) --- */
+  body:not(.admin-body) .diet-badge, body:not(.admin-body) .broetchen-badge {
+    background: none !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; box-shadow: none !important;
+    font: 600 .68rem/1.2 'Inter', sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #4F7A45; vertical-align: middle;
+  }
+  body:not(.admin-body) :is(.chapter-dark, .lunch-sheet, .order-summary-card) .diet-badge { color: #BFD9B5; }
+  body:not(.admin-body) .live-status {
+    background: none !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; box-shadow: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  }
+
+  /* --- Startseite · „Gerade jetzt“: offene Info-Spalte --- */
+  body:not(.admin-body) .hero-coord {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    padding: 18px 0 0 !important; border-top: 1px solid var(--bean, #3D2415) !important; transform: none !important;
+  }
+  body:not(.admin-body) .hero-coord::before, body:not(.admin-body) .hero-coord::after { content: none !important; }
+  body:not(.admin-body) .hero-coord .hero-coord-row:last-of-type { border-bottom: 1px solid var(--hairline, rgba(61, 36, 21, .14)); padding-bottom: 12px; }
+
+  /* --- Startseite · „Vier Gründe“: offenes Verzeichnis statt Karten --- */
+  body:not(.admin-body) .landing-cards .section-head { text-align: left; margin-left: 0; margin-right: 0; max-width: none; }
+  body:not(.admin-body) .landing-cards .section-head .eyebrow { justify-content: flex-start; }
+  body:not(.admin-body) .spread-card,
+  body:not(.admin-body) .spread-card-hero {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    overflow: visible !important; min-height: 0; transform: none !important;
+  }
+  body:not(.admin-body) .spread-card-hero::before, body:not(.admin-body) .spread-card > .spot-light { display: none !important; }
+  body:not(.admin-body) .spread-card::after { top: -1px; height: 1px; }
+  body:not(.admin-body) .spread-card h3 { transition: color .25s ease; }
+  @media (hover: hover) and (pointer: fine) { body:not(.admin-body) .spread-card:hover h3 { color: var(--accent-text, #8A6420); } }
+
+  @media (min-width: 981px) {
+    body:not(.admin-body) .spread-grid {
+      display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; align-items: stretch;
+      border-bottom: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22));
+    }
+    body:not(.admin-body) .spread-grid > .spread-card { border-top: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)) !important; padding: clamp(28px, 3vw, 44px) 0 clamp(30px, 3.2vw, 48px) clamp(32px, 4.5vw, 72px) !important; border-left: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)) !important; }
+    body:not(.admin-body) .spread-grid > .spread-card-hero { grid-row: span 3; position: static; padding: clamp(28px, 3vw, 44px) clamp(32px, 4.5vw, 72px) clamp(30px, 3.2vw, 48px) 0 !important; border-left: 0 !important; }
+    body:not(.admin-body) .spread-grid > .spread-card-hero .spread-card-body { position: sticky; top: 120px; }
+    body:not(.admin-body) .fx-strip-meter { display: none; }
+  }
+
+  /* Handy und Tablet: ein Streifen zum Wischen – der nächste Eintrag schaut schon herein */
+  @media (max-width: 980px) {
+    body:not(.admin-body) .spread-grid {
+      display: flex; gap: 0; align-items: stretch; overflow-x: auto; overflow-y: hidden;
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: none;
+      margin: clamp(28px, 6vw, 44px) calc(-1 * var(--gutter, 20px)) 0; padding: 0 var(--gutter, 20px); scroll-padding-left: var(--gutter, 20px);
+      border-top: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)); border-bottom: 0;
+    }
+    body:not(.admin-body) .spread-grid::-webkit-scrollbar { display: none; }
+    body:not(.admin-body) .spread-grid > .spread-card {
+      flex: 0 0 min(84%, 400px); scroll-snap-align: start; padding: 26px 24px 30px 0 !important; opacity: 1 !important;
+    }
+    body:not(.admin-body) .spread-grid > .spread-card + .spread-card { border-left: 1px solid var(--hairline, rgba(61, 36, 21, .14)) !important; padding-left: 24px !important; }
+    body:not(.admin-body) .spread-grid > .spread-card:last-child { flex-basis: min(88%, 420px); padding-right: 0 !important; }
+    body:not(.admin-body) .spread-card-hero h3 { font-size: clamp(1.9rem, 8vw, 2.4rem); }
+    .fx-strip-meter { display: flex; align-items: center; gap: 16px; margin-top: 0; }
+    .fx-strip-bar { position: relative; flex: 1; height: 1px; background: var(--hairline-strong, rgba(61, 36, 21, .22)); overflow: hidden; }
+    .fx-strip-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% / var(--fx-n, 4)); background: var(--gold, #B8893E); height: 3px; margin-top: -1px; translate: calc(var(--fx-sp, 0) * (var(--fx-n, 4) - 1) * 100%) 0; transition: translate .12s linear; }
+    .fx-strip-bar { height: 3px; background: linear-gradient(var(--hairline-strong, rgba(61, 36, 21, .22)), var(--hairline-strong, rgba(61, 36, 21, .22))) center / 100% 1px no-repeat; }
+    .fx-strip-count { font: 600 .72rem/1 'Inter', sans-serif; letter-spacing: .18em; color: var(--accent-text, #8A6420); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  }
+
+  /* --- Startseite · Saison-Hinweis als offenes Band --- */
+  body:not(.admin-body) .specials-teaser {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    border-top: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)) !important; border-bottom: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)) !important;
+    padding-left: 0 !important; padding-right: 0 !important;
+  }
+
+  /* „oder“ zwischen zwei Gerichten: kleine Schrift zwischen Linien, keine Pille (Startseite, Wochen-Fenster) */
+  body:not(.admin-body) :is(.dish-or, .lunch-sheet-or, .lunch-day-or) > span {
+    border: 0 !important; border-radius: 0 !important; background: none !important; padding: 0 4px !important;
+    font: 600 .68rem/1.4 'Inter', sans-serif; letter-spacing: .22em; text-transform: uppercase; font-style: normal;
+  }
+  /* --- Startseite · dunkles Kapitel: Zweitknopf als Textlink --- */
+  body:not(.admin-body) .today-feature-week {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 10px 2px !important;
+    text-decoration: underline; text-decoration-color: rgba(212, 179, 128, .6); text-underline-offset: 5px;
+  }
+
+  /* --- Kontakt --- */
+  body:not(.admin-body) .contact-info-block {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    padding: clamp(22px, 3vw, 32px) 0 0 !important; border-top: 1px solid var(--bean, #3D2415) !important;
+  }
+  body:not(.admin-body) .contact-info-block::before, body:not(.admin-body) .contact-info-block::after { content: none !important; }
+  body:not(.admin-body) .contact .social { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+  body:not(.admin-body) .contact .social a {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 11px 0 !important; min-height: 44px;
+    display: inline-flex; align-items: center; text-decoration: underline; text-decoration-color: var(--gold, #B8893E); text-underline-offset: 5px;
+  }
+  body:not(.admin-body) .map-card { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: none !important; }
+  body:not(.admin-body) .map-card .map-placeholder, body:not(.admin-body) .map-card iframe { border-radius: 0 !important; }
+  body:not(.admin-body) .map-placeholder > div {
+    border-radius: 0 !important; background: rgba(255, 252, 244, .9) !important; -webkit-backdrop-filter: none; backdrop-filter: none;
+    border-top: 1px solid var(--bean, #3D2415); text-align: left; padding: 22px 22px 20px;
+  }
+
+  /* --- Über uns --- */
+  body:not(.admin-body) .about-aside {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    padding: 6px 0 6px clamp(22px, 3vw, 40px) !important; border-left: 1px solid var(--gold, #B8893E) !important;
+  }
+  body:not(.admin-body) .about-aside::before, body:not(.admin-body) .about-aside::after { content: none !important; }
+  body:not(.admin-body) .about-text .features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(20px, 3vw, 40px); border-top: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)); padding: 0; }
+  body:not(.admin-body) .about-text .features li {
+    background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    padding: 16px 0 !important; border-bottom: 1px solid var(--hairline, rgba(61, 36, 21, .14)) !important; gap: 14px;
+  }
+  body:not(.admin-body) .about-text .features li .ico { background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 0 !important; width: 22px; height: 22px; }
+  @media (max-width: 560px) { body:not(.admin-body) .about-text .features { grid-template-columns: minmax(0, 1fr); } }
+
+  /* --- Brötchen-Service: Bestellzettel mit geraden Kanten --- */
+  body:not(.admin-body) .order-summary-card { border-radius: 0 !important; box-shadow: none !important; }
 }

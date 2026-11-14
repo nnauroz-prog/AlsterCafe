@@ -4425,6 +4425,7 @@ function escapeAttr(s) { return escapeHtml(s); }
     });
   }, { rootMargin: '0px 0px -5% 0px', threshold: 0 }) : null;
 
+  let growSeq = 0;
   const scan = () => {
     if (shineIO) document.querySelectorAll('.btn-primary, .btn-gold, .btn-stamp').forEach(b => {
       if (b.dataset.fxShine || b.closest('.hero-cta')) return;
@@ -4440,10 +4441,15 @@ function escapeAttr(s) { return escapeHtml(s); }
       });
     }
     // Karten wachsen beim Hereinscrollen an ihren Platz – nur, was beim Laden noch unter dem Bildschirm liegt
-    document.querySelectorAll('.spread-card, .reviews-cta-grid, .karte-block, .contact-info-block, .map-card, .home-broetchen-wrap .container, .landing-greeting .container').forEach(el => {
+    document.querySelectorAll('.spread-grid, .reviews-cta-grid, .karte-block, .contact-info-block, .map-card, .home-broetchen-wrap .container, .landing-greeting .container').forEach(el => {
       if (el.dataset.fxGrow) return;
       el.dataset.fxGrow = '1';
-      if (el.getBoundingClientRect().top > window.innerHeight * 1.02) el.classList.add('fx-grow');
+      const gr = el.getBoundingClientRect();
+      if (gr.top <= window.innerHeight * 1.02) return;
+      el.classList.add('fx-grow');
+      // Richtung: rechte Spalte kommt von rechts, linke von links; volle Breite abwechselnd
+      const fromRight = gr.width < window.innerWidth * 0.62 ? (gr.left + gr.width / 2) > window.innerWidth / 2 : (growSeq++ % 2 === 1);
+      if (fromRight) el.classList.add('fx-from-r');
     });
     // Ofenwärme in den dunklen Kapiteln
     document.querySelectorAll('.chapter-dark').forEach(sec => {
@@ -5130,169 +5136,6 @@ function escapeAttr(s) { return escapeHtml(s); }
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 
-/* FX „Wechsel“: Seitenwechsel als Kreisblende – die nächste Seite öffnet sich vom angetippten Punkt aus (mit feinem Goldring). */
-(function () {
-  'use strict';
-  try {
-    if (!window.matchMedia || !document.body || !document.documentElement) return;
-    if (document.body.classList.contains('admin-body')) return;
-    var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mq.matches) return;
-    /* Datensparmodus: keine Kreisblende, nur der ruhige Wechsel (ohne Wartezeit) */
-    var lite = !!(navigator.connection && navigator.connection.saveData);
-    /* Nur Browser, die Seitenwechsel zwischen zwei Dokumenten animieren können */
-    if (!('onpagereveal' in window)) return;
-
-    var KEY = 'alstercafe.fx-wechsel';
-    var FRESH = 6000;
-    var root = document.documentElement;
-    var clearTimer = 0;
-
-    /* Echte Uhr, die auf beiden Seiten gleich läuft */
-    function now() {
-      try {
-        if (window.performance && performance.timeOrigin) return performance.timeOrigin + performance.now();
-      } catch (e) {}
-      return Date.now();
-    }
-    function clamp01(n) { return n < 0 ? 0 : n > 1 ? 1 : n; }
-
-    /* ---------- Zielseite: Tipp-Punkt lesen und die Kreisblende scharf schalten ---------- */
-    function takePoint() {
-      var raw = null;
-      try { raw = sessionStorage.getItem(KEY); sessionStorage.removeItem(KEY); } catch (e) { return null; }
-      if (!raw) return null;
-      var p = null;
-      try { p = JSON.parse(raw); } catch (e) { return null; }
-      if (!p || typeof p.x !== 'number' || typeof p.y !== 'number' || typeof p.t !== 'number') return null;
-      var age = now() - p.t;
-      if (!(age > -1000 && age < FRESH)) return null;
-      return { x: clamp01(p.x), y: clamp01(p.y) };
-    }
-    function disarm() {
-      clearTimeout(clearTimer);
-      root.classList.remove('fx-iris-on');
-      root.classList.remove('fx-ruhig-on');
-      root.style.removeProperty('--fx-x');
-      root.style.removeProperty('--fx-y');
-      root.style.removeProperty('--fx-r');
-    }
-    function arm(vt) {
-      var p = takePoint();
-      clearTimeout(clearTimer);
-      if (vt && vt.finished && typeof vt.finished.then === 'function') vt.finished.then(disarm, disarm);
-      /* Sicherheitsnetz: aufräumen, sobald kein Seitenwechsel mehr läuft */
-      clearTimer = setTimeout(tidy, 1500);
-      if (!p || mq.matches || lite) {
-        /* Kein Tipp-Punkt (z. B. Zurück-Taste): ruhiger Wechsel, sofort */
-        root.classList.add('fx-ruhig-on');
-        return;
-      }
-      var w = window.innerWidth || root.clientWidth || 1;
-      var h = window.innerHeight || root.clientHeight || 1;
-      var dx = Math.max(p.x, 1 - p.x) * w;
-      var dy = Math.max(p.y, 1 - p.y) * h;
-      /* Radius bis zur fernsten Ecke, mit etwas Reserve für Adressleisten am Handy */
-      var r = Math.ceil(Math.sqrt(dx * dx + dy * dy) * 1.06) + 12;
-      root.style.setProperty('--fx-x', (p.x * 100).toFixed(2) + '%');
-      root.style.setProperty('--fx-y', (p.y * 100).toFixed(2) + '%');
-      root.style.setProperty('--fx-r', r + 'px');
-      root.classList.add('fx-iris-on');
-    }
-    function tidy() {
-      var busy = false;
-      try {
-        var list = document.getAnimations();
-        for (var i = 0; i < list.length; i++) {
-          var ps = list[i] && list[i].effect && list[i].effect.pseudoElement;
-          if (ps && ps.indexOf('::view-transition') === 0) { busy = true; break; }
-        }
-      } catch (e) {}
-      if (busy) clearTimer = setTimeout(tidy, 500);
-      else disarm();
-    }
-
-    /* „pagereveal“ kommt vor dem ersten Bild der neuen Seite – erreicht dieses Skript aber nur,
-       wenn es schon geladen ist (z. B. zurück aus dem Seiten-Zwischenspeicher) */
-    window.addEventListener('pagereveal', function (e) {
-      try {
-        if (e && e.viewTransition) arm(e.viewTransition);
-      } catch (err) {}
-    }, { passive: true });
-
-    /* Regelfall: das Skript steht am Seitenende, „pagereveal“ ist dann schon vorbei.
-       Solange hält das Stylesheet die alte Seite fest (höchstens 0,45 s) – in dieser Zeit
-       wird hier nahtlos die Kreisblende (oder der ruhige Wechsel) gestartet.
-       Kommt das Skript später, läuft der ruhige Wechsel von allein. */
-    try {
-      if (typeof document.getAnimations === 'function') {
-        var running = document.getAnimations();
-        for (var i = 0; i < running.length; i++) {
-          var fx = running[i] && running[i].effect;
-          if (!fx || fx.target !== root || fx.pseudoElement !== '::view-transition-new(root)') continue;
-          var t = running[i].currentTime;
-          if (typeof t === 'number' && t < 420) arm(document.activeViewTransition || null);
-          else { try { sessionStorage.removeItem(KEY); } catch (e2) {} }
-          break;
-        }
-      }
-    } catch (err) {}
-
-    /* ---------- Startseite des Wechsels: Tipp-Punkt merken ---------- */
-    var mark = null;
-    var markTimer = 0;
-    function dropMark() {
-      clearTimeout(markTimer);
-      if (mark && mark.parentNode) mark.parentNode.removeChild(mark);
-      mark = null;
-    }
-
-    document.addEventListener('click', function (e) {
-      try {
-        if (lite || mq.matches || e.defaultPrevented) return;
-        if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-        if (!a || a.hasAttribute('download')) return;
-        var target = (a.getAttribute('target') || '').toLowerCase();
-        if (target && target !== '_self') return;
-        var href = a.getAttribute('href') || '';
-        if (!href || href.charAt(0) === '#') return;
-        var u = new URL(a.href, location.href);
-        if (u.protocol !== location.protocol || u.origin !== location.origin) return;   /* tel:, mailto:, fremde Seiten */
-        if (u.pathname === location.pathname && u.search === location.search) return;   /* Sprungmarke auf derselben Seite */
-        if (/\.(pdf|jpe?g|png|webp|avif|gif|svg|ics|vcf|zip)$/i.test(u.pathname)) return;
-
-        var w = window.innerWidth || root.clientWidth || 1;
-        var h = window.innerHeight || root.clientHeight || 1;
-        var x = e.clientX, y = e.clientY;
-        /* Tastatur (Enter): Mitte des Links nehmen */
-        if (!e.detail || (!x && !y)) {
-          var box = a.getBoundingClientRect();
-          x = box.left + box.width / 2;
-          y = box.top + box.height / 2;
-        }
-        x = Math.min(Math.max(x, 0), w);
-        y = Math.min(Math.max(y, 0), h);
-        sessionStorage.setItem(KEY, JSON.stringify({ x: x / w, y: y / h, t: now() }));
-
-        /* Unsichtbarer Merkpunkt: gibt dem Goldring auf der nächsten Seite seinen Mittelpunkt */
-        dropMark();
-        mark = document.createElement('div');
-        mark.className = 'fx-wechsel-punkt';
-        mark.setAttribute('aria-hidden', 'true');
-        mark.style.left = (x - 1) + 'px';
-        mark.style.top = (y - 1) + 'px';
-        document.body.appendChild(mark);
-        markTimer = setTimeout(dropMark, FRESH);
-      } catch (err) {}
-    }, { passive: true });
-
-    /* Zurück aus dem Seiten-Zwischenspeicher: alten Merkpunkt entfernen */
-    window.addEventListener('pageshow', function (e) {
-      if (e && e.persisted) dropMark();
-    }, { passive: true });
-  } catch (err) {}
-})();
 
 /* fx-staub: Goldstaub mit Tiefe in den dunklen Kapiteln – schwebt durch einen Lichtstrahl, wirbelt beim Scrollen auf, weicht der Maus aus und stiebt beim Fingertipp auseinander */
 (function fxStaub() {
@@ -5570,4 +5413,91 @@ function escapeAttr(s) { return escapeHtml(s); }
 
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', start, { passive: true, once: true });
   else start();
+})();
+
+/* Gleiten · Blätter: Jeder Abschnitt der Seite bleibt stehen, während sich der nächste wie ein Blatt
+   darüberschiebt. Ganz überdeckte Abschnitte werden wieder losgelassen, damit ihre Effekte
+   (Dampf, Licht, Staub) pausieren. Nur bei erlaubter Bewegung, nie im Mitgliederbereich. */
+(function () {
+  var D = document, W = window;
+  function start() {
+    if (!D.body || D.body.classList.contains('admin-body')) return;
+    if (!W.matchMedia || W.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!(W.CSS && CSS.supports && CSS.supports('position', 'sticky')) || !W.requestAnimationFrame) return;
+    var main = D.querySelector('main');
+    if (!main) return;
+    var secs = [].slice.call(main.children).filter(function (el) { return el.tagName === 'SECTION'; });
+    if (secs.length < 2) return;
+    var state = secs.map(function () { return { off: false, c: -1 }; });
+    var setH = function (s) { s.style.setProperty('--fx-h', s.offsetHeight + 'px'); };
+    secs.forEach(function (s, i) {
+      setH(s);
+      if (i < secs.length - 1 && !s.querySelector(':scope > .fx-veil')) {
+        var v = D.createElement('span');
+        v.className = 'fx-veil'; v.setAttribute('aria-hidden', 'true');
+        s.appendChild(v);
+      }
+    });
+    var raf = 0;
+    function update() {
+      raf = 0;
+      var vh = W.innerHeight, tops = [], i;
+      // erst alles lesen …
+      for (i = 0; i < secs.length - 1; i++) {
+        var nx = secs[i].nextElementSibling;
+        while (nx && nx.offsetHeight === 0) nx = nx.nextElementSibling;
+        tops.push(nx ? nx.getBoundingClientRect().top : vh);
+      }
+      // … dann schreiben
+      for (i = 0; i < secs.length - 1; i++) {
+        var st = state[i], t = tops[i];
+        var off = t < -320;
+        if (off !== st.off) { st.off = off; secs[i].classList.toggle('fx-off', off); }
+        var c = off ? 1 : Math.max(0, Math.min(1, (vh - t) / vh));
+        c = Math.round(c * 40) / 40;
+        if (c !== st.c) { st.c = c; secs[i].style.setProperty('--fx-cover', c); }
+      }
+    }
+    function queue() { if (!raf) raf = W.requestAnimationFrame(update); }
+    if (W.ResizeObserver) {
+      var ro = new W.ResizeObserver(function (entries) { entries.forEach(function (e) { setH(e.target); }); queue(); });
+      secs.forEach(function (s) { ro.observe(s); });
+    }
+    W.addEventListener('resize', function () { secs.forEach(setH); queue(); }, { passive: true });
+    W.addEventListener('scroll', queue, { passive: true });
+    D.documentElement.classList.add('fx-deck');
+    update();
+  }
+  if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+})();
+
+/* Startseite · „Vier Gründe“ am Handy: Der Streifen wird seitlich gewischt; darunter läuft eine
+   schmale Goldlinie mit und zeigt „2 / 4“. Reine Anzeige – der Streifen selbst ist normales Scrollen. */
+(function () {
+  var D = document, W = window;
+  function start() {
+    if (!D.body || D.body.classList.contains('admin-body')) return;
+    var strip = D.querySelector('.spread-grid');
+    if (!strip || strip.nextElementSibling && strip.nextElementSibling.classList.contains('fx-strip-meter')) return;
+    var n = strip.querySelectorAll(':scope > .spread-card').length;
+    if (n < 2) return;
+    var meter = D.createElement('div');
+    meter.className = 'fx-strip-meter'; meter.setAttribute('aria-hidden', 'true'); meter.setAttribute('data-no-i18n', '');
+    meter.style.setProperty('--fx-n', n);
+    meter.innerHTML = '<span class="fx-strip-bar"><i></i></span><span class="fx-strip-count">1 / ' + n + '</span>';
+    strip.after(meter);
+    var count = meter.querySelector('.fx-strip-count'), raf = 0, last = 1;
+    function update() {
+      raf = 0;
+      var max = strip.scrollWidth - strip.clientWidth;
+      var p = max > 4 ? Math.max(0, Math.min(1, strip.scrollLeft / max)) : 0;
+      meter.style.setProperty('--fx-sp', p.toFixed(3));   // eigener Name: --fx-p ist als Winkel für den Nach-oben-Ring vergeben
+      var idx = Math.round(p * (n - 1)) + 1;
+      if (idx !== last) { last = idx; count.textContent = idx + ' / ' + n; }
+    }
+    strip.addEventListener('scroll', function () { if (!raf) raf = W.requestAnimationFrame(update); }, { passive: true });
+    W.addEventListener('resize', function () { if (!raf) raf = W.requestAnimationFrame(update); }, { passive: true });
+    update();
+  }
+  if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', start, { once: true }); else start();
 })();
