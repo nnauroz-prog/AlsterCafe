@@ -515,6 +515,7 @@ async function openEntryCard(kind, id) {
   if (search && search.value) { search.value = ''; search.dispatchEvent(new Event('input', { bubbles: true })); }
   // Reservierungen: erst den Filter auf „alle“ stellen – sonst fehlt die gesuchte Zeile in der Liste
   if (kind !== 'order' && anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); }
+  if (kind === 'order') resetOrdersView();
   const card = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item');
   if (!card) return;
   if (kind !== 'order') anfragenOpen.add(id);   // Zeile zum Aufklappen: geöffnet merken
@@ -833,6 +834,8 @@ async function showOverview() {
   dom.dashboard?.classList.remove('is-working');
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
+  // Ein über „Zu tun“ gesetzter Filter gilt nur für diesen Besuch – beim nächsten Öffnen wieder alles
+  try { if (anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); } } catch (e) {}
   try { renderOverviewSummary(); } catch (e) {}   // Stand von jetzt (Datum, Bestätigtes, Wochenplan)
   setBottomBarActive('overview');
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
@@ -2714,6 +2717,20 @@ function setStatus(el, msg, kind = '') {
 // Fuellt die Zusammenfassungs-Kacheln auf der Startansicht aus dem Cache:
 // offene Reservierungen/Bestellungen, heutiges Mittagsgericht, naechste
 // Reservierung. Wird nach jedem Laden/Realtime-Event aktualisiert.
+/* Bestellungen ohne Einschränkung zeigen (Suche leer, Sorten-Filter „Alle“) – vor jedem Sprung dorthin,
+   sonst kann die gesuchte Bestellung ausgeblendet sein. */
+function resetOrdersView() {
+  let changed = false;
+  if (dom.ordersSearch && dom.ordersSearch.value) { dom.ordersSearch.value = ''; changed = true; }
+  const chips = document.querySelectorAll('#orders-filter [data-kind]');
+  const active = document.querySelector('#orders-filter .is-active');
+  if (chips.length && active?.dataset.kind !== 'all') {
+    chips.forEach(x => { const on = x.dataset.kind === 'all'; x.classList.toggle('is-active', on); x.setAttribute('aria-pressed', String(on)); });
+    changed = true;
+  }
+  if (changed) renderOrders();
+}
+
 /* Mittagstisch eines Tages aus dem Wochenplan. null = für den Tag ist nichts vorgesehen
    (Wochenende ohne Eintrag). missing = Werktag ohne Gericht. */
 function lunchFor(date) {
@@ -2742,8 +2759,9 @@ function renderOverviewDay(key, iso, lunch, hol) {
   const sumEl = document.getElementById(`ov-${key}-sum`), body = document.getElementById(`ov-${key}-body`);
   if (!sumEl || !body) return;
   const entries = dayEntries(iso);
-  const resRows = entries.filter(e => e.kind === 'res').map(e => e.x);
-  const nOrd = entries.length - resRows.length;
+  // Summe wie im Reservierungsbereich: nur, was noch nicht erledigt ist (die Zeilen darunter zeigen alles)
+  const resRows = entries.filter(e => e.kind === 'res' && e.x.status !== 'done').map(e => e.x);
+  const nOrd = entries.filter(e => e.kind === 'order' && e.x.status !== 'done').length;
   const parts = [];
   if (resRows.length) parts.push(tablesLabel(resRows));
   if (nOrd) parts.push(`${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}`);
@@ -2787,6 +2805,12 @@ function renderOverviewSummary() {
 
   const board = document.getElementById('ov-board');
   if (!board) return;
+  // Tastatur-Fokus merken (die Übersicht wird bei jeder Live-Änderung neu aufgebaut)
+  const ae = document.activeElement && board.contains(document.activeElement) ? document.activeElement : null;
+  const focusSel = !ae ? '' : ae.dataset.openId ? `#${ae.closest('.ov-day')?.id || 'ov-board'} [data-open-id="${CSS.escape(ae.dataset.openId)}"]`
+    : ae.dataset.ovPrint ? `[data-ov-print="${CSS.escape(ae.dataset.ovPrint)}"]`
+    : ae.classList.contains('ov-lunch') ? `#${ae.closest('.ov-day')?.id || 'ov-board'} .ov-lunch`
+    : ae.dataset.ovGo ? `.ov-todo-item[data-ov-go="${ae.dataset.ovGo}"]` : '';
   const now = new Date();
   const todayIso = isoDate(now);
   const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
@@ -2820,6 +2844,8 @@ function renderOverviewSummary() {
   const tomTitle = document.getElementById('ov-tomorrow-title');
   if (tomTitle) tomTitle.innerHTML = `Morgen <span class="ov-title-date">${escapeHtml(tomorrow.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }))}</span>`;
 
+  if (focusSel) (board.querySelector(focusSel) || board.querySelector('.ov-todo-item, .ov-lunch, .today-item'))?.focus({ preventScroll: true });
+
   if (!board.dataset.bound) {
     board.dataset.bound = '1';
     board.addEventListener('click', ev => {
@@ -2835,8 +2861,18 @@ function renderOverviewSummary() {
         if (dom.anfragenSearch && dom.anfragenSearch.value) dom.anfragenSearch.value = '';
         renderAnfragen();
         switchTab('anfragen');
-      } else if (go.dataset.ovGo === 'ord') switchTab('bestellungen');
-      else switchTab('week');
+      } else if (go.dataset.ovGo === 'ord') {
+        resetOrdersView();
+        switchTab('bestellungen');
+      } else {
+        // immer die Woche zeigen, in der heute/morgen liegt – nicht eine zuvor aufgeblätterte
+        if (!dirtyForms.has('menu-form')) {
+          sundaySpillover = false;
+          currentMonday = mondayOf(new Date());
+          maybeEnableSundaySpillover();
+        }
+        switchTab('week');
+      }
     });
   }
 }

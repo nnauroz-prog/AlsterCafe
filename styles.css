@@ -13569,6 +13569,7 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   .admin-body .ov-sec { padding: 14px 12px 12px; }
   .admin-body .ov-lunch { grid-template-columns: minmax(0, 1fr) auto; }
   .admin-body .ov-lunch-label { grid-column: 1 / -1; }
+  .admin-body .ov-day-body .today-main { white-space: normal; overflow-wrap: anywhere; }
   /* Bereiche als kompakte Kacheln in zwei Spalten: Symbol, Name, Zähler */
   .admin-body .overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px; }
   .admin-body .overview-card { position: relative; min-height: 64px; padding: 10px 8px 10px 10px !important; gap: 8px; border-radius: 14px !important; }
@@ -13582,11 +13583,15 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 }
 @media (max-width: 380px) {
   .admin-body .overview-card { flex-direction: column; align-items: flex-start; gap: 6px; }
-  /* schmale Handys: Name und Personen dürfen umbrechen statt abgeschnitten zu werden */
-  .admin-body .ov-day-body .today-main { white-space: normal; }
+  /* Handy-Leiste: alle fünf Punkte passen auch auf schmale Geräte */
+  .admin-bottombar { grid-template-columns: repeat(var(--bb-n), minmax(0, 1fr)); }
+  .admin-bottombar .bb-item { min-width: 0; }
+  .admin-bottombar .bb-label { font-size: .58rem; letter-spacing: -.02em; }
 }
+/* Anleitung am Ende: gut treffbar */
+.admin-body .overview-help > summary { min-height: 44px; display: flex; align-items: center; }
 @media (min-width: 900px) {
-  .admin-body .ov-board { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "today todo" "today tomorrow"; align-items: start; gap: 14px; }
+  .admin-body .ov-board { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "today todo" "today tomorrow"; grid-template-rows: auto 1fr; align-items: start; gap: 14px; }
   .admin-body .ov-todo { grid-area: todo; }
   .admin-body #ov-today { grid-area: today; }
   .admin-body #ov-tomorrow { grid-area: tomorrow; }
