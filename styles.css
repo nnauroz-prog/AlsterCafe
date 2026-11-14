@@ -12824,36 +12824,19 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 
 /* ==========================================================================
    GLEITEN (November 2026) — Bewegung, die wirklich schiebt statt einblendet
-   1 · Blätter: jeder Abschnitt bleibt stehen, der nächste schiebt sich wie ein
-       Blatt Papier darüber (Klasse .fx-deck und die Höhen setzt script.js).
-   2 · Inhalte gleiten seitlich herein (Karten, Listenzeilen, Kopf der Seite).
-   3 · Seitenwechsel: die nächste Seite schiebt sich von rechts herein, zurück
+   1 · Inhalte gleiten seitlich herein (Karten, Listenzeilen, Kopf der Seite).
+   2 · Seitenwechsel: die nächste Seite schiebt sich von rechts herein, zurück
        zur Startseite von links. Reines CSS – braucht kein Skript.
+   (Das Übereinanderschieben der Abschnitte ist wieder entfernt – die Seite
+   scrollt normal durch.)
    Alles nur bei erlaubter Bewegung und nie im Mitgliederbereich.
    ========================================================================== */
 @media screen {
   /* Nichts, das seitlich hereingleitet, darf die Seite verbreitern */
   body:not(.admin-body) main > section, body:not(.admin-body) .site-footer { overflow-x: clip; }
-
-  /* --- 1 · Blätter --- */
-  html.fx-deck main > section { position: sticky !important; top: min(0px, calc(100vh - var(--fx-h, 100vh))); }
-  @supports (height: 100svh) {
-    html.fx-deck main > section { top: min(0px, calc(100svh - var(--fx-h, 100svh))); }
-  }
-  html.fx-deck main > section.fx-off { position: relative !important; top: auto; }
-  html.fx-deck main > .home-broetchen-wrap, html.fx-deck main > .order-section { background-color: var(--paper, #FFFCF4); }
-  /* Kante des aufliegenden Blatts */
-  html.fx-deck main > * + section, html.fx-deck main > * + .ornament { box-shadow: 0 -26px 48px -30px rgba(42, 24, 16, .42); }
-  html.fx-deck main > * + section.chapter-dark { box-shadow: inset 0 1px 0 var(--hairline-gold, rgba(212, 179, 128, .4)), 0 -26px 52px -28px rgba(20, 10, 6, .6); }
-  html.fx-deck main > .ornament + section { box-shadow: none; }
-  html.fx-deck main > .ornament { position: relative; z-index: 0; }
-  /* Das überdeckte Blatt dunkelt leicht ab (Wert setzt script.js) */
-  .fx-veil { position: absolute; inset: 0; z-index: 30; pointer-events: none; background: #2A1810; opacity: calc(var(--fx-cover, 0) * .32); }
-  .chapter-dark > .fx-veil { background: #0E0704; opacity: calc(var(--fx-cover, 0) * .42); }
 }
-@media print { .fx-veil { display: none !important; } }
 
-/* --- 2 · Seitlich hereingleiten --- */
+/* --- 1 · Seitlich hereingleiten --- */
 @keyframes fx-grow-in { from { translate: -76px 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
 @keyframes fx-slide-r { from { translate: 76px 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
 @keyframes fx-in-l { from { translate: -64px 0; opacity: 0; } }
@@ -12874,7 +12857,7 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   }
 }
 
-/* --- 3 · Seitenwechsel als Schieben --- */
+/* --- 2 · Seitenwechsel als Schieben --- */
 @keyframes fx-page-out { to { transform: translateX(-26%); opacity: .5; } }
 @keyframes fx-page-in { from { transform: translateX(100%); } to { transform: none; } }
 @keyframes fx-page-out-back { to { transform: translateX(26%); opacity: .5; } }
