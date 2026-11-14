@@ -914,20 +914,23 @@
               <div>
                 <h2 class="panel-card-title">Reservierungen</h2>
                 <p class="panel-card-sub">
-                  Hier sehen Sie alle Anfragen, die über das Reservierungs-Formular auf
-                  der Webseite eingehen — chronologisch sortiert.
+                  Anfragen vom Formular der Webseite – nach Tagen geordnet, heute zuerst.
                 </p>
               </div>
               <span class="anfragen-count" id="anfragen-count" hidden></span>
             </div>
+            <!-- Drei Zähler, die zugleich filtern; füllt admin.js -->
+            <div class="res-summary" id="res-summary" role="group" aria-label="Reservierungen filtern" hidden></div>
+            <p class="save-status" id="anfragen-status" aria-live="polite"></p>
             <details class="help-box">
               <summary>Hilfe: Reservierungen bearbeiten</summary>
               <div class="help-box-body">
                 <ul>
-                  <li>Hier landen alle Reservierungs-Anfragen vom Formular auf der Webseite — neueste zuerst. Neue erscheinen <strong>automatisch</strong> (Sie müssen nichts neu laden).</li>
-                  <li>Ablauf: <strong>Neu</strong> → <strong>„Bestätigung senden“</strong> (Gast bekommt eine E-Mail, Status <strong>Bestätigt</strong>) → nach dem Besuch <strong>„Als erledigt markieren“</strong> (später „Erneut öffnen“).</li>
-                  <li><strong>„Löschen“</strong> entfernt eine Anfrage dauerhaft.</li>
-                  <li>Ohne E-Mail-Adresse bestätigen Sie einfach telefonisch – die Nummer steht auf der Karte.</li>
+                  <li>Die Liste ist <strong>nach Tagen</strong> geordnet, heute zuerst. Jede Zeile zeigt Uhrzeit, Name und Personen – <strong>antippen</strong> klappt Kontakt, Nachricht und Notiz auf.</li>
+                  <li>Ablauf: <strong>Neu</strong> → bestätigen, per E-Mail mit <strong>„Bestätigung senden“</strong> oder nach einem Anruf mit <strong>„Telefonisch bestätigt“</strong> → nach dem Besuch <strong>„Als erledigt markieren“</strong> (später „Erneut öffnen“).</li>
+                  <li>Oben wählen Sie, was Sie sehen: alle offenen, nur die <strong>noch zu bestätigenden</strong> oder nur <strong>heute</strong>.</li>
+                  <li><strong>„Liste drucken“</strong> neben einem Tag druckt alle Tische und Abholungen dieses Tages.</li>
+                  <li>Neue Anfragen erscheinen <strong>automatisch</strong>. <strong>„Löschen“</strong> entfernt eine Anfrage dauerhaft.</li>
                 </ul>
               </div>
             </details>

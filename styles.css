@@ -13406,3 +13406,112 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   /* --- Brötchen-Service: Bestellzettel mit geraden Kanten --- */
   body:not(.admin-body) .order-summary-card { border-radius: 0 !important; box-shadow: none !important; }
 }
+
+/* ==========================================================================
+   MITGLIEDERBEREICH · Reservierungen neu geordnet (November 2026)
+   Nach Tagen gruppiert, jede Anfrage eine Zeile zum Aufklappen. Oben drei
+   Zähler, die zugleich filtern. Der Hauptknopf folgt dem Ablauf.
+   ========================================================================== */
+.res-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0 14px; }
+.res-summary[hidden] { display: none; }
+.res-stat {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px;
+  min-height: 72px; padding: 12px 14px; text-align: left; cursor: pointer;
+  font: inherit; color: var(--bean, #3D2415); background: var(--paper, #FFFCF4);
+  border: 1px solid var(--line-soft, rgba(61, 36, 21, .14)); border-radius: 12px;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+.res-stat:hover { border-color: var(--bean, #3D2415); }
+.res-stat:focus-visible { outline: 2px solid var(--gold, #B8893E); outline-offset: 2px; }
+.res-stat.is-active { background: var(--bean, #3D2415); border-color: var(--bean, #3D2415); color: var(--paper, #FFFCF4); }
+.res-stat-num { font: 500 1.7rem/1 'Fraunces', serif; font-variant-numeric: tabular-nums; }
+.res-stat-label { font-size: .78rem; line-height: 1.25; opacity: .82; }
+.res-stat[data-res-filter="neu"]:not(.is-active):not(.is-zero) { border-color: var(--gold, #B8893E); }
+.res-stat[data-res-filter="neu"]:not(.is-active):not(.is-zero) .res-stat-num { color: var(--accent-text, #8A6420); }
+.res-stat.is-zero:not(.is-active) .res-stat-num { opacity: .45; }
+#anfragen-status:empty { display: none; }
+
+#anfragen-list { gap: 26px; margin-top: 20px; }
+.res-day { margin: 0; }
+.res-day-head {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 14px;
+  padding: 0 2px 9px; border-bottom: 1px solid var(--bean, #3D2415);
+}
+.res-day-title { margin: 0; font: 500 1.12rem/1.3 'Fraunces', serif; color: var(--bean, #3D2415); }
+.res-day-lead {
+  margin-right: 10px; font: 700 .68rem/1 'Inter', sans-serif; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent-text, #8A6420); vertical-align: 2px;
+}
+.res-day-sum { font-size: .86rem; color: var(--muted, #6b5a4a); }
+.res-day-print {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 6px;
+  font: 500 .8rem/1 'Inter', sans-serif; color: var(--muted, #6b5a4a); background: none; border: 0; cursor: pointer;
+  text-decoration: underline; text-decoration-color: var(--line, rgba(61, 36, 21, .2)); text-underline-offset: 4px;
+}
+.res-day-print:hover { color: var(--bean, #3D2415); }
+.res-day-print .ico { width: 15px; height: 15px; }
+.res-day-list { list-style: none; margin: 0; padding: 0; display: block; }
+.anfragen-sublist.res-day-list { border-top: 1px solid var(--line-soft, rgba(61, 36, 21, .14)); }
+
+/* Die Zeile */
+/* (!important: die Karten-Optik der übrigen Listen im Mitgliederbereich ist mit !important gesetzt) */
+.admin-body .anfrage-item.res-row {
+  position: relative; background: none !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; box-shadow: none !important;
+  border-bottom: 1px solid var(--line-soft, rgba(61, 36, 21, .14)) !important;
+}
+.anfrage-item.res-row:hover { border-color: var(--line-soft, rgba(61, 36, 21, .14)); }
+.anfrage-item.res-row.is-stage-new::before {
+  content: ''; position: absolute; left: -10px; top: 14px; bottom: 14px; width: 3px; border-radius: 2px; background: var(--gold, #B8893E);
+}
+.anfrage-item.res-row.is-done { opacity: 1; background: none; }
+.res-row.is-done .res-sum { opacity: .62; }
+.res-sum {
+  list-style: none; display: grid; grid-template-columns: 62px minmax(0, 1fr) auto 14px; align-items: center; gap: 4px 12px;
+  min-height: 60px; padding: 12px 4px 12px 2px; cursor: pointer; border-radius: 8px;
+}
+.res-sum::-webkit-details-marker { display: none; }
+.res-sum:focus-visible { outline: 2px solid var(--gold, #B8893E); outline-offset: 2px; }
+@media (hover: hover) { .res-sum:hover { background: rgba(184, 137, 62, .07); } }
+.res-time { font: 600 1.02rem/1.2 'Inter', sans-serif; font-variant-numeric: tabular-nums; color: var(--bean, #3D2415); }
+.res-main { min-width: 0; display: block; }
+.res-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; }
+.res-row .anfrage-name { font-size: 1.06rem; }
+.res-row .anfrage-pers { margin-left: 0; font-size: .9rem; }
+.res-preview { display: block; margin-top: 2px; font-size: .86rem; color: var(--muted, #6b5a4a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res-chev { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; rotate: 45deg; opacity: .55; transition: rotate .2s ease; justify-self: center; margin-top: -4px; }
+.res-details[open] .res-chev { rotate: -135deg; margin-top: 4px; }
+.res-details[open] .res-preview { display: none; }
+.res-body { padding: 2px 4px 18px 76px; }
+.res-body .anfrage-when { margin-top: 0; }
+/* Unter einer Tages-Überschrift steht das Datum schon – in der Zeile nicht wiederholen */
+.res-day .res-body .anfrage-when { display: none; }
+.res-quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 4px 14px 76px; }
+.res-details[open] + .res-quick { display: none; }
+.res-quick .anfrage-btn { min-height: 44px; }
+/* Hauptknopf je Stand */
+.anfrage-btn-confirm.is-primary { background: var(--gold, #B8893E); border-color: var(--gold, #B8893E); color: var(--bean, #3D2415); font-weight: 600; }
+.anfrage-btn-confirm.is-primary:hover { background: #A67A33; border-color: #A67A33; }
+.res-btn-phone.is-primary { background: var(--bean, #3D2415); border-color: var(--bean, #3D2415); color: var(--paper, #FFFCF4); font-weight: 600; }
+.res-btn-phone.is-primary .ico { color: currentColor; }
+.res-btn-call { text-decoration: none; }
+
+@media (max-width: 640px) {
+  .res-summary { gap: 6px; }
+  .res-stat { min-height: 76px; padding: 10px 10px; }
+  .res-stat-num { font-size: 1.5rem; }
+  .res-stat-label { font-size: .72rem; }
+  .res-sum { grid-template-columns: 50px minmax(0, 1fr) auto 12px; gap: 4px 10px; }
+  .res-time { font-size: .96rem; }
+  .res-body { padding-left: 2px; }
+  .res-quick { padding-left: 2px; }
+  .res-quick .anfrage-btn { flex: 1 1 auto; justify-content: center; }
+  /* Am Handy nur der nächste Schritt an der Zeile; „Telefonisch bestätigt“ steht aufgeklappt bereit.
+     Ohne E-Mail bleiben beide (anrufen, dann vermerken) – das ist dort der einzige Weg. */
+  .res-quick .anfrage-btn-confirm + .res-btn-phone { display: none; }
+  .anfrage-item.res-row.is-stage-new::before { left: -9px; }
+  .res-day-print { margin-left: 0; }
+  /* In „Erledigt“ und „Vergangene“ steht das Datum mit in der ersten Spalte */
+  .anfragen-sublist .res-sum { grid-template-columns: minmax(0, 1fr) auto 12px; }
+  .anfragen-sublist .res-time { grid-column: 1 / -1; font-size: .84rem; font-weight: 600; color: var(--muted, #6b5a4a); }
+}
+@media (min-width: 641px) { .anfragen-sublist .res-sum { grid-template-columns: 132px minmax(0, 1fr) auto 14px; } .anfragen-sublist .res-body { padding-left: 146px; } }
