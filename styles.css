@@ -13596,3 +13596,282 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   .admin-body #ov-today { grid-area: today; }
   .admin-body #ov-tomorrow { grid-area: tomorrow; }
 }
+
+/* ==========================================================================
+   PREMIUM-FEINSCHLIFF (November 2026)
+   Nach zwei unabhängigen Gutachten: ein ruhiger erster Bildschirm (erst die
+   Aussage, dann die Fakten), weniger gleichzeitig laufende Bewegung, weniger
+   Zierrat, ein gemeinsamer Rhythmus. Texte unverändert; die vorhandenen
+   Effekte bleiben, laufen aber einmal statt endlos, kürzer und leiser.
+   ========================================================================== */
+@media screen {
+  /* 1 · Fehler behoben: Die Beschriftung dunkler Link-Knöpfe verschwand beim Überfahren (a:hover schlug .btn) */
+  body:not(.admin-body) a.btn:hover, body:not(.admin-body) a.btn:focus-visible { color: var(--btn-fg); }
+
+  /* 2 · Knöpfe: flache, sichere Flächen statt Verlauf, Glanzkante und Schatten */
+  body:not(.admin-body) .btn-primary { background: #3D2415 !important; box-shadow: none !important; }
+  body:not(.admin-body) .btn-gold { background: #B8893E !important; box-shadow: none !important; }
+  body:not(.admin-body) :is(.btn-primary, .btn-gold) { font-weight: 500 !important; letter-spacing: .03em !important; }
+  body:not(.admin-body) .nav-shop { box-shadow: none !important; }
+  @media (hover: hover) and (pointer: fine) {
+    body:not(.admin-body) .btn-primary:hover { background: #4A2C1A !important; box-shadow: none !important; transform: none !important; }
+    body:not(.admin-body) .btn-gold:hover { background: #C39548 !important; box-shadow: none !important; transform: none !important; }
+    body:not(.admin-body) .btn-stamp:hover { transform: translateY(-1px) !important; }
+    /* Speisekarte: beim Überfahren nichts verschieben, nur eine feine Goldkante */
+    body:not(.admin-body) .karte-list > li:hover { background: none !important; }
+    body:not(.admin-body) .karte-list > li:hover .karte-row, body:not(.admin-body) .karte-list > li:hover .karte-desc,
+    body:not(.admin-body) .karte-list > li:hover .karte-preis { translate: none !important; }
+    body:not(.admin-body) .karte-list > li:hover .karte-name { color: inherit !important; }
+  }
+
+  /* 3 · Eine Auszeichnung je Überschrift: das goldene Wort – ohne zweites Band. Nur die Startseite behält eine Haarlinie. */
+  body:not(.admin-body) :is(.reviews-h2, .landing-closer-quote, .page-hero h1, .page-hero-editorial h1, .section-head h2) em { background-image: none !important; }
+  body:not(.admin-body) .hero-cinema-h1 .head-2 em {
+    background-image: linear-gradient(transparent 92%, rgba(184, 137, 62, .55) 92%, rgba(184, 137, 62, .55) 95%, transparent 95%) !important;
+  }
+  /* Überschrift der Startseite in einer Farbe und einer Laufweite */
+  body:not(.admin-body) .hero-cinema-h1 .head-3 { color: var(--bean, #3D2415) !important; letter-spacing: -.022em !important; margin-top: 0 !important; }
+
+  /* 4 · Zierrat zurücknehmen: Lesebalken, Kapitel-Leiste und -Nummern, Geisterwörter in den Seitenköpfen, römische Ziffern */
+  body:not(.admin-body) :is(.scroll-progress, .chapter-rail, .chapter-mark, .hero-est, .page-hero-watermark) { display: none !important; }
+  body:not(.admin-body) .page-hero-editorial::after { display: none !important; }
+  body:not(.admin-body) .landing-visit-dark .section-shout { display: none !important; }
+  /* nur noch ein Schmuckstrich auf der Startseite (vor dem Schluss) */
+  body:not(.admin-body) main > .ornament:not(:has(+ .landing-closer)) { display: none !important; }
+  /* kein Initial im kurzen Einleitungssatz der Startseite */
+  body:not(.admin-body) .hero-spread-text .lead::first-letter {
+    float: none !important; font: inherit !important; color: inherit !important; margin: 0 !important; padding: 0 !important;
+    line-height: inherit !important; font-variation-settings: normal !important;
+  }
+
+  /* 5 · Laufband: Punkte statt Sterne, etwas niedriger */
+  body:not(.admin-body) .hero-ticker-track > span[aria-hidden="true"] {
+    font-size: 0 !important; flex: none; align-self: center; width: 4px; height: 4px; border-radius: 50%; background: #B8893E; opacity: .7;
+  }
+  body:not(.admin-body) .hero-ticker-track { padding: 16px 0 !important; font-size: clamp(.95rem, 1.5vw, 1.15rem) !important; font-variation-settings: normal !important; letter-spacing: .01em !important; }
+
+  /* 6 · Goldstaub: bleibt, hält aber die Textspalte frei; Ofenwärme leiser */
+  .chapter-dark.fx-dust-on > .fx-dust { opacity: .55 !important; }
+  .chapter-dark > .fx-dust {
+    -webkit-mask-image: linear-gradient(90deg, #000 0, rgba(0, 0, 0, .14) 24%, rgba(0, 0, 0, .14) 76%, #000 100%);
+            mask-image: linear-gradient(90deg, #000 0, rgba(0, 0, 0, .14) 24%, rgba(0, 0, 0, .14) 76%, #000 100%);
+  }
+  .fx-ember::before { background: radial-gradient(circle, rgba(222, 140, 60, .17), rgba(222, 140, 60, .06) 38%, rgba(222, 140, 60, 0) 68%) !important; }
+  .fx-ember::after { background: radial-gradient(circle, rgba(232, 196, 130, .11), rgba(232, 196, 130, .04) 40%, rgba(232, 196, 130, 0) 68%) !important; }
+
+  /* 7 · Links: der Strich ist so breit wie das Wort, nicht wie die Spalte */
+  body:not(.admin-body) :is(.today-feature-cta, .landing-visit-cta) .btn-link {
+    width: auto !important; align-self: center !important; padding: 10px 0 8px !important; border-bottom-color: rgba(212, 179, 128, .45) !important;
+  }
+  body:not(.admin-body) .spread-link { display: inline-flex !important; width: auto !important; align-self: flex-start; }
+
+  /* 8 · Fußbereich: Zahlungsarten als eine ruhige, einfarbige Zeile; Schriftzug kleiner */
+  body:not(.admin-body) .site-footer .footer-pay-list { filter: grayscale(1) contrast(.85) brightness(1.15); opacity: .5; }
+  body:not(.admin-body) .site-footer::after { font-size: clamp(6rem, 13vw, 12rem) !important; }
+
+  /* 9 · Reste der Karten-Optik */
+  body:not(.admin-body) .reservation-page .reservation-form { box-shadow: none !important; border-radius: 0 !important; }
+  body:not(.admin-body) .order-summary-card { background: #2A1810 !important; }
+  body:not(.admin-body) .order-summary-card::after { display: none !important; }
+  body:not(.admin-body) .broetchen-row.is-active { background: none !important; border-radius: 0 !important; box-shadow: inset 2px 0 0 #B8893E !important; }
+  body:not(.admin-body) .faq-item[open] { background: none !important; }
+  body:not(.admin-body) :is(.reservation-form, .order-form) :is(input, select, textarea) { border-radius: 4px; }
+
+  /* 10 · Kleine Serifenschrift nimmt den passenden Schnitt (nicht den Plakat-Schnitt) */
+  body:not(.admin-body) :is(.reviews-lead, .reviews-card-platform, .home-broetchen p:not(.eyebrow), .contact .col-value, .landing-visit-tag) {
+    font-variation-settings: normal !important; letter-spacing: 0 !important;
+  }
+
+  /* 11 · Nach-oben-Knopf kleiner und ohne Schatten (der Fortschritts-Ring bleibt) */
+  body:not(.admin-body) .to-top { width: 40px !important; height: 40px !important; right: 12px; box-shadow: none !important; background: rgba(255, 252, 244, .9) !important; border-color: rgba(61, 36, 21, .14) !important; }
+
+  /* --- Handy und Tablet --- */
+  @media (max-width: 760px) {
+    /* 12 · Kopf der Startseite: erst die Aussage, dann die Fakten */
+    body:not(.admin-body) .hero-cinematic .hero-masthead { display: flex !important; flex-direction: column; align-items: flex-start; padding-top: 40px !important; padding-bottom: 0 !important; }
+    body:not(.admin-body) .hero-cinematic .hero-eyebrow { order: 0; font-size: .66rem !important; letter-spacing: .12em !important; margin: 0 0 22px !important; text-wrap: balance; }
+    body:not(.admin-body) .hero-cinematic .hero-cinema-h1 { order: 1; font-size: min(11.6vw, 46px) !important; line-height: 1.02 !important; margin: 0 0 26px !important; }
+    body:not(.admin-body) .hero-cinematic .live-status { order: 2; margin: 0 0 8px !important; }
+    body:not(.admin-body) .hero-cinematic .live-lunch { order: 3; margin: 0 !important; width: 100%; padding-left: 0 !important; }
+    body:not(.admin-body) .hero-cinematic .live-lunch-dish { -webkit-line-clamp: 1 !important; text-decoration: none !important; }
+    body:not(.admin-body) .hero-cinematic .hero-spread { padding-top: 26px !important; padding-bottom: 44px !important; }
+    body:not(.admin-body) .hero-spread-text .lead { border-top: 1px solid rgba(61, 36, 21, .14); padding-top: 24px; font-size: 1rem !important; line-height: 1.65 !important; margin-bottom: 28px !important; }
+    /* die Tasse steht frei neben den ersten zwei Zeilen der Überschrift */
+    body:not(.admin-body) .hero-cinematic > .hero-art { top: 84px !important; right: 14px !important; width: 80px !important; }
+    /* ein Hauptknopf, darunter zwei gleich ruhige Links nebeneinander */
+    body:not(.admin-body) .hero-cinematic .hero-cta { display: grid !important; grid-template-columns: auto auto; justify-content: space-between; align-items: center; gap: 10px 20px !important; }
+    body:not(.admin-body) .hero-cinematic .hero-cta .btn-primary { grid-column: 1 / -1; }
+    body:not(.admin-body) .hero-cinematic .hero-cta .btn-link { width: auto !important; margin: 0 !important; padding: 10px 0 8px !important; align-self: auto !important; border-bottom-color: rgba(61, 36, 21, .35) !important; }
+    body:not(.admin-body) .hero-cinematic .hero-partner { margin-top: 30px !important; }
+    /* „Gerade jetzt“ wiederholt am Handy nur, was die Zeilen darüber und der Abschnitt darunter schon sagen */
+    body:not(.admin-body) .hero-cinematic .hero-coord { display: none !important; }
+
+    /* 13 · Zierrat am Handy: keine Geisterwörter, Sprenkel, Lichthöfe und Funken hinter Text */
+    body:not(.admin-body) .section-shout, body:not(.admin-body) .hero::before { display: none !important; }
+    body:not(.admin-body) :is(.hero-art, .page-art)::before, body:not(.admin-body) :is(.hero-art, .page-art) .art-spark { display: none !important; }
+    body:not(.admin-body) .greeting-text::first-letter {
+      float: none !important; font: inherit !important; color: inherit !important; margin: 0 !important; padding: 0 !important;
+      line-height: inherit !important; font-variation-settings: normal !important;
+    }
+    body:not(.admin-body) .page-breadcrumb, body:not(.admin-body) .page-breadcrumb a { font-size: .66rem !important; color: #786152 !important; border-bottom-color: transparent !important; text-decoration: none !important; }
+    /* Sprachumschalter im Kopf leiser (steht groß im Menü) */
+    body:not(.admin-body) .site-header .lang-toggle-head { border-color: transparent !important; background: none !important; box-shadow: none !important; }
+
+    /* 14 · Ein Rhythmus: gleiche Abstände für alle Abschnitte der Startseite */
+    body:not(.admin-body) :is(.landing-greeting, .landing-cards, .landing-reviews, .landing-closer) { padding-top: 72px !important; padding-bottom: 72px !important; }
+    body:not(.admin-body) :is(.today-feature, .landing-visit) { padding-top: 80px !important; padding-bottom: 80px !important; }
+    body:not(.admin-body) :is(.specials-teaser-wrap, .home-broetchen-wrap) { padding-bottom: 72px !important; }
+    /* eine Linie zwischen zwei Blöcken, nicht zwei */
+    body:not(.admin-body) .specials-teaser { border-bottom: 0 !important; }
+    body:not(.admin-body) .home-broetchen { border-bottom: 0 !important; }
+    body:not(.admin-body) .home-broetchen .eyebrow { margin-bottom: 14px !important; }
+
+    /* 15 · Eine linke Kante: Familie und Bewertungen stehen links wie der Rest (mittig nur Tagesgericht und Schluss) */
+    body:not(.admin-body) .landing-greeting-inner, body:not(.admin-body) .landing-greeting-inner * { text-align: left !important; }
+    body:not(.admin-body) .landing-greeting .eyebrow { justify-content: flex-start !important; }
+    body:not(.admin-body) .greeting-signature { align-items: flex-start !important; text-align: left !important; }
+    body:not(.admin-body) .greeting-signature-name { font-size: 1.4rem !important; color: #3D2415 !important; }
+    body:not(.admin-body) .landing-reviews .section-head { text-align: left !important; margin-left: 0 !important; }
+    body:not(.admin-body) .landing-reviews .section-head .eyebrow { justify-content: flex-start !important; }
+
+    /* 16 · Ruhige Schriftgrößen am Handy: eine Größe je Ebene */
+    body:not(.admin-body) :is(.landing-cards .section-head h2, .home-broetchen h2, .reviews-h2, .landing-visit h2, .greeting-line, .landing-closer-quote) {
+      font-size: 1.875rem !important; line-height: 1.12 !important; letter-spacing: -.015em !important;
+    }
+    body:not(.admin-body) :is(.spread-card h3, .spread-card-hero h3, .specials-teaser-title) { font-size: 1.5rem !important; line-height: 1.2 !important; }
+    body:not(.admin-body) :is(.eyebrow, .spread-kicker, .today-feature-kicker, .greeting-signature-role, .specials-teaser-eyebrow) {
+      font-size: .6875rem !important; font-weight: 600 !important; letter-spacing: .14em !important;
+    }
+    body:not(.admin-body) :is(.spread-link, .reviews-card-action, .specials-teaser-go) { font-size: .72rem !important; letter-spacing: .14em !important; }
+    body:not(.admin-body) .fx-strip-count { display: none; }
+
+    /* 17 · Handy-Menü: „Webshop“ als Zeile wie die anderen */
+    body:not(.admin-body) .primary-nav .nav-shop { border: 0 !important; background: none !important; padding: 14px 0 !important; justify-content: flex-start !important; }
+    /* Cookie-Hinweis etwas niedriger */
+    body:not(.admin-body) .cookie-banner { padding: 14px 16px !important; font-size: .8125rem; line-height: 1.5; }
+  }
+
+  /* --- Computer --- */
+  @media (min-width: 981px) {
+    /* 18 · Eine Leiste weniger über dem Inhalt (Datum und Adresse standen doppelt) */
+    body:not(.admin-body) .edition-strip { display: none !important; }
+    body:not(.admin-body) .hero-cinematic .hero-cinema-h1 { font-size: clamp(4rem, 8.2vw, 7.5rem) !important; }
+    body:not(.admin-body) .hero-cinematic .hero-spread { padding-top: 44px !important; }
+    body:not(.admin-body) .hero-cinematic .live-lunch { margin-left: 0 !important; padding-left: 0 !important; }
+    /* 19 · „Vier Gründe“: vier gleiche Felder statt einem großen und drei kleinen (keine leere Fläche mehr) */
+    body:not(.admin-body) .spread-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
+    body:not(.admin-body) .spread-grid > .spread-card, body:not(.admin-body) .spread-grid > .spread-card-hero {
+      grid-row: auto !important; padding: clamp(32px, 3.4vw, 48px) clamp(32px, 4.5vw, 64px) clamp(34px, 3.6vw, 52px) !important;
+      border-left: 0 !important;
+    }
+    body:not(.admin-body) .spread-grid > .spread-card:nth-child(odd) { padding-left: 0 !important; }
+    body:not(.admin-body) .spread-grid > .spread-card:nth-child(even) { border-left: 1px solid var(--hairline-strong, rgba(61, 36, 21, .22)) !important; padding-right: 0 !important; }
+    body:not(.admin-body) .spread-grid > .spread-card-hero .spread-card-body { position: static !important; }
+    body:not(.admin-body) :is(.spread-card h3, .spread-card-hero h3) { font-size: 2.125rem !important; line-height: 1.12 !important; }
+    body:not(.admin-body) :is(.spread-card, .spread-card-hero) p:not(.spread-kicker) { font-size: 1.0625rem !important; max-width: 40ch; }
+  }
+}
+
+/* 20 · Bewegung: einmal statt endlos, kürzere Wege, sanftere Kurven */
+@keyframes fx-char-glint-once { 0%, 100% { color: inherit; text-shadow: none; } 50% { color: #E2B766; text-shadow: 0 0 20px rgba(226, 183, 102, .42); } }
+@keyframes fx-head-a { to { translate: 0 -16px; } }
+@keyframes fx-head-b { to { translate: 0 -10px; } }
+@keyframes fx-head-c { to { translate: 0 -4px; } }
+@keyframes fx-art-away { to { scale: .96; opacity: .7; } }
+@keyframes fx-grow-in { from { translate: -28px 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes fx-slide-r { from { translate: 28px 0; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes fx-in-l { from { translate: -24px 0; opacity: 0; } }
+@keyframes fx-in-r { from { translate: 24px 0; opacity: 0; } }
+@keyframes shout-drift { from { translate: -6% 0; } to { translate: 6% 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* Überschrift baut sich zeilenweise auf (enger Takt je Buchstabe), der Goldglanz läuft genau einmal */
+  .hero-cinema-h1 .hero-char { animation-delay: calc(var(--char-i, 0) * 9ms + var(--char-base, 0ms)) !important; }
+  .hero-cinema-h1.is-char-revealed .head-2 em .hero-char {
+    animation: hero-char-up 700ms var(--ease-out) forwards, fx-char-glint-once 2.4s ease-in-out 1 !important;
+    animation-delay: calc(var(--char-i, 0) * 9ms + var(--char-base, 0ms)), calc(1700ms + var(--char-i, 0) * 80ms) !important;
+  }
+  /* Glanz auf dem Hauptknopf: einmal nach dem Laden, nicht alle paar Sekunden */
+  .hero-cta .btn-primary:not(:hover)::before { animation: btn-shimmer 1400ms var(--ease-out, ease-out) 2.4s 1 both !important; }
+  /* stehende statt blinkende Kleinigkeiten */
+  .hero-coord-clock-time .clock-colon { animation: none !important; }
+  .live-status-dot { animation-iteration-count: 3 !important; }
+  :is(.hero-art, .page-art) .art-spark * { animation-duration: 10s !important; }
+  .map-art .map-pulse { animation-iteration-count: 2 !important; }
+  /* Laufband und Ofenwärme langsamer */
+  .hero-ticker-track { animation-duration: 70s !important; }
+  .fx-ember::before { animation-duration: 32s !important; }
+  .fx-ember::after { animation-duration: 44s !important; }
+  /* Listenzeilen und Tipp-Welle leiser */
+  .fx-row { translate: 18px 0; }
+  .btn > .fx-ripple { background: radial-gradient(circle, rgba(255, 244, 214, .26), rgba(255, 244, 214, .08) 55%, rgba(255, 244, 214, 0) 72%); }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fx-grow { animation-range: entry 8% entry 46%; }
+    /* Dunkle Kapitel öffnen sich früh und ruhen nie als runder Kasten (Unterseiten zeigen sie schon beim Laden) */
+    .chapter.landing-visit-dark, .lunch-page.chapter-dark, .reservation-page.chapter-dark { animation-range: entry 0% entry 22% !important; }
+  }
+}
+/* Fensterlicht am Handy: bleibt, lebt aber rechts neben der Schrift statt quer durch die Überschrift */
+@media (max-width: 760px) {
+  .fx-licht.fx-licht-on { opacity: .6; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 55%); mask-image: linear-gradient(90deg, transparent 0, #000 55%); }
+}
+
+/* --- PREMIUM-FEINSCHLIFF · Reservieren sichtbar ---
+   „Tisch reservieren“ ist im Kopf der Startseite ein vollwertiger Knopf, und in der Kopfzeile jeder Seite
+   steht „Reservieren“ – am Handy als Knopf neben dem Menü, am Computer ist der Menüpunkt selbst der Knopf. */
+@media screen {
+  .header-reserve { display: none; }
+  body:not(.admin-body) .hero-cta .hero-cta-reserve { min-height: 56px; }
+  @media (max-width: 980px) {
+    body:not(.admin-body) .header-reserve {
+      display: inline-flex; align-items: center; justify-content: center; flex: none;
+      min-height: 40px; padding: 0 15px; margin-left: auto; margin-right: 10px; border-radius: 999px;
+      background: #3D2415; color: #FFFCF4; text-decoration: none;
+      font: 600 .78rem/1 'Inter', sans-serif; letter-spacing: .04em; white-space: nowrap;
+      position: relative; z-index: 1002;
+    }
+    body:not(.admin-body) .header-reserve:focus-visible { outline: 2px solid #B8893E; outline-offset: 2px; }
+    body:not(.admin-body) .header-reserve[aria-current="page"], body.menu-open .header-reserve { display: none; }
+    /* der Sprachumschalter steht am Handy im Menü */
+    body:not(.admin-body) .site-header .lang-toggle-head { display: none !important; }
+    body:not(.admin-body) .site-header .nav-toggle { margin-left: 0; }
+  }
+  @media (max-width: 480px) {
+    /* Platz für Schriftzug UND Reservieren-Knopf: Zeichen und Schrift etwas kleiner */
+    body:not(.admin-body) .site-header .brand { gap: 10px; min-width: 0; }
+    body:not(.admin-body) .site-header .brand-logo { width: 38px; height: 38px; }
+    body:not(.admin-body) .site-header .brand-name { font-size: 1.22rem; white-space: nowrap; }
+    body:not(.admin-body) .header-reserve { padding: 0 13px; margin-right: 6px; }
+  }
+  @media (max-width: 374px) {
+    body:not(.admin-body) .site-header .brand { gap: 8px; }
+    body:not(.admin-body) .site-header .brand-name { font-size: 1.08rem; }
+    body:not(.admin-body) .site-header .brand-logo { width: 34px; height: 34px; }
+    body:not(.admin-body) .header-reserve { padding: 0 11px; font-size: .72rem; letter-spacing: .02em; margin-right: 4px; }
+  }
+  @media (max-width: 339px) {
+    body:not(.admin-body) .site-header .brand-name { display: none; }   /* sehr schmale Geräte: Zeichen + Reservieren + Menü */
+    body:not(.admin-body) .header-reserve { padding: 0 9px; font-size: .68rem; }
+  }
+  @media (max-width: 760px) {
+    /* Kopf der Startseite: zwei gleich breite Knöpfe untereinander, darunter die Telefonnummer */
+    body:not(.admin-body) .hero-cinematic .hero-cta .hero-cta-reserve { grid-column: 1 / -1; width: 100%; }
+    body:not(.admin-body) .hero-cinematic .hero-cta { justify-content: stretch; grid-template-columns: minmax(0, 1fr); }
+    body:not(.admin-body) .hero-cinematic .hero-cta .btn-link { justify-self: start; }
+  }
+  @media (min-width: 981px) {
+    /* Computer: der Menüpunkt „Reservierung“ als Knopf (wie „Webshop“, aber dunkel umrandet) */
+    body:not(.admin-body) .primary-nav a[href="reservierung.html"] {
+      padding: 9px 18px; border: 1px solid #3D2415; border-radius: 999px; color: #3D2415;
+      transition: background-color .22s cubic-bezier(.2, .7, .2, 1), color .22s cubic-bezier(.2, .7, .2, 1);
+    }
+    body:not(.admin-body) .primary-nav a[href="reservierung.html"]::after { display: none; }
+    body:not(.admin-body) .primary-nav a[href="reservierung.html"]:hover,
+    body:not(.admin-body) .primary-nav a[href="reservierung.html"].is-active { background: #3D2415; color: #FFFCF4; }
+    /* Kopf der Startseite: beide Knöpfe gleich hoch nebeneinander */
+    body:not(.admin-body) .hero-cinematic .hero-cta { align-items: stretch; }
+    body:not(.admin-body) .hero-cinematic .hero-cta .hero-cta-reserve { align-self: stretch; padding-inline: 34px; }
+    body:not(.admin-body) .hero-cinematic .hero-cta .btn-link { align-self: center; }
+  }
+}
