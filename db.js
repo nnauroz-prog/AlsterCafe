@@ -324,17 +324,28 @@
       message: entry.message || '',
       status:  entry.status  || 'new'
     };
+    // Nur der Mitgliederbereich („Reservierung eintragen“): gleich als zugesagt und mit Notiz anlegen,
+    // damit der Eintrag nirgends erst als „neue Anfrage“ auftaucht.
+    const extra = {};
+    if (entry.confirmedAt) extra.confirmed_at = entry.confirmedAt;
+    if (entry.note) extra.note = entry.note;
     if (!useSupabase) {
       const list = readCache('reservations') || [];
       const next = Array.isArray(list) ? list : [];
-      next.unshift({ ...row, receivedAt: new Date().toISOString() });
+      next.unshift({ ...row, receivedAt: new Date().toISOString(), ...(entry.confirmedAt ? { confirmedAt: entry.confirmedAt } : {}), ...(entry.note ? { note: entry.note } : {}) });
       writeCache('reservations', next.slice(0, 200));
       return true;
     }
-    const { error } = await sb.from('reservations').insert(row);
+    let { error } = await sb.from('reservations').insert({ ...row, ...extra });
+    let basic = false;
+    if (error && Object.keys(extra).length && /confirmed_at|note|column|schema cache/i.test(error.message || '')) {
+      // Ältere Datenbank ohne diese Spalten: ohne sie anlegen – der Aufrufer trägt Zusage und Notiz nach
+      ({ error } = await sb.from('reservations').insert(row));
+      basic = true;
+    }
     if (error) { noteWriteError(error); return false; }
     lastWriteError = null;
-    return true;
+    return basic ? 'basic' : true;
   }
 
   function inboxCutoff() {
@@ -409,6 +420,21 @@
     if (!useSupabase) return true;
     const { error } = await sb.from('reservations').update({ note }).eq('id', id);
     return !noteWriteError(error);
+  }
+
+  /* Reservierung ändern (Datum, Uhrzeit, Personen, Name, Telefon) – nur diese Felder. */
+  async function updateReservation(id, patch) {
+    const clean = {};
+    ['name', 'phone', 'date', 'time', 'persons'].forEach(k => { if (patch && patch[k] !== undefined) clean[k] = String(patch[k] == null ? '' : patch[k]); });
+    if (!Object.keys(clean).length) return true;
+    const cur = readCache('reservations') || [];
+    const known = Array.isArray(cur) && cur.some(r => r.id === id);
+    writeCache('reservations', (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, ...clean } : r));
+    if (!useSupabase) return known ? true : 'gone';
+    // .select(): eine Änderung, die keine Zeile trifft (Eintrag inzwischen gelöscht), ist kein Erfolg
+    const { data, error } = await sb.from('reservations').update(clean).eq('id', id).select('id');
+    if (noteWriteError(error)) return false;
+    return Array.isArray(data) && data.length ? true : 'gone';
   }
 
   async function deleteReservation(id) {
@@ -672,6 +698,7 @@
     listReservations,
     updateReservationStatus,
     updateReservationNote,
+    updateReservation,
     deleteReservation,
     // Bestellungen (belegte Broetchen)
     addOrder,

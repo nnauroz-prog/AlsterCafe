@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r244" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r244" />
-  <script>(function(){var V='2026-05-10-r244';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r245" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r245" />
+  <script>(function(){var V='2026-05-10-r245';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -903,22 +903,22 @@
               <div>
                 <h2 class="panel-card-title">Reservierungen</h2>
                 <p class="panel-card-sub">
-                  Anfragen vom Formular der Webseite – nach Tagen geordnet, heute zuerst.
+                  Neue Anfragen beantworten und sehen, wer wann kommt.
                 </p>
               </div>
               <span class="anfragen-count" id="anfragen-count" hidden></span>
+              <button type="button" class="btn btn-primary res-add" id="anfragen-add">
+                <span aria-hidden="true">+</span> Reservierung eintragen
+              </button>
             </div>
-            <!-- Drei Zähler, die zugleich filtern; füllt admin.js -->
-            <div class="res-summary" id="res-summary" role="group" aria-label="Reservierungen filtern" hidden></div>
             <details class="help-box">
-              <summary>Hilfe: Reservierungen bearbeiten</summary>
+              <summary>Hilfe: Reservierungen</summary>
               <div class="help-box-body">
                 <ul>
-                  <li>Die Liste ist <strong>nach Tagen</strong> geordnet, heute zuerst. Jede Zeile zeigt Uhrzeit, Name und Personen – <strong>antippen</strong> klappt Kontakt, Nachricht und Notiz auf.</li>
-                  <li>Ablauf: <strong>Neu</strong> → bestätigen, per E-Mail mit <strong>„Bestätigung senden“</strong> oder nach einem Anruf mit <strong>„Telefonisch bestätigt“</strong> → nach dem Besuch <strong>„Als erledigt markieren“</strong> (später „Erneut öffnen“).</li>
-                  <li>Oben wählen Sie, was Sie sehen: alle offenen, nur die <strong>noch zu bestätigenden</strong> oder nur <strong>heute</strong>.</li>
-                  <li><strong>„Liste drucken“</strong> neben einem Tag druckt alle Tische und Abholungen dieses Tages.</li>
-                  <li>Neue Anfragen erscheinen <strong>automatisch</strong>. <strong>„Löschen“</strong> entfernt eine Anfrage dauerhaft.</li>
+                  <li><strong>Neue Anfragen</strong> stehen oben. <strong>„Zusagen“</strong> schickt dem Gast eine E-Mail (oder Sie sagen ohne E-Mail zu, wenn Sie telefoniert haben). <strong>„Absagen“</strong> nimmt die Anfrage aus der Liste – bitte dem Gast vorher Bescheid sagen.</li>
+                  <li>Der <strong>Tagesplan</strong> darunter zeigt alle zugesagten Tische: heute zuerst, mit Uhrzeit, Name und Personen. Antippen zeigt Kontakt und Notiz; dort können Sie die Reservierung <strong>ändern</strong> oder absagen.</li>
+                  <li>Ruft ein Gast an, tragen Sie den Tisch mit <strong>„Reservierung eintragen“</strong> selbst ein – er steht dann sofort im Tagesplan.</li>
+                  <li><strong>„Liste drucken“</strong> neben einem Tag druckt alle Tische und Abholungen dieses Tages. Vergangene Tage rutschen von selbst nach unten.</li>
                 </ul>
               </div>
             </details>
@@ -1243,11 +1243,11 @@
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
   <script src="vendor/qrcode-generator-1.4.4.js" defer></script>
-  <script src="config.js?v=2026-05-10-r244" defer></script>
-  <script src="db.js?v=2026-05-10-r244" defer></script>
-  <script src="menudata.js?v=2026-05-10-r244" defer></script>
-  <script src="calendar.js?v=2026-05-10-r244" defer></script>
-  <script src="rules.js?v=2026-05-10-r244" defer></script>
-  <script src="admin.js?v=2026-05-10-r244" defer></script>
+  <script src="config.js?v=2026-05-10-r245" defer></script>
+  <script src="db.js?v=2026-05-10-r245" defer></script>
+  <script src="menudata.js?v=2026-05-10-r245" defer></script>
+  <script src="calendar.js?v=2026-05-10-r245" defer></script>
+  <script src="rules.js?v=2026-05-10-r245" defer></script>
+  <script src="admin.js?v=2026-05-10-r245" defer></script>
 </body>
 </html>

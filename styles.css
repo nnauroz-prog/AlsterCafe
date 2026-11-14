@@ -13881,3 +13881,88 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
     body:not(.admin-body) .hero-cinematic .hero-cta .btn-link { align-self: center; }
   }
 }
+
+/* ==========================================================================
+   MITGLIEDERBEREICH · Reservierungen als einfacher Tagesplan (November 2026)
+   Oben „Neue Anfragen“ (Zusagen / Absagen), darunter der Tagesplan der zugesagten
+   Tische; Anrufe trägt man mit „Reservierung eintragen“ selbst ein.
+   ========================================================================== */
+.admin-body .anfragen-head .res-add { margin-left: auto; min-height: 46px; padding: 10px 18px; font-size: .92rem; white-space: nowrap; }
+.admin-body .res-add span { font-size: 1.2rem; line-height: 1; margin-right: 2px; }
+.admin-body #anfragen-list { gap: 22px; }
+.admin-body .res-block { margin: 0; list-style: none; }
+.admin-body .panel-card h3.res-block-title {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 4px !important;
+  font: 700 .74rem/1.3 'Inter', system-ui, sans-serif !important; letter-spacing: .18em !important; text-transform: uppercase; color: var(--accent-text, #8A6420) !important;
+}
+.admin-body .res-block-count {
+  display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px;
+  background: var(--gold, #B8893E); color: var(--bean, #3D2415); font: 700 .82rem/1 'Inter', system-ui, sans-serif; letter-spacing: 0;
+}
+.admin-body .res-block-sub { margin: 0 0 12px; font-size: .9rem; color: #776354; }
+/* Neue Anfragen: ein hervorgehobener Bereich, jede Anfrage offen lesbar */
+.admin-body .res-block-new { padding: 16px 16px 6px; border: 1px solid var(--gold, #B8893E); border-radius: 18px; background: #FFF9EC; }
+.admin-body .res-new-list { list-style: none; margin: 0; padding: 0; }
+.admin-body .anfrage-item.res-new {
+  position: relative; background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+  padding: 16px 0 !important; border-top: 1px solid rgba(184, 137, 62, .35) !important;
+}
+.admin-body .res-new-when { margin: 0 0 4px; font: 600 1.12rem/1.3 'Inter', system-ui, sans-serif; color: var(--bean, #3D2415); font-variant-numeric: tabular-nums; }
+.admin-body .res-new-when .pickup-badge { margin-left: 10px; vertical-align: 2px; }
+.admin-body .res-new-who { margin: 0 0 8px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; }
+.admin-body .res-new-who .anfrage-name { font-size: 1.12rem; overflow-wrap: anywhere; }
+.admin-body .res-new-who .anfrage-pers { margin-left: 0; font-size: .96rem; color: var(--bean, #3D2415); }
+.admin-body .res-new .anfrage-contact { margin: 8px 0 0; }
+.admin-body .res-new .anfrage-contact a { display: inline-flex; align-items: center; min-height: 44px; }
+.admin-body .res-new-mail { font-size: .9rem; color: #776354; overflow-wrap: anywhere; align-self: center; }
+.admin-body .res-new-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 12px; }
+.admin-body .res-new-actions .anfrage-btn { min-height: 46px; padding: 10px 20px; font-size: .92rem; font-weight: 600; }
+.admin-body .res-btn-accept { background: #2F7D3D; border-color: #2F7D3D; color: #FFFCF4; }
+.admin-body .res-btn-accept:hover { background: #246130; border-color: #246130; }
+.admin-body .res-btn-accept .ico { color: currentColor; }
+.admin-body .res-btn-decline { color: #8A2A20; border-color: rgba(181, 58, 46, .4); }
+.admin-body .res-btn-decline:hover { background: rgba(181, 58, 46, .08); border-color: #B53A2E; }
+.admin-body .res-new-rec { margin-left: auto; font-size: .8rem; color: #776354; }
+.admin-body .res-new.is-spotlit { animation: res-spot 2.2s ease; }
+@media (prefers-reduced-motion: reduce) { .admin-body .res-new.is-spotlit { animation: none; background-color: rgba(184, 137, 62, .14) !important; } }
+/* Tagesplan */
+.admin-body .res-block-plan .res-day + .res-day { margin-top: 22px; }
+.admin-body .res-block-plan .res-day:first-of-type { margin-top: 10px; }
+.admin-body .panel-card h4.res-day-title { margin: 0 !important; font: 500 1.12rem/1.3 'Fraunces', serif !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--bean, #3D2415) !important; }
+.admin-body .res-block-plan > .anfragen-empty { margin: 10px 0 0; padding: 14px 2px; list-style: none; color: #776354; }
+/* Fenster: Eintragen / Ändern / Absagen */
+.admin-body .confirm-dialog.res-form-dialog { width: min(480px, calc(100vw - 24px)); }
+.admin-body .res-form .res-form-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; }
+.admin-body .res-form .res-form-field { display: block; }
+.admin-body .res-form .res-form-field > span { display: block; margin: 0 0 5px; font: 600 .86rem/1.3 'Inter', system-ui, sans-serif; color: var(--bean, #3D2415); }
+.admin-body .res-form .res-form-field em { font-style: normal; font-weight: 400; color: #776354; }
+.admin-body .res-form :is(input, select, textarea) {
+  width: 100%; min-height: 46px; padding: 10px 12px; font: inherit; font-size: 1rem; color: var(--bean, #3D2415);
+  background: #fff; border: 1px solid var(--line, rgba(61, 36, 21, .22)); border-radius: 10px;
+}
+.admin-body .res-form textarea { min-height: 72px; resize: vertical; }
+.admin-body .res-form :is(input, select, textarea):focus { outline: none; border-color: var(--gold, #B8893E); box-shadow: 0 0 0 3px rgba(184, 137, 62, .18); }
+.admin-body .res-form-error { margin: 0; font-size: .9rem; font-weight: 600; color: #a3322b; }
+.admin-body .res-form-error[hidden] { display: none; }
+.admin-body .res-decline-contact { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px; }
+.admin-body .res-decline-contact .anfrage-btn { min-height: 44px; text-decoration: none; }
+@media (max-width: 640px) {
+  .admin-body .anfragen-head .res-add { width: 100%; margin: 10px 0 0; justify-content: center; }
+  .admin-body .res-block-new { padding: 14px 12px 4px; }
+  .admin-body .res-new-actions .anfrage-btn { flex: 1 1 0; justify-content: center; }
+  .admin-body .res-new-rec { flex: 1 1 100%; margin: 2px 0 0; }
+  .admin-body .res-form .res-form-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* Schmale Handys: Datum und Uhrzeit untereinander, sonst wird das Jahr abgeschnitten */
+@media (max-width: 379px) {
+  .admin-body .res-form .res-form-row { grid-template-columns: minmax(0, 1fr); }
+}
+/* Sehr lange Wörter, Namen oder E-Mail-Adressen dürfen die Seite nicht verbreitern (auch bei Bestellungen) */
+.admin-body .anfrage-msg,
+.admin-body .anfrage-name,
+.admin-body .anfrage-contact a,
+.admin-body .anfrage-contact span,
+.admin-body .res-new-when,
+.admin-body .confirm-dialog-to,
+.admin-body .res-decline-contact a { overflow-wrap: anywhere; min-width: 0; }

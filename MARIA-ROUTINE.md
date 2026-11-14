@@ -11,21 +11,31 @@ Nach dem Login sehen Sie die **Übersicht** mit Kacheln. Aus jedem Bereich komme
 ## 1. Morgens vor Öffnung (2 Minuten)
 
 1. **Übersicht** ansehen. Ganz oben steht **„Zu tun“** – nur, was wirklich ansteht:
-   Reservierungen oder Bestellungen, die noch zu bestätigen sind, und ein Hinweis, wenn der Mittagstisch
+   neue Reservierungen, die auf Antwort warten, Bestellungen, die noch zu bestätigen sind, und ein Hinweis, wenn der Mittagstisch
    für heute oder morgen fehlt. Antippen führt direkt hin. Steht dort „Alles erledigt“, ist nichts offen.
 2. Darunter **„Heute“** und **„Morgen“**: die Summe (Tische, Personen, Abholungen), der Mittagstisch
    des Tages und alle Einträge mit Uhrzeit. Antippen öffnet den Eintrag.
    Mit **„Tagesliste drucken“** haben Sie alles auf einem Blatt für die Theke.
-   Die kleinen Zahlen an den Kacheln zeigen, wie viel noch **zu bestätigen** ist.
-3. **Reservierungen** öffnen. Die Liste ist nach Tagen geordnet, heute zuerst; jede Zeile zeigt
-   Uhrzeit, Name und Personen. Antippen klappt Kontakt, Nachricht und Notiz auf.
-   Oben stehen drei Zähler – antippen filtert: **offene Anfragen**, **noch zu bestätigen**, **heute**.
-   Neben jedem Tag druckt **„Liste drucken“** alle Tische und Abholungen dieses Tages.
-   Jeder Eintrag (auch bei den **Bestellungen**) hat einen Status:
+   Die kleinen Zahlen an den Kacheln zeigen, wie viel noch **zu beantworten** ist.
+3. **Reservierungen** öffnen. Der Bereich beantwortet zwei Fragen: *Wem muss ich antworten?* und
+   *Wer kommt wann?*
+   - **Neue Anfragen** stehen oben, jede mit zwei Knöpfen:
+     **„Zusagen“** – der Gast bekommt die Zusage per E-Mail (mit freiwilliger persönlicher Nachricht).
+     Haben Sie schon telefoniert oder hat der Gast keine E-Mail angegeben: **„Ohne E-Mail zusagen“**
+     bzw. ein Tipp auf „Zusagen“ genügt.
+     **„Absagen“** – nimmt die Anfrage aus der Liste. Bitte dem Gast vorher Bescheid sagen
+     (Anrufen und E-Mail stehen direkt im Fenster).
+   - Der **Tagesplan** darunter zeigt alle zugesagten Tische: heute zuerst, je Zeile Uhrzeit, Name,
+     Personen und Notiz. Antippen zeigt Kontakt, Nachricht und Notiz. Dort können Sie die Reservierung
+     **ändern** (Datum, Uhrzeit, Personen, Name, Telefon) oder absagen.
+   - **„+ Reservierung eintragen“** ganz oben: für Anrufe und Gäste am Tresen. Der Tisch steht
+     sofort im Tagesplan.
+   - Neben jedem Tag druckt **„Liste drucken“** alle Tische und Abholungen dieses Tages.
+   - Nach dem Besuch ist nichts zu tun: vergangene Tage rutschen von selbst nach unten unter
+     **„Vergangene“**.
+   Bei den **Bestellungen** hat jeder Eintrag einen Status:
    - **Neu** – noch nicht bearbeitet.
    - **„Bestätigung senden“** – der Gast bekommt eine E-Mail, der Status wird **Bestätigt**.
-   - **„Telefonisch bestätigt“** (nur Reservierungen) – nach einem Anruf antippen: Status **Bestätigt**
-     ohne E-Mail, der Vermerk steht in der Notiz. Hat der Gast keine E-Mail angegeben, ist das der Weg.
    - **„Als erledigt markieren“**, wenn alles erledigt ist. Erledigte Einträge rutschen eingeklappt
      unter **„Erledigt (Anzahl)“** und zählen nicht mehr mit. „Erneut öffnen“ holt sie zurück.
    - **„Löschen“** (unten, ruhiger Textlink) nur für Spam oder Doppelungen – mit Rückfrage.

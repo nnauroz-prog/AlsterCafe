@@ -39,8 +39,11 @@
     return { kw: `KW ${isoWeek(monday)}`, range: `${f(monday)} – ${f(sunday)}` };
   }
 
-  // Status-Pille wie im Mitgliederbereich: Neu → bestätigt → erledigt
-  function pill(x) {
+  // Status-Pille wie im Mitgliederbereich. Bestellungen: Neu → bestätigt → erledigt.
+  // Reservierungen kennen nur „zugesagt“ (früher als „erledigt“ markierte zählen dazu) – gezeigt nur
+  // im Mitgliederbereich (opts.resStatus); der Mitarbeiter-Kalender bekommt den Zusage-Stand nicht geliefert.
+  function pill(x, kind) {
+    if (kind === 'res') return (x.confirmedAt || x.status === 'done') ? '<span class="cal-pill is-confirmed">zugesagt</span>' : '';
     if (x.status === 'done') return '<span class="cal-pill">erledigt</span>';
     if (x.confirmedAt) return '<span class="cal-pill is-confirmed">bestätigt</span>';
     return '';
@@ -87,10 +90,10 @@
       const rows = items.map(x => {
         if (x.kind === 'res') {
           const r = x.r;
-          return `<li class="cal-item is-res${r.status === 'done' ? ' is-done' : ''}"${tap('res', r.id, 'Reservierung ' + (r.name || ''))}>
+          return `<li class="cal-item is-res"${tap('res', r.id, 'Reservierung ' + (r.name || ''))}>
             <span class="cal-time">${escapeHtml(r.time || '–')}</span>
             <span class="cal-main"><span class="cal-type">Tisch</span> <strong>${escapeHtml(r.name || 'Ohne Namen')}</strong>${r.persons ? ` · ${escapeHtml(r.persons)}` : ''}</span>
-            ${pill(r)}
+            ${opts && opts.resStatus ? pill(r, 'res') : ''}
           </li>`;
         }
         const o = x.o;
