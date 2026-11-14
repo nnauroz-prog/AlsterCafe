@@ -12814,3 +12814,122 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 @media print {
   .fx-dust { display: none !important; }
 }
+
+/* ==========================================================================
+   RESERVIERUNG · neu geordnet (November 2026)
+   Formular zuerst und in drei Schritten (Wann? · Wer? · Wunsch?), davor keine
+   Textwand mehr. Alle Hinweise stehen an einer Stelle als offene Linienliste,
+   mit den echten Öffnungszeiten. Keine Kästen: kein Tipp-Kasten, kein
+   „Ausgegeben am“-Kopf, das Formular ist ein schlichtes Blatt mit geraden Kanten.
+   ========================================================================== */
+@media screen {
+  .reservation-page .reservation-grid {
+    display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    gap: clamp(40px, 6vw, 96px); align-items: start;
+  }
+  /* Im Quelltext steht das Formular zuerst (Handy, Tastatur); am Computer rechts */
+  .reservation-page .reservation-form { order: 2; }
+  .reservation-page .reservation-intro { order: 1; }
+  @media (max-width: 980px) {
+    .reservation-page .reservation-grid { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+    .reservation-page .reservation-form, .reservation-page .reservation-intro { order: 0; }
+  }
+
+  /* --- Das Blatt --- */
+  .reservation-page .reservation-form {
+    position: relative; margin: 0; background: var(--paper, #FFFCF4);
+    border: 0; border-radius: 2px; box-shadow: 0 34px 60px -44px rgba(0, 0, 0, .7);
+    padding: clamp(26px, 3.4vw, 46px) clamp(20px, 3.4vw, 46px) clamp(24px, 3vw, 40px);
+  }
+  .reservation-page .reservation-form::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: auto; width: auto; height: 3px;
+    background: var(--gold, #B8893E); border-radius: 0; transform: none; opacity: 1;
+  }
+  .reservation-page .reservation-form::after { content: none; }
+
+  /* --- Drei Schritte --- */
+  .reservation-form .res-step { border: 0; padding: 0; margin: 0; min-width: 0; }
+  /* Trennlinie sitzt an der Überschrift: ein fieldset zeichnet seinen eigenen Rand hinter die legend */
+  .reservation-form .res-step + .res-step { margin-top: 28px; }
+  .reservation-form .res-step + .res-step .res-legend { padding-top: 26px; border-top: 1px solid var(--hairline, rgba(61, 36, 21, .14)); }
+  .reservation-form .res-legend {
+    display: flex; align-items: baseline; gap: 14px; width: 100%; padding: 0; margin: 0 0 18px; float: none;
+    font-family: 'Fraunces', serif; font-weight: 400; font-style: normal;
+    font-size: clamp(1.28rem, 2vw, 1.6rem); line-height: 1.2; letter-spacing: -.012em; color: var(--bean, #3D2415);
+    text-transform: none;
+  }
+  .reservation-form .res-legend .num {
+    font: 600 .72rem/1 'Inter', sans-serif; letter-spacing: .18em; color: var(--accent-text, #8A6420);
+    font-style: normal; opacity: 1; font-variant-numeric: tabular-nums;
+  }
+  .reservation-form .res-optional {
+    margin-left: auto; font: 500 .68rem/1 'Inter', sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--muted, #6b5a4a);
+  }
+  .reservation-form .res-step > label:last-child,
+  .reservation-form .res-step > .form-row:last-child,
+  .reservation-form .res-step > .form-row:last-child > label { margin-bottom: 0; }
+  .reservation-form .res-step > .date-hint { margin: 12px 0 0; }
+  @media (max-width: 760px) { .reservation-form .res-step > .form-row:last-child > label:not(:last-child) { margin-bottom: 16px; } }
+
+  /* --- Übersicht vor dem Absenden --- */
+  .reservation-form .res-overview {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px;
+    margin: 28px 0 0; padding: 16px 0;
+    border-top: 1px solid var(--bean, #3D2415); border-bottom: 1px solid var(--hairline, rgba(61, 36, 21, .14));
+  }
+  .reservation-form .res-overview[hidden] { display: none; }
+  .reservation-form .res-overview-label { font: 600 .7rem/1.2 'Inter', sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-text, #8A6420); }
+  .reservation-form .res-overview strong {
+    font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(1.1rem, 1.6vw, 1.3rem); color: var(--bean, #3D2415);
+    font-variant-numeric: tabular-nums; letter-spacing: -.005em;
+  }
+  .reservation-form .form-privacy { margin: 22px 0 18px; }
+  .reservation-form .res-overview[hidden] + .form-privacy { margin-top: 26px; }
+  .reservation-form .res-call { margin: 14px 0 0; text-align: center; font: 400 .92rem/1.4 'Inter', sans-serif; color: var(--muted, #6b5a4a); letter-spacing: 0; text-transform: none; }
+  .reservation-form .res-call a {
+    display: inline-block; padding: 12px 4px; color: var(--bean, #3D2415); font-weight: 600;
+    text-decoration: underline; text-decoration-color: var(--gold, #B8893E); text-underline-offset: 4px; white-space: nowrap;
+  }
+
+  /* --- Die Info-Spalte: offene Linienliste auf dem dunklen Band --- */
+  .reservation-page .reservation-intro { color: rgba(241, 231, 211, .88); }
+  .reservation-page .res-info + .res-info { margin-top: 36px; }
+  .reservation-page .res-info-title {
+    margin: 0 0 16px; padding: 0 0 12px; border-bottom: 1px solid rgba(241, 231, 211, .2);
+    font: 600 .72rem/1.2 'Inter', sans-serif; letter-spacing: .22em; text-transform: uppercase; color: var(--gold-soft, #D4B380);
+  }
+  .reservation-page .res-info-text {
+    margin: 0; font-family: 'Fraunces', serif; font-style: normal; font-weight: 400;
+    font-size: clamp(1.06rem, 1.4vw, 1.22rem); line-height: 1.55; color: rgba(241, 231, 211, .92);
+  }
+  .reservation-page .res-info-lead { font-family: 'Inter', sans-serif; font-size: 1rem; color: rgba(241, 231, 211, .86); }
+  .reservation-page .reservation-info { list-style: none; margin: 0; padding: 0; }
+  .reservation-page .reservation-info li {
+    position: static; display: block; margin: 0; padding: 13px 0; border-bottom: 1px solid rgba(241, 231, 211, .12);
+    font: 400 1rem/1.55 'Inter', sans-serif; color: rgba(241, 231, 211, .86);
+  }
+  .reservation-page .reservation-info li:first-child { padding-top: 0; }
+  .reservation-page .reservation-info li::before { content: none; display: none; }
+  .reservation-page .reservation-info li em { font-style: normal; color: var(--gold-soft, #D4B380); }
+  .reservation-page .hours-list { margin: 12px 0 0; padding: 0; list-style: none; }
+  .reservation-page .hours-list li {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    padding: 11px 0; border-bottom: 1px solid rgba(241, 231, 211, .12); color: rgba(241, 231, 211, .92);
+    font-family: 'Fraunces', serif; font-size: 1.05rem;
+  }
+  .reservation-page .hours-list .time { color: var(--gold-soft, #D4B380); font-variant-numeric: tabular-nums; }
+  .reservation-page .hours-list li > span:first-child::after { content: none; display: none; }
+  .reservation-page .hours-list li.is-today { color: #FFFCF4; font-weight: 500; }
+  .reservation-page .hours-list li.is-today > span:first-child::before {
+    content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 10px 3px 0; border-radius: 50%; background: var(--gold-soft, #D4B380);
+  }
+  .reservation-page .hours-list li.hours-closures { display: block; color: rgba(241, 231, 211, .78); font: 400 .92rem/1.5 'Inter', sans-serif; }
+  .reservation-page .hours-closures-label { color: var(--gold-soft, #D4B380); }
+  .reservation-page .res-online-until {
+    margin: 14px 0 0; font: 400 .92rem/1.5 'Inter', sans-serif; font-style: normal; color: rgba(241, 231, 211, .74);
+  }
+  .reservation-page .hours-list li.is-today > span:first-child { color: var(--gold-soft, #D4B380); }
+  .reservation-page .reservation-intro > .btn-link { margin-top: 30px; }
+  /* Am Computer steht die Telefonnummer schon direkt unter dem Knopf des Formulars */
+  @media (min-width: 981px) { .reservation-page .reservation-intro > .btn-link { display: none; } }
+}

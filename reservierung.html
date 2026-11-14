@@ -29,17 +29,17 @@
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r238" />
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r239" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Alstercafé" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;color-scheme:only light;background:#FFFCF4;color:#1F140C;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}img{max-width:100%;display:block}[hidden]{display:none!important}</style>
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r238" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r239" />
   <!-- Ohne JavaScript: Inhalte sofort zeigen (sonst blieben .reveal-Blöcke und der Splash unsichtbar) -->
   <noscript><style>.app-splash{display:none!important}.reveal{opacity:1!important;transform:none!important}.closer-art .art-line{animation-play-state:running}</style></noscript>
-  <script>(function(){var V="2026-05-10-r238";try{if(localStorage.getItem("alstercafe.app-version")!==V){localStorage.removeItem("alstercafe.content");localStorage.removeItem("alstercafe.__hydrated_at");localStorage.setItem("alstercafe.app-version",V)}}catch(e){};try{if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <script>(function(){var V="2026-05-10-r239";try{if(localStorage.getItem("alstercafe.app-version")!==V){localStorage.removeItem("alstercafe.content");localStorage.removeItem("alstercafe.__hydrated_at");localStorage.setItem("alstercafe.app-version",V)}}catch(e){};try{if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -106,48 +106,76 @@
     <section class="section reservation reservation-page chapter chapter-dark" data-chapter="I">
       <span class="chapter-mark" aria-hidden="true">I</span>
       <div class="container reservation-grid">
-        <div class="reservation-intro reveal">
-          <p>
-            Ein bis zwei Tage vorher reicht meistens. Größere Gruppen ab sechs
-            Personen bitte einen Tag vorher anmelden — sonst wird's in der
-            Backstube knapp.
-          </p>
-          <a class="btn btn-link light" href="tel:+494022692891"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
-          <a class="btn btn-link light form-jump" href="#reservation-form"><svg class="ico ico-sm"><use href="#i-arrow"/></svg> Zum Formular</a>
-          <ul class="reservation-info">
-            <li><strong>So läuft's:</strong> Sie senden die Anfrage, wir melden uns am selben Tag per Anruf oder Mail zurück mit Bestätigung. Eine Online-Sofortbestätigung gibt es nicht — das ist Absicht.</li>
-            <li>Reservierungen täglich zu unseren Öffnungszeiten.</li>
-            <li>Festtagstorten und besondere Wünsche gern auf Vorbestellung.</li>
-          </ul>
-        </div>
-
         <form class="reservation-form reveal" id="reservation-form" action="mailto:info@alstercafe.de" method="post" enctype="text/plain" novalidate>
-          <div class="form-row">
-            <label><span>Name <em>*</em></span><input type="text" name="Name" required autocomplete="name" placeholder="Ihr Name" /></label>
-            <label><span>Telefon <em>*</em></span><input type="tel" name="Telefon" required autocomplete="tel" placeholder="040 12345678" /></label>
-          </div>
-          <label><span>E-Mail <em>*</em></span><input type="email" name="E-Mail" required autocomplete="email" placeholder="ihre@mail.de" /></label>
-          <div class="form-row three">
-            <label><span>Datum <em>*</em></span><input type="date" name="Datum" required /></label>
-            <label><span>Uhrzeit <em>*</em></span>
-              <select name="Uhrzeit" required>
-                <option value="">Bitte wählen</option>
-              </select>
-            </label>
-            <label><span>Personen <em>*</em></span>
-              <select name="Personen" required>
-                <option value="">Bitte wählen</option>
-                <option value="1 Person">1 Person</option><option value="2 Personen">2 Personen</option><option value="3 Personen">3 Personen</option><option value="4 Personen">4 Personen</option>
-                <option value="5 Personen">5 Personen</option><option value="6 Personen">6 Personen</option><option value="7 Personen">7 Personen</option><option value="8 Personen">8 Personen</option>
-                <option value="mehr als 8 Personen">mehr als 8 Personen</option>
-              </select>
-            </label>
-          </div>
-          <label><span>Anlass / Nachricht</span><textarea name="Nachricht" rows="2" placeholder="Geburtstag, Kinderstuhl, Wunschtisch …"></textarea></label>
+          <fieldset class="res-step">
+            <legend class="res-legend"><span class="num">01</span> Wann und mit wie vielen?</legend>
+            <div class="form-row three">
+              <label><span>Datum <em>*</em></span><input type="date" name="Datum" required /></label>
+              <label><span>Uhrzeit <em>*</em></span>
+                <select name="Uhrzeit" required>
+                  <option value="">Bitte wählen</option>
+                </select>
+              </label>
+              <label><span>Personen <em>*</em></span>
+                <select name="Personen" required>
+                  <option value="">Bitte wählen</option>
+                  <option value="1 Person">1 Person</option><option value="2 Personen">2 Personen</option><option value="3 Personen">3 Personen</option><option value="4 Personen">4 Personen</option>
+                  <option value="5 Personen">5 Personen</option><option value="6 Personen">6 Personen</option><option value="7 Personen">7 Personen</option><option value="8 Personen">8 Personen</option>
+                  <option value="mehr als 8 Personen">mehr als 8 Personen</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset class="res-step">
+            <legend class="res-legend"><span class="num">02</span> Wer kommt?</legend>
+            <div class="form-row">
+              <label><span>Name <em>*</em></span><input type="text" name="Name" required autocomplete="name" placeholder="Ihr Name" /></label>
+              <label><span>Telefon <em>*</em></span><input type="tel" name="Telefon" required autocomplete="tel" placeholder="040 12345678" /></label>
+            </div>
+            <label><span>E-Mail <em>*</em></span><input type="email" name="E-Mail" required autocomplete="email" placeholder="ihre@mail.de" /></label>
+          </fieldset>
+          <fieldset class="res-step">
+            <legend class="res-legend"><span class="num">03</span> Noch ein Wunsch? <small class="res-optional">freiwillig</small></legend>
+            <label><span>Anlass / Nachricht</span><textarea name="Nachricht" rows="2" placeholder="Geburtstag, Kinderstuhl, Wunschtisch …"></textarea></label>
+          </fieldset>
+          <!-- Übersicht vor dem Absenden; füllt script.js, sobald Datum, Uhrzeit und Personen gewählt sind -->
+          <p class="res-overview" id="res-overview" aria-live="polite" data-no-i18n hidden></p>
           <p class="form-privacy">Wir verarbeiten Ihre Angaben nur zur Bearbeitung Ihrer Anfrage. Freiwillige Hinweise zu Allergien oder Unverträglichkeiten nutzen wir ausschließlich dafür; mit dem Absenden willigen Sie insoweit ein (Art. 9 Abs. 2 lit. a DSGVO), widerrufbar jederzeit per E-Mail. Mehr in unserer <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
           <button type="submit" class="btn btn-primary form-submit">Reservierung anfragen</button>
           <p class="form-status" role="status" aria-live="polite"></p>
+          <p class="res-call"><span>Lieber telefonisch:</span> <a href="tel:+494022692891">040 – 22 69 28 91</a></p>
         </form>
+
+        <div class="reservation-intro reveal">
+          <div class="res-info">
+            <h2 class="res-info-title">So läuft's</h2>
+            <p class="res-info-text">Sie senden die Anfrage, wir melden uns am selben Tag per Anruf oder Mail zurück mit Bestätigung. Eine Online-Sofortbestätigung gibt es nicht — das ist Absicht.</p>
+          </div>
+          <div class="res-info">
+            <h2 class="res-info-title">Gut zu wissen</h2>
+            <ul class="reservation-info">
+              <li>
+                Ein bis zwei Tage vorher reicht meistens. Größere Gruppen ab sechs
+                Personen bitte einen Tag vorher anmelden — sonst wird's in der
+                Backstube knapp.
+              </li>
+              <li>Sonntag- und Samstagvormittag ist <em>am stärksten</em> nachgefragt.</li>
+              <li>Festtagstorten und besondere Wünsche gern auf Vorbestellung.</li>
+            </ul>
+          </div>
+          <div class="res-info">
+            <h2 class="res-info-title">Öffnungszeiten</h2>
+            <p class="res-info-text res-info-lead">Reservierungen täglich zu unseren Öffnungszeiten.</p>
+            <ul class="hours-list" id="hours-list">
+              <li><span>Mo – Fr</span><span class="time">06:30 – 15:00</span></li>
+              <li><span>Samstag</span><span class="time">07:30 – 15:00</span></li>
+              <li><span>Sonntag</span><span class="time">07:30 – 15:00</span></li>
+            </ul>
+            <!-- Letzte online wählbare Uhrzeit; füllt script.js aus den Öffnungszeiten -->
+            <p class="res-online-until" id="res-online-until" data-no-i18n hidden></p>
+          </div>
+          <a class="btn btn-link light" href="tel:+494022692891"><svg class="ico ico-sm"><use href="#i-phone"/></svg> 040 – 22 69 28 91</a>
+        </div>
       </div>
     </section>
   </main>
@@ -161,10 +189,10 @@
   </footer>
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
-  <script src="config.js?v=2026-05-10-r238" defer></script>
-  <script src="db.js?v=2026-05-10-r238" defer></script>
-  <script src="rules.js?v=2026-05-10-r238" defer></script>
-  <script src="script.js?v=2026-05-10-r238" defer></script>
-  <script src="i18n.js?v=2026-05-10-r238" defer></script>
+  <script src="config.js?v=2026-05-10-r239" defer></script>
+  <script src="db.js?v=2026-05-10-r239" defer></script>
+  <script src="rules.js?v=2026-05-10-r239" defer></script>
+  <script src="script.js?v=2026-05-10-r239" defer></script>
+  <script src="i18n.js?v=2026-05-10-r239" defer></script>
 </body>
 </html>
