@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://jsepktfpdlgezzncmbxz.supabase.co" crossorigin />
   <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r242" />
-  <link rel="stylesheet" href="styles.css?v=2026-05-10-r242" />
-  <script>(function(){var V='2026-05-10-r242';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
+  <link rel="stylesheet" href="fonts.css?v=2026-05-10-r243" />
+  <link rel="stylesheet" href="styles.css?v=2026-05-10-r243" />
+  <script>(function(){var V='2026-05-10-r243';try{if(localStorage.getItem('alstercafe.app-version')!==V){localStorage.removeItem('alstercafe.content');localStorage.removeItem('alstercafe.__hydrated_at');localStorage.setItem('alstercafe.app-version',V)}}catch(e){};try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}}catch(e){}})();</script>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;padding:0;color-scheme:only light;background:#FAF5EC;color:#1F140C;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -142,56 +142,31 @@
         <!-- Hero / Welcome -->
         <div class="admin-welcome admin-welcome-slim">
           <h1 id="welcome-name">Mitgliederbereich</h1>
-          <p class="admin-sub">Tippen Sie unten auf den Bereich, den Sie pflegen möchten.</p>
+          <p class="admin-sub">Oben steht, was ansteht – darunter die Bereiche zum Pflegen.</p>
         </div>
 
         <!-- OVERVIEW (Dashboard-Startansicht) -->
         <section class="admin-overview" id="overview-view">
-          <details class="overview-help">
-            <summary>Kurze Anleitung — in 3 Schritten</summary>
-            <ol class="overview-help-steps">
-              <li><strong>Bereich wählen.</strong> Tippen Sie unten auf die Kachel, die Sie ändern möchten (z. B. „Mittagstisch“).</li>
-              <li><strong>Ändern.</strong> Tragen Sie ein, was Sie möchten — Texte überschreiben, Felder ausfüllen, Bilder hochladen.</li>
-              <li><strong>Speichern.</strong> Tippen Sie unten auf den Knopf „… speichern“. Erst dann wird die Änderung übernommen — und erscheint von selbst auf der Webseite, auch auf den Handys Ihrer Gäste.</li>
-            </ol>
-            <p class="overview-help-note">
-              Über „← Zurück zur Übersicht“ oben kommen Sie immer wieder hierher.
-              Sie können nichts kaputt machen: Bevor Sie einen Bereich mit ungespeicherten
-              Änderungen verlassen, fragt der Mitgliederbereich nach.
-            </p>
-          </details>
-
-          <!-- Übersicht auf einen Blick -->
-          <div class="overview-summary" id="overview-summary">
-            <p class="summary-head"><span class="summary-head-title">Heute auf einen Blick</span></p>
-            <button type="button" class="summary-stat summary-stat-count" data-tab="anfragen">
-              <span class="summary-stat-num" id="summary-anfragen">0</span>
-              <span class="summary-stat-label">offene Reservierungen</span>
-            </button>
-            <button type="button" class="summary-stat summary-stat-count" data-tab="bestellungen">
-              <span class="summary-stat-num" id="summary-orders">0</span>
-              <span class="summary-stat-label">offene Bestellungen</span>
-            </button>
-            <div class="summary-stat summary-stat-info">
-              <span class="summary-stat-label">Heute mittag</span>
-              <span class="summary-stat-value" id="summary-today-dish">—</span>
-            </div>
-            <div class="summary-stat summary-stat-info">
-              <span class="summary-stat-label">Nächste Reservierung</span>
-              <span class="summary-stat-value" id="summary-next-res">—</span>
-            </div>
-            <button type="button" class="summary-today" data-tab="kalender" id="summary-today">
-              <svg class="ico ico-sm" aria-hidden="true"><use href="#i-clock"/></svg>
-              <span id="summary-today-text">Heute: —</span>
-              <span class="summary-today-go" aria-hidden="true">Kalender →</span>
-            </button>
-            <div class="today-list-wrap" id="today-list-wrap" hidden>
-              <ul class="today-list" id="today-list" aria-label="Heute"></ul>
-              <button type="button" class="btn btn-link today-print" data-print-day="today">
-                <svg class="ico ico-sm"><use href="#i-print"/></svg>
-                Tagesliste drucken
-              </button>
-            </div>
+          <!-- Übersicht: was zu tun ist, was heute und morgen ansteht. Füllt admin.js (renderOverviewSummary). -->
+          <div class="ov-board" id="ov-board">
+            <section class="ov-sec ov-todo" aria-labelledby="ov-todo-title">
+              <h2 class="ov-title" id="ov-todo-title">Zu tun</h2>
+              <ul class="ov-todo-list" id="ov-todo-list"></ul>
+            </section>
+            <section class="ov-sec ov-day" id="ov-today" aria-labelledby="ov-today-title">
+              <div class="ov-day-head">
+                <h2 class="ov-title" id="ov-today-title">Heute</h2>
+                <span class="ov-day-sum" id="ov-today-sum"></span>
+              </div>
+              <div class="ov-day-body" id="ov-today-body"></div>
+            </section>
+            <section class="ov-sec ov-day" id="ov-tomorrow" aria-labelledby="ov-tomorrow-title">
+              <div class="ov-day-head">
+                <h2 class="ov-title" id="ov-tomorrow-title">Morgen</h2>
+                <span class="ov-day-sum" id="ov-tomorrow-sum"></span>
+              </div>
+              <div class="ov-day-body" id="ov-tomorrow-body"></div>
+            </section>
           </div>
 
           <p class="overview-group-label">Täglich</p>
@@ -301,6 +276,20 @@
               <span class="overview-card-arrow" aria-hidden="true"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
             </button>
           </div>
+
+          <details class="overview-help">
+            <summary>Kurze Anleitung — in 3 Schritten</summary>
+            <ol class="overview-help-steps">
+              <li><strong>Bereich wählen.</strong> Tippen Sie auf die Kachel, die Sie ändern möchten (z. B. „Mittagstisch“).</li>
+              <li><strong>Ändern.</strong> Tragen Sie ein, was Sie möchten — Texte überschreiben, Felder ausfüllen, Bilder hochladen.</li>
+              <li><strong>Speichern.</strong> Tippen Sie unten auf den Knopf „… speichern“. Erst dann wird die Änderung übernommen — und erscheint von selbst auf der Webseite, auch auf den Handys Ihrer Gäste.</li>
+            </ol>
+            <p class="overview-help-note">
+              Über „← Zurück zur Übersicht“ oben kommen Sie immer wieder hierher. Ganz oben steht, was zu tun ist und was heute und morgen ansteht.
+              Sie können nichts kaputt machen: Bevor Sie einen Bereich mit ungespeicherten
+              Änderungen verlassen, fragt der Mitgliederbereich nach.
+            </p>
+          </details>
 
           <p class="overview-utility">
             <a href="index.html?edit=1" target="_blank" rel="noopener" class="overview-utility-link">
@@ -1254,11 +1243,11 @@
 
   <script src="vendor/supabase-js-2.117.2.js" defer></script>
   <script src="vendor/qrcode-generator-1.4.4.js" defer></script>
-  <script src="config.js?v=2026-05-10-r242" defer></script>
-  <script src="db.js?v=2026-05-10-r242" defer></script>
-  <script src="menudata.js?v=2026-05-10-r242" defer></script>
-  <script src="calendar.js?v=2026-05-10-r242" defer></script>
-  <script src="rules.js?v=2026-05-10-r242" defer></script>
-  <script src="admin.js?v=2026-05-10-r242" defer></script>
+  <script src="config.js?v=2026-05-10-r243" defer></script>
+  <script src="db.js?v=2026-05-10-r243" defer></script>
+  <script src="menudata.js?v=2026-05-10-r243" defer></script>
+  <script src="calendar.js?v=2026-05-10-r243" defer></script>
+  <script src="rules.js?v=2026-05-10-r243" defer></script>
+  <script src="admin.js?v=2026-05-10-r243" defer></script>
 </body>
 </html>

@@ -119,8 +119,6 @@ async function init() {
   initBottomBar();
   initOverviewArt();
 
-  // Übersicht-Zähler: Klick springt in den passenden Bereich
-  dom.summaryStats.forEach(s => s.addEventListener('click', () => switchTab(s.dataset.tab)));
 
   // Suche in Anfragen / Bestellungen
   dom.anfragenSearch?.addEventListener('input', () => renderAnfragen());
@@ -288,11 +286,6 @@ function cacheDom() {
     overviewCards: document.querySelectorAll('.overview-card[data-tab]'),
     backToOverview: document.getElementById('back-to-overview'),
     // Übersicht-Zusammenfassung
-    summaryStats:    document.querySelectorAll('.summary-stat[data-tab], .summary-today[data-tab]'),
-    summaryAnfragen: document.getElementById('summary-anfragen'),
-    summaryOrders:   document.getElementById('summary-orders'),
-    summaryTodayDish: document.getElementById('summary-today-dish'),
-    summaryNextRes:  document.getElementById('summary-next-res'),
     // Anfragen
     anfragenList:  document.getElementById('anfragen-list'),
     anfragenCount: document.getElementById('anfragen-count'),
@@ -522,6 +515,7 @@ async function openEntryCard(kind, id) {
   if (search && search.value) { search.value = ''; search.dispatchEvent(new Event('input', { bubbles: true })); }
   // Reservierungen: erst den Filter auf „alle“ stellen – sonst fehlt die gesuchte Zeile in der Liste
   if (kind !== 'order' && anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); }
+  if (kind === 'order') resetOrdersView();
   const card = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item');
   if (!card) return;
   if (kind !== 'order') anfragenOpen.add(id);   // Zeile zum Aufklappen: geöffnet merken
@@ -840,6 +834,9 @@ async function showOverview() {
   dom.dashboard?.classList.remove('is-working');
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
+  // Ein über „Zu tun“ gesetzter Filter gilt nur für diesen Besuch – beim nächsten Öffnen wieder alles
+  try { if (anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); } } catch (e) {}
+  try { renderOverviewSummary(); } catch (e) {}   // Stand von jetzt (Datum, Bestätigtes, Wochenplan)
   setBottomBarActive('overview');
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
 }
@@ -2720,77 +2717,163 @@ function setStatus(el, msg, kind = '') {
 // Fuellt die Zusammenfassungs-Kacheln auf der Startansicht aus dem Cache:
 // offene Reservierungen/Bestellungen, heutiges Mittagsgericht, naechste
 // Reservierung. Wird nach jedem Laden/Realtime-Event aktualisiert.
-function renderOverviewSummary() {
-  const resArr = (() => { const l = window.alsterDb?.get('reservations'); return Array.isArray(l) ? l : []; })();
-  const ordArr = (() => { const l = window.alsterDb?.get('orders'); return Array.isArray(l) ? l : []; })();
-  const newRes = resArr.filter(r => isOpenEntry(r, 'date')).length;
-  const newOrd = ordArr.filter(o => isOpenEntry(o, 'pickupDate')).length;
-  // Offene Anfragen im Browser-Tab sichtbar, z. B. „(2) Mitgliederbereich · Alstercafé“
-  const openTotal = newRes + newOrd;
-  document.title = (openTotal ? `(${openTotal}) ` : '') + 'Mitgliederbereich · Alstercafé';
-  countTo(dom.summaryAnfragen, newRes);
-  countTo(dom.summaryOrders, newOrd);
-  setBottomBadge('anfragen', newRes);
-  setBottomBadge('bestellungen', newOrd);
-  // Offene Einträge golden hervorheben (Facelift)
-  dom.summaryAnfragen?.closest('.summary-stat')?.classList.toggle('has-open', newRes > 0);
-  dom.summaryOrders?.closest('.summary-stat')?.classList.toggle('has-open', newOrd > 0);
-
-  // Heutiges Mittagsgericht aus dem Wochenplan
-  if (dom.summaryTodayDish) {
-    const all = loadAll();
-    const today = new Date();
-    const wk = all[isoDate(mondayOf(today))];
-    const dayKey = DAYS[(today.getDay() + 6) % 7].key;
-    const day = wk && wk.days ? wk.days[dayKey] : null;
-    const dish = [day?.dish, day?.dish2].map(d => (d || '').trim()).filter(Boolean).join('  ·  oder  ·  ');
-    dom.summaryTodayDish.textContent = (day && day.closed)
-      ? 'Heute kein Mittagstisch'
-      : (dish || 'Noch nichts eingetragen');
+/* Bestellungen ohne Einschränkung zeigen (Suche leer, Sorten-Filter „Alle“) – vor jedem Sprung dorthin,
+   sonst kann die gesuchte Bestellung ausgeblendet sein. */
+function resetOrdersView() {
+  let changed = false;
+  if (dom.ordersSearch && dom.ordersSearch.value) { dom.ordersSearch.value = ''; changed = true; }
+  const chips = document.querySelectorAll('#orders-filter [data-kind]');
+  const active = document.querySelector('#orders-filter .is-active');
+  if (chips.length && active?.dataset.kind !== 'all') {
+    chips.forEach(x => { const on = x.dataset.kind === 'all'; x.classList.toggle('is-active', on); x.setAttribute('aria-pressed', String(on)); });
+    changed = true;
   }
+  if (changed) renderOrders();
+}
 
-  // Heute: Tische und Abholungen (Kurzfassung des Kalenders)
-  const todayText = document.getElementById('summary-today-text');
-  if (todayText) {
-    const t = isoDate(new Date());
-    const nRes = resArr.filter(r => r.date === t).length;
-    const nOrd = ordArr.filter(o => o.pickupDate === t).length;
-    todayText.textContent = (nRes || nOrd)
-      ? `Heute: ${nRes} ${nRes === 1 ? 'Tisch' : 'Tische'} · ${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}`
-      : 'Heute: keine Reservierungen oder Abholungen';
-    // Kurze Liste der heutigen Einträge (Uhrzeit · Name · Personen/Stück), antippbar
-    const wrap = document.getElementById('today-list-wrap'), ul = document.getElementById('today-list');
-    if (wrap && ul) {
-      const entries = dayEntries(t);
-      wrap.hidden = !entries.length;
-      ul.innerHTML = entries.map(e => {
-        const x = e.x;
-        const qty = e.kind === 'order' ? (x.totalCount || (x.items || []).reduce((n, it) => n + (parseInt(it?.qty, 10) || 0), 0)) : 0;
-        const what = e.kind === 'res' ? (x.persons || 'Tisch') : `${qty} ${(x.items || []).some(it => it && it.kind === 'berliner') ? 'Berliner' : 'Brötchen'}`;
-        return `<li><button type="button" class="today-item${entryStage(x) === 'done' ? ' is-done' : ''}" data-open-kind="${e.kind}" data-open-id="${escapeAttr(x.id || '')}">
+/* Mittagstisch eines Tages aus dem Wochenplan. null = für den Tag ist nichts vorgesehen
+   (Wochenende ohne Eintrag). missing = Werktag ohne Gericht. */
+function lunchFor(date) {
+  const wk = loadAll()[isoDate(mondayOf(date))];
+  const idx = (date.getDay() + 6) % 7;
+  const day = wk && wk.days ? wk.days[DAYS[idx].key] : null;
+  if (day && day.closed) return { closed: true, text: 'kein Mittagstisch' };
+  const dish = [day?.dish, day?.dish2].map(d => (d || '').trim()).filter(Boolean).join('  ·  oder  ·  ');
+  if (dish) return { text: dish };
+  return idx <= 4 ? { missing: true, text: 'noch nichts eingetragen' } : null;
+}
+
+/* Tagesliste drucken; die Rückmeldung erscheint als kurze Einblendung dort, wo getippt wurde. */
+function printDayWithToast(iso) {
+  const note = document.createElement('p');
+  new MutationObserver((_, mo) => {
+    if (!note.textContent) return;
+    mo.disconnect();
+    showToast(note.textContent, note.classList.contains('error') ? { tone: 'error' } : {});
+  }).observe(note, { childList: true, characterData: true, subtree: true });
+  printDayList(iso, note);
+}
+
+/* Ein Tag in der Übersicht (heute / morgen): Summe, Mittagstisch, Einträge. */
+function renderOverviewDay(key, iso, lunch, hol) {
+  const sumEl = document.getElementById(`ov-${key}-sum`), body = document.getElementById(`ov-${key}-body`);
+  if (!sumEl || !body) return;
+  const entries = dayEntries(iso);
+  // Summe wie im Reservierungsbereich: nur, was noch nicht erledigt ist (die Zeilen darunter zeigen alles)
+  const resRows = entries.filter(e => e.kind === 'res' && e.x.status !== 'done').map(e => e.x);
+  const nOrd = entries.filter(e => e.kind === 'order' && e.x.status !== 'done').length;
+  const parts = [];
+  if (resRows.length) parts.push(tablesLabel(resRows));
+  if (nOrd) parts.push(`${nOrd} ${nOrd === 1 ? 'Abholung' : 'Abholungen'}`);
+  sumEl.textContent = hol
+    ? `geschlossen${hol.label ? ' · ' + hol.label : ''}${parts.length ? ' · ' + parts.join(' · ') : ''}`
+    : parts.join(' · ');   // ohne Einträge bleibt die Summe leer – der Satz darunter sagt es
+  sumEl.classList.toggle('is-closed', !!hol);
+  const lunchHtml = lunch ? `<button type="button" class="ov-lunch${lunch.missing ? ' is-missing' : ''}" data-ov-go="week">
+      <span class="ov-lunch-label">Mittagstisch</span>
+      <span class="ov-lunch-text">${escapeHtml(lunch.text)}</span>
+      <span class="ov-go" aria-hidden="true">→</span>
+    </button>` : '';
+  const listHtml = entries.length ? `<ul class="today-list">${entries.map(e => {
+      const x = e.x;
+      const qty = e.kind === 'order' ? (x.totalCount || (x.items || []).reduce((n, it) => n + (parseInt(it?.qty, 10) || 0), 0)) : 0;
+      const what = e.kind === 'res' ? (personsLabel(x.persons) || 'Tisch') : `${qty} ${(x.items || []).some(it => it && it.kind === 'berliner') ? 'Berliner' : 'Brötchen'}`;
+      return `<li><button type="button" class="today-item${entryStage(x) === 'done' ? ' is-done' : ''}" data-open-kind="${e.kind}" data-open-id="${escapeAttr(x.id || '')}">
           <span class="today-time">${escapeHtml(e.time || '–')}</span>
           <span class="today-main"><strong>${escapeHtml(x.name || 'Ohne Namen')}</strong> · ${escapeHtml(what)}</span>
           ${statusTagHtml(x)}
         </button></li>`;
-      }).join('');
-      if (!ul.dataset.bound) {
-        ul.dataset.bound = '1';
-        ul.addEventListener('click', ev => { const b = ev.target.closest('[data-open-id]'); if (b && b.dataset.openId) openEntryCard(b.dataset.openKind, b.dataset.openId); });
-        wrap.querySelector('[data-print-day]')?.addEventListener('click', () => printDayList(isoDate(new Date()), null));
-      }
-    }
+    }).join('')}</ul>
+    <button type="button" class="btn btn-link today-print" data-ov-print="${escapeAttr(iso)}">
+      <svg class="ico ico-sm" aria-hidden="true"><use href="#i-print"/></svg>
+      Tagesliste drucken
+    </button>` : '<p class="ov-day-empty">Keine Reservierungen oder Abholungen.</p>';
+  body.innerHTML = lunchHtml + listHtml;
+}
+
+/* Übersicht: „Zu tun“ (nur, was wirklich ansteht), „Heute“ und „Morgen“. */
+function renderOverviewSummary() {
+  const resArr = (() => { const l = window.alsterDb?.get('reservations'); return Array.isArray(l) ? l : []; })();
+  const ordArr = (() => { const l = window.alsterDb?.get('orders'); return Array.isArray(l) ? l : []; })();
+  const resTodo = resArr.filter(r => needsConfirm(r, 'date')).length;
+  const ordTodo = ordArr.filter(o => needsConfirm(o, 'pickupDate')).length;
+  // Was zu bestätigen ist, steht auch im Browser-Tab, z. B. „(2) Mitgliederbereich · Alstercafé“
+  const todoTotal = resTodo + ordTodo;
+  document.title = (todoTotal ? `(${todoTotal}) ` : '') + 'Mitgliederbereich · Alstercafé';
+  setBottomBadge('anfragen', resTodo);
+  setBottomBadge('bestellungen', ordTodo);
+
+  const board = document.getElementById('ov-board');
+  if (!board) return;
+  // Tastatur-Fokus merken (die Übersicht wird bei jeder Live-Änderung neu aufgebaut)
+  const ae = document.activeElement && board.contains(document.activeElement) ? document.activeElement : null;
+  const focusSel = !ae ? '' : ae.dataset.openId ? `#${ae.closest('.ov-day')?.id || 'ov-board'} [data-open-id="${CSS.escape(ae.dataset.openId)}"]`
+    : ae.dataset.ovPrint ? `[data-ov-print="${CSS.escape(ae.dataset.ovPrint)}"]`
+    : ae.classList.contains('ov-lunch') ? `#${ae.closest('.ov-day')?.id || 'ov-board'} .ov-lunch`
+    : ae.dataset.ovGo ? `.ov-todo-item[data-ov-go="${ae.dataset.ovGo}"]` : '';
+  const now = new Date();
+  const todayIso = isoDate(now);
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomIso = isoDate(tomorrow);
+  const holidays = (() => { const l = window.alsterDb?.get('holidays'); return Array.isArray(l) ? l : []; })();
+  const holOn = iso => holidays.find(h => h && h.date === iso) || null;
+  const lunchToday = holOn(todayIso) ? null : lunchFor(now);
+  const lunchTom = holOn(tomIso) ? null : lunchFor(tomorrow);
+
+  // --- Zu tun ---
+  const todo = [];
+  if (resTodo) todo.push({ go: 'res', num: resTodo, text: resTodo === 1 ? 'Reservierung bestätigen' : 'Reservierungen bestätigen' });
+  if (ordTodo) todo.push({ go: 'ord', num: ordTodo, text: ordTodo === 1 ? 'Bestellung bestätigen' : 'Bestellungen bestätigen' });
+  if (lunchToday?.missing && now.getHours() < 15) todo.push({ go: 'week', text: 'Mittagstisch für heute fehlt' });
+  if (lunchTom?.missing) todo.push({ go: 'week', text: 'Mittagstisch für morgen fehlt' });
+  const todoList = document.getElementById('ov-todo-list');
+  if (todoList) {
+    todoList.innerHTML = todo.length
+      ? todo.map(t => `<li><button type="button" class="ov-todo-item" data-ov-go="${t.go}">
+          <span class="ov-todo-num${t.num ? '' : ' is-dot'}"${t.num ? '' : ' aria-hidden="true"'}>${t.num || ''}</span>
+          <span class="ov-todo-text">${escapeHtml(t.text)}</span>
+          <span class="ov-go" aria-hidden="true">→</span>
+        </button></li>`).join('')
+      : '<li class="ov-todo-empty"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Alles erledigt – nichts zu tun.</li>';
+    todoList.closest('.ov-todo')?.classList.toggle('is-clear', !todo.length);
   }
 
-  // Naechste kommende, offene Reservierung
-  if (dom.summaryNextRes) {
-    const todayIso = isoDate(new Date());
-    const upcoming = resArr
-      .filter(r => r.date && r.date >= todayIso && r.status !== 'done')
-      .sort((a, b) => ((a.date || '') + (a.time || '')).localeCompare((b.date || '') + (b.time || '')));
-    const n = upcoming[0];
-    dom.summaryNextRes.textContent = n
-      ? `${formatAnfrageDate(n.date, n.time)}${n.name ? ' · ' + n.name : ''}`
-      : 'keine';
+  // --- Heute und Morgen ---
+  renderOverviewDay('today', todayIso, lunchToday, holOn(todayIso));
+  renderOverviewDay('tomorrow', tomIso, lunchTom, holOn(tomIso));
+  const tomTitle = document.getElementById('ov-tomorrow-title');
+  if (tomTitle) tomTitle.innerHTML = `Morgen <span class="ov-title-date">${escapeHtml(tomorrow.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }))}</span>`;
+
+  if (focusSel) (board.querySelector(focusSel) || board.querySelector('.ov-todo-item, .ov-lunch, .today-item'))?.focus({ preventScroll: true });
+
+  if (!board.dataset.bound) {
+    board.dataset.bound = '1';
+    board.addEventListener('click', ev => {
+      const open = ev.target.closest('[data-open-id]');
+      if (open && open.dataset.openId) { openEntryCard(open.dataset.openKind, open.dataset.openId); return; }
+      const pr = ev.target.closest('[data-ov-print]');
+      if (pr) { printDayWithToast(pr.dataset.ovPrint); return; }
+      const go = ev.target.closest('[data-ov-go]');
+      if (!go) return;
+      if (go.dataset.ovGo === 'res') {
+        // direkt zu denen, die noch zu bestätigen sind
+        anfragenFilter = 'neu';
+        if (dom.anfragenSearch && dom.anfragenSearch.value) dom.anfragenSearch.value = '';
+        renderAnfragen();
+        switchTab('anfragen');
+      } else if (go.dataset.ovGo === 'ord') {
+        resetOrdersView();
+        switchTab('bestellungen');
+      } else {
+        // immer die Woche zeigen, in der heute/morgen liegt – nicht eine zuvor aufgeblätterte
+        if (!dirtyForms.has('menu-form')) {
+          sundaySpillover = false;
+          currentMonday = mondayOf(new Date());
+          maybeEnableSundaySpillover();
+        }
+        switchTab('week');
+      }
+    });
   }
 }
 
@@ -2863,7 +2946,7 @@ function renderAnfragen() {
   if (deferRenderWhileTyping('anfragen-list', renderAnfragen)) return;
   const list = window.alsterDb?.get('reservations') || [];
   const items = Array.isArray(list) ? list : [];
-  const newCount = items.filter(r => isOpenEntry(r, 'date')).length;
+  const newCount = items.filter(r => needsConfirm(r, 'date')).length;   // Zahl an Kachel und Reiter
 
   if (dom.anfragenBadge) {
     dom.anfragenBadge.hidden = newCount === 0;
@@ -2964,16 +3047,7 @@ function renderAnfragen() {
     onMark: onMarkAnfrage, onDel: onDeleteAnfrage, onNote: onSaveAnfrageNote
   });
   dom.anfragenList.querySelectorAll('[data-phoneok]').forEach(btn => btn.addEventListener('click', () => onPhoneConfirmed(btn.dataset.phoneok)));
-  dom.anfragenList.querySelectorAll('[data-print-day]').forEach(btn => btn.addEventListener('click', () => {
-    // printDayList meldet in ein Status-Element; hier unsichtbar auffangen und als Einblendung zeigen
-    const note = document.createElement('p');
-    new MutationObserver((_, mo) => {
-      if (!note.textContent) return;
-      mo.disconnect();
-      showToast(note.textContent, note.classList.contains('error') ? { tone: 'error' } : {});
-    }).observe(note, { childList: true, characterData: true, subtree: true });
-    printDayList(btn.dataset.printDay, note);
-  }));
+  dom.anfragenList.querySelectorAll('[data-print-day]').forEach(btn => btn.addEventListener('click', () => printDayWithToast(btn.dataset.printDay)));
   // Aufgeklappt bleibt aufgeklappt
   dom.anfragenList.querySelectorAll('details[data-res-id]').forEach(d => d.addEventListener('toggle', () => {
     if (d.open) anfragenOpen.add(d.dataset.resId); else anfragenOpen.delete(d.dataset.resId);
@@ -2999,6 +3073,11 @@ function isOpenEntry(it, dateKey) {
   if (!it || it.status === 'done') return false;
   const ds = it[dateKey];
   return !ds || ds >= isoDate(new Date());
+}
+/* „Zu bestätigen“: offen UND noch im Stand „Neu“. Diese Zahl steht an Kachel, Reiter, Handy-Leiste
+   und im Browser-Tab – sie verschwindet, sobald alles bestätigt ist (passend zu „Zu tun“). */
+function needsConfirm(it, dateKey) {
+  return isOpenEntry(it, dateKey) && entryStage(it) === 'new';
 }
 
 // "2026-10-24" → "24.10.2026" (für die Suche nach deutschem Datum)
@@ -3420,7 +3499,7 @@ function renderOrders() {
   if (deferRenderWhileTyping('orders-list', renderOrders)) return;
   const list = window.alsterDb?.get('orders') || [];
   const items = Array.isArray(list) ? list : [];
-  const newCount = items.filter(o => isOpenEntry(o, 'pickupDate')).length;
+  const newCount = items.filter(o => needsConfirm(o, 'pickupDate')).length;   // Zahl an Kachel und Reiter
 
   if (dom.ordersBadge) {
     dom.ordersBadge.hidden = newCount === 0;
