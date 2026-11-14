@@ -4268,6 +4268,30 @@ function escapeAttr(s) { return escapeHtml(s); }
   else setTimeout(run, 400);
 })();
 
+/* Neuer Effekt: warmes Licht folgt der Maus in den dunklen Kapiteln (nur echte Maus, ohne reduzierte Bewegung) */
+(function initChapterGlow() {
+  if (document.body && document.body.classList.contains('admin-body')) return;
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const run = () => {
+    document.querySelectorAll('.chapter-dark').forEach(sec => {
+      if (sec.querySelector(':scope > .chapter-glow')) return;
+      const glow = document.createElement('span');
+      glow.className = 'chapter-glow'; glow.setAttribute('aria-hidden', 'true');
+      sec.prepend(glow);
+      let raf = 0, x = 0, y = 0;
+      sec.addEventListener('pointermove', e => {
+        const r = sec.getBoundingClientRect(); x = e.clientX - r.left; y = e.clientY - r.top;
+        if (!raf) raf = requestAnimationFrame(() => { raf = 0; glow.style.setProperty('--gx', x + 'px'); glow.style.setProperty('--gy', y + 'px'); });
+        sec.classList.add('is-lit');
+      }, { passive: true });
+      sec.addEventListener('pointerleave', () => sec.classList.remove('is-lit'), { passive: true });
+    });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 300));
+  else setTimeout(run, 300);
+})();
+
 /* Facelift 5: Goldstaub in dunklen Kapiteln + Tasse im Kopf folgt leicht der Maus */
 (function initGoldDustAndParallax() {
   if (document.body && document.body.classList.contains('admin-body')) return;

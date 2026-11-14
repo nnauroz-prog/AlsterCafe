@@ -12388,3 +12388,57 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   .lunch-week > .lunch-day .lunch-day-opt { column-gap: 14px; }
   .lunch-week > .lunch-day .lunch-day-dish { font-size: 1.08rem; text-wrap: wrap; }
 }
+
+/* ============================================================
+   NEUE EFFEKTE (November 2026) – alle nur mit Bewegungs-Freigabe des Geräts,
+   alle ohne Layout-Änderung; ohne Unterstützung im Browser bleibt die Seite wie bisher.
+   ============================================================ */
+
+/* --- 1 · Weicher Seitenwechsel: neue Seite blendet ein, Kopfzeile bleibt stehen --- */
+@view-transition { navigation: auto; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  body:not(.admin-body) .site-header { view-transition-name: site-header; }
+  ::view-transition-old(root) { animation: vt-leave .2s ease both; }
+  ::view-transition-new(root) { animation: vt-enter .42s cubic-bezier(.2, .7, .2, 1) both; }
+  ::view-transition-group(site-header) { animation-duration: .25s; }
+}
+@keyframes vt-leave { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes vt-enter { from { opacity: 0; transform: translateY(14px); } }
+
+/* --- 2 · Warmes Licht folgt der Maus in den dunklen Kapiteln (nur echte Maus) --- */
+.chapter-glow {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0;
+  background: radial-gradient(560px circle at var(--gx, 50%) var(--gy, 40%), rgba(226, 188, 122, .16), rgba(226, 188, 122, .05) 38%, transparent 62%);
+  transition: opacity .5s ease;
+}
+.chapter-dark.is-lit > .chapter-glow { opacity: 1; }
+
+/* --- 3 · Große Hintergrundwörter gleiten beim Scrollen langsam zur Seite --- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-shout { animation: shout-drift linear both; animation-timeline: view(); animation-range: entry 0% exit 100%; }
+    /* --- 4 · Dunkle Kapitel öffnen sich beim Hineinscrollen von einer abgerundeten Karte zur vollen Breite --- */
+    @media (min-width: 761px) {
+      .chapter.landing-visit-dark, .lunch-page.chapter-dark, .reservation-page.chapter-dark {
+        animation: chapter-open linear both; animation-timeline: view(); animation-range: entry 0% entry 80%;
+      }
+    }
+    /* --- 5 · Der große Schriftzug in der Fußzeile steigt beim Erreichen des Seitenendes auf --- */
+    .site-footer::after { animation: wordmark-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
+  }
+}
+@keyframes shout-drift { from { translate: -4% 0; } to { translate: 5% 0; } }
+@keyframes chapter-open { from { clip-path: inset(0 4.5% 0 4.5% round 32px); } to { clip-path: inset(0 0 0 0 round 0); } }
+@keyframes wordmark-rise { from { translate: 0 38%; } to { translate: 0 0; } }
+
+/* --- 6 · Speisekarte: Zeile unter der Maus bekommt eine goldene Kante und rückt leicht ein --- */
+@media (hover: hover) and (pointer: fine) {
+  .karte-list > li { transition: background-color .25s ease, box-shadow .25s ease; }
+  .karte-list > li .karte-row, .karte-list > li.karte-row > *, .karte-list > li .karte-desc { transition: translate .25s cubic-bezier(.2, .7, .2, 1); }
+  .karte-list > li:hover { background: linear-gradient(90deg, rgba(184, 137, 62, .09), rgba(184, 137, 62, 0) 72%); box-shadow: inset 2px 0 0 var(--gold); }
+  .karte-list > li:hover .karte-row, .karte-list > li:hover .karte-desc { translate: 10px 0; }
+  .karte-list > li:hover .karte-preis { translate: -10px 0; }
+  .karte-list > li .karte-preis { transition: translate .25s cubic-bezier(.2, .7, .2, 1), color .25s ease; }
+}
+@media print { .chapter-glow { display: none !important; } }
