@@ -411,6 +411,18 @@
     return !noteWriteError(error);
   }
 
+  /* Reservierung ändern (Datum, Uhrzeit, Personen, Name, Telefon) – nur diese Felder. */
+  async function updateReservation(id, patch) {
+    const clean = {};
+    ['name', 'phone', 'date', 'time', 'persons'].forEach(k => { if (patch && patch[k] !== undefined) clean[k] = String(patch[k] == null ? '' : patch[k]); });
+    if (!Object.keys(clean).length) return true;
+    const cur = readCache('reservations') || [];
+    writeCache('reservations', (Array.isArray(cur) ? cur : []).map(r => r.id === id ? { ...r, ...clean } : r));
+    if (!useSupabase) return true;
+    const { error } = await sb.from('reservations').update(clean).eq('id', id);
+    return !noteWriteError(error);
+  }
+
   async function deleteReservation(id) {
     const cur = readCache('reservations') || [];
     const next = (Array.isArray(cur) ? cur : []).filter(r => r.id !== id);
@@ -672,6 +684,7 @@
     listReservations,
     updateReservationStatus,
     updateReservationNote,
+    updateReservation,
     deleteReservation,
     // Bestellungen (belegte Broetchen)
     addOrder,

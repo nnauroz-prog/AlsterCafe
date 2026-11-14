@@ -80,10 +80,14 @@ Die ausführliche, druckbare Anleitung steht in [**MARIA-ROUTINE.md**](MARIA-ROU
 
 - **Übersicht:** oben **„Zu tun“** (was noch zu bestätigen ist, fehlender Mittagstisch), darunter
   **„Heute“** und **„Morgen“** mit Summe, Mittagstisch und allen Einträgen (antippbar,
-  „Tagesliste drucken“). Die Zahlen an den Kacheln zeigen, was noch zu bestätigen ist.
+  „Tagesliste drucken“). Die Zahlen an den Kacheln zeigen, was noch zu beantworten ist.
 - **Täglich:** Mittagstisch · Reservierungen · Bestellungen · Kalender · Berliner.
   **Selten ändern:** Speisekarte · Bilder & Farben · Hinweis · Öffnungszeiten · Urlaub & Feiertage · Konto.
-- **Status jeder Anfrage:** Neu → Bestätigt („Bestätigung senden“, E-Mail an den Gast) → Erledigt
+- **Reservierungen:** oben „Neue Anfragen“ mit **Zusagen** (E-Mail an den Gast oder ohne E-Mail) und
+  **Absagen** (nimmt die Anfrage aus der Liste); darunter der **Tagesplan** aller zugesagten Tische.
+  **„+ Reservierung eintragen“** für Anrufe, **„Ändern“** für Datum/Uhrzeit/Personen. Vergangene Tage
+  rutschen von selbst unter „Vergangene“ – kein „Erledigt“ mehr.
+- **Bestellungen:** Neu → Bestätigt („Bestätigung senden“, E-Mail an den Gast) → Erledigt
   („Als erledigt markieren“). Erledigte stehen eingeklappt unter „Erledigt (Anzahl)“.
 - **Kalender:** Wochenansicht aller Reservierungen und Abholungen inkl. Schließtage; Kalender-Code für
   Mitarbeiter (nur ansehen, ohne Kontaktdaten) unter alstercafe.de/kalender.html.

@@ -122,6 +122,7 @@ async function init() {
 
   // Suche in Anfragen / Bestellungen
   dom.anfragenSearch?.addEventListener('input', () => renderAnfragen());
+  document.getElementById('anfragen-add')?.addEventListener('click', () => onAddRes());
   dom.ordersSearch?.addEventListener('input', () => renderOrders());
   document.getElementById('orders-filter')?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-kind]'); if (!b) return;
@@ -513,20 +514,24 @@ async function openEntryCard(kind, id) {
   if (!panel || panel.hidden) return;
   const search = document.getElementById(kind === 'order' ? 'orders-search' : 'anfragen-search');
   if (search && search.value) { search.value = ''; search.dispatchEvent(new Event('input', { bubbles: true })); }
-  // Reservierungen: erst den Filter auf „alle“ stellen – sonst fehlt die gesuchte Zeile in der Liste
-  if (kind !== 'order' && anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); }
   if (kind === 'order') resetOrdersView();
-  const card = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item');
+  const card = kind === 'order'
+    ? document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item')
+    : document.querySelector(`#anfragen-list [data-res-row="${CSS.escape(id)}"]`);
   if (!card) return;
-  if (kind !== 'order') anfragenOpen.add(id);   // Zeile zum Aufklappen: geöffnet merken
-  const fresh = card;
-  const own = fresh.querySelector(':scope > details');
-  if (own) own.open = true;
-  const pastList = fresh.parentElement?.closest('details');
-  if (pastList && !pastList.open) pastList.open = true;
-  fresh.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  if (kind !== 'order') {
+    // Zeile im Tagesplan aufklappen; liegt sie unter „Vergangene“, diese Gruppe öffnen
+    const own = card.querySelector(':scope > details');
+    if (own) { anfragenOpen.add(id); own.open = true; }
+    const pastList = card.parentElement?.closest('details');
+    if (pastList && !pastList.open) pastList.open = true;
+  } else {
+    const pastList = card.closest('details');
+    if (pastList && !pastList.open) pastList.open = true;
+  }
+  card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
   spotlight = { id, until: Date.now() + 2400 };
-  fresh.classList.add('is-spotlit');
+  card.classList.add('is-spotlit');
 }
 
 function staffSetupText(err) {
@@ -569,8 +574,9 @@ function printDayList(iso, statusEl) {
       ? `Tisch · ${escapeHtml(x.persons || '')}`
       : `${(x.items || []).some(it => it && it.kind === 'berliner') ? 'Berliner' : 'Abholung'} · ${escapeHtml(orderLine(x))}`;
     const note = [x.message || x.notes || '', x.note ? 'Notiz: ' + x.note : ''].filter(Boolean).map(escapeHtml).join('<br>');
-    const st = entryStage(x) === 'done' ? 'erledigt' : entryStage(x) === 'confirmed' ? 'bestätigt' : 'neu';
-    return `<tr${entryStage(x) === 'done' ? ' class="done"' : ''}><td class="t">${escapeHtml(e.time || '–')}</td><td><strong>${escapeHtml(x.name || 'Ohne Namen')}</strong>${x.phone ? `<br><span class="ph">${escapeHtml(x.phone)}</span>` : ''}</td><td>${what}${note ? `<div class="note">${note}</div>` : ''}</td><td class="st">${st}</td></tr>`;
+    const st = e.kind === 'res' ? (resIsAccepted(x) ? 'zugesagt' : 'neu – noch offen')
+      : (entryStage(x) === 'done' ? 'erledigt' : entryStage(x) === 'confirmed' ? 'bestätigt' : 'neu');
+    return `<tr${e.kind === 'order' && entryStage(x) === 'done' ? ' class="done"' : ''}><td class="t">${escapeHtml(e.time || '–')}</td><td><strong>${escapeHtml(x.name || 'Ohne Namen')}</strong>${x.phone ? `<br><span class="ph">${escapeHtml(x.phone)}</span>` : ''}</td><td>${what}${note ? `<div class="note">${note}</div>` : ''}</td><td class="st">${st}</td></tr>`;
   }).join('');
   const nRes = list.filter(e => e.kind === 'res').length, nOrd = list.length - nRes;
   const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Tagesliste ${escapeHtml(label)} · Alstercafé</title>
@@ -834,8 +840,6 @@ async function showOverview() {
   dom.dashboard?.classList.remove('is-working');
   if (dom.overviewView) dom.overviewView.hidden = false;
   if (dom.workspaceView) dom.workspaceView.hidden = true;
-  // Ein über „Zu tun“ gesetzter Filter gilt nur für diesen Besuch – beim nächsten Öffnen wieder alles
-  try { if (anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); } } catch (e) {}
   try { renderOverviewSummary(); } catch (e) {}   // Stand von jetzt (Datum, Bestätigtes, Wochenplan)
   setBottomBarActive('overview');
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
@@ -2759,8 +2763,8 @@ function renderOverviewDay(key, iso, lunch, hol) {
   const sumEl = document.getElementById(`ov-${key}-sum`), body = document.getElementById(`ov-${key}-body`);
   if (!sumEl || !body) return;
   const entries = dayEntries(iso);
-  // Summe wie im Reservierungsbereich: nur, was noch nicht erledigt ist (die Zeilen darunter zeigen alles)
-  const resRows = entries.filter(e => e.kind === 'res' && e.x.status !== 'done').map(e => e.x);
+  // Summe wie im Tagesplan: zugesagte Tische und noch nicht abgeholte Bestellungen (die Zeilen darunter zeigen alles)
+  const resRows = entries.filter(e => e.kind === 'res' && resIsAccepted(e.x)).map(e => e.x);   // zugesagte Tische
   const nOrd = entries.filter(e => e.kind === 'order' && e.x.status !== 'done').length;
   const parts = [];
   if (resRows.length) parts.push(tablesLabel(resRows));
@@ -2778,10 +2782,10 @@ function renderOverviewDay(key, iso, lunch, hol) {
       const x = e.x;
       const qty = e.kind === 'order' ? (x.totalCount || (x.items || []).reduce((n, it) => n + (parseInt(it?.qty, 10) || 0), 0)) : 0;
       const what = e.kind === 'res' ? (personsLabel(x.persons) || 'Tisch') : `${qty} ${(x.items || []).some(it => it && it.kind === 'berliner') ? 'Berliner' : 'Brötchen'}`;
-      return `<li><button type="button" class="today-item${entryStage(x) === 'done' ? ' is-done' : ''}" data-open-kind="${e.kind}" data-open-id="${escapeAttr(x.id || '')}">
+      return `<li><button type="button" class="today-item${e.kind === 'order' && entryStage(x) === 'done' ? ' is-done' : ''}" data-open-kind="${e.kind}" data-open-id="${escapeAttr(x.id || '')}">
           <span class="today-time">${escapeHtml(e.time || '–')}</span>
           <span class="today-main"><strong>${escapeHtml(x.name || 'Ohne Namen')}</strong> · ${escapeHtml(what)}</span>
-          ${statusTagHtml(x)}
+          ${statusTagHtml(x, e.kind)}
         </button></li>`;
     }).join('')}</ul>
     <button type="button" class="btn btn-link today-print" data-ov-print="${escapeAttr(iso)}">
@@ -2822,7 +2826,7 @@ function renderOverviewSummary() {
 
   // --- Zu tun ---
   const todo = [];
-  if (resTodo) todo.push({ go: 'res', num: resTodo, text: resTodo === 1 ? 'Reservierung bestätigen' : 'Reservierungen bestätigen' });
+  if (resTodo) todo.push({ go: 'res', num: resTodo, text: resTodo === 1 ? 'neue Reservierung beantworten' : 'neue Reservierungen beantworten' });
   if (ordTodo) todo.push({ go: 'ord', num: ordTodo, text: ordTodo === 1 ? 'Bestellung bestätigen' : 'Bestellungen bestätigen' });
   if (lunchToday?.missing && now.getHours() < 15) todo.push({ go: 'week', text: 'Mittagstisch für heute fehlt' });
   if (lunchTom?.missing) todo.push({ go: 'week', text: 'Mittagstisch für morgen fehlt' });
@@ -2856,10 +2860,8 @@ function renderOverviewSummary() {
       const go = ev.target.closest('[data-ov-go]');
       if (!go) return;
       if (go.dataset.ovGo === 'res') {
-        // direkt zu denen, die noch zu bestätigen sind
-        anfragenFilter = 'neu';
-        if (dom.anfragenSearch && dom.anfragenSearch.value) dom.anfragenSearch.value = '';
-        renderAnfragen();
+        // „Neue Anfragen“ stehen dort ganz oben
+        if (dom.anfragenSearch && dom.anfragenSearch.value) { dom.anfragenSearch.value = ''; renderAnfragen(); }
         switchTab('anfragen');
       } else if (go.dataset.ovGo === 'ord') {
         resetOrdersView();
@@ -2902,15 +2904,19 @@ function deferRenderWhileTyping(listId, fn) {
   return false;
 }
 
-/* Reservierungen: nach Tagen geordnet, kompakte Zeilen zum Aufklappen.
-   Oben drei Zähler, die zugleich filtern: alle offenen · zu bestätigen · heute. */
-const anfragenOpen = new Set();     // aufgeklappte Einträge bleiben über jedes Neu-Rendern hinweg offen
-let anfragenFilter = 'offen';       // 'offen' | 'neu' | 'heute'
-const anfragenGroupOpen = { done: false, past: false };   // „Erledigt“ / „Vergangene“ aufgeklappt?
+/* Reservierungen als einfacher Tagesplan. Zwei Fragen: „Wem muss ich antworten?“ (Neue Anfragen:
+   Zusagen oder Absagen) und „Wer kommt wann?“ (Tagesplan der zugesagten Tische). Anrufe trägt der
+   Inhaber mit „Reservierung eintragen“ selbst ein. Kein „Erledigt“: vergangene Tage rutschen von
+   selbst nach unten. Gespeichert wird wie bisher – zugesagt heißt: Bestätigungs-Zeitpunkt gesetzt
+   (oder früher als „erledigt“ markiert, damit alte Einträge richtig eingeordnet bleiben). */
+const anfragenOpen = new Set();     // aufgeklappte Zeilen bleiben über jedes Neu-Rendern hinweg offen
+const anfragenGroupOpen = { past: false };   // „Vergangene“ aufgeklappt?
 /* Nach einer Aktion ordnet sich die Liste sofort neu – ein zweiter Tipp auf dieselbe Stelle träfe
    dann einen anderen Knopf. Deshalb zählt kurz danach kein weiterer Tipp auf einen Aktionsknopf. */
 let anfragenActionAt = 0;
 const anfragenTapGuard = () => Date.now() - anfragenActionAt < 700;
+const resIsAccepted = (r) => !!(r && (r.confirmedAt || r.status === 'done'));
+const RES_PERSONS = ['1 Person', '2 Personen', '3 Personen', '4 Personen', '5 Personen', '6 Personen', '7 Personen', '8 Personen', 'mehr als 8 Personen'];
 
 function personsCount(p) {
   const str = String(p || '');
@@ -2941,6 +2947,12 @@ function dayHead(iso) {
     text: d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })
   };
 }
+/* „Di., 10. Nov. · 12:00 Uhr“ */
+function resWhenShort(r) {
+  const d = r && r.date ? new Date(r.date + 'T00:00:00') : null;
+  const day = d && !isNaN(d) ? d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) : (r && r.date ? String(r.date) : 'Datum offen');
+  return r && r.time ? `${day} · ${r.time} Uhr` : day;
+}
 
 function renderAnfragen() {
   if (deferRenderWhileTyping('anfragen-list', renderAnfragen)) return;
@@ -2956,111 +2968,83 @@ function renderAnfragen() {
     dom.tabAnfragenBadge.hidden = newCount === 0;
     dom.tabAnfragenBadge.textContent = newCount > 0 ? String(newCount) : '';
   }
-  if (dom.anfragenCount) dom.anfragenCount.hidden = true;   // ersetzt durch die drei Zähler
+  if (dom.anfragenCount) dom.anfragenCount.hidden = true;
   if (!dom.anfragenList) return;
 
   // Fokus merken: nach dem Neu-Aufbau soll die Tastatur dort weitermachen, wo sie war
   const ae = document.activeElement;
-  const focusFilter = ae?.closest?.('#res-summary [data-res-filter]')?.dataset.resFilter || '';
-  const focusRow = ae && dom.anfragenList.contains(ae) ? (ae.closest('.res-row')?.querySelector('details[data-res-id]')?.dataset.resId || '') : '';
-
+  const focusRow = ae && dom.anfragenList.contains(ae) ? (ae.closest('[data-res-row]')?.dataset.resRow || '') : '';
   const hasQuery = !!(dom.anfragenSearch && dom.anfragenSearch.value.trim());
-  const filter = hasQuery ? 'offen' : anfragenFilter;   // die Suche sucht immer in allem
-  const todayIso = isoDate(new Date());
-  const open = items.filter(r => isOpenEntry(r, 'date'));
-  const toConfirm = open.filter(r => entryStage(r) === 'new');
-  const todays = open.filter(r => r.date === todayIso);
-
-  // Zähler oben (zugleich Filter)
-  const sum = document.getElementById('res-summary');
-  if (sum) {
-    sum.hidden = items.length === 0;
-    const stat = (key, num, label) => `<button type="button" class="res-stat${filter === key ? ' is-active' : ''}${num ? '' : ' is-zero'}" data-res-filter="${key}" aria-pressed="${filter === key}">
-        <span class="res-stat-num">${num}</span><span class="res-stat-label">${escapeHtml(label)}</span></button>`;
-    const todayPers = todays.length ? tablesLabel(todays).replace(/^\d+ Tische? ?·? ?/, '') : '';
-    sum.innerHTML = stat('offen', open.length, open.length === 1 ? 'offene Anfrage' : 'offene Anfragen')
-      + stat('neu', toConfirm.length, 'noch zu bestätigen')
-      + stat('heute', todays.length, todays.length === 1 ? `Tisch heute${todayPers ? ' · ' + todayPers : ''}` : `Tische heute${todayPers ? ' · ' + todayPers : ''}`);
-    sum.querySelectorAll('[data-res-filter]').forEach(btn => btn.addEventListener('click', () => {
-      anfragenFilter = btn.dataset.resFilter;
-      if (dom.anfragenSearch && dom.anfragenSearch.value) dom.anfragenSearch.value = '';   // ein Filter gilt immer – die Suche weicht
-      renderAnfragen();
-    }));
-    if (focusFilter) sum.querySelector(`[data-res-filter="${focusFilter}"]`)?.focus({ preventScroll: true });
-  }
 
   if (items.length === 0) {
-    dom.anfragenList.innerHTML = '<li class="anfragen-empty">Hier erscheinen Reservierungsanfragen, sobald jemand das Formular auf der Webseite ausfüllt.</li>';
+    dom.anfragenList.innerHTML = '<li class="anfragen-empty">Noch keine Reservierungen. Anfragen von der Webseite erscheinen hier von selbst – Anrufe tragen Sie oben mit „Reservierung eintragen“ ein.</li>';
     return;
   }
   const { upcoming, past } = splitByDate(items, dom.anfragenSearch?.value, 'date');
-  let openUp = upcoming.filter(r => r.status !== 'done');
-  const doneUp = upcoming.filter(r => r.status === 'done');
-  if (filter === 'neu') openUp = openUp.filter(r => entryStage(r) === 'new');
-  if (filter === 'heute') openUp = openUp.filter(r => r.date === todayIso);
+  const fresh = upcoming.filter(r => !resIsAccepted(r));   // wartet auf Antwort
+  const plan = upcoming.filter(resIsAccepted);             // zugesagt
 
-  // Offene nach Tagen gruppieren (splitByDate liefert schon nach Datum + Uhrzeit sortiert)
+  let html = '';
+  // 1 · Neue Anfragen
+  if (fresh.length) {
+    html += `<li class="res-block res-block-new">
+      <h3 class="res-block-title">Neue Anfragen <span class="res-block-count">${fresh.length}</span></h3>
+      <p class="res-block-sub">Bitte beantworten: zusagen oder absagen.</p>
+      <ul class="res-new-list">${fresh.map(r => buildNewRequest(r)).join('')}</ul>
+    </li>`;
+  }
+  // 2 · Tagesplan (splitByDate liefert schon nach Datum + Uhrzeit sortiert)
   const groups = [];
-  openUp.forEach(r => {
+  plan.forEach(r => {
     const key = r.date || '';
     const g = groups.length && groups[groups.length - 1].iso === key ? groups[groups.length - 1] : (groups.push({ iso: key, rows: [] }), groups[groups.length - 1]);
     g.rows.push(r);
   });
-  let html = groups.map(g => {
-    const h = dayHead(g.iso);
-    // Summe immer über alle offenen Tische des Tages – passend zum Zähler oben und zur gedruckten Liste
-    const dayAll = open.filter(r => (r.date || '') === g.iso);
-    const daySum = (filter === 'neu' ? `${g.rows.length} zu bestätigen · insgesamt ` : '') + tablesLabel(dayAll.length ? dayAll : g.rows);
-    return `<li class="res-day">
-      <div class="res-day-head">
-        <h3 class="res-day-title">${h.lead ? `<span class="res-day-lead">${h.lead}</span> ` : ''}${escapeHtml(h.text)}</h3>
-        <span class="res-day-sum">${escapeHtml(daySum)}</span>
-        ${g.iso ? `<button type="button" class="res-day-print" data-print-day="${escapeAttr(g.iso)}"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-print"/></svg> Liste drucken</button>` : ''}
-      </div>
-      <ul class="res-day-list">${g.rows.map(r => buildAnfrageItem(r)).join('')}</ul>
-    </li>`;
-  }).join('');
-  if (!groups.length) {
-    const msg = hasQuery ? 'Keine Treffer bei den kommenden Anfragen.'
-      : filter === 'neu' ? 'Alles bestätigt – nichts mehr zu tun.'
-      : filter === 'heute' ? 'Für heute ist kein Tisch offen.'
-      : (doneUp.length ? 'Alles erledigt – keine offenen Anfragen.' : 'Keine kommenden Anfragen.');
-    html = `<li class="anfragen-empty">${msg}</li>`;
-  }
-  // Erledigte und vergangene nur in der Gesamtansicht (und bei der Suche), eingeklappt
-  if (filter === 'offen') {
-    if (doneUp.length) {
-      html += `<li class="anfragen-past anfragen-done"><details data-res-group="done"${hasQuery || anfragenGroupOpen.done ? ' open' : ''}>
-        <summary>Erledigt (${doneUp.length})</summary>
-        <ul class="anfragen-sublist res-day-list">${doneUp.map(r => buildAnfrageItem(r, { showDate: true })).join('')}</ul>
-      </details></li>`;
-    }
-    if (past.length) {
-      html += `<li class="anfragen-past"><details data-res-group="past"${hasQuery || anfragenGroupOpen.past ? ' open' : ''}>
-        <summary>Vergangene (${past.length})</summary>
-        <ul class="anfragen-sublist res-day-list">${past.map(r => buildAnfrageItem(r, { showDate: true, past: true })).join('')}</ul>
-      </details></li>`;
-    }
+  html += `<li class="res-block res-block-plan">
+    <h3 class="res-block-title">Tagesplan</h3>
+    ${groups.length ? groups.map(g => {
+      const h = dayHead(g.iso);
+      return `<div class="res-day">
+        <div class="res-day-head">
+          <h4 class="res-day-title">${h.lead ? `<span class="res-day-lead">${h.lead}</span> ` : ''}${escapeHtml(h.text)}</h4>
+          <span class="res-day-sum">${escapeHtml(tablesLabel(g.rows))}</span>
+          ${g.iso ? `<button type="button" class="res-day-print" data-print-day="${escapeAttr(g.iso)}"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-print"/></svg> Liste drucken</button>` : ''}
+        </div>
+        <ul class="res-day-list">${g.rows.map(r => buildPlanRow(r)).join('')}</ul>
+      </div>`;
+    }).join('') : `<p class="anfragen-empty">${hasQuery ? 'Keine Treffer bei den kommenden Tischen.' : (fresh.length ? 'Noch nichts zugesagt.' : 'Keine kommenden Reservierungen.')}</p>`}
+  </li>`;
+  // 3 · Vergangene, eingeklappt
+  if (past.length) {
+    html += `<li class="anfragen-past"><details data-res-group="past"${hasQuery || anfragenGroupOpen.past ? ' open' : ''}>
+      <summary>Vergangene (${past.length})</summary>
+      <ul class="anfragen-sublist res-day-list">${past.map(r => buildPlanRow(r, { past: true })).join('')}</ul>
+    </details></li>`;
   }
   dom.anfragenList.innerHTML = html;
-  bindInboxHandlers(dom.anfragenList, {
-    onMark: onMarkAnfrage, onDel: onDeleteAnfrage, onNote: onSaveAnfrageNote
-  });
-  dom.anfragenList.querySelectorAll('[data-phoneok]').forEach(btn => btn.addEventListener('click', () => onPhoneConfirmed(btn.dataset.phoneok)));
-  dom.anfragenList.querySelectorAll('[data-print-day]').forEach(btn => btn.addEventListener('click', () => printDayWithToast(btn.dataset.printDay)));
+
+  const on = (sel, fn) => dom.anfragenList.querySelectorAll(sel).forEach(el => el.addEventListener('click', () => fn(el)));
+  on('[data-accept]', el => onAcceptRes(el.dataset.accept));
+  on('[data-decline]', el => onDeclineRes(el.dataset.decline));
+  on('[data-edit]', el => onEditRes(el.dataset.edit));
+  on('[data-del]', el => onDeleteAnfrage(el.dataset.del));
+  on('[data-confirm]', el => onSendConfirmation(el.dataset.confirm, 'reservation'));
+  on('[data-print-day]', el => printDayWithToast(el.dataset.printDay));
+  dom.anfragenList.querySelectorAll('[data-note]').forEach(t => t.addEventListener('change', () => onSaveAnfrageNote(t.dataset.note, t.value)));
   // Aufgeklappt bleibt aufgeklappt
   dom.anfragenList.querySelectorAll('details[data-res-id]').forEach(d => d.addEventListener('toggle', () => {
     if (d.open) anfragenOpen.add(d.dataset.resId); else anfragenOpen.delete(d.dataset.resId);
   }));
-  // Bei der Suche sind die Gruppen nur vorübergehend offen – das soll den gemerkten Zustand nicht ändern
+  // Bei der Suche ist „Vergangene“ nur vorübergehend offen – das soll den gemerkten Zustand nicht ändern
   if (!hasQuery) dom.anfragenList.querySelectorAll('details[data-res-group]').forEach(d => d.addEventListener('toggle', () => {
     anfragenGroupOpen[d.dataset.resGroup] = d.open;
   }));
-  // Fokus zurück an die Zeile (oder an ihre Gruppe, wenn sie dorthin gewandert und zugeklappt ist)
+  // Fokus zurück an den Eintrag (oder an „Vergangene“, wenn er dorthin gewandert und zugeklappt ist)
   if (focusRow) {
-    const det = dom.anfragenList.querySelector(`details[data-res-id="${CSS.escape(focusRow)}"]`);
-    const grp = det?.closest('details[data-res-group]');
-    const target = det ? (grp && !grp.open ? grp.querySelector(':scope > summary') : det.querySelector(':scope > summary')) : null;
+    const row = dom.anfragenList.querySelector(`[data-res-row="${CSS.escape(focusRow)}"]`);
+    const grp = row?.closest('details[data-res-group]');
+    const target = !row ? null : (grp && !grp.open) ? grp.querySelector(':scope > summary')
+      : (row.querySelector(':scope > details > summary') || row.querySelector('button, a'));
     target?.focus({ preventScroll: true });
   }
 }
@@ -3179,7 +3163,10 @@ function entryStage(x) {
   if (x && x.confirmedAt) return 'confirmed';
   return 'new';
 }
-function statusTagHtml(x) {
+function statusTagHtml(x, kind = 'order') {
+  if (kind === 'res') {
+    return resIsAccepted(x) ? '<span class="anfrage-tag is-stage-confirmed">Zugesagt</span>' : '<span class="anfrage-tag is-new">Neu</span>';
+  }
   const st = entryStage(x);
   if (st === 'done') return '<span class="anfrage-tag is-stage-done">Erledigt</span>';
   if (st === 'confirmed') return '<span class="anfrage-tag is-stage-confirmed">Bestätigt</span>';
@@ -3209,22 +3196,22 @@ const hasPhoneMark = (x) => /Telefonisch bestätigt am \d{2}\.\d{2}\./.test(Stri
 function historyHtml(x, kind = 'order') {
   const rows = [];
   if (x.confirmedAt) {
-    const label = kind !== 'res' ? 'Bestätigung gesendet' : (hasPhoneMark(x) ? PHONE_OK_MARK : 'Bestätigt');
+    const label = kind !== 'res' ? 'Bestätigung gesendet' : (hasPhoneMark(x) ? 'Telefonisch zugesagt' : 'Zugesagt');
     rows.push(`<span class="anfrage-hist is-confirmed"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> ${label} · ${escapeHtml(formatStamp(x.confirmedAt))}</span>`);
   }
-  if (x.status === 'done' && x.doneAt) rows.push(`<span class="anfrage-hist is-done"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Erledigt · ${escapeHtml(formatStamp(x.doneAt))}</span>`);
+  if (kind !== 'res' && x.status === 'done' && x.doneAt) rows.push(`<span class="anfrage-hist is-done"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Erledigt · ${escapeHtml(formatStamp(x.doneAt))}</span>`);
   return rows.join('');
 }
 
 const confirmSending = new Set();
-async function onSendConfirmation(id, ctype) {
+async function onSendConfirmation(id, ctype, presetMessage) {
   if (confirmSending.has(id)) return; // läuft schon, kein Doppelversand
   const key = ctype === 'order' ? 'orders' : 'reservations';
   const list = window.alsterDb?.get(key) || [];
   const it = (Array.isArray(list) ? list : []).find(x => x.id === id);
   if (!it) return;
   if (!it.email) { showToast('Für diese Anfrage ist keine E-Mail-Adresse hinterlegt – bitte telefonisch bestätigen.', { tone: 'error' }); return; }
-  const message = await askPersonalMessage(it.email);
+  const message = presetMessage !== undefined ? presetMessage : await askPersonalMessage(it.email);
   if (message === null) return; // abgebrochen
 
   const payload = ctype === 'order'
@@ -3233,7 +3220,7 @@ async function onSendConfirmation(id, ctype) {
   if (message) payload.message = message;
 
   confirmSending.add(id);
-  const btns = Array.from(document.querySelectorAll(`[data-confirm="${CSS.escape(id)}"]`));
+  const btns = Array.from(document.querySelectorAll(`[data-confirm="${CSS.escape(id)}"], [data-accept="${CSS.escape(id)}"]`));
   const labels = btns.map(b => b.innerHTML);
   btns.forEach(b => { b.disabled = true; b.textContent = 'Wird gesendet …'; });
   let res;
@@ -3244,8 +3231,8 @@ async function onSendConfirmation(id, ctype) {
   }
   if (res && res.ok) {
     await window.alsterDb?.markConfirmed?.(key, id);
-    if (ctype === 'order') renderOrders(); else renderAnfragen();
-    showToast(`Bestätigung an ${it.email} gesendet`);
+    if (ctype === 'order') { renderOrders(); showToast(`Bestätigung an ${it.email} gesendet`); }
+    else { anfragenActionAt = Date.now(); renderAnfragen(); renderOverviewSummary(); showToast(`Zusage an ${it.email} gesendet`); }
   } else {
     askNotice('Bestätigung nicht gesendet', 'Die E-Mail konnte nicht verschickt werden: ' + ((res && res.error) || 'unbekannter Fehler') +
       '. Bitte später erneut versuchen oder den Gast anrufen.');
@@ -3257,66 +3244,67 @@ async function onSaveAnfrageNote(id, note) {
   if (ok === false) warnWriteFailed();
 }
 
-/* Eine Reservierung als Zeile: zu sehen sind Uhrzeit, Name, Personen, Status und der Anfang der
-   Nachricht. Antippen klappt Kontakt, Nachricht, Notiz und die Knöpfe auf. Der Hauptknopf folgt dem
-   Ablauf: Neu → bestätigen · Bestätigt → erledigt. */
-function buildAnfrageItem(r, opts = {}) {
-  const stage = entryStage(r);
-  const isDone = stage === 'done';
+/* Neue Anfrage: alles Nötige steht offen da (wann, wer, wie viele, Nachricht, Kontakt) und es gibt
+   genau zwei Knöpfe – Zusagen oder Absagen. */
+function buildNewRequest(r) {
   const id = escapeAttr(r.id);
+  const tel = r.phone ? `tel:${String(r.phone).replace(/\s+/g, '')}` : '';
   const rec = r.receivedAt ? formatRelative(new Date(r.receivedAt)) : '';
-  const tel = r.phone ? `tel:${r.phone.replace(/\s+/g,'')}` : '';
-  const mailSubject = encodeURIComponent(`Ihre Reservierungsanfrage – Alstercafé`);
-  const mailBody = encodeURIComponent(`Guten Tag ${r.name || ''},\n\nvielen Dank für Ihre Anfrage. \n\nHerzliche Grüße\nAlstercafé`);
-  const mailLink = r.email
-    ? `mailto:${escapeAttr(encodeURIComponent(r.email).replace(/%40/g, '@'))}?subject=${mailSubject}&body=${mailBody}`
-    : '';
+  const pers = personsLabel(r.persons);
+  return `
+    <li class="anfrage-item res-new${spotClass(r.id)}" data-res-row="${id}">
+      <p class="res-new-when">${escapeHtml(resWhenShort(r))}${pickupBadgeHtml(r.date)}</p>
+      <p class="res-new-who"><span class="anfrage-name">${escapeHtml(r.name || 'Ohne Namen')}</span>${pers ? `<span class="anfrage-pers">${escapeHtml(pers)}</span>` : ''}</p>
+      ${r.message ? `<p class="anfrage-msg">${escapeHtml(r.message)}</p>` : ''}
+      <div class="anfrage-contact">
+        ${r.phone ? `<a href="${escapeAttr(tel)}">${escapeHtml(r.phone)}</a>` : ''}
+        ${r.email ? `<span class="res-new-mail">${escapeHtml(r.email)}</span>` : '<span class="res-new-mail is-none">keine E-Mail angegeben</span>'}
+      </div>
+      <div class="res-new-actions">
+        <button type="button" class="anfrage-btn res-btn-accept" data-accept="${id}">
+          <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
+          Zusagen
+        </button>
+        <button type="button" class="anfrage-btn res-btn-decline" data-decline="${id}">Absagen</button>
+        ${rec ? `<span class="res-new-rec">Eingegangen ${escapeHtml(rec)}</span>` : ''}
+      </div>
+    </li>
+  `;
+}
+
+/* Zugesagter Tisch als Zeile im Tagesplan: Uhrzeit, Name, Personen und der Anfang von Notiz/Nachricht.
+   Antippen zeigt Kontakt, Nachricht, Notiz sowie „Ändern“ und „Absagen“. */
+function buildPlanRow(r, opts = {}) {
+  const id = escapeAttr(r.id);
+  const tel = r.phone ? `tel:${String(r.phone).replace(/\s+/g, '')}` : '';
+  const mailSubject = encodeURIComponent(`Ihre Reservierung – Alstercafé`);
+  const mailBody = encodeURIComponent(`Guten Tag ${r.name || ''},\n\n\n\nHerzliche Grüße\nAlstercafé`);
+  const mailLink = r.email ? `mailto:${escapeAttr(encodeURIComponent(r.email).replace(/%40/g, '@'))}?subject=${mailSubject}&body=${mailBody}` : '';
   const isOpen = anfragenOpen.has(r.id) || (spotlight.id === r.id && Date.now() < spotlight.until);
   let when = r.time || '–';
-  if (opts.showDate) {
+  if (opts.past) {
     const d = r.date ? new Date(r.date + 'T00:00:00') : null;
     const short = d && !isNaN(d) ? d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) : (r.date || 'Datum offen');
     when = r.time ? `${short} · ${r.time}` : short;
   }
   // Vorschau: die eigene Notiz zuerst, dann die Nachricht des Gastes
   const preview = [r.note ? 'Notiz: ' + r.note : '', r.message ? String(r.message) : ''].filter(Boolean).join(' · ');
-  // „Erneut senden“ nur, wenn wirklich schon eine E-Mail raus ist (nicht nach telefonischer Bestätigung)
-  const mailSent = !!r.confirmedAt && !hasPhoneMark(r);
   const pers = personsLabel(r.persons);
-
-  const mailBtn = (extra = '') => r.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm${extra}" data-confirm="${id}" data-ctype="reservation">
-            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
-            ${mailSent ? 'Bestätigung erneut senden' : 'Bestätigung senden'}
-          </button>` : '';
-  const phoneBtn = (extra = '') => `<button type="button" class="anfrage-btn res-btn-phone${extra}" data-phoneok="${id}">
-            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
-            ${PHONE_OK_MARK}
-          </button>`;
-  // Knöpfe passend zum Stand
-  let actions;
-  if (isDone) {
-    actions = `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${id}">Erneut öffnen</button>${mailBtn()}`;
-  } else if (stage === 'confirmed' || opts.past) {
-    // Bestätigt – oder der Termin ist schon vorbei: dann ist „erledigt“ der sinnvolle Schritt
-    actions = `<button type="button" class="anfrage-btn anfrage-btn-mark is-primary" data-mark="${id}">
-                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
-                Als erledigt markieren
-              </button>${mailBtn()}`;
-  } else {
-    actions = `${mailBtn(' is-primary')}${phoneBtn(r.email ? '' : ' is-primary')}
-              <button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${id}">
-                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
-                Als erledigt markieren
-              </button>`;
-  }
-  // Neue Anfragen: der nächste Schritt liegt schon an der zugeklappten Zeile
-  const quick = stage === 'new' && !opts.past ? `<div class="res-quick">
-          ${r.email ? mailBtn(' is-primary') : (r.phone ? `<a class="anfrage-btn res-btn-call" href="${escapeAttr(tel)}">${escapeHtml(r.phone)} anrufen</a>` : '')}
-          ${phoneBtn()}
-        </div>` : '';
-
+  const mailSent = !!r.confirmedAt && !hasPhoneMark(r);
+  const rec = r.receivedAt ? formatRelative(new Date(r.receivedAt)) : '';
+  const actions = opts.past
+    ? `<button type="button" class="anfrage-btn anfrage-btn-del" data-del="${id}">
+         <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
+         Entfernen
+       </button>`
+    : `<button type="button" class="anfrage-btn res-btn-edit" data-edit="${id}">Ändern</button>
+       ${r.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm" data-confirm="${id}" data-ctype="reservation">
+         <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
+         ${mailSent ? 'Zusage erneut senden' : 'Zusage per E-Mail senden'}
+       </button>` : ''}
+       <button type="button" class="anfrage-btn res-btn-decline" data-decline="${id}">Absagen</button>`;
   return `
-    <li class="anfrage-item res-row is-stage-${stage}${isDone ? ' is-done' : ''}${spotClass(r.id)}">
+    <li class="anfrage-item res-row${spotClass(r.id)}" data-res-row="${id}">
       <details class="res-details" data-res-id="${id}"${isOpen ? ' open' : ''}>
         <summary class="res-sum">
           <span class="res-time">${escapeHtml(when)}</span>
@@ -3324,11 +3312,10 @@ function buildAnfrageItem(r, opts = {}) {
             <span class="res-who"><span class="anfrage-name">${escapeHtml(r.name || 'Ohne Namen')}</span>${pers ? `<span class="anfrage-pers">${escapeHtml(pers)}</span>` : ''}</span>
             ${preview ? `<span class="res-preview">${escapeHtml(preview)}</span>` : ''}
           </span>
-          ${statusTagHtml(r)}
+          ${opts.past && !resIsAccepted(r) ? '<span class="anfrage-tag">unbeantwortet</span>' : ''}
           <span class="res-chev" aria-hidden="true"></span>
         </summary>
         <div class="res-body">
-          <p class="anfrage-when">${escapeHtml(formatAnfrageDate(r.date, r.time))}${pickupBadgeHtml(r.date)}</p>
           <div class="anfrage-contact">
             ${r.phone ? `<a href="${escapeAttr(tel)}">${escapeHtml(r.phone)}</a>` : ''}
             ${r.email ? `<a href="${mailLink}">${escapeHtml(r.email)}</a>` : ''}
@@ -3336,22 +3323,14 @@ function buildAnfrageItem(r, opts = {}) {
           ${r.message ? `<p class="anfrage-msg">${escapeHtml(r.message)}</p>` : ''}
           <label class="anfrage-note">
             <span class="anfrage-note-label">Notiz (intern)</span>
-            <textarea class="anfrage-note-input" data-note="${id}" rows="1" placeholder="z. B. angerufen, Tisch am Fenster …">${escapeHtml(r.note || '')}</textarea>
+            <textarea class="anfrage-note-input" data-note="${id}" rows="1" placeholder="z. B. Tisch am Fenster, Kinderstuhl …">${escapeHtml(r.note || '')}</textarea>
           </label>
-          ${noMailHintHtml(r)}
           <div class="anfrage-meta">
-            <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(r, 'res')}</span>
-            <div class="anfrage-actions">
-              ${actions}
-              <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${id}" aria-label="Anfrage löschen">
-                <svg class="ico ico-sm" aria-hidden="true"><use href="#i-trash"/></svg>
-                Löschen
-              </button>
-            </div>
+            <span class="anfrage-rec">${rec ? 'Eingegangen ' + escapeHtml(rec) : ''}${historyHtml(r, 'res')}</span>
+            <div class="anfrage-actions">${actions}</div>
           </div>
         </div>
       </details>
-      ${quick}
     </li>
   `;
 }
@@ -3383,33 +3362,216 @@ function pickupBadgeHtml(dateStr) {
   return '';
 }
 
-async function onMarkAnfrage(id) {
-  if (anfragenTapGuard()) return;   // Folge-Tipp nach einer anderen Aktion an derselben Stelle
-  anfragenActionAt = Date.now();
+/* Fenster „Zusagen“ (Gast hat eine E-Mail-Adresse): Zusage senden – wahlweise mit persönlicher
+   Nachricht – oder ohne E-Mail zusagen. Liefert { mail: true, message }, { mail: false } oder null. */
+function askAccept(r) {
+  return new Promise(resolve => {
+    const dlg = document.createElement('dialog');
+    if (typeof dlg.showModal !== 'function') {
+      resolve(confirm(`Zusage per E-Mail an ${r.email} senden?`) ? { mail: true, message: '' } : null);
+      return;
+    }
+    dlg.className = 'confirm-dialog';
+    dlg.innerHTML = `
+      <form method="dialog" class="confirm-dialog-form">
+        <h3 class="confirm-dialog-title">Zusagen</h3>
+        <p class="confirm-dialog-to">${escapeHtml(resWhenShort(r))}${r.persons ? ' · ' + escapeHtml(personsLabel(r.persons)) : ''}<br>An: <strong>${escapeHtml(r.email)}</strong></p>
+        <label class="confirm-dialog-label" for="accept-dialog-msg">Persönliche Nachricht an den Gast <span>(freiwillig)</span></label>
+        <textarea id="accept-dialog-msg" class="confirm-dialog-msg" rows="3" maxlength="${PERSONAL_MESSAGE_MAX}"
+          placeholder="z. B. Wir haben Ihnen einen Tisch am Fenster reserviert."></textarea>
+        <p class="confirm-dialog-hint">Der Gast bekommt die Zusage per E-Mail. Haben Sie schon telefoniert, genügt „Ohne E-Mail zusagen“.</p>
+        <div class="confirm-dialog-actions">
+          <button type="button" class="btn btn-link" data-act="cancel">Abbrechen</button>
+          <button type="button" class="btn btn-link" data-act="nomail">Ohne E-Mail zusagen</button>
+          <button type="submit" class="btn btn-primary" data-act="send">
+            <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
+            Zusage senden
+          </button>
+        </div>
+      </form>`;
+    document.body.appendChild(dlg);
+    const ta = dlg.querySelector('textarea');
+    let result = null;
+    const close = (val) => { result = val; dlg.close(); };
+    dlg.querySelector('[data-act="cancel"]').addEventListener('click', () => close(null));
+    dlg.querySelector('[data-act="nomail"]').addEventListener('click', () => close({ mail: false }));
+    dlg.querySelector('form').addEventListener('submit', (e) => { e.preventDefault(); close({ mail: true, message: ta.value.trim().slice(0, PERSONAL_MESSAGE_MAX) }); });
+    dlg.addEventListener('cancel', () => { result = null; });
+    dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
+    dlg.showModal();
+    dlg.querySelector('[data-act="send"]').focus();
+  });
+}
+
+/* Zusagen: mit E-Mail über das Fenster, ohne E-Mail genügt ein Tipp (Vermerk in der Notiz). */
+async function onAcceptRes(id) {
+  if (anfragenTapGuard()) return;
   const list = window.alsterDb?.get('reservations') || [];
-  const current = (Array.isArray(list) ? list : []).find(r => r.id === id);
-  const nextStatus = current?.status === 'done' ? 'new' : 'done';
-  if (nextStatus === 'done') anfragenOpen.delete(id);   // in „Erledigt“ wieder als kompakte Zeile
-  // db.js aktualisiert den Cache synchron beim Aufruf → erst aufrufen, dann sofort rendern.
-  const pending = window.alsterDb?.updateReservationStatus(id, nextStatus);
+  const it = (Array.isArray(list) ? list : []).find(r => r.id === id);
+  if (!it || resIsAccepted(it)) return;
+  if (!it.email) { await onPhoneConfirmed(id); return; }
+  const choice = await askAccept(it);
+  if (!choice) return;
+  if (choice.mail) await onSendConfirmation(id, 'reservation', choice.message);
+  else await onPhoneConfirmed(id);
+}
+
+/* Absagen: Rückfrage mit dem Weg, dem Gast Bescheid zu sagen – dann wird die Reservierung entfernt. */
+function askDecline(r) {
+  return new Promise(resolve => {
+    const dlg = document.createElement('dialog');
+    if (typeof dlg.showModal !== 'function') { resolve(confirm('Reservierung absagen und aus der Liste nehmen?')); return; }
+    const tel = r.phone ? `tel:${String(r.phone).replace(/\s+/g, '')}` : '';
+    const subject = encodeURIComponent('Ihre Reservierungsanfrage – Alstercafé');
+    const body = encodeURIComponent(`Guten Tag ${r.name || ''},\n\nvielen Dank für Ihre Anfrage. Leider können wir Ihnen am ${niceDate(r.date)}${r.time ? ' um ' + r.time + ' Uhr' : ''} keinen Tisch anbieten.\n\nHerzliche Grüße\nAlstercafé`);
+    const mail = r.email ? `mailto:${escapeAttr(encodeURIComponent(r.email).replace(/%40/g, '@'))}?subject=${subject}&body=${body}` : '';
+    dlg.className = 'confirm-dialog';
+    dlg.innerHTML = `
+      <div class="confirm-dialog-form">
+        <h3 class="confirm-dialog-title">Absagen?</h3>
+        <p class="confirm-dialog-to"><strong>${escapeHtml(r.name || 'Ohne Namen')}</strong> · ${escapeHtml(resWhenShort(r))}${r.persons ? ' · ' + escapeHtml(personsLabel(r.persons)) : ''}</p>
+        <p class="confirm-dialog-hint">Die Reservierung wird aus der Liste genommen.${tel || mail ? ' Bitte sagen Sie dem Gast vorher Bescheid:' : ''}</p>
+        ${tel || mail ? `<p class="res-decline-contact">
+          ${tel ? `<a class="anfrage-btn" href="${escapeAttr(tel)}">${escapeHtml(r.phone)} anrufen</a>` : ''}
+          ${mail ? `<a class="anfrage-btn" href="${mail}">E-Mail schreiben</a>` : ''}
+        </p>` : ''}
+        <div class="confirm-dialog-actions">
+          <button type="button" class="btn btn-link" data-act="cancel">Abbrechen</button>
+          <button type="button" class="btn btn-primary btn-danger" data-act="ok">Absagen und entfernen</button>
+        </div>
+      </div>`;
+    document.body.appendChild(dlg);
+    let result = false;
+    dlg.querySelector('[data-act="cancel"]').addEventListener('click', () => { result = false; dlg.close(); });
+    dlg.querySelector('[data-act="ok"]').addEventListener('click', () => { result = true; dlg.close(); });
+    dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
+    dlg.showModal();
+    dlg.querySelector('[data-act="cancel"]').focus();   // nie die Absage vorauswählen
+  });
+}
+async function onDeclineRes(id) {
+  if (anfragenTapGuard()) return;
+  const list = window.alsterDb?.get('reservations') || [];
+  const it = (Array.isArray(list) ? list : []).find(r => r.id === id);
+  if (!it) return;
+  if (!(await askDecline(it))) return;
+  anfragenActionAt = Date.now();
+  anfragenOpen.delete(id);
+  const pending = window.alsterDb?.deleteReservation(id);
   renderAnfragen();
-  if (nextStatus === 'done') sparkleCard(id);
+  renderOverviewSummary();
   const ok = await pending;
-  if (ok === false) warnWriteFailed();
+  if (ok === false) warnWriteFailed(); else { showToast('Abgesagt und entfernt'); logActivity('Reservierung abgesagt'); }
   await refreshAnfragen();
 }
 
-/* Nach einem Anruf: als bestätigt vermerken, ohne E-Mail. Der Vermerk steht zusätzlich in der
-   internen Notiz, damit später klar ist, wie bestätigt wurde. */
+/* Fenster zum Eintragen (Anruf, Gast am Tresen) oder Ändern einer Reservierung.
+   Liefert { date, time, persons, name, phone, note } oder null. */
+function askReservationForm(existing) {
+  return new Promise(resolve => {
+    const dlg = document.createElement('dialog');
+    if (typeof dlg.showModal !== 'function') { showToast('Dieses Gerät unterstützt das Eintragen hier leider nicht.', { tone: 'error' }); resolve(null); return; }
+    const x = existing || {};
+    const persons = RES_PERSONS.includes(x.persons) || !x.persons ? RES_PERSONS : [x.persons, ...RES_PERSONS];
+    const selPersons = x.persons || '2 Personen';
+    dlg.className = 'confirm-dialog res-form-dialog';
+    dlg.innerHTML = `
+      <form method="dialog" class="confirm-dialog-form res-form" novalidate>
+        <h3 class="confirm-dialog-title">${existing ? 'Reservierung ändern' : 'Reservierung eintragen'}</h3>
+        ${existing ? '' : '<p class="confirm-dialog-hint">Für Anrufe und Gäste am Tresen. Der Tisch steht danach sofort im Tagesplan.</p>'}
+        <div class="res-form-row">
+          <label class="res-form-field"><span>Datum</span><input type="date" name="date" required value="${escapeAttr(x.date || isoDate(new Date()))}"></label>
+          <label class="res-form-field"><span>Uhrzeit</span><input type="time" name="time" required step="300" value="${escapeAttr(x.time || '')}"></label>
+        </div>
+        <label class="res-form-field"><span>Personen</span>
+          <select name="persons" required>${persons.map(p => `<option value="${escapeAttr(p)}"${p === selPersons ? ' selected' : ''}>${escapeHtml(personsLabel(p))}</option>`).join('')}</select>
+        </label>
+        <label class="res-form-field"><span>Name</span><input type="text" name="name" required autocomplete="off" value="${escapeAttr(x.name || '')}"></label>
+        <label class="res-form-field"><span>Telefon <em>(freiwillig)</em></span><input type="tel" name="phone" autocomplete="off" value="${escapeAttr(x.phone || '')}"></label>
+        <label class="res-form-field"><span>Notiz <em>(freiwillig)</em></span><textarea name="note" rows="2" placeholder="z. B. Geburtstag, Kinderstuhl, Tisch am Fenster">${escapeHtml(x.note || '')}</textarea></label>
+        <p class="res-form-error" role="alert" hidden></p>
+        <div class="confirm-dialog-actions">
+          <button type="button" class="btn btn-link" data-act="cancel">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" data-act="save">${existing ? 'Änderung speichern' : 'Eintragen'}</button>
+        </div>
+      </form>`;
+    document.body.appendChild(dlg);
+    const form = dlg.querySelector('form'), err = dlg.querySelector('.res-form-error');
+    let result = null;
+    dlg.querySelector('[data-act="cancel"]').addEventListener('click', () => { result = null; dlg.close(); });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = Object.fromEntries(['date', 'time', 'persons', 'name', 'phone', 'note'].map(k => [k, String(form.elements[k].value || '').trim()]));
+      const miss = !/^\d{4}-\d{2}-\d{2}$/.test(v.date) ? 'date' : !/^\d{2}:\d{2}$/.test(v.time) ? 'time' : !v.persons ? 'persons' : !v.name ? 'name' : '';
+      if (miss) {
+        err.textContent = { date: 'Bitte ein Datum wählen.', time: 'Bitte eine Uhrzeit eintragen.', persons: 'Bitte die Personenzahl wählen.', name: 'Bitte einen Namen eintragen.' }[miss];
+        err.hidden = false;
+        form.elements[miss].focus();
+        return;
+      }
+      result = v; dlg.close();
+    });
+    dlg.addEventListener('cancel', () => { result = null; });
+    dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
+    dlg.showModal();
+    (existing ? form.elements.time : form.elements.time).focus();
+  });
+}
+
+/* „Reservierung eintragen“: sofort als zugesagt im Tagesplan. */
+async function onAddRes() {
+  const v = await askReservationForm(null);
+  if (!v) return;
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const ok = await window.alsterDb?.addReservation({ id, name: v.name, phone: v.phone, email: '', date: v.date, time: v.time, persons: v.persons, message: '', status: 'new' });
+  if (ok === false) { warnWriteFailed(); return; }
+  const ok2 = await window.alsterDb?.markConfirmed?.('reservations', id);
+  const ok3 = v.note ? await window.alsterDb?.updateReservationNote(id, v.note) : true;
+  await refreshAnfragen();
+  if (ok2 === false || ok3 === false) warnWriteFailed();
+  else { showToast('Reservierung eingetragen'); logActivity('Reservierung eingetragen'); }
+  // die neue Zeile zeigen
+  spotlight = { id, until: Date.now() + 2400 };
+  const row = document.querySelector(`[data-res-row="${CSS.escape(id)}"]`);
+  if (row) {
+    // Nachtrag für einen vergangenen Tag: die Gruppe „Vergangene“ aufklappen, sonst sieht man ihn nicht
+    const grp = row.closest('details[data-res-group]');
+    if (grp && !grp.open) grp.open = true;
+    row.classList.add('is-spotlit');
+    row.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  }
+}
+
+/* „Ändern“: Datum, Uhrzeit, Personen, Name, Telefon, Notiz. */
+async function onEditRes(id) {
+  const list = window.alsterDb?.get('reservations') || [];
+  const it = (Array.isArray(list) ? list : []).find(r => r.id === id);
+  if (!it) return;
+  const v = await askReservationForm(it);
+  if (!v) return;
+  anfragenActionAt = Date.now();
+  // db.js aktualisiert den Cache synchron beim Aufruf → erst aufrufen, dann sofort rendern.
+  const p1 = window.alsterDb?.updateReservation?.(id, { date: v.date, time: v.time, persons: v.persons, name: v.name, phone: v.phone });
+  const p2 = v.note !== String(it.note || '') ? window.alsterDb?.updateReservationNote(id, v.note) : true;
+  renderAnfragen();
+  renderOverviewSummary();
+  const [a, b] = await Promise.all([p1, p2]);
+  if (a === false || b === false || a === undefined) warnWriteFailed();
+  else { showToast('Reservierung geändert'); logActivity('Reservierung geändert'); }
+  await refreshAnfragen();
+}
+
+/* Ohne E-Mail zusagen (nach einem Anruf, oder wenn der Gast keine Adresse angegeben hat). Der Vermerk
+   steht zusätzlich in der internen Notiz, damit später klar ist, wie zugesagt wurde. */
 const phoneOkBusy = new Set();
 async function onPhoneConfirmed(id) {
   if (phoneOkBusy.has(id) || anfragenTapGuard()) return;
   const list = window.alsterDb?.get('reservations') || [];
   const it = (Array.isArray(list) ? list : []).find(r => r.id === id);
-  if (!it || entryStage(it) !== 'new') return;
+  if (!it || resIsAccepted(it)) return;
   phoneOkBusy.add(id);
   anfragenActionAt = Date.now();
-  document.querySelectorAll(`[data-phoneok="${CSS.escape(id)}"]`).forEach(b => { b.disabled = true; });
+  document.querySelectorAll(`[data-accept="${CSS.escape(id)}"]`).forEach(b => { b.disabled = true; });
   try {
     const stamp = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
     // Erst der Vermerk: scheitert er, bleibt die Anfrage „Neu“ und der Knopf steht weiter bereit.
@@ -3421,7 +3583,8 @@ async function onPhoneConfirmed(id) {
     const ok = await window.alsterDb?.markConfirmed?.('reservations', id);
     anfragenActionAt = Date.now();   // die Liste ordnet sich jetzt neu
     renderAnfragen();
-    if (ok === false) warnWriteFailed(); else showToast('Als telefonisch bestätigt vermerkt');
+    renderOverviewSummary();
+    if (ok === false) warnWriteFailed(); else showToast('Zugesagt – steht jetzt im Tagesplan');
   } finally {
     phoneOkBusy.delete(id);
     await refreshAnfragen();
@@ -3430,7 +3593,7 @@ async function onPhoneConfirmed(id) {
 
 async function onDeleteAnfrage(id) {
   if (anfragenTapGuard()) return;
-  if (!(await askConfirm('Die Reservierung wird dauerhaft gelöscht. Tipp: „Als erledigt markieren“ behält sie im Verlauf.', { title: 'Reservierung löschen?', ok: 'Löschen' }))) return;
+  if (!(await askConfirm('Die Reservierung wird dauerhaft aus der Liste entfernt.', { title: 'Reservierung entfernen?', ok: 'Entfernen' }))) return;
   anfragenOpen.delete(id);
   const pending = window.alsterDb?.deleteReservation(id);
   renderAnfragen();
