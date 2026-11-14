@@ -14,10 +14,15 @@ Nach dem Login sehen Sie die **Übersicht** mit Kacheln. Aus jedem Bereich komme
    offene Reservierungen, offene Bestellungen, heutiger Mittagstisch, nächste Reservierung.
 2. Darunter steht die **Heute-Liste**: alle Tische und Abholungen von heute mit Uhrzeit.
    Antippen öffnet den Eintrag. Mit **„Tagesliste drucken“** haben Sie alles auf einem Blatt für die Theke.
-3. **Reservierungen** und **Bestellungen** öffnen. Jeder Eintrag hat einen Status:
+3. **Reservierungen** öffnen. Die Liste ist nach Tagen geordnet, heute zuerst; jede Zeile zeigt
+   Uhrzeit, Name und Personen. Antippen klappt Kontakt, Nachricht und Notiz auf.
+   Oben stehen drei Zähler – antippen filtert: **offene Anfragen**, **noch zu bestätigen**, **heute**.
+   Neben jedem Tag druckt **„Liste drucken“** alle Tische und Abholungen dieses Tages.
+   Jeder Eintrag (auch bei den **Bestellungen**) hat einen Status:
    - **Neu** – noch nicht bearbeitet.
    - **„Bestätigung senden“** – der Gast bekommt eine E-Mail, der Status wird **Bestätigt**.
-     Hat der Gast keine E-Mail angegeben, steht dort „bitte telefonisch bestätigen“ mit der Nummer.
+   - **„Telefonisch bestätigt“** (nur Reservierungen) – nach einem Anruf antippen: Status **Bestätigt**
+     ohne E-Mail, der Vermerk steht in der Notiz. Hat der Gast keine E-Mail angegeben, ist das der Weg.
    - **„Als erledigt markieren“**, wenn alles erledigt ist. Erledigte Einträge rutschen eingeklappt
      unter **„Erledigt (Anzahl)“** und zählen nicht mehr mit. „Erneut öffnen“ holt sie zurück.
    - **„Löschen“** (unten, ruhiger Textlink) nur für Spam oder Doppelungen – mit Rückfrage.
