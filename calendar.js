@@ -40,7 +40,8 @@
   }
 
   // Status-Pille wie im Mitgliederbereich. Bestellungen: Neu → bestätigt → erledigt.
-  // Reservierungen kennen nur „zugesagt“ (früher als „erledigt“ markierte zählen dazu).
+  // Reservierungen kennen nur „zugesagt“ (früher als „erledigt“ markierte zählen dazu) – gezeigt nur
+  // im Mitgliederbereich (opts.resStatus); der Mitarbeiter-Kalender bekommt den Zusage-Stand nicht geliefert.
   function pill(x, kind) {
     if (kind === 'res') return (x.confirmedAt || x.status === 'done') ? '<span class="cal-pill is-confirmed">zugesagt</span>' : '';
     if (x.status === 'done') return '<span class="cal-pill">erledigt</span>';
@@ -92,7 +93,7 @@
           return `<li class="cal-item is-res"${tap('res', r.id, 'Reservierung ' + (r.name || ''))}>
             <span class="cal-time">${escapeHtml(r.time || '–')}</span>
             <span class="cal-main"><span class="cal-type">Tisch</span> <strong>${escapeHtml(r.name || 'Ohne Namen')}</strong>${r.persons ? ` · ${escapeHtml(r.persons)}` : ''}</span>
-            ${pill(r, 'res')}
+            ${opts && opts.resStatus ? pill(r, 'res') : ''}
           </li>`;
         }
         const o = x.o;

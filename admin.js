@@ -441,7 +441,8 @@ async function showDashboard() {
       const ids = (() => { const l = window.alsterDb?.get(key); return new Set((Array.isArray(l) ? l : []).map(x => x.id)); })();
       if (key === 'reservations') await refreshAnfragen(); else { await refreshOrders(); try { renderBerlinerBake(); updateBerlinerLive(window.alsterDb?.get('berliner-settings') || {}); } catch {} }
       const list = window.alsterDb?.get(key);
-      const fresh = (Array.isArray(list) ? list : []).filter(x => x && !ids.has(x.id) && x.status !== 'done');
+      const fresh = (Array.isArray(list) ? list : []).filter(x => x && !ids.has(x.id) && x.status !== 'done'
+        && !(key === 'reservations' && (resIsAccepted(x) || selfAddedRes.has(x.id))));   // selbst Eingetragenes ist keine neue Anfrage
       if (fresh.length) announceNewEntries(key, fresh);
     });
   }
@@ -549,7 +550,7 @@ function renderOwnerCalendar() {
   const res = window.alsterDb?.get('reservations') || [];
   const ord = window.alsterDb?.get('orders') || [];
   const hol = window.alsterDb?.get('holidays');
-  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [], holidays: Array.isArray(hol) ? hol : [] }, calMonday, { onOpen: openEntryCard });
+  window.AlsterCalendar.render(el, { reservations: Array.isArray(res) ? res : [], orders: Array.isArray(ord) ? ord : [], holidays: Array.isArray(hol) ? hol : [] }, calMonday, { onOpen: openEntryCard, resStatus: true });
 }
 
 /* ---------- Tagesliste drucken (Reservierungen + Abholungen eines Tages, A4) ---------- */
@@ -2897,7 +2898,8 @@ function deferRenderWhileTyping(listId, fn) {
   if (a && a.matches && a.matches('[data-note]') && a.closest('#' + listId)) {
     if (!a.dataset.renderPending) {
       a.dataset.renderPending = '1';
-      a.addEventListener('blur', () => setTimeout(fn, 0), { once: true });
+      // kurz warten: der Klick, der das Feld verlässt (z. B. auf „Ändern“), soll seinen Knopf noch treffen
+      a.addEventListener('blur', () => setTimeout(fn, 300), { once: true });
     }
     return true;
   }
@@ -2910,6 +2912,7 @@ function deferRenderWhileTyping(listId, fn) {
    selbst nach unten. Gespeichert wird wie bisher – zugesagt heißt: Bestätigungs-Zeitpunkt gesetzt
    (oder früher als „erledigt“ markiert, damit alte Einträge richtig eingeordnet bleiben). */
 const anfragenOpen = new Set();     // aufgeklappte Zeilen bleiben über jedes Neu-Rendern hinweg offen
+const selfAddedRes = new Set();     // im Mitgliederbereich selbst eingetragen → zählt nie als „neue Anfrage“
 const anfragenGroupOpen = { past: false };   // „Vergangene“ aufgeklappt?
 /* Nach einer Aktion ordnet sich die Liste sofort neu – ein zweiter Tipp auf dieselbe Stelle träfe
    dann einen anderen Knopf. Deshalb zählt kurz danach kein weiterer Tipp auf einen Aktionsknopf. */
@@ -3115,24 +3118,26 @@ function niceDate(iso) {
 /* Fenster vor dem Versand der Bestätigung: optionale persönliche Nachricht an den
    Gast. Liefert den (getrimmten) Text, "" für ohne Nachricht, oder null bei Abbruch. */
 const PERSONAL_MESSAGE_MAX = 1000;
-function askPersonalMessage(email) {
+function askPersonalMessage(email, ctype = 'order') {
+  const word = ctype === 'reservation' ? 'Zusage' : 'Bestätigung';
   return new Promise(resolve => {
     const dlg = document.createElement('dialog');
     if (typeof dlg.showModal !== 'function') {
       // Sehr alte Browser ohne <dialog>: einfache Abfrage als Ersatz.
-      const v = prompt(`Bestätigung an ${email} senden.\n\nPersönliche Nachricht (optional, leer lassen für ohne):`, '');
+      const v = prompt(`${word} an ${email} senden.\n\nPersönliche Nachricht (optional, leer lassen für ohne):`, '');
       resolve(v === null ? null : v.trim().slice(0, PERSONAL_MESSAGE_MAX));
       return;
     }
     dlg.className = 'confirm-dialog';
+    dlg.setAttribute('aria-labelledby', 'confirm-dialog-title');
     dlg.innerHTML = `
       <form method="dialog" class="confirm-dialog-form">
-        <h3 class="confirm-dialog-title">Bestätigung senden</h3>
+        <h3 class="confirm-dialog-title" id="confirm-dialog-title">${word} senden</h3>
         <p class="confirm-dialog-to">An: <strong>${escapeHtml(email)}</strong></p>
         <label class="confirm-dialog-label" for="confirm-dialog-msg">Persönliche Nachricht an den Gast <span>(optional)</span></label>
         <textarea id="confirm-dialog-msg" class="confirm-dialog-msg" rows="4" maxlength="${PERSONAL_MESSAGE_MAX}"
           placeholder="z. B. Wir haben Ihnen einen Tisch am Fenster reserviert."></textarea>
-        <p class="confirm-dialog-hint">Bleibt das Feld leer, geht die Bestätigung ganz normal raus.</p>
+        <p class="confirm-dialog-hint">Bleibt das Feld leer, geht die ${word} ganz normal raus.</p>
         <div class="confirm-dialog-actions">
           <button type="button" class="btn btn-link" data-act="cancel">Abbrechen</button>
           <button type="submit" class="btn btn-primary" data-act="send">
@@ -3210,8 +3215,8 @@ async function onSendConfirmation(id, ctype, presetMessage) {
   const list = window.alsterDb?.get(key) || [];
   const it = (Array.isArray(list) ? list : []).find(x => x.id === id);
   if (!it) return;
-  if (!it.email) { showToast('Für diese Anfrage ist keine E-Mail-Adresse hinterlegt – bitte telefonisch bestätigen.', { tone: 'error' }); return; }
-  const message = presetMessage !== undefined ? presetMessage : await askPersonalMessage(it.email);
+  if (!it.email) { showToast(`Für diese Anfrage ist keine E-Mail-Adresse hinterlegt – bitte telefonisch ${ctype === 'order' ? 'bestätigen' : 'zusagen'}.`, { tone: 'error' }); return; }
+  const message = presetMessage !== undefined ? presetMessage : await askPersonalMessage(it.email, ctype);
   if (message === null) return; // abgebrochen
 
   const payload = ctype === 'order'
@@ -3230,11 +3235,13 @@ async function onSendConfirmation(id, ctype, presetMessage) {
     btns.forEach((b, i) => { b.disabled = false; b.innerHTML = labels[i]; });
   }
   if (res && res.ok) {
-    await window.alsterDb?.markConfirmed?.(key, id);
+    const okMark = await window.alsterDb?.markConfirmed?.(key, id);
     if (ctype === 'order') { renderOrders(); showToast(`Bestätigung an ${it.email} gesendet`); }
     else { anfragenActionAt = Date.now(); renderAnfragen(); renderOverviewSummary(); showToast(`Zusage an ${it.email} gesendet`); }
+    // Die E-Mail ist raus, aber der Vermerk ließ sich nicht speichern → sagen, sonst steht der Eintrag später wieder als „neu“ da
+    if (okMark === false) warnWriteFailed();
   } else {
-    askNotice('Bestätigung nicht gesendet', 'Die E-Mail konnte nicht verschickt werden: ' + ((res && res.error) || 'unbekannter Fehler') +
+    askNotice(ctype === 'order' ? 'Bestätigung nicht gesendet' : 'Zusage nicht gesendet', 'Die E-Mail konnte nicht verschickt werden: ' + ((res && res.error) || 'unbekannter Fehler') +
       '. Bitte später erneut versuchen oder den Gast anrufen.');
   }
 }
@@ -3261,11 +3268,11 @@ function buildNewRequest(r) {
         ${r.email ? `<span class="res-new-mail">${escapeHtml(r.email)}</span>` : '<span class="res-new-mail is-none">keine E-Mail angegeben</span>'}
       </div>
       <div class="res-new-actions">
-        <button type="button" class="anfrage-btn res-btn-accept" data-accept="${id}">
+        <button type="button" class="anfrage-btn res-btn-accept" data-accept="${id}" aria-label="${escapeAttr('Zusagen: ' + (r.name || 'Ohne Namen') + ', ' + resWhenShort(r))}">
           <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
           Zusagen
         </button>
-        <button type="button" class="anfrage-btn res-btn-decline" data-decline="${id}">Absagen</button>
+        <button type="button" class="anfrage-btn res-btn-decline" data-decline="${id}" aria-label="${escapeAttr('Absagen: ' + (r.name || 'Ohne Namen') + ', ' + resWhenShort(r))}">Absagen</button>
         ${rec ? `<span class="res-new-rec">Eingegangen ${escapeHtml(rec)}</span>` : ''}
       </div>
     </li>
@@ -3372,9 +3379,10 @@ function askAccept(r) {
       return;
     }
     dlg.className = 'confirm-dialog';
+    dlg.setAttribute('aria-labelledby', 'accept-dialog-title');
     dlg.innerHTML = `
       <form method="dialog" class="confirm-dialog-form">
-        <h3 class="confirm-dialog-title">Zusagen</h3>
+        <h3 class="confirm-dialog-title" id="accept-dialog-title">Zusagen</h3>
         <p class="confirm-dialog-to">${escapeHtml(resWhenShort(r))}${r.persons ? ' · ' + escapeHtml(personsLabel(r.persons)) : ''}<br>An: <strong>${escapeHtml(r.email)}</strong></p>
         <label class="confirm-dialog-label" for="accept-dialog-msg">Persönliche Nachricht an den Gast <span>(freiwillig)</span></label>
         <textarea id="accept-dialog-msg" class="confirm-dialog-msg" rows="3" maxlength="${PERSONAL_MESSAGE_MAX}"
@@ -3410,7 +3418,7 @@ async function onAcceptRes(id) {
   const it = (Array.isArray(list) ? list : []).find(r => r.id === id);
   if (!it || resIsAccepted(it)) return;
   if (!it.email) { await onPhoneConfirmed(id); return; }
-  const choice = await askAccept(it);
+  const choice = await askAccept(it);   // danach keine Tipp-Sperre mehr: die Antwort im Fenster ist eine bewusste Wahl
   if (!choice) return;
   if (choice.mail) await onSendConfirmation(id, 'reservation', choice.message);
   else await onPhoneConfirmed(id);
@@ -3426,9 +3434,10 @@ function askDecline(r) {
     const body = encodeURIComponent(`Guten Tag ${r.name || ''},\n\nvielen Dank für Ihre Anfrage. Leider können wir Ihnen am ${niceDate(r.date)}${r.time ? ' um ' + r.time + ' Uhr' : ''} keinen Tisch anbieten.\n\nHerzliche Grüße\nAlstercafé`);
     const mail = r.email ? `mailto:${escapeAttr(encodeURIComponent(r.email).replace(/%40/g, '@'))}?subject=${subject}&body=${body}` : '';
     dlg.className = 'confirm-dialog';
+    dlg.setAttribute('aria-labelledby', 'decline-dialog-title');
     dlg.innerHTML = `
       <div class="confirm-dialog-form">
-        <h3 class="confirm-dialog-title">Absagen?</h3>
+        <h3 class="confirm-dialog-title" id="decline-dialog-title">Absagen?</h3>
         <p class="confirm-dialog-to"><strong>${escapeHtml(r.name || 'Ohne Namen')}</strong> · ${escapeHtml(resWhenShort(r))}${r.persons ? ' · ' + escapeHtml(personsLabel(r.persons)) : ''}</p>
         <p class="confirm-dialog-hint">Die Reservierung wird aus der Liste genommen.${tel || mail ? ' Bitte sagen Sie dem Gast vorher Bescheid:' : ''}</p>
         ${tel || mail ? `<p class="res-decline-contact">
@@ -3449,6 +3458,20 @@ function askDecline(r) {
     dlg.querySelector('[data-act="cancel"]').focus();   // nie die Absage vorauswählen
   });
 }
+/* Nach dem Entfernen einer Zeile geht der Tastatur-Fokus an die Nachbarzeile (sonst an „Reservierung eintragen“). */
+function resNeighborId(id) {
+  const rows = Array.from(dom.anfragenList?.querySelectorAll('[data-res-row]') || []).filter(r => r.getClientRects().length);
+  const i = rows.findIndex(r => r.dataset.resRow === id);
+  return i < 0 ? '' : ((rows[i + 1] || rows[i - 1])?.dataset.resRow || '');
+}
+function focusAfterRemoval(neighborId) {
+  if (document.activeElement && document.activeElement !== document.body) return;   // Fokus sitzt schon irgendwo Sinnvollem
+  const row = neighborId ? dom.anfragenList?.querySelector(`[data-res-row="${CSS.escape(neighborId)}"]`) : null;
+  const target = row && row.getClientRects().length
+    ? (row.querySelector(':scope > details > summary') || row.querySelector('button, a'))
+    : document.getElementById('anfragen-add');
+  target?.focus({ preventScroll: true });
+}
 async function onDeclineRes(id) {
   if (anfragenTapGuard()) return;
   const list = window.alsterDb?.get('reservations') || [];
@@ -3457,9 +3480,11 @@ async function onDeclineRes(id) {
   if (!(await askDecline(it))) return;
   anfragenActionAt = Date.now();
   anfragenOpen.delete(id);
+  const neighbor = resNeighborId(id);
   const pending = window.alsterDb?.deleteReservation(id);
   renderAnfragen();
   renderOverviewSummary();
+  focusAfterRemoval(neighbor);
   const ok = await pending;
   if (ok === false) warnWriteFailed(); else { showToast('Abgesagt und entfernt'); logActivity('Reservierung abgesagt'); }
   await refreshAnfragen();
@@ -3475,9 +3500,10 @@ function askReservationForm(existing) {
     const persons = RES_PERSONS.includes(x.persons) || !x.persons ? RES_PERSONS : [x.persons, ...RES_PERSONS];
     const selPersons = x.persons || '2 Personen';
     dlg.className = 'confirm-dialog res-form-dialog';
+    dlg.setAttribute('aria-labelledby', 'res-form-title');
     dlg.innerHTML = `
       <form method="dialog" class="confirm-dialog-form res-form" novalidate>
-        <h3 class="confirm-dialog-title">${existing ? 'Reservierung ändern' : 'Reservierung eintragen'}</h3>
+        <h3 class="confirm-dialog-title" id="res-form-title">${existing ? 'Reservierung ändern' : 'Reservierung eintragen'}</h3>
         ${existing ? '' : '<p class="confirm-dialog-hint">Für Anrufe und Gäste am Tresen. Der Tisch steht danach sofort im Tagesplan.</p>'}
         <div class="res-form-row">
           <label class="res-form-field"><span>Datum</span><input type="date" name="date" required value="${escapeAttr(x.date || isoDate(new Date()))}"></label>
@@ -3514,7 +3540,7 @@ function askReservationForm(existing) {
     dlg.addEventListener('cancel', () => { result = null; });
     dlg.addEventListener('close', () => { dlg.remove(); resolve(result); });
     dlg.showModal();
-    (existing ? form.elements.time : form.elements.time).focus();
+    form.elements.time.focus();
   });
 }
 
@@ -3523,10 +3549,13 @@ async function onAddRes() {
   const v = await askReservationForm(null);
   if (!v) return;
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const ok = await window.alsterDb?.addReservation({ id, name: v.name, phone: v.phone, email: '', date: v.date, time: v.time, persons: v.persons, message: '', status: 'new' });
+  selfAddedRes.add(id);   // die Live-Meldung „Neue Reservierung“ gilt nur für Anfragen von der Webseite
+  // Zusage und Notiz gehen gleich mit: so steht der Eintrag nie – auch nicht kurz – unter „Neue Anfragen“
+  const ok = await window.alsterDb?.addReservation({ id, name: v.name, phone: v.phone, email: '', date: v.date, time: v.time, persons: v.persons, message: '', status: 'new', confirmedAt: new Date().toISOString(), note: v.note });
   if (ok === false) { warnWriteFailed(); return; }
-  const ok2 = await window.alsterDb?.markConfirmed?.('reservations', id);
-  const ok3 = v.note ? await window.alsterDb?.updateReservationNote(id, v.note) : true;
+  // ältere Datenbank (ok === 'basic'): Zusage und Notiz einzeln nachtragen
+  const ok2 = ok === 'basic' ? await window.alsterDb?.markConfirmed?.('reservations', id) : true;
+  const ok3 = ok === 'basic' && v.note ? await window.alsterDb?.updateReservationNote(id, v.note) : true;
   await refreshAnfragen();
   if (ok2 === false || ok3 === false) warnWriteFailed();
   else { showToast('Reservierung eingetragen'); logActivity('Reservierung eingetragen'); }
@@ -3549,6 +3578,9 @@ async function onEditRes(id) {
   if (!it) return;
   const v = await askReservationForm(it);
   if (!v) return;
+  const goneNotice = () => askNotice('Reservierung nicht mehr vorhanden', 'Diese Reservierung wurde inzwischen entfernt – die Änderung wurde nicht gespeichert.');
+  const still = (window.alsterDb?.get('reservations') || []);
+  if (!(Array.isArray(still) ? still : []).some(r => r.id === id)) { goneNotice(); return; }   // z. B. auf einem anderen Gerät abgesagt
   anfragenActionAt = Date.now();
   // db.js aktualisiert den Cache synchron beim Aufruf → erst aufrufen, dann sofort rendern.
   const p1 = window.alsterDb?.updateReservation?.(id, { date: v.date, time: v.time, persons: v.persons, name: v.name, phone: v.phone });
@@ -3556,7 +3588,8 @@ async function onEditRes(id) {
   renderAnfragen();
   renderOverviewSummary();
   const [a, b] = await Promise.all([p1, p2]);
-  if (a === false || b === false || a === undefined) warnWriteFailed();
+  if (a === 'gone') goneNotice();
+  else if (a === false || b === false || a === undefined) warnWriteFailed();
   else { showToast('Reservierung geändert'); logActivity('Reservierung geändert'); }
   await refreshAnfragen();
 }
@@ -3565,7 +3598,7 @@ async function onEditRes(id) {
    steht zusätzlich in der internen Notiz, damit später klar ist, wie zugesagt wurde. */
 const phoneOkBusy = new Set();
 async function onPhoneConfirmed(id) {
-  if (phoneOkBusy.has(id) || anfragenTapGuard()) return;
+  if (phoneOkBusy.has(id)) return;
   const list = window.alsterDb?.get('reservations') || [];
   const it = (Array.isArray(list) ? list : []).find(r => r.id === id);
   if (!it || resIsAccepted(it)) return;
@@ -3595,8 +3628,10 @@ async function onDeleteAnfrage(id) {
   if (anfragenTapGuard()) return;
   if (!(await askConfirm('Die Reservierung wird dauerhaft aus der Liste entfernt.', { title: 'Reservierung entfernen?', ok: 'Entfernen' }))) return;
   anfragenOpen.delete(id);
+  const neighbor = resNeighborId(id);
   const pending = window.alsterDb?.deleteReservation(id);
   renderAnfragen();
+  focusAfterRemoval(neighbor);
   const ok = await pending;
   if (ok === false) warnWriteFailed();
   await refreshAnfragen();

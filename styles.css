@@ -13954,6 +13954,10 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   .admin-body .res-form .res-form-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
+/* Schmale Handys: Datum und Uhrzeit untereinander, sonst wird das Jahr abgeschnitten */
+@media (max-width: 379px) {
+  .admin-body .res-form .res-form-row { grid-template-columns: minmax(0, 1fr); }
+}
 /* Sehr lange Wörter, Namen oder E-Mail-Adressen dürfen die Seite nicht verbreitern (auch bei Bestellungen) */
 .admin-body .anfrage-msg,
 .admin-body .anfrage-name,
