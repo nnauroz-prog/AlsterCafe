@@ -12543,3 +12543,36 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   }
 }
 @media print { .fx-row { opacity: 1 !important; translate: none !important; } .karte-jump-pill, .fx-ripple { display: none !important; } }
+
+/* ==========================================================================
+   SPITZEN-EFFEKTE · Runde 3 (November 2026)
+   Teil A (reines CSS): Überschrift zieht sich beim Wegscrollen in die Tiefe
+   zurück, Goldfolien-Glanz im großen Schriftzug am Seitenende.
+   ========================================================================== */
+@keyframes fx-head-a { to { translate: 0 -38px; opacity: .22; } }
+@keyframes fx-head-b { to { translate: 0 -22px; opacity: .28; } }
+@keyframes fx-head-c { to { translate: 0 -8px; opacity: .34; } }
+@keyframes fx-art-away { to { scale: .9; opacity: .3; } }
+@keyframes fx-foil { from { background-position: 135% 0, 0 0; } to { background-position: -35% 0, 0 0; } }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Die drei Zeilen lösen sich unterschiedlich schnell – das wirkt wie Tiefe */
+    .hero-cinema-h1.is-char-revealed .head-1 { animation: fx-head-a linear both; animation-timeline: scroll(root); animation-range: 0px 72vh; }
+    .hero-cinema-h1.is-char-revealed .head-2 { animation: fx-head-b linear both; animation-timeline: scroll(root); animation-range: 0px 78vh; }
+    .hero-cinema-h1.is-char-revealed .head-3 { animation: fx-head-c linear both; animation-timeline: scroll(root); animation-range: 0px 84vh; }
+    .hero-cinematic > .hero-art { animation: fx-art-away linear both; animation-timeline: scroll(root); animation-range: 0px 80vh; }
+    /* Goldfolie: ein Lichtband wandert beim Hereinscrollen über den Schriftzug */
+    .site-footer::after {
+      opacity: 1;
+      background:
+        linear-gradient(104deg, rgba(226, 188, 122, 0) 42%, rgba(240, 212, 160, .42) 50%, rgba(226, 188, 122, 0) 58%) no-repeat,
+        linear-gradient(180deg, rgba(241, 231, 211, .085) 0%, rgba(241, 231, 211, 0) 70%);
+      background-size: 240% 100%, 100% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+      animation: wordmark-rise linear both, fx-foil linear both;
+      animation-timeline: view(), view();
+      animation-range: entry 0% entry 100%, entry 10% entry 115%;
+    }
+  }
+}
