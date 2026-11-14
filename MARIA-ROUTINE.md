@@ -10,10 +10,13 @@ Nach dem Login sehen Sie die **Übersicht** mit Kacheln. Aus jedem Bereich komme
 
 ## 1. Morgens vor Öffnung (2 Minuten)
 
-1. **Übersicht → „Heute auf einen Blick“** ansehen:
-   offene Reservierungen, offene Bestellungen, heutiger Mittagstisch, nächste Reservierung.
-2. Darunter steht die **Heute-Liste**: alle Tische und Abholungen von heute mit Uhrzeit.
-   Antippen öffnet den Eintrag. Mit **„Tagesliste drucken“** haben Sie alles auf einem Blatt für die Theke.
+1. **Übersicht** ansehen. Ganz oben steht **„Zu tun“** – nur, was wirklich ansteht:
+   Reservierungen oder Bestellungen, die noch zu bestätigen sind, und ein Hinweis, wenn der Mittagstisch
+   für heute oder morgen fehlt. Antippen führt direkt hin. Steht dort „Alles erledigt“, ist nichts offen.
+2. Darunter **„Heute“** und **„Morgen“**: die Summe (Tische, Personen, Abholungen), der Mittagstisch
+   des Tages und alle Einträge mit Uhrzeit. Antippen öffnet den Eintrag.
+   Mit **„Tagesliste drucken“** haben Sie alles auf einem Blatt für die Theke.
+   Die kleinen Zahlen an den Kacheln zeigen, wie viel noch **zu bestätigen** ist.
 3. **Reservierungen** öffnen. Die Liste ist nach Tagen geordnet, heute zuerst; jede Zeile zeigt
    Uhrzeit, Name und Personen. Antippen klappt Kontakt, Nachricht und Notiz auf.
    Oben stehen drei Zähler – antippen filtert: **offene Anfragen**, **noch zu bestätigen**, **heute**.

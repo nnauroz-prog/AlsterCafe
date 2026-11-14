@@ -78,8 +78,9 @@ stehen in [`CUSTOM-DOMAIN.md`](CUSTOM-DOMAIN.md), HTTPS aktiviert Vercel automat
 ### Übersicht und tägliche Abläufe
 Die ausführliche, druckbare Anleitung steht in [**MARIA-ROUTINE.md**](MARIA-ROUTINE.md). Kurzfassung:
 
-- **Übersicht:** „Heute auf einen Blick“ mit offenen Reservierungen und Bestellungen, heutigem
-  Mittagstisch, nächster Reservierung und der **Heute-Liste** (antippbar, „Tagesliste drucken“).
+- **Übersicht:** oben **„Zu tun“** (was noch zu bestätigen ist, fehlender Mittagstisch), darunter
+  **„Heute“** und **„Morgen“** mit Summe, Mittagstisch und allen Einträgen (antippbar,
+  „Tagesliste drucken“). Die Zahlen an den Kacheln zeigen, was noch zu bestätigen ist.
 - **Täglich:** Mittagstisch · Reservierungen · Bestellungen · Kalender · Berliner.
   **Selten ändern:** Speisekarte · Bilder & Farben · Hinweis · Öffnungszeiten · Urlaub & Feiertage · Konto.
 - **Status jeder Anfrage:** Neu → Bestätigt („Bestätigung senden“, E-Mail an den Gast) → Erledigt
