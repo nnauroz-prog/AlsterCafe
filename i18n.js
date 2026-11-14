@@ -373,6 +373,12 @@
     'Ein bis zwei Tage vorher reicht meistens. Größere Gruppen ab sechs\n            Personen bitte einen Tag vorher anmelden — sonst wird\'s in der\n            Backstube knapp.':
       'One or two days ahead is usually enough. Larger groups of six or more, please register a day ahead — otherwise it gets tight in the bakery.',
     'So läuft\'s:': 'How it works:',
+    'So läuft\'s': 'How it works',
+    'Wann und mit wie vielen?': 'When and how many?',
+    'Wer kommt?': 'Who is coming?',
+    'Noch ein Wunsch?': 'Anything else?',
+    'freiwillig': 'optional',
+    'Lieber telefonisch:': 'Prefer to call:',
     'Sie senden die Anfrage, wir melden uns am selben Tag per Anruf oder Mail zurück mit Bestätigung. Eine Online-Sofortbestätigung gibt es nicht — das ist Absicht.':
       'You send the request, we get back to you the same day by phone or email with confirmation. There’s no instant online confirmation — that’s intentional.',
     'Reservierungen täglich zu unseren Öffnungszeiten.': 'Reservations every day during our opening hours.',

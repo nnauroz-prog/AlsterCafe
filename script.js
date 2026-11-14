@@ -2506,8 +2506,6 @@ function initPremiumPolish() {
   // 16. Splash-Screen-Markenstempel als SVG-Animation
   enhanceSplashMark();
 
-  // 17. Reservation-Form: Coupon-Header voranstellen
-  enhanceReservationCoupon();
 
   // 18. Topbar-Live-Status injizieren
   injectTopbarLiveStatus();
@@ -2518,8 +2516,8 @@ function initPremiumPolish() {
   // 20. Hero-Coord Live-Clock
   initHeroCoordClock();
 
-  // 21. Reservation-Tipp-Karte
-  injectReservationTips();
+  // 21. Reservierung: letzte online wählbare Uhrzeit unter den Öffnungszeiten
+  initReservationInfo();
 
   // 22. Brand-Wordmark Letter-by-Letter-Animation
   initBrandWordmarkReveal(reduceMotion);
@@ -2644,21 +2642,18 @@ function initHeroCoordClock() {
   setInterval(update, 30 * 1000);
 }
 
-function injectReservationTips() {
-  const intro = document.querySelector('.reservation-intro');
-  if (!intro) return;
-  if (intro.querySelector('.reservation-tips')) return;
-
-  const tips = document.createElement('div');
-  tips.className = 'reservation-tips';
-  tips.innerHTML = `
-    <p class="reservation-tips-eyebrow">Gut zu wissen</p>
-    <ul class="reservation-tips-list">
-      <li data-mark="·">Sonntag- und Samstagvormittag ist <em>am stärksten</em> nachgefragt.</li>
-      <li data-mark="·">Größere Gruppen (ab 6 Pers.) bitte einen Tag <em>vorher</em>.</li>
-    </ul>
-  `;
-  intro.appendChild(tips);
+/* Reservierungsseite: sagt unter den Öffnungszeiten, bis wann online gewählt werden kann
+   (eine Stunde vor Ladenschluss, siehe RES_LAST_SLOT_GAP). Rechnet aus den echten Zeiten. */
+function initReservationInfo() {
+  const el = document.getElementById('res-online-until');
+  if (!el) return;
+  const en = alsterLang() === 'en';
+  const lasts = [...new Set(getWeekHours().filter(Boolean).map(d => d.closeMin - RES_LAST_SLOT_GAP))];
+  if (!lasts.length) { el.hidden = true; return; }
+  el.textContent = lasts.length === 1
+    ? (en ? `Online you can choose times up to ${formatMin(lasts[0])} – for later, just call.` : `Online wählbar bis ${formatMin(lasts[0])} Uhr – für später rufen Sie einfach an.`)
+    : (en ? 'Online you can choose times up to one hour before closing – for later, just call.' : 'Online wählbar bis eine Stunde vor Ladenschluss – für später rufen Sie einfach an.');
+  el.hidden = false;
 }
 
 function injectTopbarLiveStatus() {
@@ -2723,22 +2718,6 @@ function enhanceSplashMark() {
     </svg>
   `;
   oldLogo.replaceWith(mark);
-}
-
-function enhanceReservationCoupon() {
-  const form = document.querySelector('.reservation-form');
-  if (!form) return;
-  if (form.querySelector('.reservation-form-coupon-header')) return;
-
-  const header = document.createElement('div');
-  header.className = 'reservation-form-coupon-header';
-  const now = new Date();
-  const fmt = now.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
-  header.innerHTML = `
-    <p class="reservation-form-coupon-eyebrow">${alsterLang() === 'en' ? 'Issued on' : 'Ausgegeben am'} <em>${fmt}</em></p>
-    <span class="reservation-form-coupon-stamp">${alsterLang() === 'en' ? '№ Reservation' : '№ Reservierung'}</span>
-  `;
-  form.insertBefore(header, form.firstChild);
 }
 
 /* Zahlungsarten fürs Footer (vom Inhaber bestätigt: bar, EC, alle Kreditkarten
@@ -4031,8 +4010,25 @@ function initReservationForm() {
     timeSel.addEventListener('focus', rebuild);
     dateInput.__slotsUpdate = rebuild;
   }
+  // Übersicht vor dem Absenden: erscheint, sobald Datum, Uhrzeit und Personen gewählt sind
+  const overview = form.querySelector('#res-overview');
+  const personsSel = form.querySelector('select[name="Personen"]');
+  const updateOverview = () => {
+    if (!overview) return;
+    const en = alsterLang() === 'en';
+    const txt = reservationSummaryText(dateInput?.value, timeSel?.value, personsSel?.value, en);
+    overview.hidden = !txt;
+    overview.innerHTML = txt ? `<span class="res-overview-label">${en ? 'Your request' : 'Ihre Anfrage'}</span><strong>${escapeHtml(txt)}</strong>` : '';
+  };
+  ['input', 'change'].forEach(ev => form.addEventListener(ev, updateOverview));
+  form.addEventListener('reset', () => setTimeout(updateOverview, 0));
+  updateOverview();
   // Erfolgs-Zustand und Zusammenfassung verschwinden bei der nächsten Eingabe
-  form.addEventListener('input', () => { form.querySelector('.form-submit')?.classList.remove('is-success'); form.querySelector('.form-summary')?.remove(); });
+  form.addEventListener('input', () => {
+    form.querySelector('.form-submit')?.classList.remove('is-success'); form.querySelector('.form-summary')?.remove();
+    // Eine alte Fehlermeldung unter dem Knopf verschwindet, sobald weitergetippt oder gewählt wird
+    if (status?.classList.contains('error')) setFormStatus(status, '');
+  });
   const submitBtn = form.querySelector('.form-submit');
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -4097,14 +4093,12 @@ function initReservationForm() {
       // Datum steht nach dem Zurücksetzen wieder auf morgen, Hinweis und Uhrzeiten passen dazu
       setDefaultDate();
       // Kurze Zusammenfassung der Anfrage unter der Erfolgsmeldung
-      const dm = entry.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (dm && status) {
-        const when = new Date(+dm[1], +dm[2] - 1, +dm[3]).toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+      const sumText = reservationSummaryText(entry.date, entry.time, entry.persons, en);
+      if (sumText && status) {
         const sum = document.createElement('p');
         sum.className = 'form-summary';
         sum.setAttribute('data-no-i18n', '');
-        const persons = en ? entry.persons.replace(/^(\d+) Person(en)?$/, (_, n) => `${n} ${n === '1' ? 'person' : 'people'}`).replace(/^mehr als 8 Personen$/, 'more than 8 people') : entry.persons;
-        sum.textContent = `${when} · ${entry.time}${en ? '' : ' Uhr'} · ${persons}`;
+        sum.textContent = sumText;
         const route = document.createElement('a');
         route.className = 'js-route'; route.href = routeHref(); route.target = '_blank'; route.rel = 'noopener';
         route.textContent = en ? 'Get directions →' : 'Route planen →';
@@ -4128,6 +4122,16 @@ function initReservationForm() {
       setFormStatus(status, en ? 'Please send the email that just opened — we will confirm as soon as possible.' : 'Bitte senden Sie die geöffnete E-Mail ab — wir bestätigen schnellstmöglich.', 'ok');
     }
   });
+}
+
+/* „Mi., 11. Nov. · 12:00 Uhr · 4 Personen“ – für die Übersicht vor und die Zeile nach dem Absenden.
+   Leer, solange Datum, Uhrzeit oder Personen fehlen. */
+function reservationSummaryText(dateStr, time, persons, en) {
+  const dm = String(dateStr || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!dm || !time || !persons) return '';
+  const when = new Date(+dm[1], +dm[2] - 1, +dm[3]).toLocaleDateString(en ? 'en-GB' : 'de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+  const who = en ? String(persons).replace(/^(\d+) Person(en)?$/, (_, n) => `${n} ${n === '1' ? 'person' : 'people'}`).replace(/^mehr als 8 Personen$/, 'more than 8 people') : persons;
+  return `${when} · ${time}${en ? '' : ' Uhr'} · ${who}`;
 }
 
 function setFormStatus(el, msg, kind = '') {
