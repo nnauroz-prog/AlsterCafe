@@ -12442,3 +12442,104 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   .karte-list > li .karte-preis { transition: translate .25s cubic-bezier(.2, .7, .2, 1), color .25s ease; }
 }
 @media print { .chapter-glow { display: none !important; } }
+
+/* ==========================================================================
+   NEUE EFFEKTE · Runde 2 (November 2026)
+   Schwerpunkt: Effekte, die auch am Handy sichtbar sind. Alles nur bei
+   erlaubter Bewegung; ohne JavaScript bleibt jeder Inhalt sichtbar.
+   ========================================================================== */
+@property --fx-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --fx-p { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes fx-orbit { to { --fx-a: 360deg; } }
+@keyframes fx-progress { to { --fx-p: 360deg; } }
+@keyframes btn-shine-auto { 0%, 84% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+@keyframes fx-ripple { from { scale: 1; opacity: .85; } to { scale: 26; opacity: 0; } }
+@keyframes map-pulse { 0% { opacity: .75; transform: scale(1); } 100% { opacity: 0; transform: scale(5.5); } }
+@keyframes fx-colon { 0%, 55% { opacity: 1; } 70%, 90% { opacity: .25; } 100% { opacity: 1; } }
+
+/* Karten-Pin: ruhende Ringe (ohne Bewegung unsichtbar) */
+.map-art .map-pulse { fill: none; stroke: #B8893E; stroke-width: 1.4; opacity: 0; transform-box: fill-box; transform-origin: center; }
+/* Tipp-Welle */
+.btn > .fx-ripple {
+  position: absolute; z-index: 0; left: var(--rx, 50%); top: var(--ry, 50%);
+  width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgba(255, 244, 214, .5), rgba(255, 244, 214, .16) 55%, rgba(255, 244, 214, 0) 72%);
+}
+/* Gleitende Markierung in der Kategorien-Leiste der Speisekarte */
+.karte-jump-pill { display: none; }
+.karte-jump.has-pill { position: sticky; }
+.karte-jump.has-pill .karte-jump-pill {
+  display: block; position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 999px;
+  background: var(--bean, #3D2415); pointer-events: none; z-index: 0;
+  transition: transform .42s cubic-bezier(.3, 1.1, .4, 1), width .42s cubic-bezier(.3, 1.1, .4, 1);
+}
+.karte-jump.has-pill .karte-jump-link { position: relative; z-index: 1; }
+.karte-jump.has-pill .karte-jump-link.is-active { background: transparent; border-color: transparent; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 1 · Glanz zieht von selbst über den Hauptknopf im Kopf, sonst einmal beim Hereinscrollen */
+  .hero-cta .btn-primary:not(:hover)::before { animation: btn-shine-auto 7s cubic-bezier(.4, 0, .2, 1) 2.6s infinite; }
+  .btn.fx-shine:not(:hover)::before { animation: btn-shimmer 1200ms var(--ease-out, ease-out) 1; }
+
+  /* 2 · Lichtlauf am Rand der „Gerade jetzt“-Karte und der Tageskarte */
+  .hero-coord::after, .lunch-today::after {
+    content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+    background: conic-gradient(from var(--fx-a), transparent 0 74%, rgba(226, 188, 122, .0) 76%, rgba(226, 188, 122, .95) 90%, rgba(255, 240, 205, 1) 93%, transparent 96%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: fx-orbit 8s linear infinite;
+  }
+  .lunch-today::after { animation-duration: 11s; }
+
+  /* 3 · Listen blenden Zeile für Zeile ein (Klassen setzt script.js nur unterhalb des Sichtfelds) */
+  .fx-row { opacity: 0; translate: 0 16px; }
+  .fx-row.fx-row-in {
+    opacity: 1; translate: 0 0;
+    transition: opacity .55s ease var(--fx-d, 0ms), translate .65s cubic-bezier(.2, .7, .2, 1) var(--fx-d, 0ms);
+  }
+
+  /* 8 · Tipp-Welle */
+  .btn > .fx-ripple { animation: fx-ripple .75s cubic-bezier(.2, .6, .3, 1) forwards; }
+
+  /* 9 · Karten-Pin sendet ruhige Ringe */
+  .map-art .map-pulse { animation: map-pulse 3s ease-out 2.2s infinite; }
+  .map-art .map-pulse + .map-pulse { animation-delay: 3.7s; }
+
+  /* 10 · Goldglanz läuft Buchstabe für Buchstabe über die goldenen Wörter der Überschrift */
+  .hero-cinema-h1.is-char-revealed .head-2 em .hero-char {
+    animation: hero-char-up 700ms var(--ease-out) forwards, fx-char-glint 9s ease-in-out infinite;
+    animation-delay: calc(var(--char-i, 0) * 22ms + var(--char-base, 0ms)), calc(1900ms + var(--char-i, 0) * 80ms);
+  }
+  @keyframes fx-char-glint { 0%, 12%, 100% { color: inherit; text-shadow: none; } 6% { color: #E2B766; text-shadow: 0 0 22px rgba(226, 183, 102, .55); } }
+
+  /* Uhr in der „Gerade jetzt“-Karte: der Doppelpunkt atmet wie bei einer echten Uhr */
+  .hero-coord-clock-time .clock-colon { animation: fx-colon 2s ease-in-out infinite; }
+
+  /* Karten geben beim Antippen spürbar nach (Handy) */
+  @media (hover: none) {
+    .spread-card, .reviews-card, .broetchen-row, .lunch-day-reserve, .karte-jump-link { transition: scale .16s ease, background .2s ease, color .2s ease, border-color .2s ease; }
+    .spread-card:active, .reviews-card:active { scale: .985; }
+    .karte-jump-link:active { scale: .95; }
+  }
+
+  /* 11 · Leichte 3D-Neigung unter der Maus (nur Computer, Werte setzt script.js) */
+  @media (hover: hover) and (pointer: fine) {
+    .spread-card.fx-tilt:hover {
+      transform: perspective(1100px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateY(-2px);
+      transition: transform .18s ease-out, box-shadow .26s cubic-bezier(.22, 1, .36, 1), border-color .26s;
+    }
+    .hero-coord.fx-tilt { transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)); transition: transform .25s ease-out; will-change: transform; }
+  }
+}
+
+/* Nach-oben-Knopf zeigt den Lesefortschritt als goldenen Ring */
+@supports (animation-timeline: scroll()) {
+  .to-top::after {
+    content: ''; position: absolute; inset: -1px; border-radius: 50%; padding: 2px; pointer-events: none;
+    background: conic-gradient(var(--gold, #B8893E) var(--fx-p), transparent 0);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: fx-progress linear both; animation-timeline: scroll(root);
+  }
+}
+@media print { .fx-row { opacity: 1 !important; translate: none !important; } .karte-jump-pill, .fx-ripple { display: none !important; } }

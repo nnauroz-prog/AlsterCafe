@@ -1625,6 +1625,10 @@ function initKarteJump() {
     const label = b.querySelector('h2')?.textContent.trim() || '';
     return `<a href="#${b.id}" class="karte-jump-link" data-target="${b.id}">${escapeHtml(label)}</a>`;
   }).join('');
+  // Gleitende Markierung (nur wenn genau eine Kategorie aktiv ist, s. update)
+  const pill = document.createElement('span');
+  pill.className = 'karte-jump-pill'; pill.setAttribute('aria-hidden', 'true');
+  nav.prepend(pill);
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById(a.dataset.target)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
@@ -1649,6 +1653,17 @@ function initKarteJump() {
     const key = ids.join(' ');
     if (key === current) return;
     current = key;
+    // Pille gleitet zur aktiven Kategorie; bei zwei aktiven (Computer) bleibt die alte Darstellung
+    const solo = ids.length === 1 ? links.find(a => a.dataset.target === ids[0]) : null;
+    nav.classList.toggle('has-pill', !!solo);
+    if (solo) {
+      const first = !pill.dataset.on;
+      if (first) pill.style.transition = 'none';
+      pill.style.width = solo.offsetWidth + 'px';
+      pill.style.height = solo.offsetHeight + 'px';
+      pill.style.transform = `translate(${solo.offsetLeft}px, ${solo.offsetTop}px)`;
+      if (first) { pill.dataset.on = '1'; void pill.offsetWidth; pill.style.transition = ''; }
+    }
     links.forEach(a => {
       const on = ids.includes(a.dataset.target);
       a.classList.toggle('is-active', on);
@@ -2613,7 +2628,7 @@ function initHeroCoordClock() {
     const wd = now.toLocaleDateString(dateLocale(), { weekday: 'short' });
     const next = `${wd}, ${hh}:${mm}`;
     if (next !== lastText) {
-      timeEl.textContent = next;
+      timeEl.innerHTML = `<span class="clock-text">${escapeHtml(wd)}, ${hh}<span class="clock-colon">:</span>${mm}</span>`;
       if (lastText) {
         timeEl.classList.add('is-tick');
         setTimeout(() => timeEl.classList.remove('is-tick'), 700);
@@ -4297,12 +4312,13 @@ function escapeAttr(s) { return escapeHtml(s); }
   if (document.body && document.body.classList.contains('admin-body')) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const run = () => {
-    // Goldstaub nur am Computer, wenige Punkte (ruhig)
-    if (matchMedia('(min-width: 981px)').matches) document.querySelectorAll('.chapter-dark').forEach(sec => {
+    // Goldstaub: am Computer sieben Punkte, am Handy vier (ruhig)
+    const dustCount = matchMedia('(min-width: 981px)').matches ? 7 : 4;
+    document.querySelectorAll('.chapter-dark').forEach(sec => {
       if (sec.querySelector(':scope > .gold-dust')) return;
       const box = document.createElement('div');
       box.className = 'gold-dust'; box.setAttribute('aria-hidden', 'true');
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < dustCount; i++) {
         const p = document.createElement('i');
         p.style.setProperty('--x', (6 + Math.random() * 88).toFixed(1) + '%');
         p.style.setProperty('--s', (2 + Math.random() * 2).toFixed(1) + 'px');
@@ -4367,4 +4383,111 @@ function escapeAttr(s) { return escapeHtml(s); }
     }).observe(el, { childList: true, characterData: true, subtree: true });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+})();
+
+/* Neue Effekte, Runde 2: Glanz beim Hereinscrollen, Zeilen-Kaskade, Laufband
+   reagiert aufs Scrollen, Tipp-Welle, leichte 3D-Neigung. Alles nur bei
+   erlaubter Bewegung und nie im Mitgliederbereich. */
+(function initEffectsRound2() {
+  if (document.body && document.body.classList.contains('admin-body')) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const hasIO = 'IntersectionObserver' in window;
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  // Hauptknöpfe glänzen einmal, wenn sie ins Bild kommen
+  const shineIO = hasIO ? new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      shineIO.unobserve(e.target);
+      setTimeout(() => {
+        e.target.classList.add('fx-shine');
+        setTimeout(() => e.target.classList.remove('fx-shine'), 1400);
+      }, 350);
+    });
+  }, { threshold: 0.9 }) : null;
+
+  // Listen blenden Zeile für Zeile ein. Markiert wird nur, was noch unter dem
+  // Sichtfeld liegt — Sichtbares bleibt unangetastet (kein Aufblitzen).
+  const ROWS = '.karte-list > li, .lunch-week > li, .reviews-card, #hours-list > li, .broetchen-row, .faq-item, .footer-hours-lines .footer-line';
+  const rowIO = hasIO ? new IntersectionObserver(entries => {
+    const hits = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    hits.forEach((e, i) => {
+      const el = e.target;
+      rowIO.unobserve(el);
+      const d = Math.min(i * 55, 440);
+      el.style.setProperty('--fx-d', d + 'ms');
+      el.classList.add('fx-row-in');
+      setTimeout(() => { el.classList.remove('fx-row', 'fx-row-in'); el.style.removeProperty('--fx-d'); }, d + 900);
+    });
+  }, { rootMargin: '0px 0px -5% 0px', threshold: 0 }) : null;
+
+  const scan = () => {
+    if (shineIO) document.querySelectorAll('.btn-primary, .btn-gold, .btn-stamp').forEach(b => {
+      if (b.dataset.fxShine || b.closest('.hero-cta')) return;
+      b.dataset.fxShine = '1'; shineIO.observe(b);
+    });
+    if (rowIO) {
+      const vh = window.innerHeight;
+      document.querySelectorAll(ROWS).forEach(el => {
+        if (el.dataset.fxRow) return;
+        el.dataset.fxRow = '1';
+        if (el.getBoundingClientRect().top < vh * 0.96) return;
+        el.classList.add('fx-row'); rowIO.observe(el);
+      });
+    }
+    if (finePointer) document.querySelectorAll('.spread-card-hero, .hero-coord').forEach(card => {
+      if (card.classList.contains('fx-tilt')) return;
+      card.classList.add('fx-tilt');
+      let raf = 0, rx = 0, ry = 0;
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect();
+        ry = ((e.clientX - r.left) / r.width - 0.5) * 5;
+        rx = (0.5 - (e.clientY - r.top) / r.height) * 4;
+        if (!raf) raf = requestAnimationFrame(() => {
+          raf = 0;
+          card.style.setProperty('--tx', rx.toFixed(2) + 'deg');
+          card.style.setProperty('--ty', ry.toFixed(2) + 'deg');
+        });
+      }, { passive: true });
+      card.addEventListener('pointerleave', () => { card.style.setProperty('--tx', '0deg'); card.style.setProperty('--ty', '0deg'); }, { passive: true });
+    });
+  };
+
+  // Tipp-Welle: weiches Licht breitet sich vom Berührungspunkt aus
+  document.addEventListener('pointerdown', e => {
+    const btn = e.target.closest && e.target.closest('.btn-primary, .btn-gold, .btn-stamp');
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const dot = document.createElement('span');
+    dot.className = 'fx-ripple'; dot.setAttribute('aria-hidden', 'true');
+    dot.style.setProperty('--rx', (e.clientX - r.left) + 'px');
+    dot.style.setProperty('--ry', (e.clientY - r.top) + 'px');
+    btn.appendChild(dot);
+    setTimeout(() => dot.remove(), 800);
+  }, { passive: true });
+
+  // Laufband im Kopf wird beim Scrollen kurz schneller und beruhigt sich wieder
+  const initTicker = () => {
+    const track = document.querySelector('.hero-ticker-track');
+    if (!track || !track.getAnimations) return;
+    let boost = 1, raf = 0, lastY = window.scrollY;
+    const tick = () => {
+      const anim = track.getAnimations()[0];
+      if (!anim) { raf = 0; return; }
+      boost += (1 - boost) * 0.07;
+      if (boost < 1.03) { anim.playbackRate = 1; raf = 0; return; }
+      anim.playbackRate = boost;
+      raf = requestAnimationFrame(tick);
+    };
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY, v = Math.abs(y - lastY); lastY = y;
+      if (y > window.innerHeight * 1.4) return;
+      boost = Math.min(6, Math.max(boost, 1 + v / 10));
+      if (!raf) raf = requestAnimationFrame(tick);
+    }, { passive: true });
+  };
+
+  const run = () => { scan(); initTicker(); [900, 2200, 4000].forEach(t => setTimeout(scan, t)); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(run, 350));
+  else setTimeout(run, 350);
 })();
