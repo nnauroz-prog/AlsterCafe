@@ -13429,7 +13429,6 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 .res-stat[data-res-filter="neu"]:not(.is-active):not(.is-zero) { border-color: var(--gold, #B8893E); }
 .res-stat[data-res-filter="neu"]:not(.is-active):not(.is-zero) .res-stat-num { color: var(--accent-text, #8A6420); }
 .res-stat.is-zero:not(.is-active) .res-stat-num { opacity: .45; }
-#anfragen-status:empty { display: none; }
 
 #anfragen-list { gap: 26px; margin-top: 20px; }
 .res-day { margin: 0; }
@@ -13475,7 +13474,14 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 .res-time { font: 600 1.02rem/1.2 'Inter', sans-serif; font-variant-numeric: tabular-nums; color: var(--bean, #3D2415); }
 .res-main { min-width: 0; display: block; }
 .res-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; }
-.res-row .anfrage-name { font-size: 1.06rem; }
+.res-row .anfrage-name { font-size: 1.06rem; min-width: 0; overflow-wrap: anywhere; }
+/* Telefon und E-Mail in der aufgeklappten Zeile gut treffbar */
+.res-body .anfrage-contact a { display: inline-flex; align-items: center; min-height: 44px; }
+/* Hervorhebung nach dem Sprung aus Übersicht oder Kalender (der Rahmen-Schein der Karten greift hier nicht) */
+@keyframes res-spot { 0%, 100% { background-color: transparent; } 12%, 60% { background-color: rgba(184, 137, 62, .18); } }
+.res-row.is-spotlit > .res-details { animation: res-spot 2.2s ease; border-radius: 8px; }
+.res-row.just-done > .res-details { animation: res-spot .9s ease; border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) { .res-row.is-spotlit > .res-details { animation: none; background-color: rgba(184, 137, 62, .14); } }
 .res-row .anfrage-pers { margin-left: 0; font-size: .9rem; }
 .res-preview { display: block; margin-top: 2px; font-size: .86rem; color: var(--muted, #6b5a4a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .res-chev { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; rotate: 45deg; opacity: .55; transition: rotate .2s ease; justify-self: center; margin-top: -4px; }
@@ -13509,9 +13515,13 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
      Ohne E-Mail bleiben beide (anrufen, dann vermerken) – das ist dort der einzige Weg. */
   .res-quick .anfrage-btn-confirm + .res-btn-phone { display: none; }
   .anfrage-item.res-row.is-stage-new::before { left: -9px; }
-  .res-day-print { margin-left: 0; }
+  .res-day-print { margin-left: 0; min-height: 44px; }
   /* In „Erledigt“ und „Vergangene“ steht das Datum mit in der ersten Spalte */
   .anfragen-sublist .res-sum { grid-template-columns: minmax(0, 1fr) auto 12px; }
   .anfragen-sublist .res-time { grid-column: 1 / -1; font-size: .84rem; font-weight: 600; color: var(--muted, #6b5a4a); }
 }
-@media (min-width: 641px) { .anfragen-sublist .res-sum { grid-template-columns: 132px minmax(0, 1fr) auto 14px; } .anfragen-sublist .res-body { padding-left: 146px; } }
+@media (min-width: 641px) {
+  .anfragen-sublist .res-sum { grid-template-columns: 168px minmax(0, 1fr) auto 14px; }
+  .anfragen-sublist .res-time { white-space: nowrap; }
+  .anfragen-sublist .res-body { padding-left: 182px; }
+}

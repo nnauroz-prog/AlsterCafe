@@ -520,14 +520,12 @@ async function openEntryCard(kind, id) {
   if (!panel || panel.hidden) return;
   const search = document.getElementById(kind === 'order' ? 'orders-search' : 'anfragen-search');
   if (search && search.value) { search.value = ''; search.dispatchEvent(new Event('input', { bubbles: true })); }
+  // Reservierungen: erst den Filter auf „alle“ stellen – sonst fehlt die gesuchte Zeile in der Liste
+  if (kind !== 'order' && anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); }
   const card = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item');
   if (!card) return;
-  // Reservierungen sind Zeilen zum Aufklappen: Filter zurück auf „alle“, Zeile öffnen
-  if (kind !== 'order') {
-    if (anfragenFilter !== 'offen') { anfragenFilter = 'offen'; renderAnfragen(); }
-    anfragenOpen.add(id);
-  }
-  const fresh = document.querySelector(`[data-mark="${CSS.escape(id)}"]`)?.closest('.anfrage-item') || card;
+  if (kind !== 'order') anfragenOpen.add(id);   // Zeile zum Aufklappen: geöffnet merken
+  const fresh = card;
   const own = fresh.querySelector(':scope > details');
   if (own) own.open = true;
   const pastList = fresh.parentElement?.closest('details');
@@ -2825,6 +2823,11 @@ function deferRenderWhileTyping(listId, fn) {
    Oben drei Zähler, die zugleich filtern: alle offenen · zu bestätigen · heute. */
 const anfragenOpen = new Set();     // aufgeklappte Einträge bleiben über jedes Neu-Rendern hinweg offen
 let anfragenFilter = 'offen';       // 'offen' | 'neu' | 'heute'
+const anfragenGroupOpen = { done: false, past: false };   // „Erledigt“ / „Vergangene“ aufgeklappt?
+/* Nach einer Aktion ordnet sich die Liste sofort neu – ein zweiter Tipp auf dieselbe Stelle träfe
+   dann einen anderen Knopf. Deshalb zählt kurz danach kein weiterer Tipp auf einen Aktionsknopf. */
+let anfragenActionAt = 0;
+const anfragenTapGuard = () => Date.now() - anfragenActionAt < 700;
 
 function personsCount(p) {
   const str = String(p || '');
@@ -2873,6 +2876,13 @@ function renderAnfragen() {
   if (dom.anfragenCount) dom.anfragenCount.hidden = true;   // ersetzt durch die drei Zähler
   if (!dom.anfragenList) return;
 
+  // Fokus merken: nach dem Neu-Aufbau soll die Tastatur dort weitermachen, wo sie war
+  const ae = document.activeElement;
+  const focusFilter = ae?.closest?.('#res-summary [data-res-filter]')?.dataset.resFilter || '';
+  const focusRow = ae && dom.anfragenList.contains(ae) ? (ae.closest('.res-row')?.querySelector('details[data-res-id]')?.dataset.resId || '') : '';
+
+  const hasQuery = !!(dom.anfragenSearch && dom.anfragenSearch.value.trim());
+  const filter = hasQuery ? 'offen' : anfragenFilter;   // die Suche sucht immer in allem
   const todayIso = isoDate(new Date());
   const open = items.filter(r => isOpenEntry(r, 'date'));
   const toConfirm = open.filter(r => entryStage(r) === 'new');
@@ -2882,7 +2892,7 @@ function renderAnfragen() {
   const sum = document.getElementById('res-summary');
   if (sum) {
     sum.hidden = items.length === 0;
-    const stat = (key, num, label) => `<button type="button" class="res-stat${anfragenFilter === key ? ' is-active' : ''}${num ? '' : ' is-zero'}" data-res-filter="${key}" aria-pressed="${anfragenFilter === key}">
+    const stat = (key, num, label) => `<button type="button" class="res-stat${filter === key ? ' is-active' : ''}${num ? '' : ' is-zero'}" data-res-filter="${key}" aria-pressed="${filter === key}">
         <span class="res-stat-num">${num}</span><span class="res-stat-label">${escapeHtml(label)}</span></button>`;
     const todayPers = todays.length ? tablesLabel(todays).replace(/^\d+ Tische? ?·? ?/, '') : '';
     sum.innerHTML = stat('offen', open.length, open.length === 1 ? 'offene Anfrage' : 'offene Anfragen')
@@ -2890,16 +2900,16 @@ function renderAnfragen() {
       + stat('heute', todays.length, todays.length === 1 ? `Tisch heute${todayPers ? ' · ' + todayPers : ''}` : `Tische heute${todayPers ? ' · ' + todayPers : ''}`);
     sum.querySelectorAll('[data-res-filter]').forEach(btn => btn.addEventListener('click', () => {
       anfragenFilter = btn.dataset.resFilter;
+      if (dom.anfragenSearch && dom.anfragenSearch.value) dom.anfragenSearch.value = '';   // ein Filter gilt immer – die Suche weicht
       renderAnfragen();
     }));
+    if (focusFilter) sum.querySelector(`[data-res-filter="${focusFilter}"]`)?.focus({ preventScroll: true });
   }
 
   if (items.length === 0) {
     dom.anfragenList.innerHTML = '<li class="anfragen-empty">Hier erscheinen Reservierungsanfragen, sobald jemand das Formular auf der Webseite ausfüllt.</li>';
     return;
   }
-  const hasQuery = !!(dom.anfragenSearch && dom.anfragenSearch.value.trim());
-  const filter = hasQuery ? 'offen' : anfragenFilter;   // die Suche sucht immer in allem
   const { upcoming, past } = splitByDate(items, dom.anfragenSearch?.value, 'date');
   let openUp = upcoming.filter(r => r.status !== 'done');
   const doneUp = upcoming.filter(r => r.status === 'done');
@@ -2915,10 +2925,13 @@ function renderAnfragen() {
   });
   let html = groups.map(g => {
     const h = dayHead(g.iso);
+    // Summe immer über alle offenen Tische des Tages – passend zum Zähler oben und zur gedruckten Liste
+    const dayAll = open.filter(r => (r.date || '') === g.iso);
+    const daySum = (filter === 'neu' ? `${g.rows.length} zu bestätigen · insgesamt ` : '') + tablesLabel(dayAll.length ? dayAll : g.rows);
     return `<li class="res-day">
       <div class="res-day-head">
-        <h3 class="res-day-title">${h.lead ? `<span class="res-day-lead">${h.lead}</span>` : ''}${escapeHtml(h.text)}</h3>
-        <span class="res-day-sum">${escapeHtml(tablesLabel(g.rows))}</span>
+        <h3 class="res-day-title">${h.lead ? `<span class="res-day-lead">${h.lead}</span> ` : ''}${escapeHtml(h.text)}</h3>
+        <span class="res-day-sum">${escapeHtml(daySum)}</span>
         ${g.iso ? `<button type="button" class="res-day-print" data-print-day="${escapeAttr(g.iso)}"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-print"/></svg> Liste drucken</button>` : ''}
       </div>
       <ul class="res-day-list">${g.rows.map(r => buildAnfrageItem(r)).join('')}</ul>
@@ -2934,17 +2947,15 @@ function renderAnfragen() {
   // Erledigte und vergangene nur in der Gesamtansicht (und bei der Suche), eingeklappt
   if (filter === 'offen') {
     if (doneUp.length) {
-      const wasOpenDone = !!dom.anfragenList.querySelector('.anfragen-done > details')?.open;
-      html += `<li class="anfragen-past anfragen-done"><details${hasQuery || wasOpenDone ? ' open' : ''}>
+      html += `<li class="anfragen-past anfragen-done"><details data-res-group="done"${hasQuery || anfragenGroupOpen.done ? ' open' : ''}>
         <summary>Erledigt (${doneUp.length})</summary>
         <ul class="anfragen-sublist res-day-list">${doneUp.map(r => buildAnfrageItem(r, { showDate: true })).join('')}</ul>
       </details></li>`;
     }
     if (past.length) {
-      const wasOpen = !!dom.anfragenList.querySelector('.anfragen-past:not(.anfragen-done) > details')?.open;
-      html += `<li class="anfragen-past"><details${hasQuery || wasOpen ? ' open' : ''}>
+      html += `<li class="anfragen-past"><details data-res-group="past"${hasQuery || anfragenGroupOpen.past ? ' open' : ''}>
         <summary>Vergangene (${past.length})</summary>
-        <ul class="anfragen-sublist res-day-list">${past.map(r => buildAnfrageItem(r, { showDate: true })).join('')}</ul>
+        <ul class="anfragen-sublist res-day-list">${past.map(r => buildAnfrageItem(r, { showDate: true, past: true })).join('')}</ul>
       </details></li>`;
     }
   }
@@ -2953,11 +2964,31 @@ function renderAnfragen() {
     onMark: onMarkAnfrage, onDel: onDeleteAnfrage, onNote: onSaveAnfrageNote
   });
   dom.anfragenList.querySelectorAll('[data-phoneok]').forEach(btn => btn.addEventListener('click', () => onPhoneConfirmed(btn.dataset.phoneok)));
-  dom.anfragenList.querySelectorAll('[data-print-day]').forEach(btn => btn.addEventListener('click', () => printDayList(btn.dataset.printDay, document.getElementById('anfragen-status'))));
+  dom.anfragenList.querySelectorAll('[data-print-day]').forEach(btn => btn.addEventListener('click', () => {
+    // printDayList meldet in ein Status-Element; hier unsichtbar auffangen und als Einblendung zeigen
+    const note = document.createElement('p');
+    new MutationObserver((_, mo) => {
+      if (!note.textContent) return;
+      mo.disconnect();
+      showToast(note.textContent, note.classList.contains('error') ? { tone: 'error' } : {});
+    }).observe(note, { childList: true, characterData: true, subtree: true });
+    printDayList(btn.dataset.printDay, note);
+  }));
   // Aufgeklappt bleibt aufgeklappt
   dom.anfragenList.querySelectorAll('details[data-res-id]').forEach(d => d.addEventListener('toggle', () => {
     if (d.open) anfragenOpen.add(d.dataset.resId); else anfragenOpen.delete(d.dataset.resId);
   }));
+  // Bei der Suche sind die Gruppen nur vorübergehend offen – das soll den gemerkten Zustand nicht ändern
+  if (!hasQuery) dom.anfragenList.querySelectorAll('details[data-res-group]').forEach(d => d.addEventListener('toggle', () => {
+    anfragenGroupOpen[d.dataset.resGroup] = d.open;
+  }));
+  // Fokus zurück an die Zeile (oder an ihre Gruppe, wenn sie dorthin gewandert und zugeklappt ist)
+  if (focusRow) {
+    const det = dom.anfragenList.querySelector(`details[data-res-id="${CSS.escape(focusRow)}"]`);
+    const grp = det?.closest('details[data-res-group]');
+    const target = det ? (grp && !grp.open ? grp.querySelector(':scope > summary') : det.querySelector(':scope > summary')) : null;
+    target?.focus({ preventScroll: true });
+  }
 }
 
 /* Teilt + filtert Inbox-Einträge: Suche nach Name/Telefon/E-Mail/Datum und
@@ -3091,11 +3122,16 @@ function formatStamp(iso) {
   return `${day} · ${time} Uhr`;
 }
 const PHONE_OK_MARK = 'Telefonisch bestätigt';
-function historyHtml(x) {
+/* Nur der von „Telefonisch bestätigt“ erzeugte Vermerk zählt („… am 10.11.“), nicht ein frei
+   getippter Satz, in dem die Wörter zufällig vorkommen. */
+const hasPhoneMark = (x) => /Telefonisch bestätigt am \d{2}\.\d{2}\./.test(String((x && x.note) || ''));
+/* Verlauf an der Karte. Bestellungen: wie bisher „Bestätigung gesendet“. Reservierungen können auch
+   telefonisch bestätigt sein; wie, steht nur im Vermerk der Notiz – fehlt er, steht neutral „Bestätigt“. */
+function historyHtml(x, kind = 'order') {
   const rows = [];
   if (x.confirmedAt) {
-    const byPhone = new RegExp(PHONE_OK_MARK, 'i').test(String(x.note || ''));
-    rows.push(`<span class="anfrage-hist is-confirmed"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> ${byPhone ? PHONE_OK_MARK : 'Bestätigung gesendet'} · ${escapeHtml(formatStamp(x.confirmedAt))}</span>`);
+    const label = kind !== 'res' ? 'Bestätigung gesendet' : (hasPhoneMark(x) ? PHONE_OK_MARK : 'Bestätigt');
+    rows.push(`<span class="anfrage-hist is-confirmed"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> ${label} · ${escapeHtml(formatStamp(x.confirmedAt))}</span>`);
   }
   if (x.status === 'done' && x.doneAt) rows.push(`<span class="anfrage-hist is-done"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg> Erledigt · ${escapeHtml(formatStamp(x.doneAt))}</span>`);
   return rows.join('');
@@ -3163,12 +3199,15 @@ function buildAnfrageItem(r, opts = {}) {
     const short = d && !isNaN(d) ? d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) : (r.date || 'Datum offen');
     when = r.time ? `${short} · ${r.time}` : short;
   }
-  const preview = r.message ? String(r.message) : (r.note ? 'Notiz: ' + r.note : '');
+  // Vorschau: die eigene Notiz zuerst, dann die Nachricht des Gastes
+  const preview = [r.note ? 'Notiz: ' + r.note : '', r.message ? String(r.message) : ''].filter(Boolean).join(' · ');
+  // „Erneut senden“ nur, wenn wirklich schon eine E-Mail raus ist (nicht nach telefonischer Bestätigung)
+  const mailSent = !!r.confirmedAt && !hasPhoneMark(r);
   const pers = personsLabel(r.persons);
 
   const mailBtn = (extra = '') => r.email ? `<button type="button" class="anfrage-btn anfrage-btn-confirm${extra}" data-confirm="${id}" data-ctype="reservation">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-bell"/></svg>
-            ${r.confirmedAt ? 'Bestätigung erneut senden' : 'Bestätigung senden'}
+            ${mailSent ? 'Bestätigung erneut senden' : 'Bestätigung senden'}
           </button>` : '';
   const phoneBtn = (extra = '') => `<button type="button" class="anfrage-btn res-btn-phone${extra}" data-phoneok="${id}">
             <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
@@ -3178,7 +3217,8 @@ function buildAnfrageItem(r, opts = {}) {
   let actions;
   if (isDone) {
     actions = `<button type="button" class="anfrage-btn anfrage-btn-mark" data-mark="${id}">Erneut öffnen</button>${mailBtn()}`;
-  } else if (stage === 'confirmed') {
+  } else if (stage === 'confirmed' || opts.past) {
+    // Bestätigt – oder der Termin ist schon vorbei: dann ist „erledigt“ der sinnvolle Schritt
     actions = `<button type="button" class="anfrage-btn anfrage-btn-mark is-primary" data-mark="${id}">
                 <svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>
                 Als erledigt markieren
@@ -3191,7 +3231,7 @@ function buildAnfrageItem(r, opts = {}) {
               </button>`;
   }
   // Neue Anfragen: der nächste Schritt liegt schon an der zugeklappten Zeile
-  const quick = stage === 'new' ? `<div class="res-quick">
+  const quick = stage === 'new' && !opts.past ? `<div class="res-quick">
           ${r.email ? mailBtn(' is-primary') : (r.phone ? `<a class="anfrage-btn res-btn-call" href="${escapeAttr(tel)}">${escapeHtml(r.phone)} anrufen</a>` : '')}
           ${phoneBtn()}
         </div>` : '';
@@ -3221,7 +3261,7 @@ function buildAnfrageItem(r, opts = {}) {
           </label>
           ${noMailHintHtml(r)}
           <div class="anfrage-meta">
-            <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(r)}</span>
+            <span class="anfrage-rec">Eingegangen ${escapeHtml(rec)}${historyHtml(r, 'res')}</span>
             <div class="anfrage-actions">
               ${actions}
               <button type="button" class="anfrage-btn anfrage-btn-del" data-del="${id}" aria-label="Anfrage löschen">
@@ -3265,9 +3305,12 @@ function pickupBadgeHtml(dateStr) {
 }
 
 async function onMarkAnfrage(id) {
+  if (anfragenTapGuard()) return;   // Folge-Tipp nach einer anderen Aktion an derselben Stelle
+  anfragenActionAt = Date.now();
   const list = window.alsterDb?.get('reservations') || [];
   const current = (Array.isArray(list) ? list : []).find(r => r.id === id);
   const nextStatus = current?.status === 'done' ? 'new' : 'done';
+  if (nextStatus === 'done') anfragenOpen.delete(id);   // in „Erledigt“ wieder als kompakte Zeile
   // db.js aktualisiert den Cache synchron beim Aufruf → erst aufrufen, dann sofort rendern.
   const pending = window.alsterDb?.updateReservationStatus(id, nextStatus);
   renderAnfragen();
@@ -3279,25 +3322,37 @@ async function onMarkAnfrage(id) {
 
 /* Nach einem Anruf: als bestätigt vermerken, ohne E-Mail. Der Vermerk steht zusätzlich in der
    internen Notiz, damit später klar ist, wie bestätigt wurde. */
+const phoneOkBusy = new Set();
 async function onPhoneConfirmed(id) {
+  if (phoneOkBusy.has(id) || anfragenTapGuard()) return;
   const list = window.alsterDb?.get('reservations') || [];
   const it = (Array.isArray(list) ? list : []).find(r => r.id === id);
-  if (!it || it.status === 'done') return;
-  const stamp = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-  const has = new RegExp(PHONE_OK_MARK, 'i').test(String(it.note || ''));
-  const note = has ? it.note : [String(it.note || '').trim(), `${PHONE_OK_MARK} am ${stamp}`].filter(Boolean).join(' · ');
-  // db.js aktualisiert den Cache synchron beim Aufruf → erst aufrufen, dann sofort rendern.
-  const p1 = window.alsterDb?.markConfirmed?.('reservations', id);
-  const p2 = has ? true : window.alsterDb?.updateReservationNote(id, note);
-  renderAnfragen();
-  const [ok1, ok2] = await Promise.all([p1, p2]);
-  if (ok1 === false || ok2 === false) warnWriteFailed();
-  else showToast('Als telefonisch bestätigt vermerkt');
-  await refreshAnfragen();
+  if (!it || entryStage(it) !== 'new') return;
+  phoneOkBusy.add(id);
+  anfragenActionAt = Date.now();
+  document.querySelectorAll(`[data-phoneok="${CSS.escape(id)}"]`).forEach(b => { b.disabled = true; });
+  try {
+    const stamp = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    // Erst der Vermerk: scheitert er, bleibt die Anfrage „Neu“ und der Knopf steht weiter bereit.
+    if (!hasPhoneMark(it)) {
+      const note = [String(it.note || '').trim(), `${PHONE_OK_MARK} am ${stamp}`].filter(Boolean).join(' · ');
+      const okNote = await window.alsterDb?.updateReservationNote(id, note);
+      if (okNote === false) { warnWriteFailed(); return; }
+    }
+    const ok = await window.alsterDb?.markConfirmed?.('reservations', id);
+    anfragenActionAt = Date.now();   // die Liste ordnet sich jetzt neu
+    renderAnfragen();
+    if (ok === false) warnWriteFailed(); else showToast('Als telefonisch bestätigt vermerkt');
+  } finally {
+    phoneOkBusy.delete(id);
+    await refreshAnfragen();
+  }
 }
 
 async function onDeleteAnfrage(id) {
+  if (anfragenTapGuard()) return;
   if (!(await askConfirm('Die Reservierung wird dauerhaft gelöscht. Tipp: „Als erledigt markieren“ behält sie im Verlauf.', { title: 'Reservierung löschen?', ok: 'Löschen' }))) return;
+  anfragenOpen.delete(id);
   const pending = window.alsterDb?.deleteReservation(id);
   renderAnfragen();
   const ok = await pending;
