@@ -12802,6 +12802,8 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   opacity: 0; transition: opacity 1.4s ease;
 }
 .chapter-dark.fx-dust-on > .fx-dust { opacity: 1; }
+/* Kapitel, deren Inhalt keine eigene Ebene hat: Staub sicher hinter Text und Formular */
+.chapter-dark > .fx-dust.fx-dust-behind { z-index: -1; }
 
 /* die bisherigen Einzelpunkte weichen dem Staubfeld */
 .chapter-dark.fx-has-dust > .gold-dust { display: none; }

@@ -5356,8 +5356,8 @@ function escapeAttr(s) { return escapeHtml(s); }
       var h = Math.min(secH, vh + 160);
       if (w < 40 || h < 40) { f.w = 0; return; }
       // Adressleiste am Handy blendet ein/aus: kleine Höhenänderungen nicht neu aufbauen
-      if (w === f.w && secH === f.secH && h <= f.h && h >= f.h - 150) return;
-      var ow = f.w, oh = f.h;
+      if (w === f.w && secH === f.secH && Math.abs(h - f.h) <= 110) return;
+      var ow = f.w;
       f.phone = phoneMq.matches;
       var dpr = Math.min(W.devicePixelRatio || 1, f.phone ? 1.5 : 2);
       dpr = Math.min(dpr, Math.sqrt(3.2e6 / (w * h)));
@@ -5372,8 +5372,8 @@ function escapeAttr(s) { return escapeHtml(s); }
         for (i = 0; i < far; i++) f.parts.push(makeParticle(f, 0));
         for (i = 0; i < mid; i++) f.parts.push(makeParticle(f, 1));
         for (i = 0; i < near; i++) f.parts.push(makeParticle(f, 2));
-      } else if (ow && oh) {
-        for (var k = 0; k < f.parts.length; k++) { f.parts[k].x *= w / ow; f.parts[k].y *= h / oh; }
+      } else if (ow && ow !== w) {
+        for (var k = 0; k < f.parts.length; k++) f.parts[k].x *= w / ow;
       }
       f.lastTop = null;
     }
@@ -5402,7 +5402,9 @@ function escapeAttr(s) { return escapeHtml(s); }
       if (f.dirty) layout(f);
       if (!f.w) return;
       var r = f.sec.getBoundingClientRect();
-      var off = f.secH > f.h ? Math.round(clamp(-r.top - 80, 0, f.secH - f.h)) : 0;
+      // hohe Kapitel: die Fläche ist nur gut bildschirmhoch und wandert mit dem sichtbaren Ausschnitt mit
+      var vh = W.innerHeight || f.h;
+      var off = f.secH > f.h ? Math.round(clamp(-r.top - (f.h - vh) / 2, 0, f.secH - f.h)) : 0;
       if (off !== f.off) { f.off = off; f.cv.style.transform = off ? 'translate3d(0,' + off + 'px,0)' : ''; }
       var top = r.top + off;
       var dC = (f.lastTop === null || jump) ? 0 : top - f.lastTop;
@@ -5474,11 +5476,20 @@ function escapeAttr(s) { return escapeHtml(s); }
     /* ein Staubfeld pro dunklem Kapitel */
     var fields = [];
     Array.prototype.forEach.call(secs, function (sec) {
+      if (sec.classList.contains('fx-has-dust')) return;   // schon vorhanden: nicht doppelt anlegen
       var cv = D.createElement('canvas'), ctx = cv.getContext('2d');
       if (!ctx) return;
       cv.className = 'fx-dust'; cv.setAttribute('aria-hidden', 'true');
       sec.insertBefore(cv, sec.firstChild);
       sec.classList.add('fx-has-dust');
+      // liegt der Inhalt des Kapitels nicht in einer eigenen Ebene, kommt der Staub sicher dahinter (Text bleibt klar)
+      try {
+        for (var c = sec.firstElementChild; c; c = c.nextElementSibling) {
+          if (c === cv) continue;
+          var cs = W.getComputedStyle(c);
+          if (cs.display !== 'none' && cs.position === 'static') { cv.classList.add('fx-dust-behind'); break; }
+        }
+      } catch (e) { /* bleibt auf der normalen Ebene */ }
       var f = { sec: sec, cv: cv, ctx: ctx, w: 0, h: 0, secH: 0, dpr: 1, L: 1, off: 0, left: 0, lastTop: null, parts: [], puffs: [],
         on: false, dirty: true, energy: 0, hov: false, hx: 0, hy: 0, dn: null, phone: false, seed: rnd() * 10 };
       fields.push(f);
@@ -5510,7 +5521,8 @@ function escapeAttr(s) { return escapeHtml(s); }
 
     /* gezeichnet wird nur, solange ein Kapitel im Bild und der Tab sichtbar ist */
     var raf = 0, last = 0, lastSy = 0;
-    function active() { if (D.hidden) return false; for (var i = 0; i < fields.length; i++) if (fields[i].on) return true; return false; }
+    var calmMq = W.matchMedia('(prefers-reduced-motion: reduce)');
+    function active() { if (D.hidden || calmMq.matches) return false; for (var i = 0; i < fields.length; i++) if (fields[i].on) return true; return false; }
     function frame(now) {
       raf = 0;
       if (!active()) return;
