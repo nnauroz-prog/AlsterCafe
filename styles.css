@@ -13984,7 +13984,7 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
   html.has-print-doc body.admin-body::before,
   html.has-print-doc body.admin-body::after { content: none !important; display: none !important; }
   html.has-print-doc body.admin-body > :not(#print-host) { display: none !important; }
-  html.has-print-doc #print-host { all: initial; display: block !important; }
+  html.has-print-doc #print-host { all: initial; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; display: block !important; }
 }
 
 /* Fenster „Bild für Instagram“: Hinweis, wenn gekürzt wurde; am Handy der Hauptknopf oben über die volle Breite */

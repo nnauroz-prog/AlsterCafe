@@ -394,6 +394,7 @@ async function showDashboard() {
   try { if (!sessionStorage.getItem('alstercafe.legacy-clean')) { sessionStorage.setItem('alstercafe.legacy-clean', '1'); window.alsterDb?.removeLegacyContent?.(['reservations', 'orders']); } } catch (e) {}
   // Schriften und Logos der Druck-Dokumente vorab laden – dann startet jeder Druck direkt im Tipp
   setTimeout(prewarmPrintAssets, 1500);
+  window.addEventListener('pointerdown', prewarmPrintAssets, { once: true, capture: true });   // spätestens bei der ersten Berührung
   // Default-Landing: Overview. Tab-Inhalte werden lazy beim Klick aktiv.
   showOverview();
   renderWeek();
@@ -1626,15 +1627,52 @@ function downloadMenuPdf() {
    versteckte Rahmen nicht verlässlich, und window.open schluckt dort der Popup-Blocker. window.print() der
    Seite selbst, direkt im Tipp, funktioniert überall. */
 const PRINT_FONTS = ['400 16px Inter', '500 16px Inter', '600 16px Inter', '700 16px Inter', '400 16px Fraunces', '500 16px Fraunces', '600 16px Fraunces'];
-const printImgCache = {};      // vorgeladene Logos: sind dann beim Druck sofort da
+const printImgPool = {};       // Adresse → fertig geladene <img>-Elemente (Vorrat für die Druck-Dokumente)
+let printWarm = null;          // Promise: Schriften und Logos der Druck-Dokumente sind geladen
+let printWarmDone = false;
 let printDocState = null;      // gesetzt, solange ein Druck-Dokument eingehängt ist
 
-/* Schriften und Logos der Druck-Dokumente vorab laden, damit der Druck ohne Wartezeit im Tipp starten kann. */
+/* Schriften und Logos der Druck-Dokumente vorab laden, damit der Druck ohne Wartezeit im Tipp starten kann.
+   Die Logos liegen als fertig geladene <img>-Elemente bereit und werden beim Druck selbst eingesetzt –
+   ob ein Browser ein frisch erzeugtes <img> sofort aus seinem Zwischenspeicher füllt, ist nämlich je nach
+   Browser und Version verschieden. Das Aushang-Logo gibt es mehrfach (ein Aushang kann mehrere Blätter haben). */
 function prewarmPrintAssets() {
-  try { PRINT_FONTS.forEach(f => document.fonts.load(f, 'Aä€ā').catch(() => {})); } catch (e) {}
-  [`${location.origin}/image-192.webp`, new URL('image.png', location.href).href].forEach(src => {
-    if (printImgCache[src]) return;
-    const im = new Image(); im.decoding = 'async'; im.src = src; printImgCache[src] = im;
+  if (printWarm) return printWarm;
+  let fonts = Promise.resolve();
+  try { fonts = Promise.all(PRINT_FONTS.map(f => document.fonts.load(f, 'Aä€ā').catch(() => {}))); } catch (e) {}
+  const imgs = [[`${location.origin}/image-192.webp`, 8], [new URL('image.png', location.href).href, 1]].map(([src, count]) => {
+    printImgPool[src] = [];
+    return Promise.all(Array.from({ length: count }, () => new Promise(res => {
+      const im = new Image();
+      im.onload = () => { printImgPool[src].push(im); res(); };
+      im.onerror = () => res();
+      im.src = src;
+    })));
+  });
+  printWarm = Promise.all([fonts, ...imgs]).then(() => {
+    printWarmDone = true;
+    document.documentElement.dataset.printReady = '1';   // Signal für tests/print-audit.mjs
+  });
+  return printWarm;
+}
+
+/* Ersetzt die <img> eines Druck-Dokuments durch fertig geladene Elemente aus dem Vorrat (soweit vorhanden). */
+function usePrintImages(scope) {
+  scope.querySelectorAll('img').forEach(im => {
+    let url = ''; try { url = new URL(im.getAttribute('src') || '', location.href).href; } catch (e) {}
+    const pool = printImgPool[url];
+    if (!pool || pool.includes(im)) return;
+    const ready = pool.find(el => !el.parentNode);
+    if (!ready) return;   // Vorrat aufgebraucht: dieses Bild lädt selbst, der Druck wartet dann kurz darauf
+    Array.from(ready.attributes).forEach(a => { if (a.name !== 'src') ready.removeAttribute(a.name); });
+    Array.from(im.attributes).forEach(a => { if (a.name !== 'src') ready.setAttribute(a.name, a.value); });
+    im.replaceWith(ready);
+  });
+}
+/* Gibt die Vorrats-Bilder eines Teilbaums wieder frei (bevor er verworfen wird). */
+function releasePrintImages(scope) {
+  scope.querySelectorAll('img').forEach(im => {
+    if (Object.values(printImgPool).some(pool => pool.includes(im))) im.remove();
   });
 }
 
@@ -1668,6 +1706,7 @@ function mountPrintDoc(html) {
   // Echte html-/body-Elemente: so gelten alle Selektoren der Dokumente unverändert (per Parser ginge das nicht).
   const h = document.createElement('html'); h.lang = doc.documentElement.lang || 'de';
   const b = document.createElement('body'); b.innerHTML = doc.body ? doc.body.innerHTML : '';
+  usePrintImages(b);
   h.appendChild(b);
   root.replaceChildren(...styles, h);
   const pageStyle = document.createElement('style');
@@ -1688,7 +1727,8 @@ function unmountPrintDoc() {
   if (st.off) st.off();
   document.documentElement.classList.remove('has-print-doc');
   document.getElementById('print-page-style')?.remove();
-  document.getElementById('print-host')?.shadowRoot?.replaceChildren();
+  const root = document.getElementById('print-host')?.shadowRoot;
+  if (root) { releasePrintImages(root); root.replaceChildren(); }
   if (st.docTitle && document.title === st.docTitle) document.title = st.prevTitle;
 }
 
@@ -1697,7 +1737,10 @@ function unmountPrintDoc() {
 function armPrintCleanup() {
   const st = printDocState;
   if (!st) return;
-  const done = () => { if (printDocState === st) unmountPrintDoc(); };
+  const done = (e) => {
+    if (e && e.type === 'keydown' && e.repeat) return;   // gehaltene Taste (die den Druck ausgelöst hat) räumt nicht auf
+    if (printDocState === st) unmountPrintDoc();
+  };
   let armed = false;
   const timer = setTimeout(() => {
     armed = true;
@@ -1721,13 +1764,10 @@ function printDocPending(root) {
     if (im.complete && im.naturalWidth > 0) return;
     waits.push(new Promise(res => { im.addEventListener('load', res, { once: true }); im.addEventListener('error', res, { once: true }); }));
   });
-  try {
+  if (!printWarmDone) {
     const css = Array.from(root.querySelectorAll('style')).map(s => s.textContent).join('\n');
-    if (/Fraunces|Inter/.test(css)) {
-      const text = Array.from(new Set((root.textContent || '').replace(/\s+/g, ''))).join('').slice(0, 400) || 'A';
-      PRINT_FONTS.forEach(f => { if (!document.fonts.check(f, text)) waits.push(document.fonts.load(f, text).catch(() => {})); });
-    }
-  } catch (e) {}
+    if (/Fraunces|Inter/.test(css)) waits.push(prewarmPrintAssets());   // Web-Schriften noch nicht vorgeladen
+  }
   return waits.length ? Promise.all(waits) : null;
 }
 
@@ -1741,17 +1781,27 @@ function printHtmlDocument(html, statusEl, opts = {}) {
     return;
   }
   const st = printDocState;
-  const go = () => {
+  const soon = (pending, next) => Promise.race([pending, new Promise(res => setTimeout(res, 1200))]).then(next, next);
+  const fire = () => {
     if (printDocState !== st) return;   // inzwischen wurde etwas anderes gedruckt oder aufgeräumt
-    try { if (opts.fit) opts.fit(root); } catch (e) { console.warn('Einpassen fehlgeschlagen', e); }
     armPrintCleanup();
+    const t0 = performance.now();
     try { window.focus(); window.print(); } catch (e) {}
+    // Am Computer hält print() das Skript an, bis der Druckdialog zu ist – dann gleich aufräumen (Titel, Druckbild).
+    // Am iPhone kehrt print() sofort zurück; dort bleibt das Dokument bis zum nächsten Tipp stehen.
+    if (performance.now() - t0 > 500 && printDocState === st) unmountPrintDoc();
+  };
+  const go = () => {
+    if (printDocState !== st) return;
+    try { if (opts.fit) opts.fit(root); } catch (e) { console.warn('Einpassen fehlgeschlagen', e); }
+    const late = opts.fit ? printDocPending(root) : null;   // z. B. Logos zusätzlicher Blätter über den Vorrat hinaus
+    if (!late) fire(); else soon(late, fire);
   };
   // Meldung vor dem Druckaufruf: am Computer hält der Druckdialog das Skript an.
   setStatus(statusEl, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern“ oder Ihren Drucker.', 'ok');
   const pending = printDocPending(root);
   if (!pending) go();   // Regelfall: direkt im Tipp
-  else Promise.race([pending, new Promise(res => setTimeout(res, 1200))]).then(go, go);
+  else soon(pending, go);
 }
 
 /* ---------- Wochenplan weitergeben: Aushang (A4) + Instagram-Bild ----------
@@ -1814,7 +1864,8 @@ function fitWeekPoster(root) {
   const MAX = 265 * 96 / 25.4 + 0.5;   // 265 mm in px (Blatt samt Rahmen; die Seite hat 269 mm Platz)
   const prevStyle = host.getAttribute('style') || '';
   // Zum Messen so darstellen wie im Druck: A4-Breite abzüglich der Seitenränder, ohne geerbte Stile der Seite
-  host.style.cssText = 'all: initial; display: block; position: absolute; left: -10000px; top: 0; width: 178mm; visibility: hidden;';
+  // (text-size-adjust: iPhones vergrößern Schrift in breiten Blöcken sonst von selbst – das verfälscht die Messung)
+  host.style.cssText = 'all: initial; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; display: block; position: absolute; left: -10000px; top: 0; width: 178mm; visibility: hidden;';
   try {
     const body = first.parentNode;
     const days = Array.from(first.querySelectorAll('.day'));
@@ -1838,9 +1889,10 @@ function fitWeekPoster(root) {
       return groups;
     };
     for (let n = 1; n <= days.length; n++) {
-      body.querySelectorAll('.sheet').forEach(s => { if (s !== first) s.remove(); });
+      body.querySelectorAll('.sheet').forEach(s => { if (s !== first) { releasePrintImages(s); s.remove(); } });
       const sheets = split(n).map((group, i) => {
         const s = i === 0 ? first : blank.cloneNode(true);
+        if (i) usePrintImages(s);   // fertig geladenes Logo statt eines frisch geklonten
         s.querySelector('.days').replaceChildren(...group);
         const r = s.querySelector('.range');
         if (r) r.textContent = n > 1 ? `${rangeText} · Blatt ${i + 1} von ${n}` : rangeText;
@@ -1852,6 +1904,9 @@ function fitWeekPoster(root) {
         return sheets.every(s => s.getBoundingClientRect().height <= MAX);
       });
       if (fits) return;
+      // Nach dem Durchlauf steht die kleinste Stufe. Sind jetzt nur noch Blätter zu hoch, die aus einem einzigen
+      // Tag bestehen, hilft weiteres Aufteilen nicht – dieser Tag läuft dann eben über zwei Seiten.
+      if (sheets.every(s => s.getBoundingClientRect().height <= MAX || s.querySelectorAll('.day').length === 1)) return;
     }
   } finally {
     host.setAttribute('style', prevStyle);
@@ -1979,8 +2034,8 @@ function drawWeekImage(data, logo) {
   // (bevorzugt hinter „-“ oder „/“, sonst mit Trennstrich) – keine Zeile ragt über die Spalte.
   const splitLong = (word, maxW) => {
     const out = []; let rest = word;
-    while (rest && wide(rest) > maxW) {
-      let n = rest.length - 1;
+    while (rest.length > 1 && wide(rest) > maxW) {
+      let n = rest.length - 1;   // mindestens ein Zeichen je Durchlauf, sonst käme die Schleife nie ans Ende
       while (n > 1 && wide(rest.slice(0, n) + '-') > maxW) n--;
       if (rest.length - n < 4 && n > 6) n = rest.length - 4;   // keinen Rest von zwei, drei Buchstaben stehen lassen
       const cut = Math.max(rest.lastIndexOf('-', n - 1), rest.lastIndexOf('/', n - 1));
@@ -1991,6 +2046,7 @@ function drawWeekImage(data, logo) {
     return out;
   };
   const wrapText = (text, maxW) => {
+    maxW = Math.max(40, maxW);
     const lines = []; let cur = '';
     String(text).split(/\s+/).filter(Boolean).forEach(word => {
       const bits = wide(word) > maxW ? splitLong(word, maxW) : [word];
@@ -2056,7 +2112,9 @@ function drawWeekImage(data, logo) {
     const top = headTop(o.header);
     const cellW = o.cols === 2 ? (right - left - colGap) / 2 : right - left;
     const labelW = o.cols === 2 ? 0 : 210;
-    return { ...o, rows, gap, top, avail: bottom - top, h: rows.reduce((a, r) => a + r.h + gap * 2, 0),
+    // Bleibt neben der Preis-Spalte zu wenig Platz für das Gericht (absurd langer Preis), taugt diese Anordnung nicht
+    const tooNarrow = !!o.priceSide && (cellW - labelW - o.priceCol) < 150;
+    return { ...o, rows, gap, top, tooNarrow, avail: bottom - top, h: rows.reduce((a, r) => a + r.h + gap * 2, 0),
       cellW, labelW, head: o.cols === 2 ? 44 : 0, textW: cellW - labelW, sidePx: sideSize(o.px), orPx: 19 };
   };
 
@@ -2069,7 +2127,7 @@ function drawWeekImage(data, logo) {
     for (const header of ['full', 'compact']) for (const cols of [1, 2]) for (const priceSide of sides) {
       for (const px of (tier >= 2 ? SIZES_CUT : SIZES)) {
         const L = measure({ tier, header, cols, priceSide, px });
-        if (L.h > L.avail) continue;
+        if (L.tooNarrow || L.h > L.avail) continue;
         L.score = px + (header === 'full' ? 4 : 0) + (priceSide ? 0 : 2) + (cols === 1 ? 1 : 0);
         if (!layout || L.score > layout.score) layout = L;
         break;   // größte passende Schrift dieser Kombination
@@ -2078,7 +2136,11 @@ function drawWeekImage(data, logo) {
   }
   // Notfall (praktisch nie): selbst die knappste Fassung ist zu hoch → den Block als Ganzes verkleinern
   let squeeze = 1;
-  if (!layout) { layout = measure({ tier: 4, header: 'compact', cols: 2, priceSide: hasPrices, px: 26 }); squeeze = layout.avail / layout.h; }
+  if (!layout) {
+    layout = measure({ tier: 4, header: 'compact', cols: 2, priceSide: hasPrices, px: 26 });
+    if (layout.tooNarrow) layout = measure({ tier: 4, header: 'compact', cols: 2, priceSide: false, px: 26 });
+    squeeze = Math.min(1, layout.avail / layout.h);
+  }
 
   // ----- Zeichnen -----
   const bg = ctx.createLinearGradient(0, 0, W * 0.4, H);

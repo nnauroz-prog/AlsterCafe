@@ -30,7 +30,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8139;
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -63,7 +62,7 @@ function startServer() {
       res.writeHead(200, head);
       fs.createReadStream(file).pipe(res);
     });
-    srv.listen(PORT, () => resolve(srv));
+    srv.listen(0, () => resolve(srv));   // freier Port: kein Zusammenstoß mit anderen Tests
   });
 }
 
@@ -99,7 +98,11 @@ const DOCS = [
     pages: (root) => root.querySelectorAll('.page').length },
   { name: 'Mittagstisch-Aushang', tab: 'week', run: () => { const n = window.__prints; document.getElementById('week-poster').click(); return window.__prints - n; },
     pages: (root) => root.querySelectorAll('.sheet').length },
-  { name: 'Bewertungs-Aushang', tab: null, run: () => { const n = window.__prints; printReviewPoster('https://g.page/r/TESTTESTTEST/review', null); return window.__prints - n; }, pages: () => 1 },
+  { name: 'Bewertungs-Aushang', tab: 'design', prepare: async (page) => {   // Link eintragen wie die Inhaberin (das Feld liegt in einem aufklappbaren Abschnitt, daher direkt setzen)
+      await page.evaluate(() => { const i = document.getElementById('google-review-url'); i.value = 'https://g.page/r/TESTTESTTEST/review'; i.dispatchEvent(new Event('change', { bubbles: true })); });
+      await page.waitForTimeout(200);
+    },
+    run: () => { const n = window.__prints; document.getElementById('google-review-print').click(); return window.__prints - n; }, pages: () => 1 },
   { name: 'Berliner-Backliste', tab: 'berliner', run: () => { const n = window.__prints; document.getElementById('berliner-print').click(); return window.__prints - n; }, pages: () => 1 },
 ];
 
@@ -108,7 +111,7 @@ let checks = 0;
 const check = (ok, label, detail = '') => { checks++; if (!ok) { failures.push(`${label}${detail ? ' — ' + detail : ''}`); console.log(`  ✗ ${label}${detail ? ' — ' + detail : ''}`); } };
 
 const srv = await startServer();
-const base = `http://localhost:${PORT}`;
+const base = `http://localhost:${srv.address().port}`;
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
 
 try {
@@ -125,8 +128,14 @@ try {
       return (u.includes('localhost') || u.startsWith('data:') || u.startsWith('blob:')) ? r.continue() : r.abort();
     });
     await context.addInitScript(([res, ord, week]) => {
-      window.__prints = 0; window.__printFrames = 0;
-      window.print = function () { if (window === window.top) window.__prints++; else window.top.__printFrames++; };
+      window.__prints = 0; window.__printFrames = 0; window.__imgsReady = true;
+      window.print = function () {
+        if (window !== window.top) { window.top.__printFrames++; return; }
+        window.__prints++;
+        // Sind in diesem Augenblick alle Bilder des Druck-Dokuments geladen? (sonst fehlt z. B. das Logo im Ausdruck)
+        const root = document.getElementById('print-host') && document.getElementById('print-host').shadowRoot;
+        window.__imgsReady = !root || [...root.querySelectorAll('img')].every((im) => im.complete && im.naturalWidth > 0);
+      };
       if (window !== window.top || sessionStorage.getItem('print-audit')) return;
       sessionStorage.setItem('print-audit', '1');
       localStorage.setItem('alstercafe.auth', '1');
@@ -139,7 +148,9 @@ try {
     page.on('console', (m) => { if (/Content Security Policy|violates the following/i.test(m.text())) cspHits.push(m.text().slice(0, 160)); });
     page.on('pageerror', (e) => pageErrors.push(e.message));
     await page.goto(`${base}/admin.html`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(2800);   // Anmeldung + Vorwärmen der Druck-Schriften und -Logos (läuft 1,5 s danach)
+    // Anmeldung abwarten und das Vorladen der Druck-Schriften und -Logos (läuft 1,5 s danach; die Seite meldet es)
+    await page.waitForFunction(() => document.documentElement.dataset.printReady === '1', null, { timeout: 30000 });
+    await page.waitForTimeout(300);
     const title = await page.title();
 
     for (const doc of DOCS) {
@@ -148,6 +159,7 @@ try {
       if (doc.tab) { await page.evaluate((t) => { switchTab(t); }, doc.tab); await page.waitForTimeout(600); }
       else { await page.evaluate(() => { showOverview(); }); await page.waitForTimeout(400); }
       if (doc.tab === 'week') await page.fill('#week-price', '9,90');
+      if (doc.prepare) await doc.prepare(page);
       const before = await page.evaluate(() => window.__prints);
       let inClick;
       try { inClick = await page.evaluate(doc.run); }
@@ -157,6 +169,7 @@ try {
       check(inClick === 1, `${label}: print() läuft direkt im Klick`, `im Klick ${inClick}×`);
       check(total === 1, `${label}: print() läuft genau einmal`, `${total}×`);
       check((await page.evaluate(() => window.__printFrames)) === 0, `${label}: kein Druck aus einem Rahmen`);
+      check(await page.evaluate(() => window.__imgsReady), `${label}: alle Bilder sind beim Druckaufruf geladen`);
 
       // Druckbild
       await page.setViewportSize({ width: 794, height: 1123 });
@@ -169,16 +182,24 @@ try {
         return {
           mounted: !!(root && root.querySelector('body') && root.querySelector('body').children.length),
           hostDisplay: host ? getComputedStyle(host).display : 'fehlt', others,
+          // Reste des Mess-Stils der Aushang-Einpassung (unsichtbar, aus dem Bild geschoben) ergäben ein leeres Blatt
+          hostInline: host ? host.getAttribute('style') : '', hostVisible: host ? getComputedStyle(host).visibility : '',
+          hostLeft: host ? Math.round(host.getBoundingClientRect().left) : -1, hostWidth: host ? Math.round(host.getBoundingClientRect().width) : 0,
           after: getComputedStyle(document.body, '::after').content,
           bg: getComputedStyle(document.documentElement).backgroundColor + ' / ' + getComputedStyle(document.body).backgroundColor,
           expected: root ? (0, eval)('(' + expr + ')')(root) : 0, sheets, scripts: root ? root.querySelectorAll('script').length : 0,
+          // Bilder kommen aus dem vorgeladenen Vorrat – nicht aus dem (je nach Browser unterschiedlichen) Zwischenspeicher
+          pooled: root ? [...root.querySelectorAll('img')].every((im) => Object.values(printImgPool).some((pool) => pool.includes(im))) : false,
+          imgs: root ? root.querySelectorAll('img').length : 0,
         };
       }, doc.pages.toString());
       check(pr.mounted && pr.hostDisplay === 'block', `${label}: Druck-Dokument steht im Druckbild`, `Host ${pr.hostDisplay}`);
+      check(pr.hostInline === 'display: none;' && pr.hostVisible === 'visible' && pr.hostLeft === 0 && pr.hostWidth > 700, `${label}: Druck-Dokument ist sichtbar und steht am Seitenanfang`, `Stil „${pr.hostInline}“, ${pr.hostVisible}, links ${pr.hostLeft}, Breite ${pr.hostWidth}`);
       check(pr.others.length === 0, `${label}: sonst nichts vom Mitgliederbereich im Druckbild`, pr.others.join(', '));
       check(/none/.test(pr.after), `${label}: keine angehängte Copyright-Zeile`, pr.after);
       check(/^rgb\(255, 255, 255\) \/ rgb\(255, 255, 255\)$/.test(pr.bg), `${label}: weißer Grund`, pr.bg);
       check(pr.scripts === 0, `${label}: keine Skripte im Druck-Dokument`);
+      check(pr.pooled, `${label}: Bilder stammen aus dem vorgeladenen Vorrat`, `${pr.imgs} Bild(er)`);
       const pdf = await page.pdf({ preferCSSPageSize: true });
       check(pdfPages(pdf) === pr.expected, `${label}: Seitenzahl`, `${pdfPages(pdf)} statt ${pr.expected}`);
       if (pr.sheets.length) check(pr.sheets.every((h) => h <= 266), `${label}: jedes Blatt passt auf eine A4-Seite`, `Höhen ${pr.sheets.join(', ')} mm`);
@@ -199,11 +220,24 @@ try {
       const data = weekShareData();
       const text = data.days.map((d) => d.dishes.map((x) => x.dish + ' ' + x.side).join(' ')).join(' ');
       await Promise.all(['400 40px Fraunces', '500 64px Fraunces', '400 24px Inter', '600 24px Inter'].map((f) => document.fonts.load(f, text)));
-      const r = drawWeekImage(data, null);
-      return { days: data.days.length, w: r.canvas.width, h: r.canvas.height, tier: r.tier, px: r.px, used: r.used, avail: r.avail, squeeze: r.squeeze };
+      // Jeden Textaufruf mitschreiben: so hängt die Prüfung nicht an dem, was die Funktion über sich selbst meldet.
+      const calls = []; const proto = CanvasRenderingContext2D.prototype; const orig = proto.fillText;
+      proto.fillText = function (t, x, y) {
+        const m = this.getTransform(); const w = this.measureText(t).width;
+        const x0 = this.textAlign === 'center' ? x - w / 2 : this.textAlign === 'right' ? x - w : x;
+        calls.push({ t: String(t), right: m.a * (x0 + w) + m.e, y: m.d * y + m.f });
+        return orig.apply(this, arguments);
+      };
+      let r; try { r = drawWeekImage(data, null); } finally { proto.fillText = orig; }
+      const foot = (c) => /UHR$|alstercafe\.de$/.test(c.t);
+      return { days: data.days.length, w: r.canvas.width, h: r.canvas.height, tier: r.tier, px: r.px, used: r.used, avail: r.avail, squeeze: r.squeeze,
+        labels: data.days.filter((d) => calls.some((c) => c.t === d.label.toUpperCase())).length,
+        belowZone: calls.filter((c) => !foot(c) && c.y > 1201).length, tooWide: calls.filter((c) => c.right > 972).length, footers: calls.filter(foot).length };
     });
     check(img.w === 1080 && img.h === 1350, `[${tag}] Instagram-Bild: 1080 × 1350`);
     check(img.days === 5 && img.used <= img.avail, `[${tag}] Instagram-Bild: alle Tage passen in die Inhaltszone`, `${img.used} von ${img.avail} px`);
+    check(img.labels === 5 && img.footers === 2, `[${tag}] Instagram-Bild: alle fünf Tage und die Fußzeile sind gezeichnet`, `${img.labels} Tage, ${img.footers} Fußzeilen`);
+    check(img.belowZone === 0 && img.tooWide === 0, `[${tag}] Instagram-Bild: kein Text in der Fußzeile oder über den Rand`, `${img.belowZone} zu tief, ${img.tooWide} zu breit`);
     check(img.px >= 26 && img.squeeze === 1, `[${tag}] Instagram-Bild: Schrift mindestens 26 px`, `${img.px} px, Stufe ${img.tier}`);
 
     check(cspHits.length === 0, `[${tag}] keine Verletzung der Sicherheits-Kopfzeile`, cspHits[0] || '');
