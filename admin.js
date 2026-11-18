@@ -1800,7 +1800,62 @@ function pageFontsHref() {
 function printWeekPoster() {
   const data = weekShareData();
   if (!data.hasAny) { weekShareStatus('Bitte zuerst Gerichte eintragen.', 'error'); return; }
-  printHtmlDocument(buildWeekPosterHtml(data), document.getElementById('week-share-status'));
+  printHtmlDocument(buildWeekPosterHtml(data), document.getElementById('week-share-status'), { fit: fitWeekPoster });
+}
+
+/* Passt den eingehängten Aushang vor dem Druck ein: Erst wird gemessen, dann die größte Schriftstufe genommen,
+   bei der das Blatt auf eine A4-Seite passt (bei Bedarf rückt der Preis neben das Gericht). Reicht auch die
+   kleinste Stufe nicht, wird die Woche auf zwei (oder mehr) Blätter verteilt – gekürzt wird nichts. */
+function fitWeekPoster(root) {
+  const host = document.getElementById('print-host');
+  const first = root.querySelector('.sheet');
+  if (!host || !first) return;
+  const LEVELS = ['', 'pside', 'dense', 'dense pside', 'dense xdense', 'dense xdense pside', 'dense xdense xxdense pside'];
+  const MAX = 265 * 96 / 25.4 + 0.5;   // 265 mm in px (Blatt samt Rahmen; die Seite hat 269 mm Platz)
+  const prevStyle = host.getAttribute('style') || '';
+  // Zum Messen so darstellen wie im Druck: A4-Breite abzüglich der Seitenränder, ohne geerbte Stile der Seite
+  host.style.cssText = 'all: initial; display: block; position: absolute; left: -10000px; top: 0; width: 178mm; visibility: hidden;';
+  try {
+    const body = first.parentNode;
+    const days = Array.from(first.querySelectorAll('.day'));
+    if (!days.length) return;
+    const rangeText = first.querySelector('.range')?.textContent || '';
+    const blank = first.cloneNode(true); blank.querySelector('.days').replaceChildren();
+    first.className = 'sheet dense';
+    const heights = days.map(d => d.getBoundingClientRect().height);
+    // Aufeinanderfolgende Tage so auf n Blätter verteilen, dass das vollste Blatt möglichst leer bleibt
+    const split = (n) => {
+      const N = days.length, pre = [0]; heights.forEach(h => pre.push(pre[pre.length - 1] + h));
+      const best = Array.from({ length: n + 1 }, () => Array(N + 1).fill(Infinity));
+      const cut = Array.from({ length: n + 1 }, () => Array(N + 1).fill(0));
+      best[0][0] = 0;
+      for (let k = 1; k <= n; k++) for (let i = k; i <= N; i++) for (let j = k - 1; j < i; j++) {
+        const v = Math.max(best[k - 1][j], pre[i] - pre[j]);
+        if (v <= best[k][i]) { best[k][i] = v; cut[k][i] = j; }   // bei Gleichstand das vordere Blatt voller
+      }
+      const groups = []; let i = N;
+      for (let k = n; k >= 1; k--) { const j = cut[k][i]; groups.unshift(days.slice(j, i)); i = j; }
+      return groups;
+    };
+    for (let n = 1; n <= days.length; n++) {
+      body.querySelectorAll('.sheet').forEach(s => { if (s !== first) s.remove(); });
+      const sheets = split(n).map((group, i) => {
+        const s = i === 0 ? first : blank.cloneNode(true);
+        s.querySelector('.days').replaceChildren(...group);
+        const r = s.querySelector('.range');
+        if (r) r.textContent = n > 1 ? `${rangeText} · Blatt ${i + 1} von ${n}` : rangeText;
+        if (i) body.appendChild(s);
+        return s;
+      });
+      const fits = LEVELS.some(cls => {
+        sheets.forEach(s => { s.className = ('sheet ' + cls).trim(); });
+        return sheets.every(s => s.getBoundingClientRect().height <= MAX);
+      });
+      if (fits) return;
+    }
+  } finally {
+    host.setAttribute('style', prevStyle);
+  }
 }
 
 function buildWeekPosterHtml(data) {
@@ -1814,7 +1869,7 @@ function buildWeekPosterHtml(data) {
     let body;
     if (d.closed) body = '<p class="none">Kein Mittagstisch</p>';
     else if (!d.dishes.length) body = '<p class="none">Folgt in Kürze</p>';
-    else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}${x.price != null ? `<p class="price">${esc(sharePrice(x.price))}</p>` : ''}`)
+    else body = d.dishes.map(x => `<div class="item"><p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}${x.price != null ? `<p class="price">${esc(sharePrice(x.price))}</p>` : ''}</div>`)
       .join('<p class="or"><span>oder</span></p>');
     return `<div class="day"><div class="when"><span class="name">${esc(d.label)}</span><span class="date">${d.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span></div><div class="what">${body}</div></div>`;
   }).join('');
@@ -1839,6 +1894,17 @@ function buildWeekPosterHtml(data) {
   .dense header { margin-bottom: 5mm; } .dense header img { width: 16mm; height: 16mm; } .dense .brand { font-size: 25pt; }
   .dense .day { padding: 3mm 0; } .dense .dish { font-size: 14.5pt; } .dense .side { font-size: 9.5pt; } .dense .or { margin: 1.4mm 0; }
   .xdense .day { padding: 2.2mm 0; } .xdense .dish { font-size: 12.5pt; } .xdense .side { font-size: 9pt; margin-top: .6mm; } .xdense .or { margin: .8mm 0; font-size: 7.5pt; }
+  /* Sehr volle Woche: kleinste Stufe (wird nur von der Einpassung vor dem Druck gewählt) */
+  .xxdense header { margin-bottom: 3.5mm; } .xxdense header img { width: 13mm; height: 13mm; margin-bottom: 2mm; } .xxdense .brand { font-size: 21pt; } .xxdense .kicker { margin-top: 2mm; }
+  .xxdense .day { padding: 1.7mm 0; gap: 4mm; grid-template-columns: 32mm 1fr; } .xxdense .name { font-size: 9.5pt; } .xxdense .date { font-size: 8.5pt; margin-top: .5mm; }
+  .xxdense .dish { font-size: 11.5pt; line-height: 1.18; } .xxdense .side { font-size: 8.5pt; margin-top: .4mm; } .xxdense .price { font-size: 9pt; } .xxdense .or { margin: .5mm 0; font-size: 7pt; }
+  .xxdense footer { margin-top: 3mm; padding-top: 3mm; font-size: 9.5pt; line-height: 1.45; }
+  /* Preis rechts neben dem Gericht statt darunter – spart je Gericht eine Zeile */
+  .pside .item { display: grid; grid-template-columns: 1fr auto; column-gap: 5mm; align-items: baseline; }
+  .pside .item .side { grid-column: 1 / -1; }
+  .pside .item .price { grid-column: 2; grid-row: 1; margin: 0; white-space: nowrap; }
+  /* Mehrere Blätter: jedes beginnt auf einer neuen Seite */
+  .sheet + .sheet { break-before: page; page-break-before: always; }
   .name { display: block; font-size: 11pt; font-weight: 700; letter-spacing: 1.2pt; text-transform: uppercase; color: #3D2415; }
   .date { display: block; font-size: 9.5pt; color: #8a7a68; margin-top: 1mm; }
   .dish { font-family: 'Fraunces', Georgia, serif; font-size: 17pt; line-height: 1.2; margin: 0; color: #2A1810; }
