@@ -63,6 +63,10 @@ Nach dem Login sehen Sie die **Übersicht** mit Kacheln. Aus jedem Bereich komme
 
 Praktisch: **„Vorwoche kopieren“** übernimmt die letzte Woche als Vorlage.
 **„Aushang drucken“** macht einen A4-Aushang fürs Fenster, **„Bild für Instagram“** ein fertiges Bild.
+Beides passt sich an: Der Aushang wählt die größte Schrift, die auf das Blatt passt, und verteilt eine sehr
+volle Woche auf zwei Blätter – gekürzt wird dort nichts. Das Bild bleibt immer **ein** Bild; passt nicht alles
+lesbar darauf, entfallen zuerst die Beilagen, danach enden sehr lange Gerichte mit „…“ (das Fenster sagt es dann).
+Drucken öffnet den Druckdialog des Geräts – am iPhone dort „Drucken“ oder über Teilen „In Dateien sichern“ (PDF).
 
 ---
 

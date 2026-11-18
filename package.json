@@ -5,9 +5,10 @@
   "description": "Webseite Alstercafé — statische Seite plus Layout-Schranken.",
   "type": "module",
   "scripts": {
-    "test": "node tests/version-check.mjs && node tests/overflow-audit.mjs",
+    "test": "node tests/version-check.mjs && node tests/overflow-audit.mjs && node tests/print-audit.mjs",
     "test:versions": "node tests/version-check.mjs",
     "test:overflow": "node tests/overflow-audit.mjs",
+    "test:print": "node tests/print-audit.mjs",
     "test:cls": "node tests/cls-audit.mjs"
   },
   "devDependencies": {

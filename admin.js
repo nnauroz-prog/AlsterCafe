@@ -392,6 +392,9 @@ async function showDashboard() {
   // Einmal pro Sitzung: Überbleibsel früherer Versionen (Reservierungs-/Bestellkopien) aus der
   // öffentlichen Inhalts-Tabelle entfernen – passiert still beim normalen Login.
   try { if (!sessionStorage.getItem('alstercafe.legacy-clean')) { sessionStorage.setItem('alstercafe.legacy-clean', '1'); window.alsterDb?.removeLegacyContent?.(['reservations', 'orders']); } } catch (e) {}
+  // Schriften und Logos der Druck-Dokumente vorab laden – dann startet jeder Druck direkt im Tipp
+  setTimeout(prewarmPrintAssets, 1500);
+  window.addEventListener('pointerdown', prewarmPrintAssets, { once: true, capture: true });   // spätestens bei der ersten Berührung
   // Default-Landing: Overview. Tab-Inhalte werden lazy beim Klick aktiv.
   showOverview();
   renderWeek();
@@ -605,7 +608,6 @@ function printDayList(iso, statusEl) {
 ${hol ? `<p class="closed">Schließtag${hol.label ? ' · ' + escapeHtml(hol.label) : ''}</p>` : ''}
 ${list.length ? `<table><thead><tr><th>Uhrzeit</th><th>Name</th><th>Was</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="empty">Für diesen Tag ist nichts eingetragen.</p>'}
 <p class="foot">Gedruckt am ${new Date().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} Uhr</p>
-<script>window.addEventListener('load', function () { if (!window.__alsterPrinted) { window.__alsterPrinted = true; setTimeout(function () { window.print(); }, 150); } });<\/script>
 </body></html>`;
   printHtmlDocument(html, statusEl);
   logActivity('Tagesliste gedruckt');
@@ -1603,10 +1605,9 @@ async function onResetMenu() {
 
 /* ---------- PDF-Export der Speisekarte ----------
    Nimmt den AKTUELLEN Editor-Stand (auch ungespeicherte Aenderungen),
-   oeffnet eine eigenstaendige, druckfertige Karte in einem neuen
-   Fenster und ruft den Druckdialog auf — dort waehlt Maria
-   "Als PDF speichern". Eine Seite pro Kategorie, wie ihre
-   Original-Karte. */
+   baut daraus eine druckfertige Karte und ruft den Druckdialog auf —
+   dort waehlt Maria "Als PDF speichern". Eine Seite pro Kategorie,
+   wie ihre Original-Karte. */
 function downloadMenuPdf() {
   const data = collectMenuData();
   if (!data.sections.length) {
@@ -1617,43 +1618,190 @@ function downloadMenuPdf() {
   printHtmlDocument(buildMenuPrintHtml(data), dom.menuStatus);
 }
 
-// Druck über ein verstecktes, gleich-Ursprung-Iframe statt window.open().
-// Grund: window.open('', '_blank') wird auf Handys — vor allem iOS Safari —
-// lautlos vom Popup-Blocker geschluckt, dann "passiert nichts". Ein Iframe,
-// das ein Blob-Dokument lädt, umgeht den Blocker komplett; das eingebettete
-// Skript ruft window.print() aus seinem EIGENEN Fenster auf und druckt so
-// zuverlässig genau dieses Dokument (nicht die Admin-Seite).
-function printHtmlDocument(html, statusEl) {
-  try {
-    document.getElementById('menu-print-frame')?.remove();
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
+/* ---------- Drucken ----------
+   Gedruckt wird die Seite selbst. Das Druck-Dokument liegt – am Bildschirm unsichtbar – im Shadow-Root von
+   #print-host; im Druck blendet styles.css alles andere aus. So greifen die Stile des Mitgliederbereichs nicht
+   ins Druckbild und umgekehrt.
+   Warum kein verstecktes Iframe und kein neues Fenster: Die Live-Seite erlaubt per Sicherheits-Kopfzeile
+   (frame-src) keine blob:-Rahmen – der Druck blieb dadurch auf jedem Gerät ohne Wirkung –, iPhones drucken
+   versteckte Rahmen nicht verlässlich, und window.open schluckt dort der Popup-Blocker. window.print() der
+   Seite selbst, direkt im Tipp, funktioniert überall. */
+const PRINT_FONTS = ['400 16px Inter', '500 16px Inter', '600 16px Inter', '700 16px Inter', '400 16px Fraunces', '500 16px Fraunces', '600 16px Fraunces'];
+const printImgPool = {};       // Adresse → fertig geladene <img>-Elemente (Vorrat für die Druck-Dokumente)
+let printWarm = null;          // Promise: Schriften und Logos der Druck-Dokumente sind geladen
+let printWarmDone = false;
+let printDocState = null;      // gesetzt, solange ein Druck-Dokument eingehängt ist
 
-    const frame = document.createElement('iframe');
-    frame.id = 'menu-print-frame';
-    frame.setAttribute('aria-hidden', 'true');
-    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
-    frame.src = url;
-    document.body.appendChild(frame);
+/* Schriften und Logos der Druck-Dokumente vorab laden, damit der Druck ohne Wartezeit im Tipp starten kann.
+   Die Logos liegen als fertig geladene <img>-Elemente bereit und werden beim Druck selbst eingesetzt –
+   ob ein Browser ein frisch erzeugtes <img> sofort aus seinem Zwischenspeicher füllt, ist nämlich je nach
+   Browser und Version verschieden. Das Aushang-Logo gibt es mehrfach (ein Aushang kann mehrere Blätter haben). */
+function prewarmPrintAssets() {
+  if (printWarm) return printWarm;
+  let fonts = Promise.resolve();
+  try { fonts = Promise.all(PRINT_FONTS.map(f => document.fonts.load(f, 'Aä€ā').catch(() => {}))); } catch (e) {}
+  const imgs = [[`${location.origin}/image-192.webp`, 8], [new URL('image.png', location.href).href, 1]].map(([src, count]) => {
+    printImgPool[src] = [];
+    return Promise.all(Array.from({ length: count }, () => new Promise(res => {
+      const im = new Image();
+      im.onload = () => { printImgPool[src].push(im); res(); };
+      im.onerror = () => res();
+      im.src = src;
+    })));
+  });
+  printWarm = Promise.all([fonts, ...imgs]).then(() => {
+    printWarmDone = true;
+    document.documentElement.dataset.printReady = '1';   // Signal für tests/print-audit.mjs
+  });
+  return printWarm;
+}
 
-    // Aufräumen, nachdem gedruckt (oder abgebrochen) wurde.
-    const cleanup = () => { URL.revokeObjectURL(url); setTimeout(() => frame.remove(), 500); };
-    frame.addEventListener('load', () => {
-      try { frame.contentWindow.addEventListener('afterprint', cleanup); } catch (e) {}
-      // Belt-and-Suspenders: zusätzlich vom Eltern-Fenster aus auslösen,
-      // falls das eingebettete Skript blockiert wurde. Das gemeinsame Flag
-      // __alsterPrinted verhindert, dass der Dialog doppelt aufgeht.
-      try {
-        const w = frame.contentWindow;
-        if (w && !w.__alsterPrinted && !w.__alsterWaitFonts) { w.__alsterPrinted = true; w.focus(); w.print(); }
-      } catch (e) {}
-      setTimeout(cleanup, 60000); // Spätestens nach 1 min Blob freigeben.
-    });
+/* Ersetzt die <img> eines Druck-Dokuments durch fertig geladene Elemente aus dem Vorrat (soweit vorhanden). */
+function usePrintImages(scope) {
+  scope.querySelectorAll('img').forEach(im => {
+    let url = ''; try { url = new URL(im.getAttribute('src') || '', location.href).href; } catch (e) {}
+    const pool = printImgPool[url];
+    if (!pool || pool.includes(im)) return;
+    const ready = pool.find(el => !el.parentNode);
+    if (!ready) return;   // Vorrat aufgebraucht: dieses Bild lädt selbst, der Druck wartet dann kurz darauf
+    Array.from(ready.attributes).forEach(a => { if (a.name !== 'src') ready.removeAttribute(a.name); });
+    Array.from(im.attributes).forEach(a => { if (a.name !== 'src') ready.setAttribute(a.name, a.value); });
+    im.replaceWith(ready);
+  });
+}
+/* Gibt die Vorrats-Bilder eines Teilbaums wieder frei (bevor er verworfen wird). */
+function releasePrintImages(scope) {
+  scope.querySelectorAll('img').forEach(im => {
+    if (Object.values(printImgPool).some(pool => pool.includes(im))) im.remove();
+  });
+}
 
-    setStatus(statusEl, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern“ oder Ihren Drucker.', 'ok');
-  } catch (e) {
-    setStatus(statusEl, 'Druckansicht konnte nicht erzeugt werden. Bitte erneut versuchen.', 'error');
+function ensurePrintHost() {
+  let host = document.getElementById('print-host');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'print-host';
+    host.setAttribute('aria-hidden', 'true');
+    host.style.display = 'none';   // am Bildschirm unsichtbar, auch falls styles.css einmal älter ist als dieses Skript
+    document.body.appendChild(host);
   }
+  if (!host.shadowRoot) host.attachShadow({ mode: 'open' });
+  return host;
+}
+
+/* Hängt ein vollständiges HTML-Dokument (String) als Druck-Dokument ein und gibt den Shadow-Root zurück. */
+function mountPrintDoc(html) {
+  unmountPrintDoc();
+  const doc = new DOMParser().parseFromString(String(html), 'text/html');
+  doc.querySelectorAll('script, link, base').forEach(n => n.remove());   // Skripte laufen hier nicht; Schriften kommen von der Seite
+  const title = (doc.title || '').trim();
+  let pageCss = '';
+  const styles = Array.from(doc.querySelectorAll('style')).map(s => {
+    const css = s.textContent || '';
+    // @page wirkt im Shadow-Root nicht → in den Kopf der Seite übernehmen
+    (css.match(/@page\b[^{]*\{[^{}]*\}/g) || []).forEach(rule => { pageCss += rule + '\n'; });
+    const el = document.createElement('style'); el.textContent = css; s.remove(); return el;
+  });
+  const root = ensurePrintHost().shadowRoot;
+  // Echte html-/body-Elemente: so gelten alle Selektoren der Dokumente unverändert (per Parser ginge das nicht).
+  const h = document.createElement('html'); h.lang = doc.documentElement.lang || 'de';
+  const b = document.createElement('body'); b.innerHTML = doc.body ? doc.body.innerHTML : '';
+  usePrintImages(b);
+  h.appendChild(b);
+  root.replaceChildren(...styles, h);
+  const pageStyle = document.createElement('style');
+  pageStyle.id = 'print-page-style';
+  // erst die Seitenränder der Webseite zurücksetzen, dann gilt das @page des Dokuments (oder die Browser-Vorgabe)
+  pageStyle.textContent = '@page { size: auto; margin: auto; }\n' + pageCss;
+  document.head.appendChild(pageStyle);
+  printDocState = { prevTitle: document.title, docTitle: title, off: null };
+  if (title) document.title = title;   // wird der vorgeschlagene Dateiname bei „Als PDF sichern“
+  document.documentElement.classList.add('has-print-doc');
+  return root;
+}
+
+function unmountPrintDoc() {
+  const st = printDocState;
+  if (!st) return;
+  printDocState = null;
+  if (st.off) st.off();
+  document.documentElement.classList.remove('has-print-doc');
+  document.getElementById('print-page-style')?.remove();
+  const root = document.getElementById('print-host')?.shadowRoot;
+  if (root) { releasePrintImages(root); root.replaceChildren(); }
+  if (st.docTitle && document.title === st.docTitle) document.title = st.prevTitle;
+}
+
+/* Aufräumen erst beim nächsten Tipp oder Tastendruck: Am iPhone kehrt print() sofort zurück, und die
+   Druckvorschau baut sich bei jeder Options-Änderung neu auf – bis dahin muss das Dokument stehen bleiben. */
+function armPrintCleanup() {
+  const st = printDocState;
+  if (!st) return;
+  const done = (e) => {
+    if (e && e.type === 'keydown' && e.repeat) return;   // gehaltene Taste (die den Druck ausgelöst hat) räumt nicht auf
+    if (printDocState === st) unmountPrintDoc();
+  };
+  let armed = false;
+  const timer = setTimeout(() => {
+    armed = true;
+    window.addEventListener('pointerdown', done, true);
+    window.addEventListener('keydown', done, true);
+    window.addEventListener('pagehide', done);
+  }, 0);
+  st.off = () => {
+    clearTimeout(timer);
+    if (!armed) return;
+    window.removeEventListener('pointerdown', done, true);
+    window.removeEventListener('keydown', done, true);
+    window.removeEventListener('pagehide', done);
+  };
+}
+
+/* Fehlt dem eingehängten Dokument noch ein Bild oder eine Schrift? Liefert ein Promise darauf – oder null, wenn alles da ist. */
+function printDocPending(root) {
+  const waits = [];
+  root.querySelectorAll('img').forEach(im => {
+    if (im.complete && im.naturalWidth > 0) return;
+    waits.push(new Promise(res => { im.addEventListener('load', res, { once: true }); im.addEventListener('error', res, { once: true }); }));
+  });
+  if (!printWarmDone) {
+    const css = Array.from(root.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    if (/Fraunces|Inter/.test(css)) waits.push(prewarmPrintAssets());   // Web-Schriften noch nicht vorgeladen
+  }
+  return waits.length ? Promise.all(waits) : null;
+}
+
+/* Druckt ein vollständiges HTML-Dokument. opts.fit(root) darf das eingehängte Dokument vor dem Druck einpassen. */
+function printHtmlDocument(html, statusEl, opts = {}) {
+  let root;
+  try { root = mountPrintDoc(html); }
+  catch (e) {
+    unmountPrintDoc();
+    setStatus(statusEl, 'Druckansicht konnte nicht erzeugt werden. Bitte erneut versuchen.', 'error');
+    return;
+  }
+  const st = printDocState;
+  const soon = (pending, next) => Promise.race([pending, new Promise(res => setTimeout(res, 1200))]).then(next, next);
+  const fire = () => {
+    if (printDocState !== st) return;   // inzwischen wurde etwas anderes gedruckt oder aufgeräumt
+    armPrintCleanup();
+    const t0 = performance.now();
+    try { window.focus(); window.print(); } catch (e) {}
+    // Am Computer hält print() das Skript an, bis der Druckdialog zu ist – dann gleich aufräumen (Titel, Druckbild).
+    // Am iPhone kehrt print() sofort zurück; dort bleibt das Dokument bis zum nächsten Tipp stehen.
+    if (performance.now() - t0 > 500 && printDocState === st) unmountPrintDoc();
+  };
+  const go = () => {
+    if (printDocState !== st) return;
+    try { if (opts.fit) opts.fit(root); } catch (e) { console.warn('Einpassen fehlgeschlagen', e); }
+    const late = opts.fit ? printDocPending(root) : null;   // z. B. Logos zusätzlicher Blätter über den Vorrat hinaus
+    if (!late) fire(); else soon(late, fire);
+  };
+  // Meldung vor dem Druckaufruf: am Computer hält der Druckdialog das Skript an.
+  setStatus(statusEl, 'Druckansicht geöffnet — wählen Sie „Als PDF speichern“ oder Ihren Drucker.', 'ok');
+  const pending = printDocPending(root);
+  if (!pending) go();   // Regelfall: direkt im Tipp
+  else soon(pending, go);
 }
 
 /* ---------- Wochenplan weitergeben: Aushang (A4) + Instagram-Bild ----------
@@ -1702,7 +1850,67 @@ function pageFontsHref() {
 function printWeekPoster() {
   const data = weekShareData();
   if (!data.hasAny) { weekShareStatus('Bitte zuerst Gerichte eintragen.', 'error'); return; }
-  printHtmlDocument(buildWeekPosterHtml(data), document.getElementById('week-share-status'));
+  printHtmlDocument(buildWeekPosterHtml(data), document.getElementById('week-share-status'), { fit: fitWeekPoster });
+}
+
+/* Passt den eingehängten Aushang vor dem Druck ein: Erst wird gemessen, dann die größte Schriftstufe genommen,
+   bei der das Blatt auf eine A4-Seite passt (bei Bedarf rückt der Preis neben das Gericht). Reicht auch die
+   kleinste Stufe nicht, wird die Woche auf zwei (oder mehr) Blätter verteilt – gekürzt wird nichts. */
+function fitWeekPoster(root) {
+  const host = document.getElementById('print-host');
+  const first = root.querySelector('.sheet');
+  if (!host || !first) return;
+  const LEVELS = ['', 'pside', 'dense', 'dense pside', 'dense xdense', 'dense xdense pside', 'dense xdense xxdense pside'];
+  const MAX = 265 * 96 / 25.4 + 0.5;   // 265 mm in px (Blatt samt Rahmen; die Seite hat 269 mm Platz)
+  const prevStyle = host.getAttribute('style') || '';
+  // Zum Messen so darstellen wie im Druck: A4-Breite abzüglich der Seitenränder, ohne geerbte Stile der Seite
+  // (text-size-adjust: iPhones vergrößern Schrift in breiten Blöcken sonst von selbst – das verfälscht die Messung)
+  host.style.cssText = 'all: initial; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; display: block; position: absolute; left: -10000px; top: 0; width: 178mm; visibility: hidden;';
+  try {
+    const body = first.parentNode;
+    const days = Array.from(first.querySelectorAll('.day'));
+    if (!days.length) return;
+    const rangeText = first.querySelector('.range')?.textContent || '';
+    const blank = first.cloneNode(true); blank.querySelector('.days').replaceChildren();
+    first.className = 'sheet dense';
+    const heights = days.map(d => d.getBoundingClientRect().height);
+    // Aufeinanderfolgende Tage so auf n Blätter verteilen, dass das vollste Blatt möglichst leer bleibt
+    const split = (n) => {
+      const N = days.length, pre = [0]; heights.forEach(h => pre.push(pre[pre.length - 1] + h));
+      const best = Array.from({ length: n + 1 }, () => Array(N + 1).fill(Infinity));
+      const cut = Array.from({ length: n + 1 }, () => Array(N + 1).fill(0));
+      best[0][0] = 0;
+      for (let k = 1; k <= n; k++) for (let i = k; i <= N; i++) for (let j = k - 1; j < i; j++) {
+        const v = Math.max(best[k - 1][j], pre[i] - pre[j]);
+        if (v <= best[k][i]) { best[k][i] = v; cut[k][i] = j; }   // bei Gleichstand das vordere Blatt voller
+      }
+      const groups = []; let i = N;
+      for (let k = n; k >= 1; k--) { const j = cut[k][i]; groups.unshift(days.slice(j, i)); i = j; }
+      return groups;
+    };
+    for (let n = 1; n <= days.length; n++) {
+      body.querySelectorAll('.sheet').forEach(s => { if (s !== first) { releasePrintImages(s); s.remove(); } });
+      const sheets = split(n).map((group, i) => {
+        const s = i === 0 ? first : blank.cloneNode(true);
+        if (i) usePrintImages(s);   // fertig geladenes Logo statt eines frisch geklonten
+        s.querySelector('.days').replaceChildren(...group);
+        const r = s.querySelector('.range');
+        if (r) r.textContent = n > 1 ? `${rangeText} · Blatt ${i + 1} von ${n}` : rangeText;
+        if (i) body.appendChild(s);
+        return s;
+      });
+      const fits = LEVELS.some(cls => {
+        sheets.forEach(s => { s.className = ('sheet ' + cls).trim(); });
+        return sheets.every(s => s.getBoundingClientRect().height <= MAX);
+      });
+      if (fits) return;
+      // Nach dem Durchlauf steht die kleinste Stufe. Sind jetzt nur noch Blätter zu hoch, die aus einem einzigen
+      // Tag bestehen, hilft weiteres Aufteilen nicht – dieser Tag läuft dann eben über zwei Seiten.
+      if (sheets.every(s => s.getBoundingClientRect().height <= MAX || s.querySelectorAll('.day').length === 1)) return;
+    }
+  } finally {
+    host.setAttribute('style', prevStyle);
+  }
 }
 
 function buildWeekPosterHtml(data) {
@@ -1716,7 +1924,7 @@ function buildWeekPosterHtml(data) {
     let body;
     if (d.closed) body = '<p class="none">Kein Mittagstisch</p>';
     else if (!d.dishes.length) body = '<p class="none">Folgt in Kürze</p>';
-    else body = d.dishes.map(x => `<p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}${x.price != null ? `<p class="price">${esc(sharePrice(x.price))}</p>` : ''}`)
+    else body = d.dishes.map(x => `<div class="item"><p class="dish">${esc(x.dish)}</p>${x.side ? `<p class="side">${esc(shareSide(x.side))}</p>` : ''}${x.price != null ? `<p class="price">${esc(sharePrice(x.price))}</p>` : ''}</div>`)
       .join('<p class="or"><span>oder</span></p>');
     return `<div class="day"><div class="when"><span class="name">${esc(d.label)}</span><span class="date">${d.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span></div><div class="what">${body}</div></div>`;
   }).join('');
@@ -1741,6 +1949,17 @@ function buildWeekPosterHtml(data) {
   .dense header { margin-bottom: 5mm; } .dense header img { width: 16mm; height: 16mm; } .dense .brand { font-size: 25pt; }
   .dense .day { padding: 3mm 0; } .dense .dish { font-size: 14.5pt; } .dense .side { font-size: 9.5pt; } .dense .or { margin: 1.4mm 0; }
   .xdense .day { padding: 2.2mm 0; } .xdense .dish { font-size: 12.5pt; } .xdense .side { font-size: 9pt; margin-top: .6mm; } .xdense .or { margin: .8mm 0; font-size: 7.5pt; }
+  /* Sehr volle Woche: kleinste Stufe (wird nur von der Einpassung vor dem Druck gewählt) */
+  .xxdense header { margin-bottom: 3.5mm; } .xxdense header img { width: 13mm; height: 13mm; margin-bottom: 2mm; } .xxdense .brand { font-size: 21pt; } .xxdense .kicker { margin-top: 2mm; }
+  .xxdense .day { padding: 1.7mm 0; gap: 4mm; grid-template-columns: 32mm 1fr; } .xxdense .name { font-size: 9.5pt; } .xxdense .date { font-size: 8.5pt; margin-top: .5mm; }
+  .xxdense .dish { font-size: 11.5pt; line-height: 1.18; } .xxdense .side { font-size: 8.5pt; margin-top: .4mm; } .xxdense .price { font-size: 9pt; } .xxdense .or { margin: .5mm 0; font-size: 7pt; }
+  .xxdense footer { margin-top: 3mm; padding-top: 3mm; font-size: 9.5pt; line-height: 1.45; }
+  /* Preis rechts neben dem Gericht statt darunter – spart je Gericht eine Zeile */
+  .pside .item { display: grid; grid-template-columns: 1fr auto; column-gap: 5mm; align-items: baseline; }
+  .pside .item .side { grid-column: 1 / -1; }
+  .pside .item .price { grid-column: 2; grid-row: 1; margin: 0; white-space: nowrap; }
+  /* Mehrere Blätter: jedes beginnt auf einer neuen Seite */
+  .sheet + .sheet { break-before: page; page-break-before: always; }
   .name { display: block; font-size: 11pt; font-weight: 700; letter-spacing: 1.2pt; text-transform: uppercase; color: #3D2415; }
   .date { display: block; font-size: 9.5pt; color: #8a7a68; margin-top: 1mm; }
   .dish { font-family: 'Fraunces', Georgia, serif; font-size: 17pt; line-height: 1.2; margin: 0; color: #2A1810; }
@@ -1761,16 +1980,6 @@ function buildWeekPosterHtml(data) {
   <div class="days">${rows}</div>
   <footer><strong>${data.until ? `12:00 – ${esc(data.until)} Uhr` : 'Ab 12:00 Uhr'}</strong> · Beilage und Salat sind immer dabei<br>Ifflandstraße 45 · 040 – 22 69 28 91 · alstercafe.de</footer>
 </div>
-<script>
-  /* Erst drucken, wenn Schriften und Logo geladen sind */
-  window.__alsterWaitFonts = true;
-  function alsterPrint(){ if (window.__alsterPrinted) return; window.__alsterPrinted = true; try { window.focus(); window.print(); } catch (e) {} }
-  window.addEventListener('load', function(){
-    var go = function(){ setTimeout(alsterPrint, 200); };
-    try { document.fonts.ready.then(go, go); } catch (e) { go(); }
-    setTimeout(alsterPrint, 3000);
-  });
-</script>
 </body></html>`;
 }
 
@@ -1779,143 +1988,250 @@ async function makeWeekImage() {
   const data = weekShareData();
   if (!data.hasAny) { weekShareStatus('Bitte zuerst Gerichte eintragen.', 'error'); return; }
   weekShareStatus('Bild wird erstellt …');
+  // Schriften mit dem tatsächlichen Text laden – sonst fehlt bei Sonderzeichen der passende Schnitt
+  const allText = data.days.map(d => d.dishes.map(x => `${x.dish} ${x.side}`).join(' ')).join(' ') + ' AlstercaféMITTAGSTISCHKWODER€';
   try {
     await Promise.all([
-      document.fonts.load('500 64px Fraunces'), document.fonts.load('400 40px Fraunces'),
-      document.fonts.load('600 24px Inter'), document.fonts.load('400 24px Inter')
+      document.fonts.load('500 64px Fraunces', allText), document.fonts.load('400 40px Fraunces', allText),
+      document.fonts.load('600 24px Inter', allText), document.fonts.load('400 24px Inter', allText)
     ]);
   } catch (e) {}
   let logo = null;
   try {
     logo = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = 'image-192.webp'; });
   } catch (e) {}
-  const canvas = drawWeekImage(data, logo);
-  const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+  const img = drawWeekImage(data, logo);
+  const blob = await new Promise(r => img.canvas.toBlob(r, 'image/png'));
   if (!blob) { weekShareStatus('Bild konnte nicht erstellt werden.', 'error'); return; }
   weekShareStatus('');
-  showWeekImageDialog(blob, `alstercafe-mittagstisch-KW${data.kw}.png`);
+  const note = img.tier >= 2 ? 'Damit alles lesbar auf ein Bild passt, stehen die Beilagen nicht dabei und sehr lange Gerichte sind gekürzt. Der volle Text steht auf der Webseite und im Aushang.'
+    : img.tier === 1 ? 'Damit alles lesbar auf ein Bild passt, stehen die Beilagen diesmal nicht dabei. Der volle Text steht auf der Webseite und im Aushang.' : '';
+  showWeekImageDialog(blob, `alstercafe-mittagstisch-KW${data.kw}.png`, note);
 }
 
+/* Zeichnet den Wochenplan auf ein Bild. Immer genau ein Bild, nie Überlappung:
+   Erst wird die Schrift verkleinert (bis 26 px) und der Preis neben statt unter das Gericht gesetzt,
+   dann stufenweise gekürzt –
+   Stufe 0 voller Text · 1 ohne Beilagen · 2 Gerichte höchstens 3 Zeilen · 3 höchstens 2 · 4 eine Zeile.
+   Liefert { canvas, tier, px }. */
 function drawWeekImage(data, logo) {
   const W = 1080, H = 1350;
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const ctx = c.getContext('2d');
   const C = { espresso: '#2A1810', bean: '#3D2415', gold: '#B8893E', goldSoft: '#D4B380', linen: '#F1E7D3' };
+  const spacing = (px) => { if ('letterSpacing' in ctx) ctx.letterSpacing = px + 'px'; };
+  const left = 110, right = W - 110, bottom = H - 150, colGap = 56;
+  const SIZES = [40, 38, 36, 34, 32, 30, 28, 26];
+  const SIZES_CUT = [30, 28, 26];   // wird gekürzt, zählt mehr Text als größere Schrift
+  const MAX_LINES = [Infinity, Infinity, 3, 2, 1];
+  const hasPrices = data.days.some(d => d.dishes.some(x => x.price != null));
+  const dishFont = (px) => `400 ${px}px Fraunces, Georgia, serif`;
+  const textFont = (px, weight = 400) => `${weight} ${px}px Inter, Arial, sans-serif`;
+  const sideSize = (px) => Math.max(21, Math.round(px * 0.62));
+  const wide = (t) => ctx.measureText(t).width;
+
+  // Umbruch nach Wörtern; ein Wort, das allein breiter ist als die Spalte, wird geteilt
+  // (bevorzugt hinter „-“ oder „/“, sonst mit Trennstrich) – keine Zeile ragt über die Spalte.
+  const splitLong = (word, maxW) => {
+    const out = []; let rest = word;
+    while (rest.length > 1 && wide(rest) > maxW) {
+      let n = rest.length - 1;   // mindestens ein Zeichen je Durchlauf, sonst käme die Schleife nie ans Ende
+      while (n > 1 && wide(rest.slice(0, n) + '-') > maxW) n--;
+      if (rest.length - n < 4 && n > 6) n = rest.length - 4;   // keinen Rest von zwei, drei Buchstaben stehen lassen
+      const cut = Math.max(rest.lastIndexOf('-', n - 1), rest.lastIndexOf('/', n - 1));
+      if (cut > 0) { out.push(rest.slice(0, cut + 1)); rest = rest.slice(cut + 1); }
+      else { out.push(rest.slice(0, n) + '-'); rest = rest.slice(n); }
+    }
+    if (rest) out.push(rest);
+    return out;
+  };
+  const wrapText = (text, maxW) => {
+    maxW = Math.max(40, maxW);
+    const lines = []; let cur = '';
+    String(text).split(/\s+/).filter(Boolean).forEach(word => {
+      const bits = wide(word) > maxW ? splitLong(word, maxW) : [word];
+      bits.forEach((bit, i) => {
+        const t = cur ? cur + ' ' + bit : bit;
+        if (i === 0 && wide(t) <= maxW) { cur = t; return; }
+        if (cur) lines.push(cur);
+        cur = bit;
+      });
+    });
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  // Auf n Zeilen begrenzen; die letzte endet dann mit „…“ – an einer Wortgrenze („Wort …“) oder,
+  // wenn schon das eine Wort zu lang ist, mitten im Wort („Wor…“).
+  const clampLines = (lines, n, maxW) => {
+    if (lines.length <= n) return lines;
+    const out = lines.slice(0, n);
+    let last = out[n - 1], midWord = false;
+    while (last && wide(last + (midWord ? '…' : ' …')) > maxW) {
+      if (/\s/.test(last)) last = last.replace(/\s+\S+$/, '');
+      else { last = last.slice(0, -1); midWord = true; }
+    }
+    last = last.replace(/[\s,;:.·–-]+$/, '');
+    out[n - 1] = last + (midWord ? '…' : ' …');
+    return out;
+  };
+
+  const headTop = (header) => header === 'full' ? (logo ? 394 : 292) : 214;   // Beginn der Tage unter dem Kopf
+  const measureDay = (d, o) => {
+    const cellW = o.cols === 2 ? (right - left - colGap) / 2 : right - left;
+    const labelW = o.cols === 2 ? 0 : 210;
+    const head = o.cols === 2 ? 44 : 0;   // Platz für den Tag über dem Gericht
+    const textW = cellW - labelW, sidePx = sideSize(o.px);
+    const parts = [];
+    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? 'Kein Mittagstisch' : 'Folgt in Kürze', h: 34 });
+    d.dishes.forEach((x, i) => {
+      if (i) parts.push({ kind: 'or', h: 37 });
+      const priceTxt = x.price != null ? sharePrice(x.price) : '';
+      const beside = o.priceSide && !!priceTxt;   // Preis rechts neben dem Gericht (eigene schmale Spalte)
+      const dishW = o.priceSide ? textW - o.priceCol : textW;
+      spacing(0); ctx.font = dishFont(o.px);
+      const lines = clampLines(wrapText(x.dish, dishW), MAX_LINES[o.tier], dishW);
+      parts.push({ kind: 'dish', lines, h: lines.length * o.px * 1.15, price: beside ? priceTxt : '' });
+      if (o.tier === 0 && x.side) {
+        ctx.font = textFont(sidePx);
+        const sl = wrapText(shareSide(x.side), textW);
+        parts.push({ kind: 'side', lines: sl, h: 8 + sl.length * sidePx * 1.3 });
+      }
+      if (priceTxt && !beside) parts.push({ kind: 'price', text: priceTxt, h: 8 + sidePx * 1.3 });
+    });
+    return { d, parts, h: Math.max(o.cols === 2 ? 0 : 56, head + parts.reduce((a, p) => a + p.h, 0)) };
+  };
+  const measure = (o) => {
+    if (o.priceSide) {   // Breite der Preis-Spalte: der breiteste Preis der Woche
+      spacing(0); ctx.font = textFont(sideSize(o.px), 600);
+      o.priceCol = Math.ceil(Math.max(0, ...data.days.flatMap(d => d.dishes.map(x => x.price != null ? wide(sharePrice(x.price)) : 0)))) + 22;
+    }
+    const gap = Math.max(18, Math.round(o.px * 0.7));
+    const cells = data.days.map(d => measureDay(d, o));
+    const rows = [];
+    for (let i = 0; i < cells.length; i += o.cols) { const part = cells.slice(i, i + o.cols); rows.push({ cells: part, h: Math.max(...part.map(x => x.h)) }); }
+    const top = headTop(o.header);
+    const cellW = o.cols === 2 ? (right - left - colGap) / 2 : right - left;
+    const labelW = o.cols === 2 ? 0 : 210;
+    // Bleibt neben der Preis-Spalte zu wenig Platz für das Gericht (absurd langer Preis), taugt diese Anordnung nicht
+    const tooNarrow = !!o.priceSide && (cellW - labelW - o.priceCol) < 150;
+    return { ...o, rows, gap, top, tooNarrow, avail: bottom - top, h: rows.reduce((a, r) => a + r.h + gap * 2, 0),
+      cellW, labelW, head: o.cols === 2 ? 44 : 0, textW: cellW - labelW, sidePx: sideSize(o.px), orPx: 19 };
+  };
+
+  // Die erste Kürzungsstufe, bei der etwas passt, gewinnt. Innerhalb der Stufe: größte Schrift –
+  // der volle Kopf mit Logo ist dabei so viel wert wie 4 px Schrift, der Preis unter dem Gericht 2 px,
+  // eine Spalte 1 px.
+  let layout = null;
+  for (let tier = 0; tier < MAX_LINES.length && !layout; tier++) {
+    const sides = !hasPrices ? [false] : tier === 4 ? [true] : [false, true];
+    for (const header of ['full', 'compact']) for (const cols of [1, 2]) for (const priceSide of sides) {
+      for (const px of (tier >= 2 ? SIZES_CUT : SIZES)) {
+        const L = measure({ tier, header, cols, priceSide, px });
+        if (L.tooNarrow || L.h > L.avail) continue;
+        L.score = px + (header === 'full' ? 4 : 0) + (priceSide ? 0 : 2) + (cols === 1 ? 1 : 0);
+        if (!layout || L.score > layout.score) layout = L;
+        break;   // größte passende Schrift dieser Kombination
+      }
+    }
+  }
+  // Notfall (praktisch nie): selbst die knappste Fassung ist zu hoch → den Block als Ganzes verkleinern
+  let squeeze = 1;
+  if (!layout) {
+    layout = measure({ tier: 4, header: 'compact', cols: 2, priceSide: hasPrices, px: 26 });
+    if (layout.tooNarrow) layout = measure({ tier: 4, header: 'compact', cols: 2, priceSide: false, px: 26 });
+    squeeze = Math.min(1, layout.avail / layout.h);
+  }
+
+  // ----- Zeichnen -----
   const bg = ctx.createLinearGradient(0, 0, W * 0.4, H);
   bg.addColorStop(0, C.bean); bg.addColorStop(1, C.espresso);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = 'rgba(212,179,128,.55)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(40, 40, W - 80, H - 80, 28) : ctx.rect(40, 40, W - 80, H - 80); ctx.stroke();
-  const spacing = (px) => { if ('letterSpacing' in ctx) ctx.letterSpacing = px + 'px'; };
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-
-  let y = 92;
-  if (logo) {
-    ctx.save(); ctx.beginPath(); ctx.arc(W / 2, y + 48, 48, 0, Math.PI * 2); ctx.clip();
-    ctx.drawImage(logo, W / 2 - 48, y, 96, 96); ctx.restore();
-    y += 96 + 66;
-  } else y += 60;
-  spacing(0); ctx.fillStyle = C.linen; ctx.font = '500 66px Fraunces, Georgia, serif';
-  ctx.fillText('Alstercafé', W / 2, y);
-  y += 54; spacing(6); ctx.fillStyle = C.goldSoft; ctx.font = '600 25px Inter, Arial, sans-serif';
-  ctx.fillText(`MITTAGSTISCH · KW ${data.kw}`, W / 2, y);
-  y += 40; spacing(1); ctx.fillStyle = 'rgba(241,231,211,.72)'; ctx.font = '400 24px Inter, Arial, sans-serif';
-  ctx.fillText(data.range, W / 2, y);
-
-  const top = y + 46, bottom = H - 150, left = 110, right = W - 110;
-  const wrap = (text, maxW) => {
-    const words = String(text).split(/\s+/); const lines = []; let cur = '';
-    words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; });
-    if (cur) lines.push(cur);
-    return lines;
-  };
-  // Volle Woche: zwei Spalten (Tag über dem Gericht), sonst eine Spalte (Tag links)
-  const totalDishes = data.days.reduce((a, d) => a + d.dishes.length, 0);
-  const cols = (data.days.length > 5 || totalDishes > 7) ? 2 : 1;
-  const colGap = 56;
-  const cellW = cols === 2 ? (right - left - colGap) / 2 : right - left;
-  const labelW = cols === 2 ? 0 : 210;
-  const head = cols === 2 ? 44 : 0; // Platz für den Tag über dem Gericht
-  const textW = cellW - labelW;
-  const measure = (d, k) => {
-    const dishPx = Math.round(40 * k), sidePx = Math.round(25 * Math.max(k, 0.8)), orPx = 19;
-    const parts = [];
-    if (!d.dishes.length) parts.push({ kind: 'none', text: d.closed ? 'Kein Mittagstisch' : 'Folgt in Kürze', h: 34 });
-    d.dishes.forEach((x, i) => {
-      if (i) parts.push({ kind: 'or', h: orPx + 18 });
-      spacing(0); ctx.font = `400 ${dishPx}px Fraunces, Georgia, serif`;
-      const lines = wrap(x.dish, textW);
-      parts.push({ kind: 'dish', lines, h: lines.length * dishPx * 1.15 });
-      if (x.side) {
-        ctx.font = `400 ${sidePx}px Inter, Arial, sans-serif`;
-        const sl = wrap(shareSide(x.side), textW);
-        parts.push({ kind: 'side', lines: sl, h: 8 + sl.length * sidePx * 1.3 });
-      }
-      if (x.price != null) parts.push({ kind: 'price', text: sharePrice(x.price), h: 8 + sidePx * 1.3 });
-    });
-    return { d, parts, h: Math.max(cols === 2 ? 0 : 56, head + parts.reduce((a, p) => a + p.h, 0)) };
-  };
-  // Layout messen und bei Bedarf verkleinern, bis alles passt
-  let layout;
-  for (let k = 1; k >= 0.5; k -= 0.05) {
-    const gap = Math.round(28 * Math.max(k, 0.7));
-    const cells = data.days.map(d => measure(d, k));
-    const rows = [];
-    for (let i = 0; i < cells.length; i += cols) rows.push({ cells: cells.slice(i, i + cols), h: Math.max(...cells.slice(i, i + cols).map(c => c.h)) });
-    const h = rows.reduce((a, r) => a + r.h + gap * 2, 0);
-    layout = { rows, k, dishPx: Math.round(40 * k), sidePx: Math.round(25 * Math.max(k, 0.8)), orPx: 19, gap, h };
-    if (h <= bottom - top) break;
+  if (layout.header === 'full') {
+    let y = 92;
+    if (logo) {
+      ctx.save(); ctx.beginPath(); ctx.arc(W / 2, y + 48, 48, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(logo, W / 2 - 48, y, 96, 96); ctx.restore();
+      y += 96 + 66;
+    } else y += 60;
+    spacing(0); ctx.fillStyle = C.linen; ctx.font = '500 66px Fraunces, Georgia, serif';
+    ctx.fillText('Alstercafé', W / 2, y);
+    y += 54; spacing(6); ctx.fillStyle = C.goldSoft; ctx.font = textFont(25, 600);
+    ctx.fillText(`MITTAGSTISCH · KW ${data.kw}`, W / 2, y);
+    y += 40; spacing(1); ctx.fillStyle = 'rgba(241,231,211,.72)'; ctx.font = textFont(24);
+    ctx.fillText(data.range, W / 2, y);
+  } else {
+    // Kompakter Kopf für volle Wochen: Name, darunter Woche und Zeitraum in einer Zeile
+    spacing(0); ctx.fillStyle = C.linen; ctx.font = '500 50px Fraunces, Georgia, serif';
+    ctx.fillText('Alstercafé', W / 2, 124);
+    spacing(4); ctx.fillStyle = C.goldSoft; ctx.font = textFont(23, 600);
+    ctx.fillText(`MITTAGSTISCH · KW ${data.kw} · ${data.range}`, W / 2, 168);
   }
-  let ry = top + Math.max(0, (bottom - top - layout.h) / 2);
+
+  // Die Tage: beschnitten auf ihren Bereich, damit nie etwas in die Fußzeile ragen kann
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, layout.top - 4, W, layout.avail + 8); ctx.clip();
+  if (squeeze < 1) { ctx.translate(W / 2, layout.top); ctx.scale(squeeze, squeeze); ctx.translate(-W / 2, -layout.top); }
+  let ry = layout.top + Math.max(0, (layout.avail - layout.h * Math.min(1, squeeze)) / 2);
   layout.rows.forEach((row, i) => {
     if (i) { ctx.strokeStyle = 'rgba(212,179,128,.25)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(left, ry); ctx.lineTo(right, ry); ctx.stroke(); }
     ry += layout.gap;
     row.cells.forEach((r, ci) => {
-      const cx = left + ci * (cellW + colGap);
+      const cx = left + ci * (layout.cellW + colGap);
       const dateTxt = r.d.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
       ctx.textAlign = 'left';
-      spacing(3); ctx.fillStyle = C.goldSoft; ctx.font = '600 22px Inter, Arial, sans-serif';
+      spacing(3); ctx.fillStyle = C.goldSoft; ctx.font = textFont(22, 600);
       ctx.fillText(r.d.label.toUpperCase(), cx, ry + 26);
-      if (cols === 2) {
-        const lw = ctx.measureText(r.d.label.toUpperCase()).width;
-        spacing(0); ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = '400 20px Inter, Arial, sans-serif';
+      if (layout.cols === 2) {
+        const lw = wide(r.d.label.toUpperCase());
+        spacing(0); ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = textFont(20);
         ctx.fillText(dateTxt, cx + lw + 14, ry + 26);
       } else {
-        spacing(0); ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = '400 20px Inter, Arial, sans-serif';
+        spacing(0); ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = textFont(20);
         ctx.fillText(dateTxt, cx, ry + 54);
       }
-      let ty = ry + head; const tx = cx + labelW;
+      let ty = ry + layout.head; const tx = cx + layout.labelW;
       r.parts.forEach(p => {
-        if (p.kind === 'none') { ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = '400 26px Inter, Arial, sans-serif'; ctx.fillText(p.text, tx, ty + 28); }
-        if (p.kind === 'or') { spacing(4); ctx.fillStyle = C.gold; ctx.font = `600 ${layout.orPx}px Inter, Arial, sans-serif`; ctx.fillText('ODER', tx, ty + layout.orPx + 6); spacing(0); }
-        if (p.kind === 'dish') { ctx.fillStyle = '#FFFCF4'; ctx.font = `400 ${layout.dishPx}px Fraunces, Georgia, serif`; p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + layout.dishPx * (0.9 + k * 1.15))); }
-        if (p.kind === 'side') { ctx.fillStyle = 'rgba(241,231,211,.75)'; ctx.font = `400 ${layout.sidePx}px Inter, Arial, sans-serif`; p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + 8 + layout.sidePx * (1 + k * 1.3))); }
-        if (p.kind === 'price') { ctx.fillStyle = C.goldSoft; ctx.font = `600 ${layout.sidePx}px Inter, Arial, sans-serif`; ctx.fillText(p.text, tx, ty + 8 + layout.sidePx); }
+        spacing(0); ctx.textAlign = 'left';
+        if (p.kind === 'none') { ctx.fillStyle = 'rgba(241,231,211,.6)'; ctx.font = textFont(26); ctx.fillText(p.text, tx, ty + 28); }
+        if (p.kind === 'or') { spacing(4); ctx.fillStyle = C.gold; ctx.font = textFont(layout.orPx, 600); ctx.fillText('ODER', tx, ty + layout.orPx + 6); spacing(0); }
+        if (p.kind === 'dish') {
+          ctx.fillStyle = '#FFFCF4'; ctx.font = dishFont(layout.px);
+          p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + layout.px * (0.9 + k * 1.15)));
+          if (p.price) { ctx.textAlign = 'right'; ctx.fillStyle = C.goldSoft; ctx.font = textFont(layout.sidePx, 600); ctx.fillText(p.price, tx + layout.textW, ty + layout.px * 0.9); ctx.textAlign = 'left'; }
+        }
+        if (p.kind === 'side') { ctx.fillStyle = 'rgba(241,231,211,.75)'; ctx.font = textFont(layout.sidePx); p.lines.forEach((l, k) => ctx.fillText(l, tx, ty + 8 + layout.sidePx * (1 + k * 1.3))); }
+        if (p.kind === 'price') { ctx.fillStyle = C.goldSoft; ctx.font = textFont(layout.sidePx, 600); ctx.fillText(p.text, tx, ty + 8 + layout.sidePx); }
         ty += p.h;
       });
     });
     ry += row.h + layout.gap;
   });
+  ctx.restore();
 
   ctx.textAlign = 'center'; spacing(2);
-  ctx.fillStyle = C.goldSoft; ctx.font = '600 25px Inter, Arial, sans-serif';
+  ctx.fillStyle = C.goldSoft; ctx.font = textFont(25, 600);
   ctx.fillText(data.until ? `12:00 – ${data.until} UHR` : 'AB 12:00 UHR', W / 2, H - 100);
-  spacing(0); ctx.fillStyle = 'rgba(241,231,211,.8)'; ctx.font = '400 23px Inter, Arial, sans-serif';
+  spacing(0); ctx.fillStyle = 'rgba(241,231,211,.8)'; ctx.font = textFont(23);
   ctx.fillText('Ifflandstraße 45 · Hamburg-Hohenfelde · alstercafe.de', W / 2, H - 66);
-  return c;
+  return { canvas: c, tier: layout.tier, px: layout.px, cols: layout.cols, header: layout.header, squeeze, used: Math.round(layout.h), avail: layout.avail };
 }
 
-function showWeekImageDialog(blob, filename) {
+function showWeekImageDialog(blob, filename, note = '') {
   const url = URL.createObjectURL(blob);
   const file = (typeof File === 'function') ? new File([blob], filename, { type: 'image/png' }) : null;
   const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
   const dlg = document.createElement('dialog');
   dlg.className = 'confirm-dialog week-image-dialog';
+  dlg.setAttribute('aria-labelledby', 'week-image-title');
   dlg.innerHTML = `
     <div class="confirm-dialog-form">
-      <h3 class="confirm-dialog-title">Bild für Instagram</h3>
+      <h3 class="confirm-dialog-title" id="week-image-title">Bild für Instagram</h3>
       <img class="week-image-preview" src="${url}" alt="Vorschau: Mittagstisch der Woche als Bild" />
       <p class="confirm-dialog-hint">${canShare ? 'Tippen Sie auf „Teilen“ und wählen Sie Instagram, WhatsApp oder „Bild sichern“.' : 'Bild speichern und dann bei Instagram als Beitrag hochladen.'}</p>
+      ${note ? `<p class="confirm-dialog-hint week-image-note">${escapeHtml(note)}</p>` : ''}
       <div class="confirm-dialog-actions">
         <button type="button" class="btn btn-link" data-act="close">Schließen</button>
         <a class="btn ${canShare ? 'btn-link' : 'btn-primary'}" href="${url}" download="${filename}" data-act="save">Bild speichern</a>
@@ -1930,6 +2246,8 @@ function showWeekImageDialog(blob, filename) {
   dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
   dlg.addEventListener('close', () => { dlg.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); });
   if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  // Fokus auf den Hauptknopf (sonst landet er auf „Schließen“)
+  (dlg.querySelector('[data-act="share"]') || dlg.querySelector('[data-act="save"]'))?.focus({ preventScroll: true });
 }
 
 function buildMenuPrintHtml(data) {
@@ -1984,14 +2302,6 @@ function buildMenuPrintHtml(data) {
   .desc { font-size: 9pt; color: #6b5a4a; margin: 3pt 0 0; line-height: 1.45; max-width: 400pt; }
   .foot { text-align: center; font-size: 7.5pt; color: #aaa; margin-top: 22pt; padding-top: 10pt; border-top: 1px solid #e8ddca; line-height: 1.5; }
 </style></head><body>${pages}
-<script>
-  /* Sobald das Dokument steht, den Druckdialog aus dem EIGENEN Fenster
-     heraus öffnen. So druckt der Browser zuverlässig genau diese Karte —
-     auch im Iframe und auf iOS Safari. */
-  function alsterPrint(){ if (window.__alsterPrinted) return; window.__alsterPrinted = true; try { window.focus(); window.print(); } catch (e) {} }
-  if (document.readyState === 'complete') { setTimeout(alsterPrint, 250); }
-  else { window.addEventListener('load', function(){ setTimeout(alsterPrint, 250); }); }
-</script>
 </body></html>`;
 }
 
@@ -2453,7 +2763,6 @@ function printReviewPoster(url, statusEl) {
   <p>Vielen Dank – Ihr Alstercafé-Team</p>
   <p class="foot">Ifflandstraße 45 · 22087 Hamburg · alstercafe.de</p>
 </div>
-<script>window.addEventListener('load', function () { if (!window.__alsterPrinted) { window.__alsterPrinted = true; setTimeout(function () { window.print(); }, 150); } });<\/script>
 </body></html>`;
   printHtmlDocument(html, statusEl);
   logActivity('Bewertungs-Aushang gedruckt');
@@ -4161,7 +4470,7 @@ ${days.map(d => `<tr><td>${escapeHtml(d.date === 'ohne Datum' ? d.date : fmtIsoD
 <tr class="is-sum"><td>Gesamt</td>${sorts.map(s => `<td>${days.reduce((t, d) => t + (d.by[s] || 0), 0)}</td>`).join('')}<td>${total}</td></tr></table>
 <h1 style="font-size:17px">Einzelne Bestellungen</h1>
 <table class="orders"><tr><th>Abholung</th><th>Name</th><th>Bestellung</th><th>Status</th></tr>${orderRows}</table>
-<script>window.addEventListener('load',function(){setTimeout(function(){try{window.focus();window.print()}catch(e){}},200)})</script></body></html>`;
+</body></html>`;
   printHtmlDocument(html, bEl('berliner-items-status'));
 }
 
