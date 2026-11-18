@@ -13966,3 +13966,43 @@ html[lang="en"] .order-summary-card.is-receipt .order-summary-eyebrow::after { c
 .admin-body .res-new-when,
 .admin-body .confirm-dialog-to,
 .admin-body .res-decline-contact a { overflow-wrap: anywhere; min-width: 0; }
+
+/* ==========================================================================
+   MITGLIEDERBEREICH · Drucken (November 2026)
+   Gedruckt wird die Seite selbst: Das Druck-Dokument liegt in #print-host (Shadow-Root, siehe
+   printHtmlDocument in admin.js). Am Bildschirm unsichtbar; im Druck ist es das Einzige, was bleibt.
+   Die Klasse sitzt am <html>, weil dessen Hintergrund sonst mitgedruckt würde.
+   ========================================================================== */
+#print-host { display: none; }
+@media print {
+  html.has-print-doc,
+  html.has-print-doc body.admin-body {
+    display: block !important; margin: 0 !important; padding: 0 !important; border: 0 !important;
+    width: auto !important; min-height: 0 !important; height: auto !important; overflow: visible !important;
+    background: #fff !important;
+  }
+  html.has-print-doc body.admin-body::before,
+  html.has-print-doc body.admin-body::after { content: none !important; display: none !important; }
+  html.has-print-doc body.admin-body > :not(#print-host) { display: none !important; }
+  html.has-print-doc #print-host { all: initial; display: block !important; }
+}
+
+/* Fenster „Bild für Instagram“: Hinweis, wenn gekürzt wurde; am Handy der Hauptknopf oben über die volle Breite */
+.admin-body .week-image-note { margin-top: -2px; color: var(--accent-text, #8A6420); }
+@media (max-width: 560px) {
+  .admin-body .week-image-dialog .confirm-dialog-actions { flex-direction: column-reverse; align-items: stretch; gap: 6px; }
+  .admin-body .week-image-dialog .confirm-dialog-actions .btn { width: 100%; justify-content: center; text-align: center; }
+}
+
+/* Wochen-Umschaltung auf sehr schmalen Handys (bis 380 px): passt in die Breite, „Heute“ rückt eng heran.
+   Vorher ragte die Leiste bei 320 px seitlich aus der Seite. */
+@media (max-width: 380px) {
+  .admin-body .week-switch { max-width: 100%; box-sizing: border-box; gap: 2px; }
+  .admin-body .week-switch .week-label { min-width: 0; flex: 1 1 auto; padding: 0 4px; }
+  .admin-body .week-switch .week-range { font-size: .74rem; white-space: nowrap; }
+  .admin-body .week-switch .btn-link { padding: 8px 8px; margin-left: 0; letter-spacing: .08em; }
+  /* Speichern-Leiste: der Knopf bleibt ganz im Bild, die Statuszeile gibt Platz ab */
+  .admin-body .save-bar:not(.inline) { gap: 8px !important; padding-left: 12px !important; }
+  .admin-body .save-bar:not(.inline) .save-status { flex: 1 1 0 !important; min-width: 0; }
+  .admin-body .save-bar:not(.inline) .btn-primary { padding: 0 12px !important; font-size: .82rem !important; letter-spacing: 0 !important; white-space: nowrap; }
+}
